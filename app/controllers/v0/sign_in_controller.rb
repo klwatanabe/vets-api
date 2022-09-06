@@ -6,9 +6,9 @@ require 'sign_in/logger'
 
 module V0
   class SignInController < SignIn::ApplicationController
-    skip_before_action :authenticate, only: %i[authorize callback token refresh revoke]
+    skip_before_action :authenticate, only: %i[authorize callback token refresh revoke logout]
 
-    def authorize
+    def authorize # rubocop:disable Metrics/MethodLength
       type = params[:type]
       client_state = params[:state]
       code_challenge = params[:code_challenge]
@@ -26,23 +26,34 @@ module V0
                                                  acr: acr, client_id: client_id,
                                                  type: type, client_state: client_state).perform
       context = { type: type, client_id: client_id, acr: acr }
-      log_pre_login_event('authorize', SignIn::Constants::Statsd::STATSD_SIS_AUTHORIZE_ATTEMPT_SUCCESS, context)
+
+      sign_in_logger.info('authorize', context)
+      statsd_increment_acr(SignIn::Constants::Statsd::STATSD_SIS_AUTHORIZE_SUCCESS, context)
 
       render body: auth_service(type).render_auth(state: state, acr: acr_for_type), content_type: 'text/html'
+    rescue SignIn::Errors::StandardError => e
+      sign_in_logger.info('authorize error', { errors: e.message, client_id: client_id, type: type, acr: acr })
+      StatsD.increment(SignIn::Constants::Statsd::STATSD_SIS_AUTHORIZE_FAILURE)
+      handle_pre_login_error(e, client_id)
     rescue => e
-      context = { type: type, client_id: client_id, acr: acr }
-      handle_pre_login_error(e, SignIn::Constants::Statsd::STATSD_SIS_AUTHORIZE_ATTEMPT_FAILURE, context)
+      log_message_to_sentry(error.message, :error)
+      StatsD.increment(SignIn::Constants::Statsd::STATSD_SIS_AUTHORIZE_FAILURE)
+      handle_pre_login_error(e, client_id)
     end
 
-    def callback
+    def callback # rubocop:disable Metrics/MethodLength
       code = params[:code]
       state = params[:state]
+      error = params[:error]
 
-      validate_callback_params(code, state)
+      validate_callback_params(code, state, error)
 
       state_payload = SignIn::StatePayloadJwtDecoder.new(state_payload_jwt: state).perform
+
+      handle_credential_provider_error(error, state_payload&.type) if error
       service_token_response = auth_service(state_payload.type).token(code)
-      raise SignIn::Errors::CodeInvalidError, 'Code is not valid' unless service_token_response
+
+      raise SignIn::Errors::CodeInvalidError, message: 'Code is not valid' unless service_token_response
 
       user_info = auth_service(state_payload.type).user_info(service_token_response[:access_token])
       credential_level = SignIn::CredentialLevelCreator.new(requested_acr: state_payload.acr,
@@ -54,10 +65,17 @@ module V0
       else
         create_login_code(state_payload, user_info, credential_level, service_token_response)
       end
+    rescue SignIn::Errors::StandardError => e
+      sign_in_logger.info('callback error', { errors: e.message,
+                                              client_id: state_payload&.client_id,
+                                              type: state_payload&.type,
+                                              acr: state_payload&.acr })
+      StatsD.increment(SignIn::Constants::Statsd::STATSD_SIS_CALLBACK_FAILURE)
+      handle_pre_login_error(e, state_payload&.client_id)
     rescue => e
-      context = { type: state_payload&.type, client_id: state_payload&.client_id,
-                  acr: state_payload&.acr, state: state, code: code }
-      handle_pre_login_error(e, SignIn::Constants::Statsd::STATSD_SIS_CALLBACK_FAILURE, context)
+      log_message_to_sentry(error.message, :error)
+      StatsD.increment(SignIn::Constants::Statsd::STATSD_SIS_CALLBACK_FAILURE)
+      handle_pre_login_error(e, state_payload&.client_id)
     end
 
     def token
@@ -66,166 +84,173 @@ module V0
       grant_type = params[:grant_type]
 
       validate_token_params(code, code_verifier, grant_type)
+
       validated_credential = SignIn::CodeValidator.new(code: code,
                                                        code_verifier: code_verifier,
                                                        grant_type: grant_type).perform
       session_container = SignIn::SessionCreator.new(validated_credential: validated_credential).perform
-      log_post_login_event('token',
-                           session_container.refresh_token,
-                           SignIn::Constants::Statsd::STATSD_SIS_TOKEN_SUCCESS,
-                           { code: code })
-
       serializer_response = SignIn::TokenSerializer.new(session_container: session_container,
                                                         cookies: token_cookies).perform
+
+      sign_in_logger.token_log('token', session_container.access_token)
+      StatsD.increment(SignIn::Constants::Statsd::STATSD_SIS_TOKEN_SUCCESS)
+
       render json: serializer_response, status: :ok
     rescue SignIn::Errors::StandardError => e
-      handle_post_login_error(e, SignIn::Constants::Statsd::STATSD_SIS_TOKEN_FAILURE,
-                              { code: code, code_verifier: code_verifier, grant_type: grant_type },
-                              session_container&.session&.user_account_id, status: :bad_request)
+      sign_in_logger.info('token error', { errors: e.message })
+      StatsD.increment(SignIn::Constants::Statsd::STATSD_SIS_TOKEN_FAILURE)
+      render json: { errors: e }, status: :bad_request
     end
 
     def refresh
       refresh_token = params[:refresh_token] || token_cookies[SignIn::Constants::Auth::REFRESH_TOKEN_COOKIE_NAME]
       anti_csrf_token = params[:anti_csrf_token] || token_cookies[SignIn::Constants::Auth::ANTI_CSRF_COOKIE_NAME]
 
-      raise SignIn::Errors::MalformedParamsError, 'Refresh token is not defined' unless refresh_token
+      raise SignIn::Errors::MalformedParamsError, message: 'Refresh token is not defined' unless refresh_token
 
       decrypted_refresh_token = SignIn::RefreshTokenDecryptor.new(encrypted_refresh_token: refresh_token).perform
       session_container = SignIn::SessionRefresher.new(refresh_token: decrypted_refresh_token,
                                                        anti_csrf_token: anti_csrf_token).perform
-      log_post_login_event('refresh', session_container.refresh_token,
-                           SignIn::Constants::Statsd::STATSD_SIS_REFRESH_SUCCESS)
-
       serializer_response = SignIn::TokenSerializer.new(session_container: session_container,
                                                         cookies: token_cookies).perform
+
+      sign_in_logger.token_log('refresh', session_container.access_token)
+      StatsD.increment(SignIn::Constants::Statsd::STATSD_SIS_REFRESH_SUCCESS)
+
       render json: serializer_response, status: :ok
     rescue SignIn::Errors::MalformedParamsError => e
-      handle_post_login_error(e, SignIn::Constants::Statsd::STATSD_SIS_REFRESH_FAILURE,
-                              { refresh_token: refresh_token, anti_csrf_token: anti_csrf_token },
-                              status: :bad_request)
+      sign_in_logger.info('refresh error', { errors: e.message })
+      StatsD.increment(SignIn::Constants::Statsd::STATSD_SIS_REFRESH_FAILURE)
+      render json: { errors: e }, status: :bad_request
     rescue SignIn::Errors::StandardError => e
-      handle_post_login_error(e, SignIn::Constants::Statsd::STATSD_SIS_REFRESH_FAILURE,
-                              { refresh_token: refresh_token, anti_csrf_token: anti_csrf_token },
-                              session_container&.session&.user_account_id)
+      sign_in_logger.info('refresh error', { errors: e.message })
+      StatsD.increment(SignIn::Constants::Statsd::STATSD_SIS_REFRESH_FAILURE)
+      render json: { errors: e }, status: :unauthorized
     end
 
     def revoke
       refresh_token = params[:refresh_token]
       anti_csrf_token = params[:anti_csrf_token]
 
-      raise SignIn::Errors::MalformedParamsError, 'Refresh token is not defined' unless refresh_token
+      raise SignIn::Errors::MalformedParamsError, message: 'Refresh token is not defined' unless refresh_token
 
       decrypted_refresh_token = SignIn::RefreshTokenDecryptor.new(encrypted_refresh_token: refresh_token).perform
-      SignIn::SessionRevoker.new(refresh_token: decrypted_refresh_token,
-                                 anti_csrf_token: anti_csrf_token,
-                                 access_token: nil).perform
-      log_post_login_event('revoke', decrypted_refresh_token, SignIn::Constants::Statsd::STATSD_SIS_REVOKE_SUCCESS)
+      SignIn::SessionRevoker.new(refresh_token: decrypted_refresh_token, anti_csrf_token: anti_csrf_token).perform
+
+      sign_in_logger.token_log('revoke', decrypted_refresh_token)
+      StatsD.increment(SignIn::Constants::Statsd::STATSD_SIS_REVOKE_SUCCESS)
 
       render status: :ok
     rescue SignIn::Errors::MalformedParamsError => e
-      handle_post_login_error(e, SignIn::Constants::Statsd::STATSD_SIS_REVOKE_FAILURE,
-                              { refresh_token: refresh_token, anti_csrf_token: anti_csrf_token },
-                              status: :bad_request)
+      sign_in_logger.info('revoke error', { errors: e.message })
+      StatsD.increment(SignIn::Constants::Statsd::STATSD_SIS_REVOKE_FAILURE)
+
+      render json: { errors: e }, status: :bad_request
     rescue SignIn::Errors::StandardError => e
-      handle_post_login_error(e, SignIn::Constants::Statsd::STATSD_SIS_REVOKE_FAILURE,
-                              { refresh_token: refresh_token, anti_csrf_token: anti_csrf_token },
-                              decrypted_refresh_token&.user_uuid)
+      sign_in_logger.info('revoke error', { errors: e.message })
+      StatsD.increment(SignIn::Constants::Statsd::STATSD_SIS_REVOKE_FAILURE)
+
+      render json: { errors: e }, status: :unauthorized
     end
 
     def revoke_all_sessions
       SignIn::RevokeSessionsForUser.new(user_account: @current_user.user_account).perform
-      log_post_login_event('revoke all sessions', @access_token,
-                           SignIn::Constants::Statsd::STATSD_SIS_REVOKE_ALL_SESSIONS_SUCCESS)
+
+      sign_in_logger.token_log('revoke all sessions', @access_token)
+      StatsD.increment(SignIn::Constants::Statsd::STATSD_SIS_REVOKE_ALL_SESSIONS_SUCCESS)
 
       render status: :ok
     rescue SignIn::Errors::StandardError => e
-      handle_authenticated_route_error(e, SignIn::Constants::Statsd::STATSD_SIS_REVOKE_ALL_SESSIONS_FAILURE)
+      sign_in_logger.info('revoke all sessions error', { errors: e.message })
+      StatsD.increment(SignIn::Constants::Statsd::STATSD_SIS_REVOKE_ALL_SESSIONS_FAILURE)
+      render json: { errors: e }, status: :unauthorized
     end
 
     def logout
       anti_csrf_token = params[:anti_csrf_token] || token_cookies[SignIn::Constants::Auth::ANTI_CSRF_COOKIE_NAME]
 
-      SignIn::SessionRevoker.new(access_token: @access_token,
-                                 refresh_token: nil,
-                                 anti_csrf_token: anti_csrf_token).perform
-      delete_cookies if token_cookies
-      log_post_login_event('logout', @access_token, SignIn::Constants::Statsd::STATSD_SIS_LOGOUT_SUCCESS)
-
-      credential_info = SignIn::CredentialInfo.find(@current_user.logingov_uuid)
-      if credential_info
-        redirect_to auth_service(credential_info.credential_type).render_logout(id_token: credential_info.id_token)
-      else
-        render status: :ok
+      unless load_user(skip_expiration_check: true)
+        raise SignIn::Errors::LogoutAuthorizationError, message: 'Unable to Authorize User'
       end
-    rescue SignIn::Errors::StandardError => e
-      handle_authenticated_route_error(e, SignIn::Constants::Statsd::STATSD_SIS_LOGOUT_FAILURE)
+
+      SignIn::SessionRevoker.new(access_token: @access_token, anti_csrf_token: anti_csrf_token).perform
+      delete_cookies if token_cookies
+
+      sign_in_logger.token_log('logout', @access_token)
+      StatsD.increment(SignIn::Constants::Statsd::STATSD_SIS_LOGOUT_SUCCESS)
+    rescue => e
+      sign_in_logger.info('logout error', { errors: e.message })
+      StatsD.increment(SignIn::Constants::Statsd::STATSD_SIS_LOGOUT_FAILURE)
+    ensure
+      redirect_to logout_get_redirect_url
     end
 
     def introspect
-      log_post_login_event('introspect', @access_token, SignIn::Constants::Statsd::STATSD_SIS_INTROSPECT_SUCCESS)
-
       render json: @current_user, serializer: SignIn::IntrospectSerializer, status: :ok
     rescue SignIn::Errors::StandardError => e
-      handle_authenticated_route_error(e, SignIn::Constants::Statsd::STATSD_SIS_INTROSPECT_FAILURE)
+      render json: { errors: e }, status: :unauthorized
     end
 
     private
 
     def validate_authorize_params(type, client_id, code_challenge, code_challenge_method, acr)
       unless SignIn::Constants::ClientConfig::CLIENT_IDS.include?(client_id)
-        raise SignIn::Errors::MalformedParamsError, 'Client id is not valid'
+        raise SignIn::Errors::MalformedParamsError, message: 'Client id is not valid'
       end
       unless SignIn::Constants::Auth::REDIRECT_URLS.include?(type)
-        raise SignIn::Errors::AuthorizeInvalidType, 'Type is not valid'
+        raise SignIn::Errors::AuthorizeInvalidType, message: 'Type is not valid'
       end
       unless SignIn::Constants::Auth::ACR_VALUES.include?(acr)
-        raise SignIn::Errors::MalformedParamsError, 'ACR is not valid'
+        raise SignIn::Errors::MalformedParamsError, message: 'ACR is not valid'
       end
-      raise SignIn::Errors::MalformedParamsError, 'Code Challenge is not defined' unless code_challenge
-      raise SignIn::Errors::MalformedParamsError, 'Code Challenge Method is not defined' unless code_challenge_method
+      raise SignIn::Errors::MalformedParamsError, message: 'Code Challenge is not defined' unless code_challenge
+      unless code_challenge_method
+        raise SignIn::Errors::MalformedParamsError, message: 'Code Challenge Method is not defined'
+      end
     end
 
-    def validate_callback_params(code, state)
-      raise SignIn::Errors::MalformedParamsError, 'Code is not defined' unless code
-      raise SignIn::Errors::MalformedParamsError, 'State is not defined' unless state
+    def validate_callback_params(code, state, error)
+      raise SignIn::Errors::MalformedParamsError, message: 'Code is not defined' unless code || error
+      raise SignIn::Errors::MalformedParamsError, message: 'State is not defined' unless state
     end
 
     def validate_token_params(code, code_verifier, grant_type)
-      raise SignIn::Errors::MalformedParamsError, 'Code is not defined' unless code
-      raise SignIn::Errors::MalformedParamsError, 'Code Verifier is not defined' unless code_verifier
-      raise SignIn::Errors::MalformedParamsError, 'Grant Type is not defined' unless grant_type
+      raise SignIn::Errors::MalformedParamsError, message: 'Code is not defined' unless code
+      raise SignIn::Errors::MalformedParamsError, message: 'Code Verifier is not defined' unless code_verifier
+      raise SignIn::Errors::MalformedParamsError, message: 'Grant Type is not defined' unless grant_type
     end
 
-    def log_pre_login_event(event, statsd_code, context)
-      sign_in_logger.info(event, context)
-      StatsD.increment(statsd_code,
-                       tags: ["type:#{context[:type]}", "client_id:#{context[:client_id]}", "acr:#{context[:acr]}"])
-    end
-
-    def log_post_login_event(event, token, statsd_code, context = {})
-      auth_info = get_user_auth_info(User.find(token.user_uuid))
-      context = context.merge({ type: auth_info[:type], client_id: auth_info[:client_id], loa: auth_info[:loa] })
-      if token.instance_of?(SignIn::AccessToken)
-        sign_in_logger.access_token_log(event, token, context)
+    def logout_get_redirect_url
+      credential_info = @current_user && SignIn::CredentialInfo.find(@current_user.logingov_uuid)
+      if credential_info
+        auth_service(credential_info.credential_type).render_logout(id_token: credential_info.id_token)
       else
-        sign_in_logger.refresh_token_log(event, token, context)
+        URI.parse(Settings.sign_in.client_redirect_uris.web_logout).to_s
       end
-      StatsD.increment(statsd_code,
-                       tags: ["type:#{auth_info[:type]}",
-                              "client_id:#{auth_info[:client_id]}",
-                              "loa:#{auth_info[:loa]}"])
     end
 
-    def handle_pre_login_error(error, statsd_code, context, status: :bad_request)
-      log_message_to_sentry(error.message, :error, context)
-      StatsD.increment(statsd_code,
-                       tags: ["type:#{context[:type]}", "client_id:#{context[:client_id]}", "acr:#{context[:acr]}"])
-      if SignIn::Constants::ClientConfig::COOKIE_AUTH.include?(context[:client_id])
-        query_params = { auth: 'fail', code: '400' }
-        query_params[:type] = context[:type] if context[:type]
-        redirect_to failed_auth_url(query_params)
+    def handle_pre_login_error(error, client_id)
+      if SignIn::Constants::ClientConfig::COOKIE_AUTH.include?(client_id)
+        error_code = error.try(:code) || SignIn::Constants::ErrorCode::INVALID_REQUEST
+        redirect_to failed_auth_url({ auth: 'fail', code: error_code })
       else
-        render json: { errors: error }, status: status
+        render json: { errors: error }, status: :bad_request
+      end
+    end
+
+    def handle_credential_provider_error(error, type)
+      if error == SignIn::Constants::Auth::ACCESS_DENIED
+        error_message = 'User Declined to Authorize Client'
+        error_code = if type == SAML::User::LOGINGOV_CSID
+                       SignIn::Constants::ErrorCode::LOGINGOV_VERIFICATION_DENIED
+                     else
+                       SignIn::Constants::ErrorCode::IDME_VERIFICATION_DENIED
+                     end
+        raise SignIn::Errors::AccessDeniedError, message: error_message, code: error_code
+      else
+        error_message = 'Unknown Credential Provider Issue'
+        error_code = SignIn::Constants::ErrorCode::GENERIC_EXTERNAL_ISSUE
+        raise SignIn::Errors::CredentialProviderError, message: error_message, code: error_code
       end
     end
 
@@ -235,29 +260,9 @@ module V0
       uri.to_s
     end
 
-    def handle_post_login_error(error, statsd_code, context, user_id = nil, status: :unauthorized)
-      auth_info = user_id ? get_user_auth_info(User.find(user_id)) : {}
-      context = context.merge({ type: auth_info[:type], client_id: auth_info[:client_id], loa: auth_info[:loa] })
-      log_message_to_sentry(error.message, :error, context)
+    def statsd_increment_acr(statsd_code, context)
       StatsD.increment(statsd_code,
-                       tags: ["type:#{auth_info[:type]}",
-                              "client_id:#{auth_info[:client_id]}",
-                              "loa:#{auth_info[:loa]}"])
-      render json: { errors: error }, status: status
-    end
-
-    def handle_authenticated_route_error(error, statsd_code)
-      auth_info = get_user_auth_info
-      context = { user_uuid: @current_user.uuid,
-                  type: auth_info[:type],
-                  client_id: auth_info[:client_id],
-                  loa: auth_info[:loa] }
-      log_message_to_sentry(error.message, :error, context)
-      StatsD.increment(statsd_code,
-                       tags: ["type:#{auth_info[:type]}",
-                              "client_id:#{auth_info[:client_id]}",
-                              "loa:#{auth_info[:loa]}"])
-      render json: { errors: error }, status: :unauthorized
+                       tags: ["type:#{context[:type]}", "client_id:#{context[:client_id]}", "acr:#{context[:acr]}"])
     end
 
     def render_uplevel_credential(state_payload, state)
@@ -273,7 +278,9 @@ module V0
                                         csp_token_response: service_token_response).perform
       user_code_map = SignIn::UserCreator.new(user_attributes: user_attributes, state_payload: state_payload).perform
       context = { type: state_payload.type, client_id: state_payload.client_id, acr: state_payload.acr }
-      log_pre_login_event('callback', SignIn::Constants::Statsd::STATSD_SIS_CALLBACK_SUCCESS, context)
+      sign_in_logger.info('callback', context)
+      statsd_increment_acr(SignIn::Constants::Statsd::STATSD_SIS_CALLBACK_SUCCESS, context)
+
       redirect_to SignIn::LoginRedirectUrlGenerator.new(user_code_map: user_code_map).perform
     end
 
@@ -288,17 +295,9 @@ module V0
       cookies.delete(SignIn::Constants::Auth::INFO_COOKIE_NAME, domain: Settings.sign_in.info_cookie_domain)
     end
 
-    def get_user_auth_info(user = @current_user)
-      return {} unless user
-
-      { type: user.identity.sign_in[:service_name],
-        client_id: user.identity.sign_in[:client_id],
-        loa: user.loa[:current] }
-    end
-
     def auth_service(type)
       case type
-      when 'logingov'
+      when SAML::User::LOGINGOV_CSID
         logingov_auth_service
       else
         idme_auth_service(type)

@@ -16,7 +16,7 @@
     "claimType": {
       "type": "string",
       "description": "Name of claim type",
-      "example": "Appeals Control"
+      "example": "Compensation"
     },
     "contentionList": {
       "type": "array",
@@ -26,10 +26,16 @@
       "description": "The contentions being submitted with a claim",
       "example": ["abnormal heart (New)", "abscess kidney (New)"]
     },
-    "dateFiled": {
-      "type": "string",
+    "claimDate": {
+      "type": ["string", "null"],
       "description": "The date a claim was filed",
       "example": "5/17/20"
+    },
+    "closeDate": {
+      "type": ["string", "null"],
+      "format": "date",
+      "description": "Date claim was closed",
+      "example": "2019-09-04"
     },
     "decisionLetterSent": {
       "type": "boolean",
@@ -48,16 +54,56 @@
       "description": "End product code of claim",
       "example": "930"
     },
+    "errors": {
+      "type": "array",
+      "description": "Error details if claim is in an errored state.",
+      "items": {
+        "properties": {
+          "detail": {
+            "type": "string",
+            "example": "Something happened"
+          },
+          "source": {
+            "type": "string",
+            "example": "some/error/path"
+          }
+        }
+      }
+    },
+    "jurisdiction": {
+      "type": "string",
+      "description": "Jurisdiction of claim"
+    },
     "lighthouseId": {
       "type": "string",
       "nullable": true,
       "description": "Claim ID in Lighthouse",
       "example": "600131328"
     },
+    "minEstClaimDate": {
+      "type": ["string", "null"],
+      "format": "date",
+      "description": "Minimum Estimated Claim Completion Date",
+      "example": "2019-06-04"
+    },
+    "maxEstClaimDate": {
+      "type": ["string", "null"],
+      "format": "date",
+      "description": "Maximum Estimated Claim Completion Date",
+      "example": "2019-09-04"
+    },
     "status": {
       "type": "string",
       "description": "Status of claim",
-      "example": "Complete"
+      "enum": [
+        "PENDING",
+        "CLAIM_RECEIVED",
+        "INITIAL_REVIEW",
+        "EVIDENCE_GATHERING_REVIEW_DECISION",
+        "PREPARATION_FOR_NOTIFICATION",
+        "COMPLETE",
+        "ERRORED"
+      ]
     },
     "submitterApplicationCode": {
       "type": "string",
@@ -74,22 +120,69 @@
       "description": "Information regarding any supported documents attached to a claim",
       "items": {
         "properties": {
-          "id": {
+          "documentId": {
             "type": "string",
             "description": "Unique identifier of document"
           },
-          "md5": {
+          "documentTypeLabel": {
             "type": "string",
-            "description": "Hashed representation of document"
+            "nullable": true
           },
-          "filename": {
+          "originalFileName": {
             "type": "string",
-            "description": "Name of document"
+            "description": "Name of document",
+            "nullable": true
           },
-          "uploadedAt": {
+          "trackedItemId": {
+            "type": "string",
+            "nullable": true
+          },
+          "uploadDate": {
+            "type": "date",
+            "description": "Date and time document was uploaded",
+            "nullable": true
+          }
+        }
+      }
+    },
+    "tempJurisdiction": {
+      "type": ["string", "null"],
+      "description": "Temporary jurisdiction of claim"
+    },
+    "trackedItems": {
+      "type": "array",
+      "description": "",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "closedDate": {
             "type": "string",
             "format": "date",
-            "description": "Date and time document was uploaded"
+            "description": "Date the tracked item was closed",
+            "example": "2022-01-01T00:00:00-04:00"
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the tracked item",
+            "example": "Buddy mentioned - No complete address"
+          },
+          "suspensionDate": {
+            "type": "string",
+            "format": "date",
+            "description": "Suspension date on the tracked item",
+            "example": "2022-01-01T00:00:00-04:00"
+          },
+          "requestedDate": {
+            "type": "string",
+            "format": "date",
+            "description": "Date the tracked item was requested",
+            "example": "2022-01-01T00:00:00-04:00"
+          },
+          "trackedItemId": {
+            "type": "integer",
+            "description": "ID of the tracked item",
+            "example": 293454
           }
         }
       }

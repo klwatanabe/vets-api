@@ -28,7 +28,7 @@ module SignIn
     end
 
     def validate_account_and_session
-      raise Errors::SessionNotFoundError, 'Invalid Session Handle' unless session
+      raise Errors::SessionNotFoundError, message: 'Invalid Session Handle' unless session
     end
 
     def user_attributes
@@ -52,7 +52,7 @@ module SignIn
     def sign_in
       { service_name: user_verification.credential_type,
         client_id: session.client_id,
-        auth_broker: SignIn::Constants::Auth::BROKER_CODE }
+        auth_broker: Constants::Auth::BROKER_CODE }
     end
 
     def authn_context
@@ -61,7 +61,7 @@ module SignIn
         user_is_verified? ? LOA::IDME_LOA3 : LOA::IDME_LOA1_VETS
       when 'dslogon'
         user_is_verified? ? LOA::IDME_DSLOGON_LOA3 : LOA::IDME_DSLOGON_LOA1
-      when 'myhealthevet'
+      when 'mhv'
         user_is_verified? ? LOA::IDME_MHV_LOA3 : LOA::IDME_MHV_LOA1
       when 'logingov'
         user_is_verified? ? IAL::LOGIN_GOV_IAL2 : IAL::LOGIN_GOV_IAL1

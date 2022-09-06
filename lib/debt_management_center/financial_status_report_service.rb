@@ -7,6 +7,7 @@ require 'debt_management_center/models/financial_status_report'
 require 'debt_management_center/financial_status_report_downloader'
 require 'debt_management_center/workers/va_notify_email_job'
 require 'debt_management_center/vbs/request'
+require 'debt_management_center/sharepoint/request'
 require 'json'
 
 module DebtManagementCenter
@@ -25,7 +26,6 @@ module DebtManagementCenter
     STATSD_KEY_PREFIX = 'api.dmc'
     DATE_TIMEZONE = 'Central Time (US & Canada)'
     CONFIRMATION_TEMPLATE = Settings.vanotify.services.dmc.template_id.fsr_confirmation_email
-    DEBT_TYPES = %w[vba vha combined].freeze
 
     ##
     # Submit a financial status report to the Debt Management Center
@@ -37,7 +37,7 @@ module DebtManagementCenter
       with_monitoring_and_error_handling do
         form = add_personal_identification(form)
         validate_form_schema(form)
-        if Flipper.enabled?(:combined_financial_status_report)
+        if Flipper.enabled?(:combined_financial_status_report, @user)
           submit_combined_fsr(form)
         else
           submit_vba_fsr(form)
@@ -60,17 +60,15 @@ module DebtManagementCenter
     end
 
     def submit_combined_fsr(form)
-      case form['personalIdentification']['debtType']
-      when 'vba'
-        submit_vba_fsr(form)
-      when 'vha'
-        submit_vha_fsr(form)
-      else
-        submit_vba_fsr(form)
-      end
+      submission = persist_form_submission(form)
+      vba_status = submit_vba_fsr(form) if selected_vba_debts(form['selectedDebtsAndCopays']).present?
+      vha_status = submit_vha_fsr(form, submission) if selected_vha_copays(form['selectedDebtsAndCopays']).present?
+
+      { vba_status: vba_status, vha_status: vha_status }.compact
     end
 
     def submit_vba_fsr(form)
+      form.delete('selectedDebtsAndCopays')
       response = perform(:post, 'financial-status-report/formtopdf', form)
       fsr_response = DebtManagementCenter::FinancialStatusReportResponse.new(response.body)
 
@@ -80,20 +78,75 @@ module DebtManagementCenter
       { status: fsr_response.status }
     end
 
-    def submit_vha_fsr(form)
-      request = DebtManagementCenter::VBS::Request.build
-      parsed_form = remove_form_delimiters(form)
-      response = request.post("#{vbs_settings.base_path}/UploadFSRJsonDocument", parsed_form)
+    def submit_vha_fsr(form, form_submission)
+      vha_forms = parse_vha_form(form, form_submission.id)
+      vbs_request = DebtManagementCenter::VBS::Request.build
+      sharepoint_request = DebtManagementCenter::Sharepoint::Request.new
+      vbs_responses = []
+      vha_forms.each do |vha_form|
+        sharepoint_request.upload(
+          form_contents: vha_form,
+          form_submission: form_submission,
+          station_id: vha_form['facilityNum']
+        )
+        vbs_response = vbs_request.post("#{vbs_settings.base_path}/UploadFSRJsonDocument",
+                                        { jsonDocument: vha_form.to_json })
+        vbs_responses << vbs_response
+      end
 
-      send_confirmation_email if response.success?
+      send_confirmation_email if vbs_responses.all?(&:success?)
 
-      { status: response.status }
+      { status: vbs_responses.collect(&:status) }
     end
 
     private
 
     def raise_client_error
       raise Common::Client::Errors::ClientError.new('malformed request', 400)
+    end
+
+    def parse_vha_form(form, form_submission_id)
+      facility_forms = []
+      facility_copays = selected_vha_copays(form['selectedDebtsAndCopays']).group_by do |copay|
+        copay['station']['facilitYNum']
+      end
+      facility_copays.each do |facility_num, copays|
+        fsr_reason = copays.map do |c|
+          c['resolutionOption']
+        end.uniq.join(', ') + " - Facility #{facility_num}}"
+        facility_form = form.deep_dup
+        facility_form['personalIdentification']['fsrReason'] = fsr_reason
+        facility_form['facilityNum'] = facility_num
+        facility_form['transactionId'] = form_submission_id
+        facility_form.delete('selectedDebtsAndCopays')
+        facility_forms << remove_form_delimiters(facility_form)
+      end
+
+      facility_forms
+    end
+
+    def persist_form_submission(form)
+      metadata = {
+        debts: selected_vba_debts(form['selectedDebtsAndCopays']),
+        copays: selected_vha_copays(form['selectedDebtsAndCopays'])
+      }.to_json
+      form_json = form.deep_dup
+
+      form_json.delete('selectedDebtsAndCopays')
+
+      Form5655Submission.create(
+        form_json: form_json.to_json,
+        metadata: metadata,
+        user_uuid: @user.uuid
+      )
+    end
+
+    def selected_vba_debts(debts)
+      debts&.filter { |debt| debt['debtType'] == 'DEBT' }
+    end
+
+    def selected_vha_copays(debts)
+      debts&.filter { |debt| debt['debtType'] == 'COPAY' }
     end
 
     def update_filenet_id(response)

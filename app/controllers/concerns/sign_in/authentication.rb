@@ -17,10 +17,20 @@ module SignIn
     def authenticate
       @access_token = authenticate_access_token
       @current_user = load_user_object
-    rescue SignIn::Errors::AccessTokenExpiredError => e
+    rescue Errors::AccessTokenExpiredError => e
       render json: { errors: e }, status: :forbidden
-    rescue SignIn::Errors::StandardError => e
+    rescue Errors::StandardError => e
       handle_authenticate_error(e)
+    end
+
+    def load_user(skip_expiration_check: false)
+      @access_token = authenticate_access_token
+      @current_user = load_user_object
+    rescue Errors::AccessTokenExpiredError => e
+      render json: { errors: e }, status: :forbidden unless skip_expiration_check
+    rescue Errors::StandardError => e
+      Rails.logger.debug("load_user not authenticated, error: #{e}")
+      nil
     end
 
     private
@@ -33,16 +43,16 @@ module SignIn
     def cookie_access_token
       return unless defined?(cookies)
 
-      cookies[SignIn::Constants::Auth::ACCESS_TOKEN_COOKIE_NAME]
+      cookies[Constants::Auth::ACCESS_TOKEN_COOKIE_NAME]
     end
 
     def authenticate_access_token(with_validation: true)
       access_token_jwt = bearer_token || cookie_access_token
-      SignIn::AccessTokenJwtDecoder.new(access_token_jwt: access_token_jwt).perform(with_validation: with_validation)
+      AccessTokenJwtDecoder.new(access_token_jwt: access_token_jwt).perform(with_validation: with_validation)
     end
 
     def load_user_object
-      SignIn::UserLoader.new(access_token: @access_token).perform
+      UserLoader.new(access_token: @access_token).perform
     end
 
     def handle_authenticate_error(error)
@@ -56,7 +66,7 @@ module SignIn
     end
 
     def sign_in_logger
-      @sign_in_logger = SignIn::Logger.new
+      @sign_in_logger = Logger.new
     end
   end
 end

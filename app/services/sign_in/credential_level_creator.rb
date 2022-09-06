@@ -23,24 +23,43 @@ module SignIn
                           current_ial: current_ial,
                           max_ial: max_ial)
     rescue ActiveModel::ValidationError
-      raise Errors::InvalidCredentialLevelError, 'Unsupported credential authorization levels'
+      raise Errors::InvalidCredentialLevelError, message: 'Unsupported credential authorization levels'
     end
 
     def max_ial
-      if type == 'logingov'
-        user_info[:verified_at] ? IAL::TWO : IAL::ONE
+      case type
+      when SAML::User::LOGINGOV_CSID
+        verified_ial_level(user_info[:verified_at])
+      when SAML::User::MHV_ORIGINAL_CSID
+        verified_ial_level(LOA::MHV_PREMIUM_VERIFIED.include?(user_info.mhv_assurance))
+      when SAML::User::DSLOGON_CSID
+        verified_ial_level(LOA::DSLOGON_PREMIUM_VERIFIED.include?(user_info.dslogon_assurance))
       else
-        user_info.level_of_assurance == LOA::THREE ? IAL::TWO : IAL::ONE
+        verified_ial_level(user_info.level_of_assurance == LOA::THREE)
       end
     end
 
     def current_ial
-      if type == 'logingov'
+      case type
+      when SAML::User::LOGINGOV_CSID
         acr = JWT.decode(id_token, nil, false).first['acr']
-        acr == IAL::LOGIN_GOV_IAL2 ? IAL::TWO : IAL::ONE
+        verified_ial_level(acr == IAL::LOGIN_GOV_IAL2)
+      when SAML::User::MHV_ORIGINAL_CSID
+        verified_ial_level(requested_verified_account? && LOA::MHV_PREMIUM_VERIFIED.include?(user_info.mhv_assurance))
+      when SAML::User::DSLOGON_CSID
+        verified_ial_level(requested_verified_account? &&
+                           LOA::DSLOGON_PREMIUM_VERIFIED.include?(user_info.dslogon_assurance))
       else
-        user_info.credential_ial == LOA::IDME_CLASSIC_LOA3 ? IAL::TWO : IAL::ONE
+        verified_ial_level(user_info.credential_ial == LOA::IDME_CLASSIC_LOA3)
       end
+    end
+
+    def verified_ial_level(verified)
+      verified ? IAL::TWO : IAL::ONE
+    end
+
+    def requested_verified_account?
+      [Constants::Auth::IAL2, Constants::Auth::LOA3, Constants::Auth::MIN].include?(requested_acr)
     end
   end
 end

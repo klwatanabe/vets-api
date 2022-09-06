@@ -13,17 +13,36 @@ RSpec.describe DhpConnectedDevices::Fitbit::Client do
         refresh_token: 'short',
         scope: 'heartrate activity sleep nutrition',
         token_type: 'Bearer',
-        user_id: '1FAKE' }.to_json
+        user_id: '1FAKE' }.to_json.to_s
     end
 
-    let(:faraday_response) { double('Faraday::Response', body: body) }
+    let(:faraday_response) { double('Faraday::Response', status: 200, body: body) }
 
-    before do
-      allow_any_instance_of(Faraday::Connection).to receive(:post).with(anything).and_return(faraday_response)
+    context 'successful response from fitbit' do
+      before do
+        allow_any_instance_of(Faraday::Connection).to receive(:post).with(anything).and_return(faraday_response)
+      end
+
+      it 'returns the body as a hash' do
+        result = subject.get_token('auth_code')
+
+        expect(result[:access_token]).to eq('short')
+        expect(result[:refresh_token]).to eq('short')
+        expect(result[:scope]).to eq('heartrate activity sleep nutrition')
+        expect(result[:expires_in]).to eq(28_800)
+      end
     end
 
-    it 'returns the body' do
-      expect(subject.get_token('auth_code')).to eq(faraday_response)
+    context 'unsuccessful fitbit response' do
+      let(:faraday_response) { double('Faraday::Response', status: 404, body: 'unsuccessful response') }
+
+      before do
+        allow_any_instance_of(Faraday::Connection).to receive(:post).with(anything).and_return(faraday_response)
+      end
+
+      it 'raises error when when is response is 404' do
+        expect { subject.get_token('123') }.to raise_error(DhpConnectedDevices::Fitbit::TokenExchangeError)
+      end
     end
   end
 
@@ -60,6 +79,44 @@ RSpec.describe DhpConnectedDevices::Fitbit::Client do
   describe '.new' do
     it 'returns an instance of Fitbit client' do
       expect(subject).to be_an_instance_of(described_class)
+    end
+  end
+
+  describe 'get_auth_code' do
+    let(:missing_auth_error) { DhpConnectedDevices::Fitbit::MissingAuthError }
+
+    it 'returns code param as a string when auth code is included in request parameters' do
+      success_params = ActionController::Parameters.new(code: '1234')
+
+      expect(subject.get_auth_code(success_params.permit(:code))).to eq('1234')
+    end
+
+    it 'raises errors when auth code is not included in request parameters' do
+      error_params = ActionController::Parameters.new(error: 'error', error_details: 'details')
+      expect { subject.get_auth_code(error_params) }.to raise_error(missing_auth_error)
+
+      empty_params = ActionController::Parameters.new
+      expect { subject.get_auth_code(empty_params) }.to raise_error(missing_auth_error)
+
+      random_params = ActionController::Parameters.new(random_param: '')
+      expect { subject.get_auth_code(random_params) }.to raise_error(missing_auth_error)
+    end
+  end
+
+  describe 'revoke_token' do
+    let(:revocation_response_200) { double('Faraday::Response', status: 200) }
+    let(:revocation_response_400) { double('Faraday::Response', status: 400, body: 'unsuccessful response') }
+
+    token = { 'access_token': 'access_token_value' }
+
+    it 'returns true is token was successfully revoked' do
+      allow_any_instance_of(Faraday::Connection).to receive(:post).with(anything).and_return(revocation_response_200)
+      expect(subject.revoke_token(token).nil?).to eq(true)
+    end
+
+    it 'returns TokenRevocationError when fitbit returns 400' do
+      allow_any_instance_of(Faraday::Connection).to receive(:post).with(anything).and_return(revocation_response_400)
+      expect { subject.revoke_token(token) }.to raise_error(DhpConnectedDevices::Fitbit::TokenRevocationError)
     end
   end
 end

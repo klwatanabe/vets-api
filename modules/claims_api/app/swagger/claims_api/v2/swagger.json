@@ -3,7 +3,7 @@
   "info": {
     "title": "Benefits Claims",
     "version": "v2",
-    "description": "## Background\n\nThe Benefits Claims API Version 2 offers internal consumers the ability to retrieve existing claim information, including status, by claim ID. Additional functionality will be added over time. \n\nYou should use the [Benefits Claims API Version 1](https://developer.va.gov/explore/benefits/docs/claims?version=current) if: \n\n-   You are not an internal consumer, and/or\n-   You want automatic establishment of disability compensation claims in Veterans Benefits Management System (VBMS) or power of attorney (POA)\n    \n## Technical Overview\n\nThis API accepts a payload of requests and responses with the payload identifying the claim and Veteran. Responses provide the submission’s processing status. Responses also provide a unique ID which can be used with the appropriate GET endpoint to return detailed, end-to-end claims status tracking. \n\nEnd-to-end claims tracking provides the status of claims as they move through the submission process, but does not return whether the claim was approved or denied. \n\n### Claim statuses\n\nWhen the claim is successfully submitted to Lighthouse, the status is Pending. Other statuses this API returns align with the [VA.gov claim status descriptions](https://www.va.gov/resources/what-your-claim-status-means/), which are: \n\n-   Claim received\n-   Initial review\n-   Evidence gathering, review, and decision\n-   Preparation for notification\n-   Complete\n\n### Finding a Veteran's unique VA ID\n\nThis API uses a unique Veteran identifier to identify the subject of each API request. This Veteran identifier can be retrieved by passing the Veteran’s first name, last name, DOB, and SSN to the ‘/veteran-id’ endpoint. This identifier should then be used as the Veteran ID parameter in request URLs.\n\nNote: though Veteran identifiers are typically static, they may change over time. If a specific Veteran ID suddenly responds with a ‘404 not found’ error, the identifier may have changed. It’s a good idea to periodically check the identifier for each Veteran.\n\n### Authentication and authorization\n\nTo make an API request, use our [client credentials grant](https://developer.va.gov/explore/authorization/docs/client-credentials?api=claims) to receive an [OAuth token](https://oauth.net/2/). \n\n### Test data for sandbox environment use\n\nWe use mock [test data in the sandbox environment](https://github.com/department-of-veterans-affairs/vets-api-clients/blob/master/test_accounts.md). Sandbox test data and test users for the Benefits Claims API are valid for all versions of the API.\n"
+    "description": "## Background\n\nThe Benefits Claims API Version 2 offers internal consumers the ability to retrieve existing claim information, including status, by claim ID. Additional functionality will be added over time. \n\nYou should use the [Benefits Claims API Version 1](https://developer.va.gov/explore/benefits/docs/claims?version=current) if: \n\n-   You are not an internal consumer, and/or\n-   You want automatic establishment of disability compensation claims in Veterans Benefits Management System (VBMS) or power of attorney (POA)\n    \n## Technical Overview\n\nThis API accepts a payload of requests and responses with the payload identifying the claim and Veteran. Responses provide the submission’s processing status. Responses also provide a unique ID which can be used with the appropriate GET endpoint to return detailed, end-to-end claims status tracking. \n\nEnd-to-end claims tracking provides the status of claims as they move through the submission process, but does not return whether the claim was approved or denied. \n\n### Claim statuses\n\nWhen the claim is successfully submitted to Lighthouse, the status is Pending. If the submission runs into any upstream errors, the status is Errored. Other statuses this API returns align with the [VA.gov](http://va.gov/) [claim status descriptions](https://www.va.gov/resources/what-your-claim-status-means/), which are: \n\n-   Claim received\n-   Initial review\n-   Evidence gathering, review, and decision\n-   Preparation for notification\n-   Complete\n\n### Finding a Veteran's unique VA ID\n\nThis API uses a unique Veteran identifier to identify the subject of each API request. This Veteran identifier can be retrieved by passing the Veteran’s first name, last name, DOB, and SSN to the ‘/veteran-id’ endpoint. This identifier should then be used as the Veteran ID parameter in request URLs.\n\nNote: though Veteran identifiers are typically static, they may change over time. If a specific Veteran ID suddenly responds with a ‘404 not found’ error, the identifier may have changed. It’s a good idea to periodically check the identifier for each Veteran.\n\n### Authentication and authorization\n\nTo make an API request, use our [client credentials grant](https://developer.va.gov/explore/authorization/docs/client-credentials?api=claims) to receive an [OAuth token](https://oauth.net/2/). \n\n### Test data for sandbox environment use\n\nWe use mock [test data in the sandbox environment](https://github.com/department-of-veterans-affairs/vets-api-clients/blob/master/test_accounts.md). Sandbox test data and test users for the Benefits Claims API are valid for all versions of the API.\n"
   },
   "tags": [
     {
@@ -405,14 +405,16 @@
                 "example": [
                   {
                     "5103WaiverSubmitted": false,
+                    "claimDate": "05/02/17",
                     "claimId": "555555555",
                     "claimType": "Compensation",
-                    "dateFiled": "05/02/17",
+                    "closeDate": null,
                     "decisionLetterSent": false,
                     "developmentLetterSent": false,
                     "documentsNeeded": false,
+                    "endProductCode": "404",
                     "lighthouseId": null,
-                    "status": "Complete"
+                    "status": "COMPLETE"
                   }
                 ],
                 "schema": {
@@ -430,18 +432,25 @@
                       "claimType": {
                         "type": "string",
                         "description": "Name of claim type",
-                        "example": "Appeals control"
+                        "example": "Compensation"
                       },
-                      "dateFiled": {
-                        "type": "string",
+                      "claimDate": {
+                        "type": [
+                          "string",
+                          "null"
+                        ],
                         "format": "date",
                         "description": "Date in YYYY-MM-DD the claim was first filed",
                         "example": "2018-06-04"
                       },
-                      "documentsNeeded": {
-                        "type": "boolean",
-                        "description": "If true, the claim requires additional documents to be submitted",
-                        "example": "false"
+                      "closeDate": {
+                        "type": [
+                          "string",
+                          "null"
+                        ],
+                        "format": "date",
+                        "description": "Date claim was closed",
+                        "example": "2019-09-04"
                       },
                       "developmentLetterSent": {
                         "type": "boolean",
@@ -453,6 +462,15 @@
                         "description": "If true, a decision letter has been sent to the claimant regarding a benefit claim",
                         "example": "false"
                       },
+                      "documentsNeeded": {
+                        "type": "boolean",
+                        "description": "If true, the claim requires additional documents to be submitted",
+                        "example": "false"
+                      },
+                      "endProductCode": {
+                        "type": "string",
+                        "description": "End product code of claim"
+                      },
                       "lighthouseId": {
                         "type": "string",
                         "nullable": true,
@@ -462,7 +480,15 @@
                       "status": {
                         "type": "string",
                         "description": "Status of claim",
-                        "example": "Complete"
+                        "enum": [
+                          "PENDING",
+                          "CLAIM_RECEIVED",
+                          "INITIAL_REVIEW",
+                          "EVIDENCE_GATHERING_REVIEW_DECISION",
+                          "PREPARATION_FOR_NOTIFICATION",
+                          "COMPLETE",
+                          "ERRORED"
+                        ]
                       },
                       "5103WaiverSubmitted": {
                         "type": "boolean",
@@ -640,8 +666,10 @@
                 "example": {
                   "5103WaiverSubmitted": false,
                   "benefitClaimTypeCode": "400PREDSCHRG",
+                  "claimDate": "05/02/17",
                   "claimId": "555555555",
                   "claimType": "Compensation",
+                  "closeDate": null,
                   "contentionList": [
                     "abnormal heart (New)",
                     " abscess kidney (New)",
@@ -652,17 +680,45 @@
                     " groin condition (New)",
                     " metritis (New)"
                   ],
-                  "dateFiled": "05/02/17",
                   "decisionLetterSent": false,
                   "developmentLetterSent": false,
                   "documentsNeeded": false,
                   "endProductCode": "404",
+                  "errors": [
+
+                  ],
+                  "jurisdiction": "National Work Queue",
                   "lighthouseId": null,
-                  "status": "Complete",
+                  "maxEstClaimDate": null,
+                  "minEstClaimDate": null,
+                  "status": "COMPLETE",
                   "submitterApplicationCode": "EBN",
                   "submitterRoleCode": "VET",
                   "supportingDocuments": [
-
+                    {
+                      "documentId": "{54EF0C16-A9E7-4C3F-B876-B2C7BEC1F834}",
+                      "documentTypeLabel": "Medical",
+                      "originalFileName": null,
+                      "trackedItemId": null,
+                      "uploadDate": null
+                    }
+                  ],
+                  "tempJurisdiction": null,
+                  "trackedItems": [
+                    {
+                      "closedDate": "2022-02-03T12:44:36-06:00",
+                      "description": "MG-not a recognized condition",
+                      "suspensionDate": "2022-03-06T00:00:00-06:00",
+                      "requestedDate": "2022-02-04T00:00:00-06:00",
+                      "trackedItemId": 325525
+                    },
+                    {
+                      "closedDate": "2022-02-03T12:44:36-06:00",
+                      "description": "Line of Duty determination from claimant",
+                      "suspensionDate": "2022-03-06T00:00:00-06:00",
+                      "requestedDate": "2022-02-04T00:00:00-06:00",
+                      "trackedItemId": 325524
+                    }
                   ]
                 },
                 "schema": {
@@ -683,7 +739,7 @@
                     "claimType": {
                       "type": "string",
                       "description": "Name of claim type",
-                      "example": "Appeals Control"
+                      "example": "Compensation"
                     },
                     "contentionList": {
                       "type": "array",
@@ -696,10 +752,22 @@
                         "abscess kidney (New)"
                       ]
                     },
-                    "dateFiled": {
-                      "type": "string",
+                    "claimDate": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
                       "description": "The date a claim was filed",
                       "example": "5/17/20"
+                    },
+                    "closeDate": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "format": "date",
+                      "description": "Date claim was closed",
+                      "example": "2019-09-04"
                     },
                     "decisionLetterSent": {
                       "type": "boolean",
@@ -718,16 +786,62 @@
                       "description": "End product code of claim",
                       "example": "930"
                     },
+                    "errors": {
+                      "type": "array",
+                      "description": "Error details if claim is in an errored state.",
+                      "items": {
+                        "properties": {
+                          "detail": {
+                            "type": "string",
+                            "example": "Something happened"
+                          },
+                          "source": {
+                            "type": "string",
+                            "example": "some/error/path"
+                          }
+                        }
+                      }
+                    },
+                    "jurisdiction": {
+                      "type": "string",
+                      "description": "Jurisdiction of claim"
+                    },
                     "lighthouseId": {
                       "type": "string",
                       "nullable": true,
                       "description": "Claim ID in Lighthouse",
                       "example": "600131328"
                     },
+                    "minEstClaimDate": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "format": "date",
+                      "description": "Minimum Estimated Claim Completion Date",
+                      "example": "2019-06-04"
+                    },
+                    "maxEstClaimDate": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "format": "date",
+                      "description": "Maximum Estimated Claim Completion Date",
+                      "example": "2019-09-04"
+                    },
                     "status": {
                       "type": "string",
                       "description": "Status of claim",
-                      "example": "Complete"
+                      "enum": [
+                        "PENDING",
+                        "CLAIM_RECEIVED",
+                        "INITIAL_REVIEW",
+                        "EVIDENCE_GATHERING_REVIEW_DECISION",
+                        "PREPARATION_FOR_NOTIFICATION",
+                        "COMPLETE",
+                        "ERRORED"
+                      ]
                     },
                     "submitterApplicationCode": {
                       "type": "string",
@@ -744,22 +858,72 @@
                       "description": "Information regarding any supported documents attached to a claim",
                       "items": {
                         "properties": {
-                          "id": {
+                          "documentId": {
                             "type": "string",
                             "description": "Unique identifier of document"
                           },
-                          "md5": {
+                          "documentTypeLabel": {
                             "type": "string",
-                            "description": "Hashed representation of document"
+                            "nullable": true
                           },
-                          "filename": {
+                          "originalFileName": {
                             "type": "string",
-                            "description": "Name of document"
+                            "description": "Name of document",
+                            "nullable": true
                           },
-                          "uploadedAt": {
+                          "trackedItemId": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "uploadDate": {
+                            "type": "date",
+                            "description": "Date and time document was uploaded",
+                            "nullable": true
+                          }
+                        }
+                      }
+                    },
+                    "tempJurisdiction": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "description": "Temporary jurisdiction of claim"
+                    },
+                    "trackedItems": {
+                      "type": "array",
+                      "description": "",
+                      "items": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "properties": {
+                          "closedDate": {
                             "type": "string",
                             "format": "date",
-                            "description": "Date and time document was uploaded"
+                            "description": "Date the tracked item was closed",
+                            "example": "2022-01-01T00:00:00-04:00"
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Description of the tracked item",
+                            "example": "Buddy mentioned - No complete address"
+                          },
+                          "suspensionDate": {
+                            "type": "string",
+                            "format": "date",
+                            "description": "Suspension date on the tracked item",
+                            "example": "2022-01-01T00:00:00-04:00"
+                          },
+                          "requestedDate": {
+                            "type": "string",
+                            "format": "date",
+                            "description": "Date the tracked item was requested",
+                            "example": "2022-01-01T00:00:00-04:00"
+                          },
+                          "trackedItemId": {
+                            "type": "integer",
+                            "description": "ID of the tracked item",
+                            "example": 293454
                           }
                         }
                       }

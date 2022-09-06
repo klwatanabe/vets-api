@@ -286,6 +286,13 @@ class User < Common::RedisStore
     mpi.add_person_implicit_search
   end
 
+  def mpi_update_profile
+    return unless loa3?
+
+    invalidate_mpi_cache
+    mpi.update_profile
+  end
+
   def set_mhv_ids(mhv_id)
     mpi_profile.mhv_ids = [mhv_id] + mhv_ids
     mpi_profile.active_mhv_ids = [mhv_id] + active_mhv_ids
@@ -504,7 +511,7 @@ class User < Common::RedisStore
   # fall back to idme
   def get_user_verification
     case identity_sign_in&.dig(:service_name)
-    when SAML::User::MHV_MAPPED_CSID
+    when SAML::User::MHV_ORIGINAL_CSID
       return UserVerification.find_by(mhv_uuid: mhv_correlation_id) if mhv_correlation_id
     when SAML::User::DSLOGON_CSID
       return UserVerification.find_by(dslogon_uuid: identity.edipi) if identity.edipi

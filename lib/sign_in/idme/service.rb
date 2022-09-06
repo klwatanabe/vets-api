@@ -6,7 +6,7 @@ require 'sign_in/idme/errors'
 module SignIn
   module Idme
     class Service < Common::Client::Base
-      configuration SignIn::Idme::Configuration
+      configuration Configuration
 
       attr_accessor :type
 
@@ -46,7 +46,7 @@ module SignIn
         )
         response.body
       rescue Common::Client::Errors::ClientError => e
-        raise e, 'Cannot perform Token request'
+        raise e, '[SignIn][Idme][Service] Cannot perform Token request'
       end
 
       def user_info(token)
@@ -54,7 +54,7 @@ module SignIn
         decrypted_jwe = jwe_decrypt(JSON.parse(response.body))
         jwt_decode(decrypted_jwe)
       rescue Common::Client::Errors::ClientError => e
-        raise e, 'Cannot perform UserInfo request'
+        raise e, '[SignIn][Idme][Service] Cannot perform UserInfo request'
       end
 
       private
@@ -66,16 +66,12 @@ module SignIn
           uuid: user_info.sub,
           idme_uuid: user_info.sub,
           loa: { current: loa_current, highest: loa_highest },
-          sign_in: { service_name: get_service_name, auth_broker: SignIn::Constants::Auth::BROKER_CODE,
+          sign_in: { service_name: type, auth_broker: Constants::Auth::BROKER_CODE,
                      client_id: client_id },
           csp_email: user_info.email,
           multifactor: user_info.multifactor,
           authn_context: get_authn_context(credential_level.current_ial)
         }
-      end
-
-      def get_service_name
-        type == 'mhv' ? 'myhealthevet' : type
       end
 
       def get_authn_context(current_ial)
@@ -112,7 +108,8 @@ module SignIn
       def mhv_attributes(user_info)
         {
           mhv_correlation_id: user_info.mhv_uuid,
-          mhv_icn: user_info.mhv_icn
+          mhv_icn: user_info.mhv_icn,
+          mhv_assurance: user_info.mhv_assurance
         }
       end
 
@@ -134,7 +131,7 @@ module SignIn
       def jwe_decrypt(encrypted_jwe)
         JWE.decrypt(encrypted_jwe, config.ssl_key)
       rescue JWE::DecodeError
-        raise Errors::JWEDecodeError, 'JWE is malformed'
+        raise Errors::JWEDecodeError, '[SignIn][Idme][Service] JWE is malformed'
       end
 
       def jwt_decode(encoded_jwt)
@@ -150,11 +147,11 @@ module SignIn
         )&.first
         OpenStruct.new(decoded_jwt)
       rescue JWT::VerificationError
-        raise Errors::JWTVerificationError, 'JWT body does not match signature'
+        raise Errors::JWTVerificationError, '[SignIn][Idme][Service] JWT body does not match signature'
       rescue JWT::ExpiredSignature
-        raise Errors::JWTExpiredError, 'JWT has expired'
+        raise Errors::JWTExpiredError, '[SignIn][Idme][Service] JWT has expired'
       rescue JWT::DecodeError
-        raise Errors::JWTDecodeError, 'JWT is malformed'
+        raise Errors::JWTDecodeError, '[SignIn][Idme][Service] JWT is malformed'
       end
 
       def auth_url

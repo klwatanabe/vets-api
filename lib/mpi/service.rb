@@ -12,6 +12,7 @@ require 'mpi/messages/add_person_implicit_search_message'
 require 'mpi/messages/find_profile_message'
 require 'mpi/messages/find_profile_message_identifier'
 require 'mpi/messages/find_profile_message_edipi'
+require 'mpi/messages/update_profile_message'
 require 'mpi/responses/add_person_response'
 require 'mpi/responses/find_profile_response'
 require 'mpi/constants'
@@ -50,7 +51,7 @@ module MPI
       mvi_add_exception_response_for(MPI::Constants::CONNECTION_FAILED, e)
     rescue MPI::Errors::Base => e
       key = get_mvi_error_key(e)
-      mvi_error_handler(user_identity, e, 'add_person_proxy')
+      mvi_error_handler(e, 'add_person_proxy')
       mvi_add_exception_response_for(key, e)
     end
     # rubocop:enable Metrics/MethodLength
@@ -79,7 +80,7 @@ module MPI
       mvi_add_exception_response_for(MPI::Constants::CONNECTION_FAILED, e)
     rescue MPI::Errors::Base => e
       key = get_mvi_error_key(e)
-      mvi_error_handler(user_identity, e, 'add_person_implicit')
+      mvi_error_handler(e, 'add_person_implicit')
       mvi_add_exception_response_for(key, e)
     end
     # rubocop:enable Metrics/MethodLength
@@ -114,12 +115,44 @@ module MPI
       log_message_to_sentry("MVI find_profile error: #{e.message}", :warn)
       mvi_profile_exception_response_for(MPI::Constants::CONNECTION_FAILED, e)
     rescue MPI::Errors::Base => e
-      mvi_error_handler(user_identity, e, 'find_profile', profile_message)
+      mvi_error_handler(e, 'find_profile', profile_message)
       if e.is_a?(MPI::Errors::RecordNotFound)
         mvi_profile_exception_response_for(MPI::Constants::NOT_FOUND, e, type: 'not_found')
       else
         mvi_profile_exception_response_for(MPI::Constants::ERROR, e)
       end
+    end
+    # rubocop:enable Metrics/MethodLength
+
+    # rubocop:disable Metrics/MethodLength
+    def update_profile(user_identity)
+      with_monitoring do
+        measure_info(user_identity) do
+          raw_response = perform(
+            :post, '',
+            create_update_profile_message(user_identity),
+            soapaction: MPI::Constants::UPDATE_PROFILE
+          )
+          MPI::Responses::AddPersonResponse.with_parsed_response(raw_response)
+        end
+      end
+    rescue Breakers::OutageException => e
+      Raven.extra_context(breakers_error_message: e.message)
+      log_message_to_sentry('MVI update_profile connection failed.', :warn)
+      mvi_add_exception_response_for(MPI::Constants::OUTAGE_EXCEPTION, e)
+    rescue Faraday::ConnectionFailed => e
+      log_message_to_sentry("MVI update_profile connection failed: #{e.message}", :warn)
+      mvi_add_exception_response_for(MPI::Constants::CONNECTION_FAILED, e)
+    rescue Common::Client::Errors::ClientError, Common::Exceptions::GatewayTimeout => e
+      log_message_to_sentry("MVI update_profile error: #{e.message}", :warn)
+      mvi_add_exception_response_for(MPI::Constants::CONNECTION_FAILED, e)
+    rescue Errors::ArgumentError => e
+      log_message_to_sentry("MVI update_profile request error: #{e.message}", :warn)
+      nil
+    rescue MPI::Errors::Base => e
+      key = get_mvi_error_key(e)
+      mvi_error_handler(e, 'update_profile')
+      mvi_add_exception_response_for(key, e)
     end
     # rubocop:enable Metrics/MethodLength
 
@@ -166,21 +199,18 @@ module MPI
       )
     end
 
-    def mvi_error_handler(user_identity, error, source = '', request = '')
+    def mvi_error_handler(error, source = '', request = '')
+      context = { error: error.try(:body) }
       case error
       when MPI::Errors::DuplicateRecords
         log_exception_to_sentry(error, nil, nil, 'warn')
       when MPI::Errors::RecordNotFound
         Rails.logger.info('MVI Record Not Found')
       when MPI::Errors::InvalidRequestError
-        # NOTE: ICN based lookups do not return RecordNotFound. They return InvalidRequestError
-        if user_identity.mhv_icn.present?
-          log_exception_to_sentry(error, {}, { message: 'Possible RecordNotFound', source: source })
-        else
-          log_exception_to_sentry(error, { request: request }, { message: 'MVI Invalid Request', source: source })
-        end
+        context[:request] = request
+        log_exception_to_sentry(error, context, { message: 'MVI Invalid Request', source: source })
       when MPI::Errors::FailedRequestError
-        log_exception_to_sentry(error)
+        log_exception_to_sentry(error, context)
       end
     end
 
@@ -206,6 +236,19 @@ module MPI
       raise Common::Exceptions::ValidationErrors, user_identity unless user_identity.valid?
 
       MPI::Messages::AddPersonProxyAddMessage.new(user_identity).to_xml if user_identity.icn_with_aaid.present?
+    end
+
+    def create_update_profile_message(user_identity)
+      raise Common::Exceptions::ValidationErrors, user_identity unless user_identity.valid?
+
+      MPI::Messages::UpdateProfileMessage.new(last_name: user_identity.last_name,
+                                              ssn: user_identity.ssn,
+                                              birth_date: user_identity.birth_date,
+                                              icn: user_identity.icn,
+                                              idme_uuid: user_identity.idme_uuid,
+                                              logingov_uuid: user_identity.logingov_uuid,
+                                              edipi: user_identity.edipi,
+                                              first_name: user_identity.first_name).to_xml
     end
 
     def create_profile_message(user_identity,

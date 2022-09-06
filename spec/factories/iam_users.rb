@@ -194,17 +194,21 @@ FactoryBot.define do
       end
     end
 
-    trait :staging_facility_ids do
+    trait :custom_facility_ids do
       callback(:after_build, :after_stub, :after_create) do |user, _t|
         user_identity = create(:iam_user_identity)
         user.instance_variable_set(:@identity, user_identity)
       end
 
-      after(:build) do
+      transient do
+        facility_ids { [] }
+      end
+
+      after(:build) do |_user, evaluator|
         stub_mpi(
           build(
             :mvi_profile,
-            vha_facility_ids: %w[983 984]
+            vha_facility_ids: evaluator.facility_ids
           )
         )
       end
@@ -224,7 +228,7 @@ FactoryBot.define do
       callback(:after_build, :after_stub, :after_create) do |user, _t|
         user_identity = create(:iam_user_identity,
                                mhv_account_type: 'Premium',
-                               sign_in: { service_name: 'myhealthevet', auth_broker: SAML::URLService::BROKER_CODE })
+                               sign_in: { service_name: 'mhv', auth_broker: SAML::URLService::BROKER_CODE })
         user.instance_variable_set(:@identity, user_identity)
         user.instance_variable_set(:@mhv_account_type, 'Premium')
       end

@@ -6,6 +6,7 @@ class AppealsApi::V2::DecisionReviews::SupplementalClaimsController < AppealsApi
   include AppealsApi::JsonFormatValidation
   include AppealsApi::StatusSimulation
   include AppealsApi::CharacterUtilities
+  include AppealsApi::MPIVeteran
 
   skip_before_action :authenticate
   before_action :validate_json_format, if: -> { request.post? }
@@ -20,6 +21,13 @@ class AppealsApi::V2::DecisionReviews::SupplementalClaimsController < AppealsApi
   )['definitions']['scCreateParameters']['properties'].keys
   SCHEMA_ERROR_TYPE = Common::Exceptions::DetailedSchemaErrors
 
+  def index
+    veteran_scs = AppealsApi::SupplementalClaim.where(veteran_icn: target_veteran.mpi_icn)
+                                               .order(created_at: :desc)
+    options = { params: { is_collection: true } }
+    render json: AppealsApi::SupplementalClaimSerializer.new(veteran_scs, options).serializable_hash
+  end
+
   def create
     sc = AppealsApi::SupplementalClaim.new(
       auth_headers: request_headers,
@@ -33,7 +41,9 @@ class AppealsApi::V2::DecisionReviews::SupplementalClaimsController < AppealsApi
 
     sc.save
 
-    AppealsApi::PdfSubmitJob.perform_async(sc.id, 'AppealsApi::SupplementalClaim', 'V2')
+    pdf_version = 'v2'
+    AppealsApi::PdfSubmitJob.perform_async(sc.id, 'AppealsApi::SupplementalClaim', pdf_version)
+    AppealsApi::AddIcnUpdater.perform_async(sc.id, 'AppealsApi::SupplementalClaim')
 
     render json: AppealsApi::SupplementalClaimSerializer.new(sc).serializable_hash
   end

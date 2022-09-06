@@ -68,40 +68,25 @@ Rails.application.reloader.to_prepare do
   end
 
   # Sign in Service
+  StatsD.increment(SignIn::Constants::Statsd::STATSD_SIS_TOKEN_SUCCESS, 0)
+  StatsD.increment(SignIn::Constants::Statsd::STATSD_SIS_TOKEN_FAILURE, 0)
+  StatsD.increment(SignIn::Constants::Statsd::STATSD_SIS_REFRESH_SUCCESS, 0)
+  StatsD.increment(SignIn::Constants::Statsd::STATSD_SIS_REFRESH_FAILURE, 0)
+  StatsD.increment(SignIn::Constants::Statsd::STATSD_SIS_REVOKE_SUCCESS, 0)
+  StatsD.increment(SignIn::Constants::Statsd::STATSD_SIS_REVOKE_FAILURE, 0)
+  StatsD.increment(SignIn::Constants::Statsd::STATSD_SIS_REVOKE_ALL_SESSIONS_SUCCESS, 0)
+  StatsD.increment(SignIn::Constants::Statsd::STATSD_SIS_REVOKE_ALL_SESSIONS_FAILURE, 0)
+  StatsD.increment(SignIn::Constants::Statsd::STATSD_SIS_LOGOUT_FAILURE, 0)
+  StatsD.increment(SignIn::Constants::Statsd::STATSD_SIS_LOGOUT_SUCCESS, 0)
+  StatsD.increment(SignIn::Constants::Statsd::STATSD_SIS_AUTHORIZE_FAILURE, 0)
+  StatsD.increment(SignIn::Constants::Statsd::STATSD_SIS_CALLBACK_FAILURE, 0)
   SignIn::Constants::ClientConfig::CLIENT_IDS.each do |client_id|
     SignIn::Constants::Auth::REDIRECT_URLS.each do |type|
-      acrs = client_id == 'logingov' ? %w[ial1 ial2 min] : %w[loa1 loa3 min]
-      acrs.each do |acr|
-        StatsD.increment(SignIn::Constants::Statsd::STATSD_SIS_AUTHORIZE_ATTEMPT_SUCCESS, 0,
-                         tags: ["type:#{type}", "client_id:#{client_id}", "acr:#{acr}"])
-        StatsD.increment(SignIn::Constants::Statsd::STATSD_SIS_AUTHORIZE_ATTEMPT_FAILURE, 0,
+      SignIn::Constants::Auth::ACR_VALUES.each do |acr|
+        StatsD.increment(SignIn::Constants::Statsd::STATSD_SIS_AUTHORIZE_SUCCESS, 0,
                          tags: ["type:#{type}", "client_id:#{client_id}", "acr:#{acr}"])
         StatsD.increment(SignIn::Constants::Statsd::STATSD_SIS_CALLBACK_SUCCESS, 0,
                          tags: ["type:#{type}", "client_id:#{client_id}", "acr:#{acr}"])
-        StatsD.increment(SignIn::Constants::Statsd::STATSD_SIS_CALLBACK_FAILURE, 0,
-                         tags: ["type:#{type}", "client_id:#{client_id}", "acr:#{acr}"])
-      end
-      %w[1 3].each do |loa|
-        StatsD.increment(SignIn::Constants::Statsd::STATSD_SIS_TOKEN_SUCCESS, 0,
-                         tags: ["type:#{type}", "client_id:#{client_id}", "loa:#{loa}"])
-        StatsD.increment(SignIn::Constants::Statsd::STATSD_SIS_TOKEN_FAILURE, 0,
-                         tags: ["type:#{type}", "client_id:#{client_id}", "loa:#{loa}"])
-        StatsD.increment(SignIn::Constants::Statsd::STATSD_SIS_REFRESH_SUCCESS, 0,
-                         tags: ["type:#{type}", "client_id:#{client_id}", "loa:#{loa}"])
-        StatsD.increment(SignIn::Constants::Statsd::STATSD_SIS_REFRESH_FAILURE, 0,
-                         tags: ["type:#{type}", "client_id:#{client_id}", "loa:#{loa}"])
-        StatsD.increment(SignIn::Constants::Statsd::STATSD_SIS_REVOKE_SUCCESS, 0,
-                         tags: ["type:#{type}", "client_id:#{client_id}", "loa:#{loa}"])
-        StatsD.increment(SignIn::Constants::Statsd::STATSD_SIS_REVOKE_FAILURE, 0,
-                         tags: ["type:#{type}", "client_id:#{client_id}", "loa:#{loa}"])
-        StatsD.increment(SignIn::Constants::Statsd::STATSD_SIS_INTROSPECT_SUCCESS, 0,
-                         tags: ["type:#{type}", "client_id:#{client_id}", "loa:#{loa}"])
-        StatsD.increment(SignIn::Constants::Statsd::STATSD_SIS_INTROSPECT_FAILURE, 0,
-                         tags: ["type:#{type}", "client_id:#{client_id}", "loa:#{loa}"])
-        StatsD.increment(SignIn::Constants::Statsd::STATSD_SIS_REVOKE_ALL_SESSIONS_SUCCESS, 0,
-                         tags: ["type:#{type}", "client_id:#{client_id}", "loa:#{loa}"])
-        StatsD.increment(SignIn::Constants::Statsd::STATSD_SIS_REVOKE_ALL_SESSIONS_FAILURE, 0,
-                         tags: ["type:#{type}", "client_id:#{client_id}", "loa:#{loa}"])
       end
     end
   end
@@ -154,9 +139,13 @@ Rails.application.reloader.to_prepare do
     end
   end
 
-  # init  mvi
+  # init  mpi
   StatsD.increment("#{MPI::Service::STATSD_KEY_PREFIX}.find_profile.total", 0)
   StatsD.increment("#{MPI::Service::STATSD_KEY_PREFIX}.find_profile.fail", 0)
+  StatsD.increment("#{MPI::Service::STATSD_KEY_PREFIX}.add_person_proxy.total", 0)
+  StatsD.increment("#{MPI::Service::STATSD_KEY_PREFIX}.add_person_proxy.fail", 0)
+  StatsD.increment("#{MPI::Service::STATSD_KEY_PREFIX}.add_person_implicit_search.total", 0)
+  StatsD.increment("#{MPI::Service::STATSD_KEY_PREFIX}.add_person_implicit_search.fail", 0)
 
   # init Vet360
   VAProfile::Exceptions::Parser.instance.known_keys.each do |key|
@@ -201,6 +190,10 @@ Rails.application.reloader.to_prepare do
   StatsD.increment(Form1010cg::Auditor.metrics.submission.caregivers.primary_two_secondary, 0)
   StatsD.increment(Form1010cg::Auditor.metrics.submission.caregivers.no_primary_one_secondary, 0)
   StatsD.increment(Form1010cg::Auditor.metrics.submission.caregivers.no_primary_two_secondary, 0)
+
+  %w[record_parse_error failed_no_retries_left failed_ten_retries].each do |key|
+    StatsD.increment("#{Form1010cg::SubmissionJob::STATSD_KEY_PREFIX}#{key}", 0)
+  end
 
   # init form 526 - disability compenstation
   StatsD.increment("#{EVSS::Service::STATSD_KEY_PREFIX}.submit_form526.total", 0)
@@ -323,9 +316,13 @@ Rails.application.reloader.to_prepare do
                                                     'iam_ssoe_oauth.create_user_session'
   IAMSSOeOAuth::SessionManager.statsd_measure :create_user_session,
                                               'iam_ssoe_oauth.create_user_session.measure'
+
   StatsD.increment('iam_ssoe_oauth.create_user_session.success', 0)
   StatsD.increment('iam_ssoe_oauth.create_user_session.failure', 0)
   StatsD.increment('iam_ssoe_oauth.inactive_session', 0)
+  StatsD.increment('iam_ssoe_oauth.user_sign_in', 0)
+  StatsD.increment('iam_ssoe_oauth.call_to_introspect.total', 0)
+  StatsD.increment('iam_ssoe_oauth.user_session_creation_done', 0)
 
   %w[IDME MHV DSL LOGINGOV].each do |cred|
     StatsD.increment(
@@ -334,6 +331,8 @@ Rails.application.reloader.to_prepare do
     StatsD.increment(
       IAMSSOeOAuth::SessionManager::STATSD_OAUTH_SESSION_KEY, 0, tags: ['type:refresh', "credential:#{cred}"]
     )
+    StatsD.increment('iam_ssoe_oauth.created_user_profile', 0, tags: ["credential:#{cred}"])
+    StatsD.increment('iam_ssoe_oauth.call_to_introspect.success', 0, tags: ["credential:#{cred}"])
   end
 
   # init VEText Push Notifications

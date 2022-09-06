@@ -5,7 +5,7 @@ require 'sign_in/logingov/configuration'
 module SignIn
   module Logingov
     class Service < Common::Client::Base
-      configuration SignIn::Logingov::Configuration
+      configuration Configuration
 
       SCOPE = 'profile profile:verified_at address email social_security_number openid'
 
@@ -40,14 +40,14 @@ module SignIn
         )
         response.body
       rescue Common::Client::Errors::ClientError => e
-        raise e
+        raise e, '[SignIn][Logingov][Service] Cannot perform Token request'
       end
 
       def user_info(token)
         response = perform(:get, config.userinfo_path, nil, { 'Authorization' => "Bearer #{token}" })
         response.body
       rescue Common::Client::Errors::ClientError => e
-        raise e
+        raise e, '[SignIn][Logingov][Service] Cannot perform UserInfo request'
       end
 
       def normalized_attributes(user_info, credential_level, client_id)
@@ -63,7 +63,7 @@ module SignIn
           last_name: user_info[:family_name],
           csp_email: user_info[:email],
           multifactor: true,
-          sign_in: { service_name: config.service_name, auth_broker: SignIn::Constants::Auth::BROKER_CODE,
+          sign_in: { service_name: config.service_name, auth_broker: Constants::Auth::BROKER_CODE,
                      client_id: client_id },
           authn_context: get_authn_context(credential_level.current_ial)
         }
