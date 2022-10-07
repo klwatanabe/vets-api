@@ -916,6 +916,7 @@ flipper:
     - metrowebz@gmail.com
     - micah@adhocteam.us
     - michel.mcdonald@adhocteam.us
+    - michael.chaffee@va.gov # DHP team tech lead
     - michael.chelen@va.gov
     - michael.pelz-sherman@gcio.com
     - michelle.middaugh@adhocteam.us
@@ -1067,6 +1068,10 @@ hqva_mobile:
 # settings va.gov uses related to lighthouse api's
 lighthouse:
   api_key: fake_key
+  benefits_reference_data:
+    url: https://sandbox-api.va.gov
+    path: services/benefits-reference-data
+    version: v1
   veterans_health:
     url: https://sandbox-api.va.gov
     fast_tracker:
