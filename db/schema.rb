@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2022_09_20_211515) do
+ActiveRecord::Schema.define(version: 2022_10_19_135935) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "btree_gin"
@@ -161,6 +161,8 @@ ActiveRecord::Schema.define(version: 2022_09_20_211515) do
     t.datetime "status_update_time"
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
+    t.string "code"
+    t.string "detail"
     t.index ["statusable_type", "statusable_id"], name: "status_update_id_type_index"
   end
 
@@ -275,6 +277,7 @@ ActiveRecord::Schema.define(version: 2022_09_20_211515) do
     t.string "cid"
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
+    t.string "status"
   end
 
   create_table "claims_api_intent_to_files", force: :cascade do |t|
