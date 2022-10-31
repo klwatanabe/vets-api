@@ -31,8 +31,8 @@ module SignIn
                         format: :html)
       end
 
-      def render_logout(id_token:)
-        "#{sign_out_url}?#{sign_out_params(id_token, config.logout_redirect_uri, SecureRandom.hex).to_query}"
+      def render_logout
+        "#{sign_out_url}?#{sign_out_params(config.logout_redirect_uri, SecureRandom.hex).to_query}"
       end
 
       def token(code)
@@ -63,6 +63,7 @@ module SignIn
           birth_date: user_info.birthdate,
           first_name: user_info.given_name,
           last_name: user_info.family_name,
+          address: normalize_address(user_info.address),
           csp_email: user_info.email,
           multifactor: true,
           sign_in: { service_name: config.service_name, auth_broker: Constants::Auth::BROKER_CODE,
@@ -73,6 +74,24 @@ module SignIn
       end
 
       private
+
+      def normalize_address(address)
+        return unless address
+
+        street_array = address[:street_address].split("\n")
+        {
+          street: street_array[0],
+          street2: street_array[1],
+          postal_code: address[:postal_code],
+          state: address[:region],
+          city: address[:locality],
+          country: united_states_country_code
+        }
+      end
+
+      def united_states_country_code
+        'USA'
+      end
 
       def raise_client_error(client_error, function_name)
         status = client_error.status
@@ -101,9 +120,9 @@ module SignIn
         "#{config.base_path}/#{config.logout_path}"
       end
 
-      def sign_out_params(id_token, redirect_uri, state)
+      def sign_out_params(redirect_uri, state)
         {
-          id_token_hint: id_token,
+          client_id: config.client_id,
           post_logout_redirect_uri: redirect_uri,
           state: state
         }

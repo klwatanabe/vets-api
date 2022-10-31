@@ -104,7 +104,7 @@ RSpec.describe DebtManagementCenter::FinancialStatusReportService, type: :servic
             service = described_class.new(user)
             expect(DebtManagementCenter::VANotifyEmailJob).to receive(:perform_async).with(
               user.email.downcase,
-              described_class::CONFIRMATION_TEMPLATE,
+              described_class::VBA_CONFIRMATION_TEMPLATE,
               {
                 'name' => user.first_name,
                 'time' => '48 hours',
@@ -199,7 +199,7 @@ RSpec.describe DebtManagementCenter::FinancialStatusReportService, type: :servic
       service = described_class.new(user)
       expect(DebtManagementCenter::VANotifyEmailJob).to receive(:perform_async).with(
         user.email.downcase,
-        described_class::CONFIRMATION_TEMPLATE,
+        described_class::VHA_CONFIRMATION_TEMPLATE,
         {
           'name' => user.first_name,
           'time' => '48 hours',
@@ -218,9 +218,9 @@ RSpec.describe DebtManagementCenter::FinancialStatusReportService, type: :servic
         'debtType' => 'COPAY'
       }]
       service = described_class.new(user)
-      valid_form_data['personalData']['veteranFullName']['first'] = '^Greg|'
+      valid_form_data['personalData']['veteranFullName']['first'] = "^Gr\neg|"
       parsed_form_string = service.send(:remove_form_delimiters, valid_form_data).to_s
-      expect(['^', '|'].any? { |i| parsed_form_string.include? i }).to be false
+      expect(['^', '|', "\n"].any? { |i| parsed_form_string.include? i }).to be false
     end
 
     it 'calls VBS multiple times for multiple stations' do

@@ -130,6 +130,10 @@ features:
     actor_type: user
     description: Enables travel reimbursement workflow for day-of check-in application.
     enable_in_development: true
+  check_in_experience_browser_monitoring:
+    actor_type: user
+    description: Enables browser monitoring for check-in applications.
+    enable_in_development: false
   ch31_vbms_form_confirmation_email:
     actor_type: user
     description: Enables Ch31 form email submission confirmation after central mail
@@ -373,9 +377,6 @@ features:
     actor_type: user
     description: Enables secure messaging
     enable_in_development: true
-  hlr_v2:
-    actor_type: user
-    description: Enable showing Higher-Level Review v2
   in_progress_form_custom_expiration:
     actor_type: user
     description: Enable/disable custom expiration dates for forms
@@ -462,12 +463,16 @@ features:
       Toggle for the entire pre-entry covid 19 self-screener available at /covid19screener and to be used by visitors
       to VHA facilities in lieu of manual screening with a VHA employee.
       This toggle is owned by Patrick B. and the rest of the CTO Health Products team.
+  profile_email_specify_change:
+    actor_type: user
+    description: >
+      When enabled, if a user changes a phone number, the notification email will specify whether the home or mobile
+      phone was changed.  For an address change, the notification email will specify whether the residential or correspondence 
+      address was changed.
+    enable_in_development: true
   profile_user_claims:
     actor_type: user
     description: When enabled, /v0/user will return user profile claims for accessing service endpoints.
-  profile_get_military_info_from_vaprofile:
-    actor_type: user
-    description: When enabled, the profile page will get military service history from VA Profile instead of eMIS.
   profile_show_military_academy_attendance:
     actor_type: user
     description: When enabled, profile service history will include military academy attendance.
@@ -475,7 +480,7 @@ features:
   profile_hide_direct_deposit_comp_and_pen:
     actor_type: user
     description: Hides disability comp and pen section of the Profile - Direct Deposit page during a service outage
-    enable_in_development: true
+    enable_in_development: false
   profile_notification_settings:
     actor_type: user
     description: Turns on the Notification Settings section of the VA.gov Profile
@@ -545,9 +550,17 @@ features:
     actor_type: user
     description: Enables Slack notifications for MAS-specific disabilities
     enable_in_development: true
+  rrd_mas_all_claims_tracking:
+    actor_type: user
+    description: Enables Slack and other email notifications for all MAS-eligible claims
+    enable_in_development: true
   rrd_mas_notification:
     actor_type: user
     description: Notifies MAS service that a MAS-relevant claim has come through
+    enable_in_development: true
+  rrd_mas_all_claims_notification:
+    actor_type: user
+    description: Notifies MAS service of all MAS-eligible claims that have come through
     enable_in_development: true
   rrd_hypertension_mas_notification:
     actor_type: user
@@ -680,6 +693,10 @@ features:
     actor_type: user
     description: Form 526 subforms for unemployability & connected employment information
     enable_in_development: true
+  supplemental_claim:
+    actor_type: user
+    description: Enable showing Supplemental Claim form 0995
+    enable_in_development: true
   va_global_downtime_notification:
     actor_type: user
     description: Enables global downtime notification- do not use in production
@@ -762,6 +779,10 @@ features:
     actor_type: user
     enable_in_development: true
     description: Toggle for the new appointment List feature
+  va_online_scheduling_acheron_service:
+    actor_type: user
+    enable_in_development: true
+    description: Toggle for the Acheron service changes
   va_view_dependents_access:
     actor_type: user
     description: Allows us to gate the View/ Modify dependents content in a progressive rollout

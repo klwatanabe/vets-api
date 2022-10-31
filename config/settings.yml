@@ -1178,6 +1178,7 @@ vanotify:
       api_key: fake_secret
       template_id:
         fsr_confirmation_email: fake_template_id
+        vha_fsr_confirmation_email: fake_template_id
   mock: false
   links:
     connected_applications: https://www.va.gov/profile/connected-applications
@@ -1305,6 +1306,9 @@ github_cvu:
   private_pem: ~
 
 check_in:
+  travel_reimbursement_api:
+    redis_token_expiry: 3540 # 59 minutes
+    service_name: BTSSS-API
   authentication:
     max_auth_retry_limit: 3
     retry_attempt_expiry: 604800 # 7 Days
@@ -1362,6 +1366,9 @@ rrd:
     recipients:
       - fake_email
   mas_tracking:
+    recipients:
+      - fake_email
+  mas_all_claims_tracking:
     recipients:
       - fake_email
   pact_tracking:
