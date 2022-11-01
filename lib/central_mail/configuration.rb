@@ -2,8 +2,6 @@
 
 module CentralMail
   class Configuration < Common::Client::Configuration::REST
-    self.read_timeout = 55
-
     def base_path
       "https://#{Settings.central_mail.upload.host}/VADocument"
     end
