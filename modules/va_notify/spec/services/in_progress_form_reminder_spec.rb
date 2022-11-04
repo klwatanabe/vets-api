@@ -24,7 +24,7 @@ describe VANotify::InProgressFormReminder, type: :worker do
       veteran_double = double('VaNotify::Veteran')
       allow(veteran_double).to receive(:icn).and_return('icn')
       allow(veteran_double).to receive(:first_name).and_return(nil)
-      allow(VANotify::InProgressFormHelper).to receive(:veteran_data).and_return(veteran_double)
+      allow(VANotify::Veteran).to receive(:new).and_return(veteran_double)
 
       allow(VANotify::IcnJob).to receive(:perform_async)
 
@@ -76,7 +76,7 @@ describe VANotify::InProgressFormReminder, type: :worker do
         veteran_double = double('VaNotify::Veteran')
         allow(veteran_double).to receive(:icn).and_return('icn')
         allow(veteran_double).to receive(:first_name).and_return('first_name')
-        allow(VANotify::InProgressFormHelper).to receive(:veteran_data).and_return(veteran_double)
+        allow(VANotify::Veteran).to receive(:new).and_return(veteran_double)
 
         allow(VANotify::IcnJob).to receive(:perform_async)
         stub_const('VANotify::FindInProgressForms::RELEVANT_FORMS', %w[686C-674 form_2_id form_3_id])
@@ -89,6 +89,8 @@ describe VANotify::InProgressFormReminder, type: :worker do
       end
 
       it 'delegates to VANotify::IcnJob if its the oldest in_progress_form' do
+        Flipper.disable(:in_progress_generic_multiple_template)
+
         user_with_icn = double('VANotify::Veteran', icn: 'icn', first_name: 'first_name')
         allow(VANotify::Veteran).to receive(:new).and_return(user_with_icn)
 
