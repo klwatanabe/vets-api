@@ -4,8 +4,7 @@ class FormProfiles::VA0995 < FormProfiles::DecisionReview
   def metadata
     {
       version: 0,
-      prefill: true,
-      returnUrl: '/veteran-information'
+      prefill: true
     }
   end
 end
