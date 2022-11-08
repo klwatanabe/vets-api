@@ -279,6 +279,7 @@ module Mobile
             APPOINTMENT_TYPES[:va_video_connect_gfe]
 
             location[:name] = appointment_hash.dig(:location, :name)
+            location[:phone] = parse_phone(appointment_hash.dig(:location, :phone, :main))
 
             if telehealth
               address = telehealth.dig(:atlas, :address)
@@ -292,7 +293,6 @@ module Mobile
                   country: address[:country]
                 }
               end
-
               location[:url] = telehealth[:url]
               location[:code] = telehealth.dig(:atlas, :confirmation_code)
             end
