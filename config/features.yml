@@ -353,9 +353,9 @@ features:
     actor_type: user
     description: Form 10182 Notice of Disagreement - Request a board appeal
     enable_in_development: true
-  form686c_confirmation_email:
+  form674_confirmation_email:
     actor_type: user
-    description: Form 686c - Email submission confirmation
+    description: Form 674 - Email submission confirmation
     enable_in_development: true
   fsr_confirmation_email:
     actor_type: user
@@ -510,6 +510,10 @@ features:
     description: "Use VA Forms System Core for forms instead of schema based forms"
     actor_type: user
     enable_in_development: true
+  profile_block_for_fiduciary_deceased_or_incompetent:
+    description: "Blocks profile access when a user has 1 of 3 user criteria, fiduciary, deceased, or incompetent flag"
+    actor_type: user
+    enable_in_development: true
   pw_ehr_cta_drupal_source_of_truth:
     actor_type: user
     description: Enabling Public Websites-managed EHR CTAs to use Drupal EHR data, including for Cerner cutovers
@@ -623,10 +627,6 @@ features:
   show_header_v2:
     action_type: user
     description: Enables the new header
-    enable_in_development: true
-  show_meb_mock_endpoints:
-    actor_type: user
-    description: Allows for frontend to have progressivley enhanced backend endpoints to consume in staging.
     enable_in_development: true
   show_meb_unverified_user_alert:
     actor_type: user
