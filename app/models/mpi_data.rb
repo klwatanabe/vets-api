@@ -170,37 +170,22 @@ class MPIData < Common::RedisStore
   # The status of the MPI Add Person Proxy Add call. An Orchestrated MVI Search needs to be made before an
   # MPI add person proxy addcall is made. The response is recached afterwards so the new ids can be accessed
   # on the next call.
-  #
-  # @return [MPI::Responses::AddPersonResponse] the response returned from MPI Add Person Proxy call
   def add_person_proxy
     search_response = MPI::Service.new.find_profile(user_identity, orch_search: true)
     if search_response.ok?
       @mvi_response = search_response
-      update_user_identity_with_orch_search(search_response.profile)
-      add_response = mpi_service.add_person_proxy(user_identity)
+      add_response = mpi_service.add_person_proxy(last_name: search_response.profile.family_name,
+                                                  ssn: search_response.profile.ssn,
+                                                  birth_date: search_response.profile.birth_date,
+                                                  icn: search_response.profile.icn,
+                                                  edipi: search_response.profile.edipi,
+                                                  search_token: search_response.profile.search_token,
+                                                  first_name: search_response.profile.given_names.first)
       add_ids(add_response) if add_response.ok?
+      add_response
     else
-      add_response = MPI::Responses::AddPersonResponse.with_failed_orch_search(
-        search_response.status, search_response.error
-      )
+      search_response
     end
-    add_response
-  end
-
-  # Make a call for MPI Add Person that implicitly searches for a user with the existing attributes and
-  # either returns an ICN for an existing user, or creates a new MPI record and correlates it to a new ICN
-  #
-  # @return [MPI::Responses::AddPersonResponse] the response returned from MPI Add Person Implicit Search call
-  def add_person_implicit_search
-    mpi_service.add_person_implicit_search(user_identity)
-  end
-
-  # Make a call for MPI Update Profile to revise an existing MPI record. This will add attributes to a correlation
-  # record, not necessarily a main view, which means MPI may prefer its own attributes over the provided ones
-  #
-  # @return [MPI::Responses::UpdateProfileResponse] the response returned from MPI Update Profile call
-  def update_profile
-    mpi_service.update_profile(user_identity)
   end
 
   private
@@ -219,24 +204,10 @@ class MPIData < Common::RedisStore
     end
   end
 
-  def update_user_identity_with_orch_search(search_response_profile)
-    user_identity.icn_with_aaid = search_response_profile.icn_with_aaid
-    user_identity.edipi = search_response_profile.edipi
-    user_identity.search_token = search_response_profile.search_token
-
-    first_name, *middle_name = search_response_profile.given_names
-    user_identity.first_name = first_name
-    user_identity.middle_name = middle_name&.join(' ').presence
-    user_identity.last_name = search_response_profile.family_name
-    user_identity.gender = search_response_profile.gender
-    user_identity.ssn = search_response_profile.ssn
-    user_identity.birth_date = search_response_profile.birth_date
-  end
-
   def add_ids(response)
     # set new ids in the profile and recache the response
-    profile.birls_id = response.mvi_codes[:birls_id].presence
-    profile.participant_id = response.mvi_codes[:participant_id].presence
+    profile.birls_id = response.parsed_codes[:birls_id].presence
+    profile.participant_id = response.parsed_codes[:participant_id].presence
 
     cache(user_identity.uuid, mvi_response) if mvi_response.cache?
   end

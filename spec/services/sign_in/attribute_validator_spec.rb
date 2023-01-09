@@ -73,6 +73,7 @@ RSpec.describe SignIn::AttributeValidator do
         allow_any_instance_of(MPI::Service).to receive(:add_person_implicit_search).and_return(add_person_response)
         allow_any_instance_of(MPI::Service).to receive(:find_profile).and_return(find_profile_response)
         allow_any_instance_of(MPI::Service).to receive(:update_profile).and_return(update_profile_response)
+        allow(Rails.logger).to receive(:info)
       end
 
       shared_examples 'error response' do
@@ -287,10 +288,9 @@ RSpec.describe SignIn::AttributeValidator do
             let(:auto_uplevel) { false }
             let(:update_profile_response) do
               MPI::Responses::AddPersonResponse.new(status: update_status,
-                                                    mvi_codes: { logingov_uuid: logingov_uuid },
-                                                    error: nil)
+                                                    parsed_codes: { logingov_uuid: logingov_uuid })
             end
-            let(:update_status) { 'OK' }
+            let(:update_status) { :ok }
 
             it_behaves_like 'mpi versus credential mismatch'
 
@@ -303,11 +303,11 @@ RSpec.describe SignIn::AttributeValidator do
 
         context 'and mpi record does not exist for user' do
           let(:add_person_response) do
-            MPI::Responses::AddPersonResponse.new(status: status, mvi_codes: mvi_codes, error: nil)
+            MPI::Responses::AddPersonResponse.new(status: status, parsed_codes: parsed_codes, error: nil)
           end
-          let(:status) { 'OK' }
+          let(:status) { :ok }
           let(:icn) { 'some-icn' }
-          let(:mvi_codes) { { icn: icn } }
+          let(:parsed_codes) { { icn: icn } }
 
           before { allow_any_instance_of(SignIn::AttributeValidator).to receive(:mpi_record_exists?).and_return(false) }
 
@@ -319,7 +319,7 @@ RSpec.describe SignIn::AttributeValidator do
           end
 
           context 'and mpi add person call is not successful' do
-            let(:status) { 'NOT-OK' }
+            let(:status) { :server_error }
             let(:expected_error) { SignIn::Errors::MPIUserCreationFailedError }
             let(:expected_error_message) { 'User MPI record cannot be created' }
             let(:expected_error_code) { SignIn::Constants::ErrorCode::GENERIC_EXTERNAL_ISSUE }
@@ -328,7 +328,7 @@ RSpec.describe SignIn::AttributeValidator do
           end
 
           context 'and mpi add person call is successful' do
-            let(:status) { 'OK' }
+            let(:status) { :ok }
 
             it_behaves_like 'mpi attribute validations'
           end
@@ -340,6 +340,7 @@ RSpec.describe SignIn::AttributeValidator do
         let(:mhv_icn) { 'some-icn' }
         let(:idme_uuid) { 'some-idme-uuid' }
         let(:csp_id) { idme_uuid }
+        let(:address) { nil }
         let(:mhv_correlation_id) { 'some-mhv-correlation-id' }
         let(:email) { 'some-email' }
 
@@ -383,11 +384,11 @@ RSpec.describe SignIn::AttributeValidator do
 
           context 'and mpi record exists for user' do
             let(:add_person_response) do
-              MPI::Responses::AddPersonResponse.new(status: status, mvi_codes: mvi_codes, error: nil)
+              MPI::Responses::AddPersonResponse.new(status: status, parsed_codes: parsed_codes, error: nil)
             end
-            let(:status) { 'OK' }
+            let(:status) { :ok }
             let(:icn) { mhv_icn }
-            let(:mvi_codes) { { icn: icn } }
+            let(:parsed_codes) { { icn: icn } }
             let(:find_profile_response) do
               MPI::Responses::FindProfileResponse.new(
                 status: MPI::Responses::FindProfileResponse::RESPONSE_STATUS[:ok],
@@ -412,6 +413,10 @@ RSpec.describe SignIn::AttributeValidator do
                     given_names: [first_name],
                     family_name: last_name)
             end
+            let(:first_name) { 'some-first-name' }
+            let(:last_name) { 'some-last-name' }
+            let(:ssn) { 'some-ssn' }
+            let(:birth_date) { '19700101' }
             let(:id_theft_flag) { false }
             let(:deceased_date) { nil }
             let(:edipis) { ['some-edipi'] }
@@ -425,7 +430,7 @@ RSpec.describe SignIn::AttributeValidator do
             end
 
             context 'and mpi add person call is not successful' do
-              let(:status) { 'NOT-OK' }
+              let(:status) { :server_error }
               let(:expected_error) { SignIn::Errors::MPIUserCreationFailedError }
               let(:expected_error_message) { 'User MPI record cannot be created' }
               let(:expected_error_code) { SignIn::Constants::ErrorCode::GENERIC_EXTERNAL_ISSUE }
@@ -434,7 +439,7 @@ RSpec.describe SignIn::AttributeValidator do
             end
 
             context 'and mpi add person call is successful' do
-              let(:status) { 'OK' }
+              let(:status) { :ok }
 
               it_behaves_like 'mpi attribute validations'
             end
