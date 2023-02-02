@@ -7,6 +7,7 @@ RSpec.describe VBADocuments::UploadProcessor, type: :job do
   include VBADocuments::Fixtures
 
   let(:test_caller) { { 'caller' => 'tester' } }
+  let(:integrity_checker) { instance_double('VBADocuments::UploadIntegrityChecker') }
   let(:client_stub) { instance_double('CentralMail::Service') }
   let(:faraday_response) { instance_double('Faraday::Response') }
   let(:valid_metadata) { get_fixture('valid_metadata.json').read }
@@ -26,35 +27,59 @@ RSpec.describe VBADocuments::UploadProcessor, type: :job do
   let(:non_pdf_doc) { get_fixture('valid_metadata.json') }
 
   let(:valid_parts) do
-    { 'metadata' => valid_metadata,
-      'content' => valid_doc }
+    {
+      'contents' => {
+        'metadata' => valid_metadata,
+        'content' => valid_doc
+      }
+    }
   end
 
   let(:valid_parts_but_locked) do
-    { 'metadata' => valid_metadata,
-      'content' => locked_doc }
+    {
+      'contents' => {
+        'metadata' => valid_metadata,
+        'content' => locked_doc
+      }
+    }
   end
 
   let(:valid_parts_attachment) do
-    { 'metadata' => valid_metadata,
-      'content' => valid_doc,
-      'attachment1' => valid_doc }
+    {
+      'contents' => {
+        'metadata' => valid_metadata,
+        'content' => valid_doc,
+        'attachment1' => valid_doc
+      }
+    }
   end
 
   let(:valid_parts_locked_attachment) do
-    { 'metadata' => valid_metadata,
-      'content' => valid_doc,
-      'attachment1' => locked_doc }
+    {
+      'contents' => {
+        'metadata' => valid_metadata,
+        'content' => valid_doc,
+        'attachment1' => locked_doc
+      }
+    }
   end
 
   let(:invalid_parts_missing) do
-    { 'metadata' => invalid_metadata_missing,
-      'content' => valid_doc }
+    {
+      'contents' => {
+        'metadata' => invalid_metadata_missing,
+        'content' => valid_doc
+      }
+    }
   end
 
   let(:invalid_parts_nonstring) do
-    { 'metadata' => invalid_metadata_nonstring,
-      'content' => valid_doc }
+    {
+      'contents' => {
+        'metadata' => invalid_metadata_nonstring,
+        'content' => valid_doc
+      }
+    }
   end
 
   before do
@@ -240,7 +265,7 @@ RSpec.describe VBADocuments::UploadProcessor, type: :job do
        name_too_long_metadata].each do |bad|
       it "sets error status for #{bad} name" do
         allow(VBADocuments::MultipartParser).to receive(:parse) {
-          { 'metadata' => send(bad), 'content' => valid_doc }
+          { 'contents' => { 'metadata' => send(bad), 'content' => valid_doc } }
         }
         described_class.new.perform(upload.guid, test_caller)
         updated = VBADocuments::UploadSubmission.find_by(guid: upload.guid)
@@ -253,7 +278,7 @@ RSpec.describe VBADocuments::UploadProcessor, type: :job do
     %i[dashes_slashes_first_last valid_metadata_space_in_name].each do |allowed|
       it "allows #{allowed} names" do
         allow(VBADocuments::MultipartParser).to receive(:parse) {
-          { 'metadata' => send(allowed), 'content' => valid_doc }
+          { 'contents' => { 'metadata' => send(allowed), 'content' => valid_doc } }
         }
         allow(CentralMail::Service).to receive(:new) { client_stub }
         allow(faraday_response).to receive(:status).and_return(200)
@@ -268,7 +293,7 @@ RSpec.describe VBADocuments::UploadProcessor, type: :job do
 
     it 'sets error status for non-JSON metadata part' do
       allow(VBADocuments::MultipartParser).to receive(:parse) {
-        { 'metadata' => valid_doc, 'content' => valid_doc }
+        { 'contents' => { 'metadata' => valid_doc, 'content' => valid_doc } }
       }
       described_class.new.perform(upload.guid, test_caller)
       updated = VBADocuments::UploadSubmission.find_by(guid: upload.guid)
@@ -279,7 +304,7 @@ RSpec.describe VBADocuments::UploadProcessor, type: :job do
 
     it 'sets error status for unparseable JSON metadata part' do
       allow(VBADocuments::MultipartParser).to receive(:parse) {
-        { 'metadata' => 'I am not JSON', 'content' => valid_doc }
+        { 'contents' => { 'metadata' => 'I am not JSON', 'content' => valid_doc } }
       }
       described_class.new.perform(upload.guid, test_caller)
       updated = VBADocuments::UploadSubmission.find_by(guid: upload.guid)
@@ -290,7 +315,7 @@ RSpec.describe VBADocuments::UploadProcessor, type: :job do
 
     it 'sets error status for parsable JSON metadata but not an object' do
       allow(VBADocuments::MultipartParser).to receive(:parse) {
-        { 'metadata' => [valid_metadata].to_json, 'content' => valid_doc }
+        { 'contents' => { 'metadata' => [valid_metadata].to_json, 'content' => valid_doc } }
       }
       described_class.new.perform(upload.guid, test_caller)
       updated = VBADocuments::UploadSubmission.find_by(guid: upload.guid)
@@ -303,7 +328,7 @@ RSpec.describe VBADocuments::UploadProcessor, type: :job do
       md = JSON.parse(valid_metadata)
       md['fileNumber'] = '123456'
       allow(VBADocuments::MultipartParser).to receive(:parse) {
-        { 'metadata' => md.to_json, 'content' => valid_doc }
+        { 'contents' => { 'metadata' => md.to_json, 'content' => valid_doc } }
       }
       described_class.new.perform(upload.guid, test_caller)
       updated = VBADocuments::UploadSubmission.find_by(guid: upload.guid)
@@ -316,7 +341,7 @@ RSpec.describe VBADocuments::UploadProcessor, type: :job do
       md = JSON.parse(valid_metadata)
       md['fileNumber'] = '1234567890'
       allow(VBADocuments::MultipartParser).to receive(:parse) {
-        { 'metadata' => md.to_json, 'content' => valid_doc }
+        { 'contents' => { 'metadata' => md.to_json, 'content' => valid_doc } }
       }
       described_class.new.perform(upload.guid, test_caller)
       updated = VBADocuments::UploadSubmission.find_by(guid: upload.guid)
@@ -329,7 +354,7 @@ RSpec.describe VBADocuments::UploadProcessor, type: :job do
       md = JSON.parse(valid_metadata)
       md['fileNumber'] = 'c12345678'
       allow(VBADocuments::MultipartParser).to receive(:parse) {
-        { 'metadata' => md.to_json, 'content' => valid_doc }
+        { 'contents' => { 'metadata' => md.to_json, 'content' => valid_doc } }
       }
       described_class.new.perform(upload.guid, test_caller)
       updated = VBADocuments::UploadSubmission.find_by(guid: upload.guid)
@@ -342,7 +367,7 @@ RSpec.describe VBADocuments::UploadProcessor, type: :job do
       md = JSON.parse(valid_metadata)
       md['fileNumber'] = '123-45-6789'
       allow(VBADocuments::MultipartParser).to receive(:parse) {
-        { 'metadata' => md.to_json, 'content' => valid_doc }
+        { 'contents' => { 'metadata' => md.to_json, 'content' => valid_doc } }
       }
       described_class.new.perform(upload.guid, test_caller)
       updated = VBADocuments::UploadSubmission.find_by(guid: upload.guid)
@@ -353,7 +378,7 @@ RSpec.describe VBADocuments::UploadProcessor, type: :job do
 
     it 'sets error status for non-PDF document parts' do
       allow(VBADocuments::MultipartParser).to receive(:parse) {
-        { 'metadata' => valid_metadata, 'content' => valid_metadata }
+        { 'contents' => { 'metadata' => valid_metadata, 'content' => valid_metadata } }
       }
       described_class.new.perform(upload.guid, test_caller)
       updated = VBADocuments::UploadSubmission.find_by(guid: upload.guid)
@@ -363,7 +388,7 @@ RSpec.describe VBADocuments::UploadProcessor, type: :job do
 
     it 'sets error status for unparseable PDF document parts' do
       allow(VBADocuments::MultipartParser).to receive(:parse) {
-        { 'metadata' => valid_metadata, 'content' => non_pdf_doc }
+        { 'contents' => { 'metadata' => valid_metadata, 'content' => non_pdf_doc } }
       }
       described_class.new.perform(upload.guid, test_caller)
       updated = VBADocuments::UploadSubmission.find_by(guid: upload.guid)
@@ -375,9 +400,9 @@ RSpec.describe VBADocuments::UploadProcessor, type: :job do
       it "sets error status for missing JSON metadata #{key}" do
         allow(VBADocuments::MultipartParser).to receive(:parse) {
           v = valid_parts
-          hash = JSON.parse(v['metadata'])
+          hash = JSON.parse(v['contents']['metadata'])
           hash.delete(key)
-          v['metadata'] = hash.to_json
+          v['contents']['metadata'] = hash.to_json
           v
         }
         described_class.new.perform(upload.guid, test_caller)
@@ -415,7 +440,7 @@ RSpec.describe VBADocuments::UploadProcessor, type: :job do
 
     it 'sets error status for missing metadata part' do
       allow(VBADocuments::MultipartParser).to receive(:parse) {
-        { 'content' => valid_doc }
+        { 'contents' => { 'content' => valid_doc } }
       }
       described_class.new.perform(upload.guid, test_caller)
       updated = VBADocuments::UploadSubmission.find_by(guid: upload.guid)
@@ -426,7 +451,7 @@ RSpec.describe VBADocuments::UploadProcessor, type: :job do
 
     it 'sets error status for missing document part' do
       allow(VBADocuments::MultipartParser).to receive(:parse) {
-        { 'metadata' => valid_metadata }
+        { 'contents' => { 'metadata' => valid_metadata } }
       }
       described_class.new.perform(upload.guid, test_caller)
       updated = VBADocuments::UploadSubmission.find_by(guid: upload.guid)
@@ -436,7 +461,7 @@ RSpec.describe VBADocuments::UploadProcessor, type: :job do
 
     it 'sets document size metadata' do
       allow(VBADocuments::MultipartParser).to receive(:parse) {
-        { 'content' => valid_doc }
+        { 'contents' => { 'content' => valid_doc } }
       }
       described_class.new.perform(upload.guid, test_caller)
       updated = VBADocuments::UploadSubmission.find_by(guid: upload.guid)
@@ -447,11 +472,11 @@ RSpec.describe VBADocuments::UploadProcessor, type: :job do
       it 'sets document base64_encoded metadata to true' do
         allow(VBADocuments::MultipartParser).to receive(:base64_encoded?).and_return(true)
         allow(VBADocuments::MultipartParser).to receive(:parse) {
-          { 'content' => valid_doc }
+          { 'contents' => { 'content' => valid_doc } }
         }
         described_class.new.perform(upload.guid, test_caller)
-        updated = VBADocuments::UploadSubmission.find_by(guid: upload.guid)
-        expect(updated.metadata['base64_encoded']).to be(true)
+        upload.reload
+        expect(upload.metadata['base64_encoded']).to be(true)
       end
     end
 
@@ -459,11 +484,60 @@ RSpec.describe VBADocuments::UploadProcessor, type: :job do
       it 'sets document base64_encoded metadata to false' do
         allow(VBADocuments::MultipartParser).to receive(:base64_encoded?).and_return(false)
         allow(VBADocuments::MultipartParser).to receive(:parse) {
-          { 'content' => valid_doc }
+          { 'contents' => { 'content' => valid_doc } }
         }
         described_class.new.perform(upload.guid, test_caller)
-        updated = VBADocuments::UploadSubmission.find_by(guid: upload.guid)
-        expect(updated.metadata['base64_encoded']).to be(false)
+        upload.reload
+        expect(upload.metadata['base64_encoded']).to be(false)
+      end
+    end
+
+    it 'saves the original checksum to the submission metadata' do
+      sha256_char_length = 64
+      described_class.new.perform(upload.guid, test_caller)
+      upload.reload
+      expect(upload.metadata['original_checksum']).to be_a(String)
+      expect(upload.metadata['original_checksum'].length).to eq(sha256_char_length)
+    end
+
+    context 'when vba_documents_file_checksum flag is enabled' do
+      before do
+        allow(VBADocuments::MultipartParser).to receive(:parse).and_return(valid_parts)
+        allow(VBADocuments::UploadIntegrityChecker).to receive(:new)
+          .with(upload, valid_parts).and_return(integrity_checker)
+        allow(integrity_checker).to receive(:check_integrity)
+        allow(CentralMail::Service).to receive(:new).and_return(client_stub)
+        allow(faraday_response).to receive(:status).and_return(200)
+        allow(faraday_response).to receive(:body).and_return('')
+        allow(faraday_response).to receive(:success?).and_return(true)
+        allow(client_stub).to receive(:upload).and_return(faraday_response)
+        Flipper.enable(:vba_documents_file_checksum)
+      end
+
+      it 'calls VBADocuments::UploadIntegrityChecker' do
+        expect(VBADocuments::UploadIntegrityChecker).to receive(:new).with(upload, valid_parts)
+        expect(integrity_checker).to receive(:check_integrity)
+        described_class.new.perform(upload.guid, test_caller)
+      end
+    end
+
+    context 'when vba_documents_file_checksum flag is disabled' do
+      before do
+        allow(VBADocuments::MultipartParser).to receive(:parse).and_return(valid_parts)
+        allow(VBADocuments::UploadIntegrityChecker).to receive(:new)
+          .with(upload, valid_parts).and_return(integrity_checker)
+        allow(integrity_checker).to receive(:check_integrity)
+        allow(CentralMail::Service).to receive(:new).and_return(client_stub)
+        allow(faraday_response).to receive(:status).and_return(200)
+        allow(faraday_response).to receive(:body).and_return('')
+        allow(faraday_response).to receive(:success?).and_return(true)
+        allow(client_stub).to receive(:upload).and_return(faraday_response)
+        Flipper.disable(:vba_documents_file_checksum)
+      end
+
+      it 'does not call the VBADocuments::UploadIntegrityChecker' do
+        expect(VBADocuments::UploadIntegrityChecker).not_to receive(:new)
+        described_class.new.perform(upload.guid, test_caller)
       end
     end
 
@@ -471,7 +545,7 @@ RSpec.describe VBADocuments::UploadProcessor, type: :job do
       %w[18x22 22x18].each do |invalid_size|
         it 'sets an error status for invalid size' do
           allow(VBADocuments::MultipartParser).to receive(:parse) {
-            { 'metadata' => valid_metadata, 'content' => get_fixture("#{invalid_size}.pdf") }
+            { 'contents' => { 'metadata' => valid_metadata, 'content' => get_fixture("#{invalid_size}.pdf") } }
           }
           described_class.new.perform(upload.guid, test_caller)
           updated = VBADocuments::UploadSubmission.find_by(guid: upload.guid)
@@ -483,7 +557,7 @@ RSpec.describe VBADocuments::UploadProcessor, type: :job do
 
     it 'sets uploaded pdf data' do
       allow(VBADocuments::MultipartParser).to receive(:parse) {
-        file = 'modules/vba_documents/spec/fixtures/valid_multipart_pdf_attachments.blob'
+        file = 'modules/vba_documents/spec/fixtures/valid_multipart_pdf_attachments_invalid_metadata.blob'
         VBADocuments::MultipartParser.parse_file(file)
       }
       described_class.new.perform(upload.guid, test_caller)
@@ -504,7 +578,7 @@ RSpec.describe VBADocuments::UploadProcessor, type: :job do
       before do
         @md = JSON.parse(valid_metadata)
         allow(VBADocuments::MultipartParser).to receive(:parse) {
-          { 'metadata' => @md.to_json, 'content' => valid_doc }
+          { 'contents' => { 'metadata' => @md.to_json, 'content' => valid_doc } }
         }
         allow(CentralMail::Service).to receive(:new) { client_stub }
         allow(faraday_response).to receive(:status).and_return(200)
@@ -536,7 +610,7 @@ RSpec.describe VBADocuments::UploadProcessor, type: :job do
     it 'sets error status and records invalid lines of business' do
       md = JSON.parse(invalid_metadata_unknown_lob)
       allow(VBADocuments::MultipartParser).to receive(:parse) {
-        { 'metadata' => md.to_json, 'content' => valid_doc }
+        { 'contents' => { 'metadata' => md.to_json, 'content' => valid_doc } }
       }
       described_class.new.perform(upload.guid, test_caller)
       updated = VBADocuments::UploadSubmission.find_by(guid: upload.guid)
@@ -549,7 +623,7 @@ RSpec.describe VBADocuments::UploadProcessor, type: :job do
     it 'sets error status and records missing lines of business for V2' do
       md = JSON.parse(invalid_metadata_missing_lob)
       allow(VBADocuments::MultipartParser).to receive(:parse) {
-        { 'metadata' => md.to_json, 'content' => valid_doc }
+        { 'contents' => { 'metadata' => md.to_json, 'content' => valid_doc } }
       }
       allow(CentralMail::Service).to receive(:new) { client_stub }
       allow(faraday_response).to receive(:status).and_return(200)

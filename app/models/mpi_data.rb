@@ -131,6 +131,11 @@ class MPIData < Common::RedisStore
   # @return [Array[String]] the list of person types
   delegate :person_types, to: :profile, allow_nil: true
 
+  # The user's home phone number
+  #
+  # @return [String] the home_phone
+  delegate :home_phone, to: :profile, allow_nil: true
+
   # The profile returned from the MVI service. Either returned from cached response in Redis or the MVI service.
   #
   # @return [MPI::Models::MviProfile] patient 'golden record' data from MVI
@@ -146,7 +151,7 @@ class MPIData < Common::RedisStore
   def status
     return :not_authorized unless user_loa3
 
-    mvi_response.status
+    mvi_response&.status
   end
 
   # The error experienced when reaching out to the MVI service.
@@ -165,16 +170,6 @@ class MPIData < Common::RedisStore
 
   def mpi_response_is_cached?(user_key: get_user_key)
     cached?(key: user_key)
-  end
-
-  # @return [String] Array representing the historical icn data for the user
-  def get_person_historical_icns
-    return [] unless user_loa3 && user_icn
-
-    mpi_profile = mpi_service.find_profile_by_identifier(identifier: user_icn,
-                                                         identifier_type: MPI::Constants::ICN,
-                                                         search_type: MPI::Constants::CORRELATION_WITH_ICN_HISTORY)
-    mpi_profile&.profile&.historical_icns
   end
 
   # The status of the MPI Add Person Proxy Add call. An Orchestrated MVI Search needs to be made before an
@@ -247,7 +242,7 @@ class MPIData < Common::RedisStore
   def response_from_redis_or_service(user_key:)
     do_cached_with(key: user_key) do
       find_profile
-    rescue ArgumentError => e
+    rescue ArgumentError, MPI::Errors::ArgumentError => e
       log_message_to_sentry("[MPI Data] Request error: #{e.message}", :warn)
       return nil
     end

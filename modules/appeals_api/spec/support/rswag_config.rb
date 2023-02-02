@@ -7,6 +7,9 @@ class AppealsApi::RswagConfig
   include DocHelpers
 
   def config
+    # Avoid trying to build this config when running a rake task for a non-appeals API (e.g. Claims)
+    return {} if DocHelpers.running_rake_task? && ENV['RAILS_MODULE'] != 'appeals_api'
+
     {
       DocHelpers.output_json_path => {
         # FIXME: The Lighthouse docs UI code does not yet support openapi versions above 3.0.z
@@ -103,6 +106,7 @@ class AppealsApi::RswagConfig
     )
   end
 
+  # rubocop:disable Metrics/AbcSize
   def schemas(api_name = nil)
     a = []
     case api_name
@@ -146,6 +150,9 @@ class AppealsApi::RswagConfig
       a << legacy_appeals_schema('#/components/schemas')
       a << generic_schemas('#/components/schemas').slice(*%i[errorModel X-VA-SSN X-VA-File-Number])
       a << shared_schemas.slice(*%W[#{nbs_key}])
+    when 'appeals_status'
+      a << appeals_status_response_schemas
+      a << generic_schemas('#/components/schemas').slice(*%i[errorModel X-VA-SSN])
     when 'decision_reviews'
       a << hlr_v2_create_schemas
       a << hlr_v2_response_schemas('#/components/schemas')
@@ -165,6 +172,7 @@ class AppealsApi::RswagConfig
 
     a.reduce(&:merge).sort_by { |k, _| k.to_s.downcase }.to_h
   end
+  # rubocop:enable Metrics/AbcSize
 
   def generic_schemas(ref_root)
     nbs_ref = "#{ref_root}/#{nbs_key}"
@@ -191,6 +199,10 @@ class AppealsApi::RswagConfig
         'minLength': 9,
         'maxLength': 9,
         'pattern': '^[0-9]{9}$'
+      },
+      "X-VA-ICN": {
+        "type": 'string',
+        "description": "Veteran's Integration Control Number, a unique identifier established via the Master Person Index (MPI)"
       },
       'X-VA-First-Name': {
         'allOf': [
@@ -855,6 +867,126 @@ class AppealsApi::RswagConfig
         }
       },
       'legacyAppeal': JSON.parse(File.read(AppealsApi::Engine.root.join('spec', 'support', 'schemas', 'legacy_appeal.json')))
+    }
+  end
+
+  def appeals_status_response_schemas
+    {
+      'appeals': {
+        'type': 'array',
+        'items': { '$ref': '#/components/schemas/appeal' }
+      },
+      'appeal': JSON.parse(File.read(AppealsApi::Engine.root.join('spec', 'support', 'schemas', 'appeal.json'))),
+      'eta': {
+        'type': 'object',
+        'description': 'Estimated decision dates for each docket.',
+        'properties': {
+          'directReview': {
+            'format': 'date',
+            'example': '2020-02-01'
+          },
+          'evidenceSubmission': {
+            'format': 'date',
+            'example': '2024-06-01'
+          },
+          'hearing': {
+            'format': 'date',
+            'example': '2024-06-01'
+          }
+        }
+      },
+      'alert': {
+        'type': 'object',
+        'description': 'Notification of a request for more information or of a change in the appeal status that requires action.',
+        'properties': {
+          'type': {
+            'type': 'string',
+            'description': 'Enum of notifications for an appeal. Acronyms used include cavc (Court of Appeals for Veteran Claims), vso (Veteran Service Organization), and dro (Decision Review Officer).',
+            'example': 'form9_needed',
+            'enum': %w[form9_needed scheduled_hearing hearing_no_show held_for_evidence cavc_option ramp_eligible ramp_ineligible decision_soon blocked_by_vso scheduled_dro_hearing dro_hearing_no_show evidentiary_period ama_post_decision]
+          },
+          'details': {
+            'description': 'Further information about the alert',
+            'type': 'object'
+          }
+        }
+      },
+      'event': {
+        'type': 'object',
+        'description': 'Event during the appeals process',
+        'properties': {
+          'type': {
+            'type': 'string',
+            'example': 'soc',
+            'description': 'Enum of possible event types. Acronyms used include, nod (Notice of Disagreement), soc (Statement of Case), ssoc (Supplemental Statement of Case), ftr (Failed to Report), bva (Board of Veteran Appeals), cavc (Court of Appeals for Veteran Claims), and dro (Decision Review Officer).',
+            'enum': %w[claim_decision nod soc form9 ssoc certified hearing_held hearing_no_show bva_decision field_grant withdrawn ftr ramp death merged record_designation reconsideration vacated other_close cavc_decision ramp_notice transcript remand_return ama_nod docket_change distributed_to_vlj bva_decision_effectuation dta_decision sc_request sc_decision sc_other_close hlr_request hlr_decision hlr_dta_error hlr_other_close statutory_opt_in]
+          },
+          'date': {
+            'type': 'string',
+            'format': 'date',
+            'description': 'Date the event occurred',
+            'example': '2016-05-30'
+          },
+          'details': {
+            'description': 'Further information about the event',
+            'type': 'object'
+          }
+        }
+      },
+      'issue': {
+        'type': 'object',
+        'description': 'Issues on appeal',
+        'properties': {
+          'active': {
+            'type': 'boolean',
+            'example': true,
+            'description': 'Whether the issue is presently under contention.'
+          },
+          'description': {
+            'type': 'string',
+            'example': 'Service connection, tinnitus',
+            'description': 'Description of the Issue'
+          },
+          'diagnosticCode': {
+            'nullable': true,
+            'type': 'string',
+            'example': '6260',
+            'description': 'The CFR (Code of Federal Regulations) diagnostic code for the issue, if applicable'
+          },
+          'lastAction': {
+            'nullable': true,
+            'type': 'string',
+            'description': 'Most recent decision made on this issue',
+            'enum': %w[field_grant withdrawn allowed denied remand cavc_remand]
+          },
+          'date': {
+            'anyOf': [
+              'nullable': true,
+              'type': 'string',
+              'format': 'date',
+              'description': 'The date of the most recent decision on the issue',
+              'example': '2016-05-30'
+            ]
+          }
+        }
+      },
+      'evidence': {
+        'type': 'object',
+        'description': 'Documentation and other evidence that has been submitted in support of the appeal',
+        'properties': {
+          'description': {
+            'type': 'string',
+            'example': 'Service treatment records',
+            'description': 'Short text describing what the evidence is'
+          },
+          'date': {
+            'type': 'string',
+            'format': 'date',
+            'description': 'Date the evidence was added to the case',
+            'example': '2017-09-30'
+          }
+        }
+      }
     }
   end
 

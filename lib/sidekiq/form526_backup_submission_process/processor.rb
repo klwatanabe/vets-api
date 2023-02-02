@@ -16,7 +16,7 @@ module Sidekiq
   module Form526BackupSubmissionProcess
     class Processor
       attr_reader :submission, :lighthouse_service, :zip, :initial_upload_location, :initial_upload_uuid,
-                  :initial_upload
+                  :initial_upload, :docs_gathered, :initial_upload_fetched, :ignore_expiration
       attr_accessor :docs
 
       FORM_526 = 'form526'
@@ -28,40 +28,133 @@ module Sidekiq
       FORM_0781 = 'form0781'
       FORM_8940 = 'form8940'
       FLASHES = 'flashes'
-      BIRLS_KEY = 'va_eauth_birlsfilenumber'
-      TMP_FILE_PREFIX = 'form526.backup.'
-      EVIDENCE_LOOKUP = {}.freeze
       BKUP_SETTINGS = Settings.key?(:form526_backup) ? Settings.form526_backup : OpenStruct.new
+      DOCTYPE_MAPPING = {
+        '21-526EZ' => 'L533',
+        '21-4142' => 'L107',
+        '21-0781' => 'L228',
+        '21-0781a' => 'L229',
+        '21-8940' => 'L149',
+        'bdd' => 'L023'
+      }.freeze
+      DOCTYPE_NAMES = %w[
+        21-526EZ
+        21-4142
+        21-0781
+        21-0781a
+        21-8940
+      ].freeze
 
       SUB_METHOD = (BKUP_SETTINGS.submission_method || 'single').to_sym
-      CONSUMER_NAME = 'vets_api_backup_submission'
 
       # Takes a submission id, assembles all needed docs from its payload, then sends it to central mail via
       # lighthouse benefits intake API - https://developer.va.gov/explore/benefits/docs/benefits?version=current
-      def initialize(submission_id, docs = [])
+      def initialize(submission_id, docs = [], get_upload_location_on_instantiation: true, ignore_expiration: false)
         @submission = Form526Submission.find(submission_id)
         @docs = docs
+        @docs_gathered = false
+        @initial_upload_fetched = false
         @lighthouse_service = Form526BackupSubmission::Service.new
+        @ignore_expiration = ignore_expiration
         # We need an initial location/uuid as other ancillary docs want a reference id to it
         # (eventhough I dont think they actually use it for anything because we are just using them to
         # generate the pdf and not the sending portion of those classes... but it needs something there to not error)
-        @initial_upload = get_upload_info
-        uuid_and_location = upload_location_to_location_and_uuid(initial_upload)
-        @initial_upload_uuid = uuid_and_location[:uuid]
-        @initial_upload_location = uuid_and_location[:location]
+        instantiate_upload_info_from_lighthouse if get_upload_location_on_instantiation
+
         determine_zip
       end
 
       def process!
         # Generates or makes calls to get, all PDFs, adds all to self.docs obj
-        gather_docs!
-        # Iterate over self.docs obj and add required metadata to objs directly
-        docs.each { |doc| doc[:metadata] = get_meta_data(doc[:type]) }
+        gather_docs! unless @docs_gathered
         # Take assemebled self.docs and aggregate and send how needed
         send_to_central_mail_through_lighthouse_claims_intake_api!
       end
 
+      def gather_docs!
+        get_form526_pdf # 21-526EZ
+        get_uploads      if submission.form[FORM_526_UPLOADS]
+        get_form4142_pdf if submission.form[FORM_4142]
+        get_form0781_pdf if submission.form[FORM_0781]
+        get_form8940_pdf if submission.form[FORM_8940]
+        get_bdd_pdf      if bdd?
+        convert_docs_to_pdf
+        # Iterate over self.docs obj and add required metadata to objs directly
+        docs.each { |doc| doc[:metadata] = get_meta_data(doc[:type]) }
+        @docs_gathered = true
+      end
+
+      # [remediation effort] This code is to take a 526 submission, generate the pdfs,
+      # and upload to aws for manual review
+      def upload_pdf_submission_to_s3(return_url: false, url_life_length: 1.week.to_i)
+        gather_docs! unless @docs_gathered
+        i = 0
+        params_docs = docs.map do |doc|
+          doc_type = doc[:evssDocType] || doc[:metadata][:docType]
+          {
+            file_path: lighthouse_service.get_file_path_from_objs(doc[:file]),
+            docType: DOCTYPE_MAPPING[doc_type] || doc_type,
+            file_name: DOCTYPE_NAMES.include?(doc_type) ? "#{doc_type}.pdf" : "attachment#{i += 1}.pdf"
+          }
+        end
+        metadata = get_meta_data(FORM_526_DOC_TYPE)
+        zipname = "#{submission.id}.zip"
+        generate_zip_and_upload(params_docs, zipname, metadata, return_url, url_life_length)
+      end
+
       private
+
+      def instantiate_upload_info_from_lighthouse
+        @initial_upload = get_upload_info
+        uuid_and_location = upload_location_to_location_and_uuid(initial_upload)
+        @initial_upload_uuid = uuid_and_location[:uuid]
+        @initial_upload_location = uuid_and_location[:location]
+        @initial_upload_fetched = true
+      end
+
+      def evidence_526_split
+        is_526_or_evidence = docs.group_by do |doc|
+          doc[:type] == FORM_526_DOC_TYPE || doc[:type] == FORM_526_UPLOADS_DOC_TYPE
+        end
+        [is_526_or_evidence[true], is_526_or_evidence[false]]
+      end
+
+      def generate_zip_and_upload(params_docs, zipname, metadata, return_url, url_life_length)
+        zip_path_and_name = "tmp/#{zipname}"
+        Zip::File.open(zip_path_and_name, create: true) do |zipfile|
+          zipfile.get_output_stream('metadata.json') { |f| f.puts metadata.to_json }
+          zipfile.get_output_stream('mappings.json') do |f|
+            f.puts params_docs.to_h { |q|
+                     [q[:file_name], q[:docType]]
+                   }.to_json
+          end
+          params_docs.each { |doc| zipfile.add(doc[:file_name], doc[:file_path]) }
+        end
+        s3_resource = new_s3_resource
+        obj = s3_resource.bucket(s3_bucket).object(zipname)
+        obj_ret = obj.upload_file(zip_path_and_name, content_type: 'application/zip')
+        if return_url
+          obj.presigned_url(:get, expires_in: url_life_length)
+        else
+          obj_ret
+        end
+      ensure
+        Common::FileHelpers.delete_file_if_exists(zip_path_and_name)
+      end
+
+      # [remediation effort]
+      def s3_bucket
+        Settings.form526_backup.aws.bucket
+      end
+
+      # [remediation effort]
+      def new_s3_resource
+        Aws::S3::Resource.new(
+          region: Settings.form526_backup.aws.region,
+          access_key_id: Settings.form526_backup.aws.access_key_id,
+          secret_access_key: Settings.form526_backup.aws.secret_access_key
+        )
+      end
 
       # Transforms the lighthouse response to the only info we actually need from it
       def upload_location_to_location_and_uuid(upload_return)
@@ -91,19 +184,23 @@ module Sidekiq
       # Generate metadata for metadata.json file for the lighthouse benefits intake API to send along to Central Mail
       def get_meta_data(doc_type)
         auth_info = submission.auth_headers
-        {
-          "veteranFirstName": auth_info['va_eauth_firstName'], "veteranLastName": auth_info['va_eauth_lastName'],
-          "fileNumber": auth_info['va_eauth_pnid'], "zipCode": zip, "source": 'va.gov backup submission',
-          "docType": doc_type, "businessLine": 'CMP'
+        md = {
+          veteranFirstName: auth_info['va_eauth_firstName'],
+          veteranLastName: auth_info['va_eauth_lastName'],
+          fileNumber: auth_info['va_eauth_pnid'],
+          zipCode: zip,
+          source: 'va.gov backup submission',
+          docType: doc_type,
+          businessLine: 'CMP',
+          claimDate: submission.created_at.iso8601
         }
+        md[:forceOfframp] = 'true' if Flipper.enabled?(:form526_backup_submission_force_offramp)
+        md
       end
 
       def send_to_central_mail_through_lighthouse_claims_intake_api!
-        is_526_or_evidence = docs.group_by do |doc|
-          doc[:type] == FORM_526_DOC_TYPE || doc[:type] == FORM_526_UPLOADS_DOC_TYPE
-        end
-        initial_payload = is_526_or_evidence[true]
-        other_payloads  = is_526_or_evidence[false]
+        instantiate_upload_info_from_lighthouse unless @initial_upload_fetched
+        initial_payload, other_payloads = evidence_526_split
         if SUB_METHOD == :single
           submit_as_one(initial_payload, other_payloads)
         else
@@ -130,16 +227,7 @@ module Sidekiq
         evidence_files
       end
 
-      def submit_as_one(initial_payload, other_payloads = nil)
-        seperated = initial_payload.group_by { |doc| doc[:type] }
-        form526_doc = seperated[FORM_526_DOC_TYPE].first
-        evidence_files = []
-        unless seperated[FORM_526_UPLOADS_DOC_TYPE].nil?
-          evidence_files = seperated[FORM_526_UPLOADS_DOC_TYPE].map.with_index do |doc, i|
-            { file: doc[:file], file_name: "evidence_#{i + 1}.pdf" }
-          end
-        end
-        attachments = generate_attachments(evidence_files, other_payloads)
+      def submit_to_lh_claims_intake_api(form526_doc, attachments)
         log_info(message: 'Uploading single fallback payload to Lighthouse', upload_type: FORM_526_DOC_TYPE,
                  uuid: initial_upload_uuid)
         lighthouse_service.upload_doc(
@@ -153,10 +241,36 @@ module Sidekiq
         @submission.update!(backup_submitted_claim_id: initial_upload_uuid)
       end
 
+      def return_upload_params_and_docs(form526_doc, attachments)
+        lighthouse_service.get_upload_docs(
+          file_with_full_path: form526_doc[:file],
+          metadata: form526_doc[:metadata].to_json,
+          attachments: attachments
+        )
+      end
+
+      def submit_as_one(initial_payload, other_payloads = nil, return_docs_instead_of_sending: false)
+        seperated = initial_payload.group_by { |doc| doc[:type] }
+        form526_doc = seperated[FORM_526_DOC_TYPE].first
+        evidence_files = []
+        unless seperated[FORM_526_UPLOADS_DOC_TYPE].nil?
+          evidence_files = seperated[FORM_526_UPLOADS_DOC_TYPE].map.with_index do |doc, i|
+            { file: doc[:file], file_name: "evidence_#{i + 1}.pdf" }
+          end
+        end
+        attachments = generate_attachments(evidence_files, other_payloads)
+        # Optional exit point to just return the docs/payloads, to be utilized by other classes
+        if return_docs_instead_of_sending
+          return_upload_params_and_docs(form526_doc, attachments)
+        else
+          submit_to_lh_claims_intake_api(form526_doc, attachments)
+        end
+      end
+
       def submit_initial_payload(initial_payload)
         seperated = initial_payload.group_by { |doc| doc[:type] }
         form526_doc = seperated[FORM_526_DOC_TYPE].first
-        evidence_files = seperated[FORM_526_UPLOADS_DOC_TYPE].map { |doc| doc[:file] }
+        evidence_files = seperated[FORM_526_UPLOADS_DOC_TYPE].pluck(:file)
         log_info(message: 'Uploading initial fallback payload to Lighthouse', upload_type: FORM_526_DOC_TYPE,
                  uuid: initial_upload_uuid)
         lighthouse_service.upload_doc(
@@ -199,23 +313,22 @@ module Sidekiq
         submission.form.dig('form526', 'form526', 'bddQualified') || false
       end
 
+      def write_to_tmp_file(content, ext = 'pdf')
+        fname = "#{Common::FileHelpers.random_file_path}.#{ext}"
+        File.binwrite(fname, content)
+        fname
+      end
+
       def get_form526_pdf
         headers = submission.auth_headers
-        form_json = JSON.parse(submission.form_json)[FORM_526].to_json
-        resp = EVSS::DisabilityCompensationForm::Service.new(headers).get_form526(form_json)
+        submission_create_date = submission.created_at.iso8601
+        form_json = JSON.parse(submission.form_json)[FORM_526]
+        form_json[FORM_526]['claimDate'] ||= submission_create_date
+        form_json[FORM_526]['applicationExpirationDate'] = 365.days.from_now.iso8601 if @ignore_expiration
+        resp = EVSS::DisabilityCompensationForm::Service.new(headers).get_form526(form_json.to_json)
         b64_enc_body = resp.body['pdf']
         content = Base64.decode64(b64_enc_body)
-        file = if ::Rails.env.production?
-                 content_tmpfile = Tempfile.new(TMP_FILE_PREFIX, binmode: true)
-                 content_tmpfile.write(content)
-                 content_tmpfile.path
-               else
-                 fname = "/tmp/#{Random.uuid}.pdf"
-                 File.open(fname, 'wb') do |f|
-                   f.write(content)
-                 end
-                 fname
-               end
+        file = write_to_tmp_file(content)
         docs << {
           type: FORM_526_DOC_TYPE,
           file: file
@@ -230,16 +343,20 @@ module Sidekiq
           file = sea&.get_file
           raise ArgumentError, "supporting evidence attachment with guid #{guid} has no file data" if file.nil?
 
-          docs << upload.merge!(file: file, type: FORM_526_UPLOADS_DOC_TYPE, evssDocType: upload['attachmentId'])
+          fname = File.basename(file.path)
+          entropied_fname = "#{Common::FileHelpers.random_file_path}.#{Time.now.to_i}.#{fname}"
+          File.binwrite(entropied_fname, file.read)
+          docs << upload.merge!(file: entropied_fname, type: FORM_526_UPLOADS_DOC_TYPE,
+                                evssDocType: upload['attachmentId'])
         end
       end
 
       def get_form4142_pdf
-        processor_4142 = DecisionReviewV1::Processor::Form4142Processor.new(form_data: submission.form[FORM_4142],
-                                                                            response: initial_upload)
+        processor4142 = DecisionReviewV1::Processor::Form4142Processor.new(form_data: submission.form[FORM_4142],
+                                                                           response: initial_upload)
         docs << {
           type: FORM_4142_DOC_TYPE,
-          file: processor_4142.pdf_path
+          file: processor4142.pdf_path
         }
       end
 
@@ -275,17 +392,6 @@ module Sidekiq
             Common::FileHelpers.delete_file_if_exists(actual_path_to_file) if ::Rails.env.production?
           end
         end
-      end
-
-      def gather_docs!
-        get_form526_pdf # 21-526EZ
-        get_uploads      if submission.form[FORM_526_UPLOADS]
-        get_form4142_pdf if submission.form[FORM_4142]
-        get_form0781_pdf if submission.form[FORM_0781]
-        get_form8940_pdf if submission.form[FORM_8940]
-        get_bdd_pdf      if bdd?
-
-        convert_docs_to_pdf
       end
     end
   end

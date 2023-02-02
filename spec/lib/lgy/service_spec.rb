@@ -134,6 +134,26 @@ describe LGY::Service do
         end
       end
     end
+
+    context 'unexpected statuses' do
+      it 'logs error to Sentry' do
+        VCR.use_cassette 'lgy/determination_pending' do
+          VCR.use_cassette 'lgy/application_200_status_unexpected' do
+            expect_any_instance_of(LGY::Service).to receive(:log_message_to_sentry).with(
+              'Unexpected COE statuses!',
+              :error,
+              {
+                determination_status: 'PENDING',
+                application_status: 'UNEXPECTED',
+                get_application_status: 200
+              },
+              { team: 'vfs-ebenefits' }
+            )
+            expect(subject.coe_status).to eq(nil)
+          end
+        end
+      end
+    end
   end
 
   describe '#get_coe_file' do
@@ -217,11 +237,6 @@ describe LGY::Service do
 
   describe '#get_coe_documents' do
     context 'when retrieving the document list from LGY' do
-      before do
-        allow_any_instance_of(User).to receive(:icn).and_return('1012830245V504544')
-        allow_any_instance_of(User).to receive(:edipi).and_return('1007451748')
-      end
-
       it 'returns a document list' do
         VCR.use_cassette 'lgy/documents_list' do
           response = subject.get_coe_documents
@@ -237,19 +252,27 @@ describe LGY::Service do
   describe '#get_document' do
     context 'when downloading an available document from LGY' do
       it 'returns the document' do
-        VCR.use_cassette 'lgy/document_download' do
-          response = subject.get_document('123456789')
-          expect(response.status).to eq 200
+        # documents_list contains a single document with id: 23215740
+        VCR.use_cassette 'lgy/documents_list' do
+          # document_download returns a fake document
+          VCR.use_cassette 'lgy/document_download' do
+            response = subject.get_document('23215740')
+            expect(response.status).to eq 200
+          end
         end
       end
     end
 
     context 'when the document is not available' do
       it 'returns a 404 not found' do
-        VCR.use_cassette 'lgy/document_download_not_found' do
-          response = subject.get_document('234567890')
-          puts response
-          expect(response.status).to eq 404
+        # documents_list contains a single document with id: 23215740
+        VCR.use_cassette 'lgy/documents_list' do
+          # This request will never actually be made, because documents_list
+          # doesn't contain a document with id 234567890. It is at that point
+          # that we raise a 404.
+          VCR.use_cassette 'lgy/document_download_not_found' do
+            expect { subject.get_document('234567890') }.to raise_error(Common::Exceptions::RecordNotFound)
+          end
         end
       end
     end
