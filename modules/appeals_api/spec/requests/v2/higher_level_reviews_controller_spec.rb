@@ -35,7 +35,7 @@ describe AppealsApi::V2::DecisionReviews::HigherLevelReviewsController, type: :r
         uuid_2 = create(:higher_level_review_v2, veteran_icn: '1013062086V794840').id
         create(:higher_level_review_v2, veteran_icn: 'something_else')
 
-        get(path, headers: @minimum_required_headers)
+        get(path, headers: { 'X-VA-ICN' => ' 1013062086V794840   ' })
 
         expect(parsed['data'].length).to eq(2)
         # Returns HLRs in desc creation date, so expect 2 before 1
@@ -51,9 +51,21 @@ describe AppealsApi::V2::DecisionReviews::HigherLevelReviewsController, type: :r
         create(:higher_level_review_v2, veteran_icn: 'someone_else')
         create(:higher_level_review_v2, veteran_icn: 'also_someone_else')
 
-        get(path, headers: @minimum_required_headers)
+        get(path, headers: { 'X-VA-ICN' => ' 1013062086V794840   ' })
 
         expect(parsed['data'].length).to eq(0)
+      end
+    end
+
+    context 'when no ICN is provided' do
+      it 'returns a 422 error' do
+        @headers_extra.delete('X-VA-ICN')
+
+        get(path, headers: {})
+
+        expect(response.status).to eq(422)
+        expect(parsed['errors']).to be_an Array
+        expect(parsed['errors'][0]['detail']).to include('X-VA-ICN is required')
       end
     end
   end
@@ -257,7 +269,10 @@ describe AppealsApi::V2::DecisionReviews::HigherLevelReviewsController, type: :r
     context 'with oauth' do
       let(:oauth_path) { new_base_path 'forms/200996' }
 
-      it_behaves_like('an endpoint with OpenID auth', %w[claim.write]) do
+      it_behaves_like(
+        'an endpoint with OpenID auth',
+        AppealsApi::HigherLevelReviews::V0::HigherLevelReviewsController::OAUTH_SCOPES[:POST]
+      ) do
         def make_request(auth_header)
           post(oauth_path, params: @data, headers: @headers.merge(auth_header))
         end
@@ -270,7 +285,9 @@ describe AppealsApi::V2::DecisionReviews::HigherLevelReviewsController, type: :r
           orig_body = JSON.parse(response.body)
           orig_body['data']['id'] = 'ignored'
 
-          with_openid_auth(%w[claim.write]) do |auth_header|
+          with_openid_auth(
+            AppealsApi::HigherLevelReviews::V0::HigherLevelReviewsController::OAUTH_SCOPES[:POST]
+          ) do |auth_header|
             post(oauth_path, params: @data, headers: @headers.merge(auth_header))
           end
           oauth_status = response.status
@@ -352,7 +369,10 @@ describe AppealsApi::V2::DecisionReviews::HigherLevelReviewsController, type: :r
     context 'with oauth' do
       let(:oauth_path) { new_base_path 'forms/200996/validate' }
 
-      it_behaves_like('an endpoint with OpenID auth', %w[claim.write]) do
+      it_behaves_like(
+        'an endpoint with OpenID auth',
+        AppealsApi::HigherLevelReviews::V0::HigherLevelReviewsController::OAUTH_SCOPES[:POST]
+      ) do
         def make_request(auth_header)
           post(oauth_path, params: @data, headers: @headers.merge(auth_header))
         end
@@ -363,7 +383,9 @@ describe AppealsApi::V2::DecisionReviews::HigherLevelReviewsController, type: :r
         orig_status = response.status
         orig_body = JSON.parse(response.body)
 
-        with_openid_auth(%w[claim.write]) do |auth_header|
+        with_openid_auth(
+          AppealsApi::HigherLevelReviews::V0::HigherLevelReviewsController::OAUTH_SCOPES[:POST]
+        ) do |auth_header|
           post(oauth_path, params: @data, headers: @headers.merge(auth_header))
         end
         oauth_status = response.status
@@ -420,7 +442,10 @@ describe AppealsApi::V2::DecisionReviews::HigherLevelReviewsController, type: :r
     let(:orig_path) { base_path "higher_level_reviews/#{uuid}" }
     let(:oauth_path) { new_base_path("forms/200996/#{uuid}") }
 
-    it_behaves_like('an endpoint with OpenID auth', %w[claim.read]) do
+    it_behaves_like(
+      'an endpoint with OpenID auth',
+      AppealsApi::HigherLevelReviews::V0::HigherLevelReviewsController::OAUTH_SCOPES[:GET]
+    ) do
       def make_request(auth_header)
         get(oauth_path, headers: auth_header)
       end
@@ -431,7 +456,9 @@ describe AppealsApi::V2::DecisionReviews::HigherLevelReviewsController, type: :r
       orig_status = response.status
       orig_body = JSON.parse(response.body)
 
-      with_openid_auth(%w[claim.read]) do |auth_header|
+      with_openid_auth(
+        AppealsApi::HigherLevelReviews::V0::HigherLevelReviewsController::OAUTH_SCOPES[:GET]
+      ) do |auth_header|
         get(oauth_path, headers: auth_header)
       end
       oauth_status = response.status

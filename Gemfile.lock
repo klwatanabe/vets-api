@@ -43,7 +43,7 @@ GIT
 
 GIT
   remote: https://github.com/department-of-veterans-affairs/connect_vbms.git
-  revision: 049b3c5068fa6c6d1cae0b58654529316b84be57
+  revision: 4b24bf161815648b9d256fc7034dcf7cf9e426d7
   branch: master
   specs:
     connect_vbms (1.2.0)
@@ -113,7 +113,7 @@ GEM
   remote: https://rubygems.org/
   specs:
     Ascii85 (1.1.0)
-    aasm (5.4.0)
+    aasm (5.5.0)
       concurrent-ruby (~> 1.0)
     actioncable (6.1.7.2)
       actionpack (= 6.1.7.2)
@@ -190,7 +190,7 @@ GEM
     attr_extras (6.2.5)
     awesome_print (1.9.2)
     aws-eventstream (1.2.0)
-    aws-partitions (1.701.0)
+    aws-partitions (1.705.0)
     aws-sdk-core (3.170.0)
       aws-eventstream (~> 1, >= 1.0.2)
       aws-partitions (~> 1, >= 1.651.0)
@@ -203,7 +203,7 @@ GEM
       aws-sdk-core (~> 3, >= 3.165.0)
       aws-sdk-kms (~> 1)
       aws-sigv4 (~> 1.4)
-    aws-sdk-sns (1.58.0)
+    aws-sdk-sns (1.59.0)
       aws-sdk-core (~> 3, >= 3.165.0)
       aws-sigv4 (~> 1.1)
     aws-sigv4 (1.5.2)
@@ -361,7 +361,7 @@ GEM
     factory_bot_rails (6.2.0)
       factory_bot (~> 6.2.0)
       railties (>= 5.0.0)
-    faker (3.1.0)
+    faker (3.1.1)
       i18n (>= 1.8.11, < 2)
     fakeredis (0.8.0)
       redis (~> 4.1)
@@ -553,7 +553,7 @@ GEM
     listen (3.7.0)
       rb-fsevent (~> 0.10, >= 0.10.3)
       rb-inotify (~> 0.9, >= 0.9.10)
-    lockbox (1.1.1)
+    lockbox (1.1.2)
     loofah (2.19.1)
       crass (~> 1.0.2)
       nokogiri (>= 1.5.9)
@@ -586,7 +586,7 @@ GEM
     netrc (0.11.0)
     nio4r (2.5.8)
     no_proxy_fix (0.1.2)
-    nokogiri (1.14.0)
+    nokogiri (1.14.1)
       mini_portile2 (~> 2.8.0)
       racc (~> 1.4)
     nori (2.6.0)
@@ -604,7 +604,7 @@ GEM
     octokit (4.21.0)
       faraday (>= 0.9)
       sawyer (~> 0.8.0, >= 0.5.3)
-    oj (3.14.0)
+    oj (3.14.1)
     okcomputer (1.18.4)
     olive_branch (4.0.1)
       multi_json
@@ -618,7 +618,7 @@ GEM
       activerecord (>= 6.0)
       request_store (~> 1.4)
     parallel (1.22.1)
-    parallel_tests (4.1.0)
+    parallel_tests (4.2.0)
       parallel
     parser (3.2.0.0)
       ast (~> 2.4.1)
@@ -945,13 +945,13 @@ GEM
       activerecord (>= 4.2)
     xmldsig (0.3.2)
       nokogiri
-    xmlenc (0.7.1)
+    xmlenc (0.8.0)
       activemodel (>= 3.0.0)
       activesupport (>= 3.0.0)
       nokogiri (>= 1.6.0, < 2.0.0)
       xmlmapper (>= 0.7.3)
-    xmlmapper (0.7.3)
-      nokogiri (~> 1.5)
+    xmlmapper (0.8.1)
+      nokogiri (~> 1.11)
     yard (0.9.28)
       webrick (~> 1.7.0)
     zeitwerk (2.6.6)
