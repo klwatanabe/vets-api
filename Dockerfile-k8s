@@ -57,7 +57,7 @@ RUN --mount=type=secret,id=GH_USER \
     --mount=type=secret,id=GH_PASSWORD \
     export GH_USER=$(cat /run/secrets/GH_USER) && \
     export GH_PASSWORD=$(cat /run/secrets/GH_PASSWORD) && \
-    cd .. && git clone https://${GH_USER}:${GH_PASSWORD}@github.com/department-of-veterans-affairs/vets-api-mockdata.git
+    if [ $GH_USER ] ; then cd .. && git clone https://${GH_USER}:${GH_PASSWORD}@github.com/department-of-veterans-affairs/vets-api-mockdata.git ; fi
 
 EXPOSE 3000
 
