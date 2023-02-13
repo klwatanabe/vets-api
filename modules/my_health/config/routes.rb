@@ -2,6 +2,10 @@
 
 MyHealth::Engine.routes.draw do
   namespace :v1 do
+    scope :medical_records do
+      resources :vaccines, only: [:index], defaults: { format: :json }
+    end
+
     scope :messaging do
       resources :triage_teams, only: [:index], defaults: { format: :json }, path: 'recipients'
 
