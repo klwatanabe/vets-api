@@ -32,7 +32,7 @@ COPY config/ca-trust/*.crt /usr/local/share/ca-certificates/
 
 # Download VA Certs
 COPY ./import-va-certs-pe.sh .
-RUN ./import-va-certs-pe.sh
+RUN ./import-va-certs-k8s.sh
 
 COPY config/clamd.conf /etc/clamav/clamd.conf
 
