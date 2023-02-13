@@ -1,5 +1,4 @@
 #!/bin/sh
-# TODO: Remove this file and update references to it when the k8s branch is merged to master
 
 (
     cd /usr/local/share/ca-certificates/
