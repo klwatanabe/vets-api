@@ -19,7 +19,6 @@ features:
   caregiver_use_facilities_API:
     actor_type: user
     description: Allow list of caregiver facilites to be fetched by way of the Facilities API.
-    enable_in_development: false
   career_counseling_confirmation_email:
     actor_type: user
     description: Enables Career Counseling claim email confirmation upon submission
@@ -31,19 +30,16 @@ features:
   hca_browser_monitoring_enabled:
     actor_type: user
     description: Enables browser monitoring for the health care application.
-    enable_in_development: false
-  hca_short_form_enabled:
-    actor_type: user
-    description: Enables Short Form for users with or self discloser of high disability.
-    enable_in_development: true
   hca_enrollment_status_override_enabled:
     actor_type: user
     description: Enables override of enrollment status for a user, to allow multiple submissions with same user.
-    enable_in_development: false
+  hca_household_v2_enabled:
+    actor_type: user
+    description: Enables the optimized household section flow.
+    enable_in_development: true
   hca_use_facilities_API:
     actor_type: user
     description: Allow list of medical care facilites to be fetched by way of the Facilities API.
-    enable_in_development: false
   cerner_allow_partial_facilities:
     actor_type: user
     description: This will allow cerner facilities to be set to partially cerner or all cerner.
@@ -251,6 +247,12 @@ features:
   decision_review_monthly_stats_report_enabled:
     actor_type: user
     description: Enables the monthly decision review stats report email
+  decision_review_ci_icn_support:
+    actor_type: user
+    description: Enables the X-VA-ICN header for Contestable Issues endpoints
+  decision_review_la_icn_support:
+    actor_type: user
+    description: Enables the X-VA-ICN header for the Legacy Appeals endpoint
   dependency_verification:
     actor_type: user
     description: Feature gates the dependency verification modal for updating the diaries service.
@@ -402,6 +404,9 @@ features:
     actor_type: user
     description: Enable new list loop pattern
     enable_in_development: true
+  show_mbs_preneed_change_va_4010007:
+    actor_type: user
+    description: Updates to text in form VA 40-10007
   medical_copays_six_mo_window:
     actor_type: user
     description: This will filter to only show medical copays within the last 6 months
@@ -414,9 +419,9 @@ features:
     actor_type: user
     description: This will use new API key name when available
     enable_in_development: true
-  mega_menu_mobile_v2:
+  mhv_landing_page_enabled:
     actor_type: user
-    description: Separates mobile mega menu from desktop mega menu
+    description: Enables the new MHV landing page on VA.gov
     enable_in_development: true
   mhv_secure_messaging_to_va_gov_release:
     actor_type: user
@@ -559,9 +564,6 @@ features:
     actor_type: user
     description: Toggles the availability of sharable links to deep link to content
     enable_in_development: true
-  shift_vets_banner:
-    actor_type: user
-    description: Shift veteran banner position on the home page
   show526_wizard:
     actor_type: user
     description: This determines when the wizard should show up on the form 526 intro page
@@ -666,16 +668,9 @@ features:
     actor_type: user
     description: Enable showing Supplemental Claim form 0995
     enable_in_development: true
-  va_global_downtime_notification:
-    actor_type: user
-    description: Enables global downtime notification- do not use in production
   va_home_preview_modal:
     actor_type: user
     description: Allows user testing for Homepage redesign soft launch modal
-  va_online_filter36_vats:
-    actor_type: user
-    description: Update the filtering logic from 24 months to 36 months for a given clinic in the direct appointment schedule flow
-    enable_in_development: true
   va_online_scheduling:
     actor_type: user
     description: Allows veterans to view their VA and Community Care appointments
@@ -691,10 +686,6 @@ features:
   va_online_scheduling_direct:
     actor_type: user
     description: Allows veterans to directly schedule VA appointments
-    enable_in_development: true
-  va_online_scheduling_facility_selection_v2_2:
-    actor_type: user
-    description: Set up toggle in anticipation of the next iteration of facility selection, version 2.2.
     enable_in_development: true
   va_online_scheduling_requests:
     actor_type: user
@@ -720,14 +711,6 @@ features:
     actor_type: user
     description: Toggle for new mobile facility service v2 endpoints
     enable_in_development: true
-  va_online_scheduling_variant_testing:
-    actor_type: user
-    enable_in_development: true
-    description: Toggle for VAOS variant testing.
-  va_online_scheduling_poc_health_apt:
-    actor_type: user
-    enable_in_development: true
-    description: Toggle for health apartment proof of concept
   va_online_scheduling_clinic_location:
     actor_type: user
     enable_in_development: true
@@ -831,3 +814,6 @@ features:
   form526_backup_submission_force_offramp:
     actor_type: user
     description: If enabled add the "forceOfframp" flag to backup 526 submission metadata
+  bgs_via_faraday:
+    actor_type: user
+    description: If enabled uses the faraday connection to BGS as opposed to bgs-ext
