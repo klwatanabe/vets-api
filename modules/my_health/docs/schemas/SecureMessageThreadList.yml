@@ -5,4 +5,4 @@ properties:
   data:
     type: array
     items:
-      $ref: "./AppointmentRequestMessage.yml"
+      $ref: './SecureMessageThread.yml'
