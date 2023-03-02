@@ -85,6 +85,31 @@ FactoryBot.define do
                              edipi: t.edipi,
                              sign_in: t.sign_in)
       user.instance_variable_set(:@identity, user_identity)
+
+      given_names = [t.first_name]
+      given_names << t.middle_name if t.middle_name.present?
+      stub_mpi(
+        build(
+          :mvi_profile,
+          address: t.address,
+          birls_id: t.birls_id,
+          birth_date: t.birth_date,
+          cerner_id: t.cerner_id,
+          cerner_facility_ids: t.cerner_facility_ids,
+          edipi: t.edipi,
+          family_name: t.last_name,
+          gender: t.gender,
+          given_names: given_names,
+          home_phone: t.home_phone,
+          mhv_ids: t.mhv_ids,
+          participant_id: t.participant_id,
+          person_types: t.person_types,
+          ssn: t.ssn,
+          suffix: t.suffix,
+          vha_facility_ids: t.vha_facility_ids,
+          vha_facility_hash: t.vha_facility_hash
+        )
+      )
     end
 
     # This is used by the response_builder helper to build a user from saml attributes
@@ -659,5 +684,6 @@ FactoryBot.define do
         )
       end
     end
+
   end
 end
