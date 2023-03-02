@@ -4,6 +4,7 @@ x-app: &common
   build:
     args:
       BUNDLE_ENTERPRISE__CONTRIBSYS__COM: "${BUNDLE_ENTERPRISE__CONTRIBSYS__COM}"
+      CACHE_IMAGE: vets-api
     context: .
   environment:
     BUNDLE_ENTERPRISE__CONTRIBSYS__COM: "${BUNDLE_ENTERPRISE__CONTRIBSYS__COM}"
@@ -12,7 +13,8 @@ x-app: &common
     "Settings.redis.app_data.url": "redis://redis:6379"
     "Settings.redis.sidekiq.url": "redis://redis:6379"
     "Settings.redis.rails_cache.url": "redis://redis:6379"
-  image: vets-api:${DOCKER_IMAGE:-latest}
+  image: vets-api:${DOCKER_IMAGE:-latest} # Should we pass a gem cache version here
+
   volumes:
     - "../vets-api-mockdata:/cache"
     - .:/app:cached

@@ -55,6 +55,7 @@ jobs:
           build-args: |
             BUNDLE_ENTERPRISE__CONTRIBSYS__COM=${{ env.BUNDLE_ENTERPRISE__CONTRIBSYS__COM }}
             USER_ID=${{ env.USER_ID }}
+            CACHE_IMAGE=vets-api
           context: .
           push: false
           load: true
