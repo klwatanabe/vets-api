@@ -47,6 +47,7 @@ FactoryBot.define do
       cerner_facility_ids { %w[200MHV] }
       vha_facility_ids { %w[200CRNR 200MHV] }
       vha_facility_hash { { '200CRNR' => %w[123456], '200MHV' => %w[123456] } }
+      vet360_id { nil }
 
       sign_in do
         {
@@ -59,57 +60,61 @@ FactoryBot.define do
       loa do
         { current: LOA::ONE, highest: LOA::THREE }
       end
+
+      user_identity do
+        { authn_context: authn_context,
+          uuid: uuid,
+          email: email,
+          first_name: first_name,
+          middle_name: middle_name,
+          last_name: last_name,
+          gender: gender,
+          birth_date: birth_date,
+          ssn: ssn,
+          idme_uuid: idme_uuid,
+          logingov_uuid: logingov_uuid,
+          verified_at: verified_at,
+          sec_id: sec_id,
+          icn: icn,
+          mhv_icn: mhv_icn,
+          loa: loa,
+          multifactor: multifactor,
+          mhv_correlation_id: mhv_correlation_id,
+          mhv_account_type: mhv_account_type,
+          edipi: edipi,
+          sign_in: sign_in }
+      end
+
+      mpi_profile do
+        given_names = [first_name]
+        given_names << middle_name if middle_name.present?
+
+        { address: address,
+          birls_id: birls_id,
+          birth_date: birth_date,
+          cerner_id: cerner_id,
+          cerner_facility_ids: cerner_facility_ids,
+          edipi: edipi,
+          family_name: last_name,
+          gender: gender,
+          given_names: given_names,
+          home_phone: home_phone,
+          mhv_ids: mhv_ids,
+          participant_id: participant_id,
+          person_types: person_types,
+          ssn: ssn,
+          suffix: suffix,
+          vha_facility_ids: vha_facility_ids,
+          vha_facility_hash: vha_facility_hash,
+          vet360_id: vet360_id }
+      end
     end
 
     callback(:after_build, :after_stub, :after_create) do |user, t|
       user_identity = create(:user_identity,
-                             authn_context: t.authn_context,
-                             uuid: user.uuid,
-                             email: t.email,
-                             first_name: t.first_name,
-                             middle_name: t.middle_name,
-                             last_name: t.last_name,
-                             gender: t.gender,
-                             birth_date: t.birth_date,
-                             ssn: t.ssn,
-                             idme_uuid: t.idme_uuid,
-                             logingov_uuid: t.logingov_uuid,
-                             verified_at: t.verified_at,
-                             sec_id: t.sec_id,
-                             icn: t.icn,
-                             mhv_icn: t.mhv_icn,
-                             loa: t.loa,
-                             multifactor: t.multifactor,
-                             mhv_correlation_id: t.mhv_correlation_id,
-                             mhv_account_type: t.mhv_account_type,
-                             edipi: t.edipi,
-                             sign_in: t.sign_in)
+                             t.user_identity)
       user.instance_variable_set(:@identity, user_identity)
-
-      given_names = [t.first_name]
-      given_names << t.middle_name if t.middle_name.present?
-      stub_mpi(
-        build(
-          :mvi_profile,
-          address: t.address,
-          birls_id: t.birls_id,
-          birth_date: t.birth_date,
-          cerner_id: t.cerner_id,
-          cerner_facility_ids: t.cerner_facility_ids,
-          edipi: t.edipi,
-          family_name: t.last_name,
-          gender: t.gender,
-          given_names: given_names,
-          home_phone: t.home_phone,
-          mhv_ids: t.mhv_ids,
-          participant_id: t.participant_id,
-          person_types: t.person_types,
-          ssn: t.ssn,
-          suffix: t.suffix,
-          vha_facility_ids: t.vha_facility_ids,
-          vha_facility_hash: t.vha_facility_hash
-        )
-      )
+      stub_mpi(build(:mvi_profile, t.mpi_profile))
     end
 
     # This is used by the response_builder helper to build a user from saml attributes
@@ -684,6 +689,5 @@ FactoryBot.define do
         )
       end
     end
-
   end
 end
