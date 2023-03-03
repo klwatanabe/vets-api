@@ -112,6 +112,14 @@ All of the OSX instructions assume `homebrew` is your [package manager](https://
       - ```bash
          PG_CPPFLAGS='-DACCEPT_USE_OF_DEPRECATED_PROJ_API_H -I/usr/local/include' CFLAGS='-DACCEPT_USE_OF_DEPRECATED_PROJ_API_H -I/usr/local/include' pex install postgis
         ```
+   - run postgres (e.g. open postgres.app, create a new server, and click "initialize")
+
+1. Install redis
+    ```bash
+    brew install redis
+    brew services start redis
+    ```
+
 
 1. Install binary dependencies:
     ```bash
