@@ -411,7 +411,7 @@ RSpec.describe 'IntentToFiles', type: :request do
                 with_okta_user(scopes) do |auth_header|
                   survivor_data = data
                   survivor_data[:type] = 'survivor'
-                  survivor_data[:claimantSsn] = '123456'
+                  survivor_data[:claimantSsn] = '123456789'
                   post itf_submit_path, params: survivor_data, headers: auth_header
                   expect(response.status).to eq(200)
                 end
@@ -423,6 +423,18 @@ RSpec.describe 'IntentToFiles', type: :request do
                 with_okta_user(scopes) do |auth_header|
                   survivor_data = data
                   survivor_data[:type] = 'survivor'
+                  post itf_submit_path, params: survivor_data, headers: auth_header
+                  expect(response.status).to eq(422)
+                end
+              end
+            end
+
+            context 'when invalid parameter is provided' do
+              it 'returns a 422' do
+                with_okta_user(scopes) do |auth_header|
+                  survivor_data = data
+                  survivor_data[:type] = 'survivor'
+                  survivor_data[:claimantSsn] = 'abcdefghi'
                   post itf_submit_path, params: survivor_data, headers: auth_header
                   expect(response.status).to eq(422)
                 end
@@ -530,6 +542,20 @@ RSpec.describe 'IntentToFiles', type: :request do
         end
 
         context 'when payload is invalid' do
+          context "when 'type' is survivor" do
+            context "when 'claimantSsn' is blank" do
+              it 'returns a 422' do
+                with_okta_user(scopes) do |auth_header|
+                  invalid_data = data
+                  invalid_data[:type] = 'survivor'
+                  invalid_data[:claimantSsn] = ''
+                  post itf_validate_path, params: invalid_data, headers: auth_header
+                  expect(response.status).to eq(422)
+                end
+              end
+            end
+          end
+
           context "when 'type' is invalid" do
             context "when 'type' is blank" do
               it 'returns a 400' do
