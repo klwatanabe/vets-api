@@ -462,7 +462,7 @@ module ClaimsApi
             {
               claim_phase_dates:
                 {
-                  phase_change_date: format_bgs_phase_chng_dates(bgs_claim[:benefit_claim_details_dto]),
+                  phase_change_date: format_bgs_phase_chng_dates(bgs_claim),
                   current_phase_back: current_phase_back(bgs_claim),
                   latest_phase_type: latest_phase_type(bgs_claim),
                   previous_phases: get_bgs_phase_completed_dates(bgs_claim)
