@@ -47,7 +47,7 @@ FactoryBot.define do
       cerner_facility_ids { %w[200MHV] }
       vha_facility_ids { %w[200CRNR 200MHV] }
       vha_facility_hash { { '200CRNR' => %w[123456], '200MHV' => %w[123456] } }
-      vet360_id { nil }
+      vet360_id { SecureRandom. }
 
       sign_in do
         {
