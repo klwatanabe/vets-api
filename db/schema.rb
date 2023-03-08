@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2023_02_14_001703) do
+ActiveRecord::Schema.define(version: 2023_03_03_003828) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "btree_gin"
@@ -320,6 +320,20 @@ ActiveRecord::Schema.define(version: 2023_02_14_001703) do
     t.text "file_data_ciphertext"
     t.text "encrypted_kms_key"
     t.date "verified_decryptable_at"
+  end
+
+  create_table "client_configs", force: :cascade do |t|
+    t.string "client_id", null: false
+    t.string "authentication", null: false
+    t.boolean "anti_csrf", null: false
+    t.text "redirect_uri", null: false
+    t.interval "access_token_duration", null: false
+    t.string "access_token_audience", null: false
+    t.interval "refresh_token_duration", null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.text "logout_redirect_uri"
+    t.index ["client_id"], name: "index_client_configs_on_client_id", unique: true
   end
 
   create_table "covid_vaccine_expanded_registration_submissions", id: :serial, force: :cascade do |t|
@@ -1037,19 +1051,6 @@ ActiveRecord::Schema.define(version: 2023_02_14_001703) do
     t.uuid "guid", null: false
     t.json "response"
     t.index ["guid"], name: "index_vic_submissions_on_guid", unique: true
-  end
-
-  create_table "virtual_agent_user_access_records", force: :cascade do |t|
-    t.string "action_type", null: false
-    t.string "first_name"
-    t.string "last_name"
-    t.string "ssn", null: false
-    t.string "icn", null: false
-    t.datetime "created_at", precision: 6, null: false
-    t.datetime "updated_at", precision: 6, null: false
-    t.index ["action_type"], name: "index_virtual_agent_user_access_records_on_action_type"
-    t.index ["icn"], name: "index_virtual_agent_user_access_records_on_icn"
-    t.index ["ssn"], name: "index_virtual_agent_user_access_records_on_ssn"
   end
 
   create_table "webhooks_notification_attempt_assocs", id: false, force: :cascade do |t|

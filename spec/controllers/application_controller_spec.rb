@@ -88,8 +88,8 @@ RSpec.describe ApplicationController, type: :controller do
       end
     end
 
-    it 'does log exceptions to sentry if Pundit::NotAuthorizedError' do
-      expect(Raven).to receive(:capture_exception).with(Pundit::NotAuthorizedError, { level: 'info' })
+    it 'does not log exceptions to sentry if Pundit::NotAuthorizedError' do
+      expect(Raven).not_to receive(:capture_exception).with(Pundit::NotAuthorizedError, { level: 'info' })
       expect(Raven).not_to receive(:capture_message)
       get :not_authorized
     end
@@ -227,24 +227,28 @@ RSpec.describe ApplicationController, type: :controller do
       allow_any_instance_of(Rx::Client)
         .to receive(:connection).and_raise(Faraday::ConnectionFailed, 'some message')
       expect(Raven).to receive(:extra_context).once.with(
-        request_uuid: nil
+        { request_uuid: nil }
       )
       expect(Raven).to receive(:extra_context).once.with(
-        va_exception_errors: [{
-          title: 'Service unavailable',
-          detail: 'Backend Service Outage',
-          code: '503',
-          status: '503'
-        }]
+        {
+          va_exception_errors: [{
+            title: 'Service unavailable',
+            detail: 'Backend Service Outage',
+            code: '503',
+            status: '503'
+          }]
+        }
       )
       # if current user is nil it means user is not signed in.
       expect(Raven).to receive(:tags_context).once.with(
-        controller_name: 'anonymous',
-        sign_in_method: 'not-signed-in',
-        source: 'my_testing'
+        {
+          controller_name: 'anonymous',
+          sign_in_method: 'not-signed-in',
+          source: 'my_testing'
+        }
       )
       expect(Raven).to receive(:tags_context).once.with(
-        error: 'mhv_session'
+        { error: 'mhv_session' }
       )
       # since user is not signed in this shouldnt get called.
       expect(Raven).not_to receive(:user_context)
@@ -268,30 +272,34 @@ RSpec.describe ApplicationController, type: :controller do
         allow_any_instance_of(Rx::Client)
           .to receive(:connection).and_raise(Faraday::ConnectionFailed, 'some message')
         expect(Raven).to receive(:extra_context).once.with(
-          request_uuid: nil
+          { request_uuid: nil }
         )
         expect(Raven).to receive(:extra_context).once.with(
-          va_exception_errors: [{
-            title: 'Service unavailable',
-            detail: 'Backend Service Outage',
-            code: '503',
-            status: '503'
-          }]
+          {
+            va_exception_errors: [{
+              title: 'Service unavailable',
+              detail: 'Backend Service Outage',
+              code: '503',
+              status: '503'
+            }]
+          }
         )
         # if authn_context is nil on current_user it means idme
-        expect(Raven).to receive(:tags_context).once.with(controller_name: 'anonymous',
-                                                          sign_in_method: SignIn::Constants::Auth::IDME,
-                                                          sign_in_acct_type: nil)
+        expect(Raven).to receive(:tags_context).once.with(
+          { controller_name: 'anonymous', sign_in_method: SignIn::Constants::Auth::IDME, sign_in_acct_type: nil }
+        )
 
         expect(Raven).to receive(:tags_context).once.with(
-          error: 'mhv_session'
+          { error: 'mhv_session' }
         )
         # since user IS signed in, this SHOULD get called
         expect(Raven).to receive(:user_context).with(
-          id: user.uuid,
-          authn_context: user.authn_context,
-          loa: user.loa,
-          mhv_icn: user.mhv_icn
+          {
+            id: user.uuid,
+            authn_context: user.authn_context,
+            loa: user.loa,
+            mhv_icn: user.mhv_icn
+          }
         )
         expect(Raven).to receive(:capture_exception).once.with(
           Faraday::ConnectionFailed,
@@ -318,12 +326,12 @@ RSpec.describe ApplicationController, type: :controller do
           expect(subject.keys).to eq(keys_for_all_env)
         end
 
-        it 'logs info level and extra context to Sentry' do
-          expect(Raven).to receive(:capture_exception).once.with(
+        it 'does not log info level and extra context to Sentry' do
+          expect(Raven).not_to receive(:capture_exception).with(
             Pundit::NotAuthorizedError,
             level: 'info'
           )
-          expect(Raven).to receive(:extra_context).once.with(
+          expect(Raven).not_to receive(:extra_context).with(
             va_exception_errors: [{
               title: 'Forbidden',
               detail: 'User does not have access to the requested resource',

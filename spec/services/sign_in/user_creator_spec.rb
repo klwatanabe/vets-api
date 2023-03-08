@@ -30,7 +30,8 @@ RSpec.describe SignIn::UserCreator do
              type: type)
     end
     let(:client_state) { SecureRandom.alphanumeric(SignIn::Constants::Auth::CLIENT_STATE_MINIMUM_LENGTH) }
-    let(:client_id) { SignIn::Constants::Auth::MOBILE_CLIENT }
+    let(:client_id) { client_config.client_id }
+    let(:client_config) { create(:client_config) }
     let(:code_challenge) { 'some-code-challenge' }
     let(:type) { service_name }
     let(:current_ial) { IAL::TWO }
@@ -91,7 +92,7 @@ RSpec.describe SignIn::UserCreator do
       expect(user_code_map.login_code).to eq(login_code)
       expect(user_code_map.type).to eq(type)
       expect(user_code_map.client_state).to eq(client_state)
-      expect(user_code_map.client_id).to eq(client_id)
+      expect(user_code_map.client_config).to eq(client_config)
     end
 
     it 'creates a code container mapped to expected login code' do

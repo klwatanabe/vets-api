@@ -23,13 +23,15 @@ module V0
       acr_for_type = SignIn::AcrTranslator.new(acr: acr, type: type).perform
       state = SignIn::StatePayloadJwtEncoder.new(code_challenge: code_challenge,
                                                  code_challenge_method: code_challenge_method,
-                                                 acr: acr, client_id: client_id,
-                                                 type: type, client_state: client_state).perform
+                                                 acr: acr,
+                                                 client_config: client_config(client_id),
+                                                 type: type,
+                                                 client_state: client_state).perform
       context = { type: type, client_id: client_id, acr: acr }
 
       sign_in_logger.info('authorize', context)
       StatsD.increment(SignIn::Constants::Statsd::STATSD_SIS_AUTHORIZE_SUCCESS,
-                       tags: ["type:#{context[:type]}", "client_id:#{context[:client_id]}", "acr:#{context[:acr]}"])
+                       tags: ["type:#{type}", "client_id:#{client_id}", "acr:#{acr}"])
 
       render body: auth_service(type).render_auth(state: state, acr: acr_for_type), content_type: 'text/html'
     rescue SignIn::Errors::StandardError => e
@@ -55,7 +57,7 @@ module V0
       handle_credential_provider_error(error, state_payload&.type) if error
       service_token_response = auth_service(state_payload.type).token(code)
 
-      raise SignIn::Errors::CodeInvalidError, message: 'Code is not valid' unless service_token_response
+      raise SignIn::Errors::CodeInvalidError.new message: 'Code is not valid' unless service_token_response
 
       user_info = auth_service(state_payload.type).user_info(service_token_response[:access_token])
       credential_level = SignIn::CredentialLevelCreator.new(requested_acr: state_payload.acr,
@@ -108,7 +110,7 @@ module V0
       refresh_token = refresh_token_param.presence
       anti_csrf_token = anti_csrf_token_param.presence
 
-      raise SignIn::Errors::MalformedParamsError, message: 'Refresh token is not defined' unless refresh_token
+      raise SignIn::Errors::MalformedParamsError.new message: 'Refresh token is not defined' unless refresh_token
 
       decrypted_refresh_token = SignIn::RefreshTokenDecryptor.new(encrypted_refresh_token: refresh_token).perform
       session_container = SignIn::SessionRefresher.new(refresh_token: decrypted_refresh_token,
@@ -134,7 +136,7 @@ module V0
       refresh_token = params[:refresh_token].presence
       anti_csrf_token = params[:anti_csrf_token].presence
 
-      raise SignIn::Errors::MalformedParamsError, message: 'Refresh token is not defined' unless refresh_token
+      raise SignIn::Errors::MalformedParamsError.new message: 'Refresh token is not defined' unless refresh_token
 
       decrypted_refresh_token = SignIn::RefreshTokenDecryptor.new(encrypted_refresh_token: refresh_token).perform
       SignIn::SessionRevoker.new(refresh_token: decrypted_refresh_token, anti_csrf_token: anti_csrf_token).perform
@@ -172,7 +174,7 @@ module V0
       anti_csrf_token = anti_csrf_token_param.presence
 
       unless load_user(skip_expiration_check: true)
-        raise SignIn::Errors::LogoutAuthorizationError, message: 'Unable to Authorize User'
+        raise SignIn::Errors::LogoutAuthorizationError.new message: 'Unable to Authorize User'
       end
 
       SignIn::SessionRevoker.new(access_token: @access_token, anti_csrf_token: anti_csrf_token).perform
@@ -196,30 +198,30 @@ module V0
     private
 
     def validate_authorize_params(type, client_id, code_challenge, code_challenge_method, acr)
-      unless SignIn::Constants::Auth::CLIENT_IDS.include?(client_id)
-        raise SignIn::Errors::MalformedParamsError, message: 'Client id is not valid'
+      if client_config(client_id).blank?
+        raise SignIn::Errors::MalformedParamsError.new message: 'Client id is not valid'
       end
       unless SignIn::Constants::Auth::CSP_TYPES.include?(type)
-        raise SignIn::Errors::AuthorizeInvalidType, message: 'Type is not valid'
+        raise SignIn::Errors::AuthorizeInvalidType.new message: 'Type is not valid'
       end
       unless SignIn::Constants::Auth::ACR_VALUES.include?(acr)
-        raise SignIn::Errors::MalformedParamsError, message: 'ACR is not valid'
+        raise SignIn::Errors::MalformedParamsError.new message: 'ACR is not valid'
       end
-      raise SignIn::Errors::MalformedParamsError, message: 'Code Challenge is not defined' unless code_challenge
+      raise SignIn::Errors::MalformedParamsError.new message: 'Code Challenge is not defined' unless code_challenge
       unless code_challenge_method
-        raise SignIn::Errors::MalformedParamsError, message: 'Code Challenge Method is not defined'
+        raise SignIn::Errors::MalformedParamsError.new message: 'Code Challenge Method is not defined'
       end
     end
 
     def validate_callback_params(code, state, error)
-      raise SignIn::Errors::MalformedParamsError, message: 'Code is not defined' unless code || error
-      raise SignIn::Errors::MalformedParamsError, message: 'State is not defined' unless state
+      raise SignIn::Errors::MalformedParamsError.new message: 'Code is not defined' unless code || error
+      raise SignIn::Errors::MalformedParamsError.new message: 'State is not defined' unless state
     end
 
     def validate_token_params(code, code_verifier, grant_type)
-      raise SignIn::Errors::MalformedParamsError, message: 'Code is not defined' unless code
-      raise SignIn::Errors::MalformedParamsError, message: 'Code Verifier is not defined' unless code_verifier
-      raise SignIn::Errors::MalformedParamsError, message: 'Grant Type is not defined' unless grant_type
+      raise SignIn::Errors::MalformedParamsError.new message: 'Code is not defined' unless code
+      raise SignIn::Errors::MalformedParamsError.new message: 'Code Verifier is not defined' unless code_verifier
+      raise SignIn::Errors::MalformedParamsError.new message: 'Grant Type is not defined' unless grant_type
     end
 
     def logout_get_redirect_url
@@ -232,7 +234,7 @@ module V0
     end
 
     def handle_pre_login_error(error, client_id)
-      if SignIn::Constants::Auth::CLIENT_IDS.include?(client_id) && client_config(client_id).cookie_auth?
+      if cookie_authentication?(client_id)
         error_code = error.try(:code) || SignIn::Constants::ErrorCode::INVALID_REQUEST
         redirect_to failed_auth_url({ auth: 'fail', code: error_code, request_id: request.request_id })
       else
@@ -248,11 +250,11 @@ module V0
                      else
                        SignIn::Constants::ErrorCode::IDME_VERIFICATION_DENIED
                      end
-        raise SignIn::Errors::AccessDeniedError, message: error_message, code: error_code
+        raise SignIn::Errors::AccessDeniedError.new message: error_message, code: error_code
       else
         error_message = 'Unknown Credential Provider Issue'
         error_code = SignIn::Constants::ErrorCode::GENERIC_EXTERNAL_ISSUE
-        raise SignIn::Errors::CredentialProviderError, message: error_message, code: error_code
+        raise SignIn::Errors::CredentialProviderError.new message: error_message, code: error_code
       end
     end
 
@@ -266,7 +268,8 @@ module V0
       acr_for_type = SignIn::AcrTranslator.new(acr: state_payload.acr, type: state_payload.type, uplevel: true).perform
       state = SignIn::StatePayloadJwtEncoder.new(code_challenge: state_payload.code_challenge,
                                                  code_challenge_method: SignIn::Constants::Auth::CODE_CHALLENGE_METHOD,
-                                                 acr: state_payload.acr, client_id: state_payload.client_id,
+                                                 acr: state_payload.acr,
+                                                 client_config: client_config(state_payload.client_id),
                                                  type: state_payload.type,
                                                  client_state: state_payload.client_state).perform
       render body: auth_service(state_payload.type).render_auth(state: state, acr: acr_for_type),
@@ -288,10 +291,10 @@ module V0
       }
       sign_in_logger.info('callback', context)
       StatsD.increment(SignIn::Constants::Statsd::STATSD_SIS_CALLBACK_SUCCESS,
-                       tags: ["type:#{context[:type]}",
-                              "client_id:#{context[:client_id]}",
-                              "ial:#{context[:ial]}",
-                              "acr:#{context[:acr]}"])
+                       tags: ["type:#{state_payload.type}",
+                              "client_id:#{state_payload.client_id}",
+                              "ial:#{credential_level.current_ial}",
+                              "acr:#{state_payload.acr}"])
 
       redirect_to SignIn::LoginRedirectUrlGenerator.new(user_code_map: user_code_map).perform
     end
@@ -324,8 +327,12 @@ module V0
       end
     end
 
+    def cookie_authentication?(client_id)
+      client_config(client_id)&.cookie_auth?
+    end
+
     def client_config(client_id)
-      @client_config ||= SignIn::ClientConfig.new(client_id: client_id)
+      @client_config ||= SignIn::ClientConfig.find_by(client_id: client_id)
     end
 
     def idme_auth_service(type)

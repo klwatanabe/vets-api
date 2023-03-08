@@ -121,6 +121,8 @@ Rails.application.routes.draw do
       resources :burial_claims, only: %i[create show]
     end
 
+    resources :benefits_claims, only: %i[index show]
+
     get 'claim_letters', to: 'claim_letters#index'
     get 'claim_letters/:document_id', to: 'claim_letters#show'
 
@@ -430,6 +432,10 @@ Rails.application.routes.draw do
   Sidekiq::Web.register GithubAuthentication::SidekiqWeb unless Rails.env.development? || Settings.sidekiq_admin_panel
 
   mount TestUserDashboard::Engine, at: '/test_user_dashboard' if Settings.test_user_dashboard.env == 'staging'
+
+  if Settings.vsp_enironment == 'localhost' || Settings.vsp_environment == 'development'
+    mount MockedAuthentication::Engine, at: '/mocked_authentication'
+  end
 
   mount Flipper::UI.app(Flipper.instance) => '/flipper', constraints: Flipper::AdminUserConstraint.new
 

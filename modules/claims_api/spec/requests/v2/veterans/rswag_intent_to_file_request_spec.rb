@@ -17,18 +17,19 @@ describe 'IntentToFile', swagger_doc: Rswag::TextHelpers.new.claims_api_docs,
         { bearer_token: [] }
       ]
       produces 'application/json'
-      description "Returns Veteran's last active Intent to File submission for given 'type'."
+      description "Returns Veteran's last active Intent to File submission for given benefit type."
 
       parameter name: 'veteranId',
                 in: :path,
                 required: true,
                 type: :string,
+                example: '1012667145V762142',
                 description: 'ID of Veteran'
       parameter name: 'type',
                 in: :path,
                 required: true,
                 type: :string,
-                description: 'Type of Intent to File to return. Available values - compensation, pension, burial'
+                description: 'Type of Intent to File to return. Available values - compensation, pension, survivor.'
       let(:veteranId) { '1013062086V794840' } # rubocop:disable RSpec/VariableName
       let(:type) { 'compensation' }
       let(:Authorization) { 'Bearer token' }
@@ -180,12 +181,13 @@ describe 'IntentToFile', swagger_doc: Rswag::TextHelpers.new.claims_api_docs,
       ]
       consumes 'application/json'
       produces 'application/json'
-      description 'Establishes an intent to file for disability compensation and pension claims.'
+      description 'Establishes an Intent to File for disability compensation, pension, and survivor claims.'
 
       parameter name: 'veteranId',
                 in: :path,
                 required: true,
                 type: :string,
+                example: '1012667145V762142',
                 description: 'ID of Veteran'
       let(:veteranId) { '1013062086V794840' } # rubocop:disable RSpec/VariableName
       let(:type) { 'compensation' }
@@ -337,6 +339,40 @@ describe 'IntentToFile', swagger_doc: Rswag::TextHelpers.new.claims_api_docs,
           end
         end
       end
+
+      describe 'Getting a 422 response' do
+        response '422', 'Unprocessable entity' do
+          schema JSON.parse(File.read(Rails.root.join('spec', 'support', 'schemas', 'claims_api', 'v2', 'errors',
+                                                      'default.json')))
+
+          let(:scopes) { %w[claim.write] }
+          let(:data) { { type: 'survivor', claimantSsn: '796111863' } }
+          let(:veteranId) { '1013062086V794840' } # rubocop:disable RSpec/VariableName
+
+          before do |example|
+            stub_poa_verification
+            stub_mpi
+
+            with_okta_user(scopes) do
+              VCR.use_cassette('bgs/intent_to_file_web_service/insert_intent_to_file') do
+                submit_request(example.metadata)
+              end
+            end
+          end
+
+          after do |example|
+            example.metadata[:response][:content] = {
+              'application/json' => {
+                example: JSON.parse(response.body, symbolize_names: true)
+              }
+            }
+          end
+
+          it 'returns a 422 response' do |example|
+            assert_response_matches_metadata(example.metadata)
+          end
+        end
+      end
     end
   end
 
@@ -351,12 +387,13 @@ describe 'IntentToFile', swagger_doc: Rswag::TextHelpers.new.claims_api_docs,
       ]
       consumes 'application/json'
       produces 'application/json'
-      description 'Validates an intent to file for disability compensation and pension claims.'
+      description 'Validates an Intent to File for disability compensation, pension, and survivor claims.'
 
       parameter name: 'veteranId',
                 in: :path,
                 required: true,
                 type: :string,
+                example: '1012667145V762142',
                 description: 'ID of Veteran'
       let(:veteranId) { '1013062086V794840' } # rubocop:disable RSpec/VariableName
       let(:type) { 'compensation' }

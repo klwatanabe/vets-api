@@ -14,8 +14,7 @@ module V0
     def create
       feature = params[:feature]
       unless MHVOptInFlag::FEATURES.include?(feature)
-        raise MHVOptInFlagFeatureNotValid,
-              message: 'Feature param is not valid'
+        raise MHVOptInFlagFeatureNotValid.new message: 'Feature param is not valid'
       end
 
       status = :ok

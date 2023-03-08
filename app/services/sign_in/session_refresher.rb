@@ -21,19 +21,19 @@ module SignIn
 
     def anti_csrf_check
       if anti_csrf_token != refresh_token.anti_csrf_token
-        raise Errors::AntiCSRFMismatchError, message: 'Anti CSRF token is not valid'
+        raise Errors::AntiCSRFMismatchError.new message: 'Anti CSRF token is not valid'
       end
     end
 
     def find_valid_oauth_session
       @session ||= OAuthSession.find_by(handle: refresh_token.session_handle)
-      raise Errors::SessionNotAuthorizedError, message: 'No valid Session found' unless session&.active?
+      raise Errors::SessionNotAuthorizedError.new message: 'No valid Session found' unless session&.active?
     end
 
     def detect_token_theft
       unless refresh_token_in_session? || parent_refresh_token_in_session?
         session.destroy!
-        raise Errors::TokenTheftDetectedError, message: 'Token theft detected'
+        raise Errors::TokenTheftDetectedError.new message: 'Token theft detected'
       end
     end
 
@@ -49,7 +49,7 @@ module SignIn
       SessionContainer.new(session: session,
                            refresh_token: child_refresh_token,
                            access_token: access_token,
-                           client_id: session.client_id,
+                           client_config: client_config,
                            anti_csrf_token: updated_anti_csrf_token)
     end
 
@@ -73,6 +73,7 @@ module SignIn
         session_handle: session.handle,
         client_id: session.client_id,
         user_uuid: refresh_token.user_uuid,
+        audience: audience,
         refresh_token_hash: get_hash(child_refresh_token.to_json),
         parent_refresh_token_hash: refresh_token_hash,
         anti_csrf_token: updated_anti_csrf_token,
@@ -97,11 +98,15 @@ module SignIn
     end
 
     def anti_csrf_enabled_client?
-      client_config.anti_csrf?
+      client_config.anti_csrf
+    end
+
+    def audience
+      @audience ||= client_config.access_token_audience
     end
 
     def client_config
-      @client_config ||= SignIn::ClientConfig.new(client_id: session.client_id)
+      @client_config ||= SignIn::ClientConfig.find_by!(client_id: session.client_id)
     end
 
     def get_hash(object)

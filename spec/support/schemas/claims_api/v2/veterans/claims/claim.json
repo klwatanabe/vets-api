@@ -12,7 +12,7 @@
         "id": {
           "type": "string",
           "nullable": true,
-          "description": "Claim ID in VBMS",
+          "description": "Claim ID in VBMS. If a claim was submitted with Lighthouse and not successfully established upstream, it could have a null claimId.",
           "example": "600131328"
         },
         "type": {
@@ -204,7 +204,7 @@
                 "PREPARATION_FOR_NOTIFICATION",
                 "COMPLETE",
                 "ERRORED",
-                "CANCELLED"
+                "CANCELED"
               ]
             },
             "submitterApplicationCode": {
@@ -325,7 +325,14 @@
                     "type": "string",
                     "nullable": true,
                     "description": "Enum with the status of the tracked item",
-                    "example": "NO_LONGER_REQUIRED"
+                    "example": "NO_LONGER_REQUIRED",
+                    "enum": [
+                      "ACCEPTED",
+                      "INITIAL_REVIEW_COMPLETE",
+                      "NEEDED",
+                      "NO_LONGER_REQUIRED",
+                      "SUBMITTED_AWAITING_REVIEW"
+                    ]
                   },
                   "uploaded": {
                     "type": "boolean",

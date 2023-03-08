@@ -1,6 +1,6 @@
 hostname: 127.0.0.1:3000 # possible fallback for unsafe request.host
 
-vsp_environment:
+vsp_environment: localhost
 
 virtual_hosts: ["127.0.0.1", "localhost"] # Safe host names
 
@@ -343,6 +343,9 @@ vre_readiness:
   prefill: true
 
 coe:
+  prefill: true
+
+adapted_housing:
   prefill: true
 
 # Settings for EVSS
@@ -839,6 +842,7 @@ flipper:
     - alastair@adhocteam.us
     - alex.wilson@oddball.io # Alex Wilson - Oddball
     - andrew.herzberg@adhocteam.us
+    - anthony@themostudio.com
     - bill.ryan@adhocteam.us
     - bradley.gross@b3groupinc.com
     - brian.seek@civicactions.com # Brian Seek (Civic Actions), FE Engineer Health Care Experience/Check-In
@@ -887,6 +891,7 @@ flipper:
     - kabrown@thoughtworks.com
     - kadams@governmentcio.com
     - kathleen.crawford@gcio.com
+    - kcoulter@pluribusdigital.com
     - kenneth.gary@va.gov
     - kenneth.santiago2010@gmail.com
     - kevin.musiorski@gcio.com # Kevin Musiorski (GCIO), Engineer
@@ -912,6 +917,7 @@ flipper:
     - michael.chelen@va.gov
     - michael.pelz-sherman@gcio.com
     - michelle.middaugh@adhocteam.us
+    - mmiller@pluribusdigital.com
     - n.ratana@gmail.com
     - nathaniel.buck@gmail.com # AFS - My Education Benefits
     - narin@adhocteam.us
@@ -991,6 +997,7 @@ flipper:
     - Jarred.Simon@va.gov # Jarred Simon GCIO VFEP FE Dev
     - NOAH.STERN@va.gov # Noah Sterngo GCIO VFEP BE Dev
     - GREGG.PUHALA@va.gov # Gregg Puhala GCIO VFEP BE Dev
+    - derrick.ellerbie@agile6.com # Derrick Ellerbie - Engineer - Agile 6
 
 bgs:
   application: ~
@@ -1071,12 +1078,8 @@ lighthouse:
   api_key: fake_key
   benefits_claims:
     host: https://sandbox-api.va.gov
-    path: services/claims/v2/veterans
     access_token:
       aud_claim_url: https://deptva-eval.okta.com/oauth2/ausdg7guis2TYDlFe2p7/v1/token
-      api_scopes:
-        - claim.read
-        - claim.write
       client_id: ~
       rsa_key: ~
     use_mocks: false
@@ -1086,8 +1089,9 @@ lighthouse:
     version: v1
   direct_deposit:
     host: https://sandbox-api.va.gov
+    path: services/direct-deposit-management/v1/direct-deposit
     access_token:
-      aud_claim_url: https://deptva-eval.okta.com/oauth2/1234567890/v1/token
+      aud_claim_url: https://deptva-eval.okta.com/oauth2/ausi0e21hbv5iElEh2p7/v1/token
       client_id: ~
       rsa_key: ~
     use_mocks: false
@@ -1177,6 +1181,7 @@ vanotify:
         form527ez_confirmation_email: form527ez_confirmation_email_template_id
         preneeds_burial_form_email: preneeds_burial_form_email_template_id
         contact_info_change: fake_template_id
+        form1990_confirmation_email: form1990_confirmation_email_template_id
         form526_confirmation_email: fake_template_id
         form526_submission_failed_email: fake_template_id
         form5490_confirmation_email: form5490_confirmation_email_template_id

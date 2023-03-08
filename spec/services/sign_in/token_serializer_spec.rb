@@ -12,7 +12,7 @@ RSpec.describe SignIn::TokenSerializer do
 
     let(:session_container) do
       create(:session_container,
-             client_id: client_id,
+             client_config: client_config,
              refresh_token: refresh_token,
              access_token: access_token,
              anti_csrf_token: anti_csrf_token)
@@ -21,7 +21,9 @@ RSpec.describe SignIn::TokenSerializer do
     let(:refresh_token) { create(:refresh_token) }
     let(:access_token) { create(:access_token) }
     let(:anti_csrf_token) { 'some-anti-csrf-token' }
-    let(:client_id) { SignIn::Constants::Auth::MOBILE_CLIENT }
+    let(:client_config) { create(:client_config, authentication: authentication, anti_csrf: anti_csrf) }
+    let(:anti_csrf) { false }
+    let(:authentication) { SignIn::Constants::Auth::API }
     let(:encoded_access_token) do
       SignIn::AccessTokenJwtEncoder.new(access_token: access_token).perform
     end
@@ -29,8 +31,8 @@ RSpec.describe SignIn::TokenSerializer do
       SignIn::RefreshTokenEncryptor.new(refresh_token: session_container.refresh_token).perform
     end
 
-    context 'when client id is in the list of cookie auth clients' do
-      let(:client_id) { SignIn::Constants::Auth::WEB_CLIENT }
+    context 'when client is configured with cookie based authentication' do
+      let(:authentication) { SignIn::Constants::Auth::COOKIE }
       let(:access_token_expiration) { access_token.expiration_time }
       let(:refresh_token_expiration) { session_container.session.refresh_expiration }
       let(:info_cookie_value) do
@@ -101,7 +103,9 @@ RSpec.describe SignIn::TokenSerializer do
         expect(cookies[info_cookie_name]).to eq(expected_info_cookie)
       end
 
-      context 'and client id is in the list of anti csrf enabled clients' do
+      context 'and client is configured to check for anti csrf' do
+        let(:anti_csrf) { true }
+
         it 'sets anti csrf token cookie' do
           subject
           expect(cookies[anti_csrf_token_cookie_name]).to eq(expected_anti_csrf_token_cookie)
@@ -111,27 +115,47 @@ RSpec.describe SignIn::TokenSerializer do
           expect(subject).to eq({})
         end
       end
-    end
 
-    context 'when client id is in the list of api auth clients' do
-      let(:client_id) { SignIn::Constants::Auth::MOBILE_CLIENT }
-      let(:token_payload) { { access_token: encoded_access_token, refresh_token: encrypted_refresh_token } }
-      let(:expected_json_payload) { { data: token_payload } }
+      context 'and client is not configured to check for anti csrf' do
+        let(:anti_csrf) { false }
 
-      context 'and client id is not in the list of anti csrf enabled clients' do
-        it 'returns expected json payload' do
-          expect(subject).to eq(expected_json_payload)
+        it 'does not anti csrf token cookie' do
+          subject
+          expect(cookies[anti_csrf_token_cookie_name]).to eq(nil)
+        end
+
+        it 'returns an empty hash' do
+          expect(subject).to eq({})
         end
       end
     end
 
-    context 'when client id is arbitrary' do
-      let(:client_id) { 'some-client-id' }
-      let(:expected_error) { ActiveModel::ValidationError }
-      let(:expected_error_message) { 'Validation failed: Client is not included in the list' }
+    context 'when client is configured with api based authentication' do
+      let(:authentication) { SignIn::Constants::Auth::API }
+      let(:expected_json_payload) { { data: token_payload } }
 
-      it 'raises client id is not valid error' do
-        expect { subject }.to raise_error(expected_error, expected_error_message)
+      context 'and client is not configured to check for anti csrf' do
+        let(:anti_csrf) { false }
+        let(:token_payload) { { access_token: encoded_access_token, refresh_token: encrypted_refresh_token } }
+
+        it 'returns expected json payload without anti csrf token' do
+          expect(subject).to eq(expected_json_payload)
+        end
+      end
+
+      context 'and client is configured to check for anti csrf' do
+        let(:anti_csrf) { true }
+        let(:token_payload) do
+          {
+            access_token: encoded_access_token,
+            refresh_token: encrypted_refresh_token,
+            anti_csrf_token: anti_csrf_token
+          }
+        end
+
+        it 'returns expected json payload with anti csrf token' do
+          expect(subject).to eq(expected_json_payload)
+        end
       end
     end
   end

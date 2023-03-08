@@ -7,8 +7,8 @@ RSpec.describe SignIn::AccessTokenJwtEncoder do
     subject { SignIn::AccessTokenJwtEncoder.new(access_token: access_token).perform }
 
     let(:access_token) { create(:access_token, client_id: client_id) }
-    let(:client_id) { SignIn::Constants::Auth::MOBILE_CLIENT }
-    let(:client_config) { SignIn::ClientConfig.new(client_id: client_id) }
+    let(:client_id) { client_config.client_id }
+    let(:client_config) { create(:client_config) }
 
     context 'when input object is an access token' do
       let(:expected_sub) { access_token.user_uuid }
@@ -23,7 +23,7 @@ RSpec.describe SignIn::AccessTokenJwtEncoder do
       let(:expected_last_regeneration_time) { access_token.last_regeneration_time.to_i }
       let(:expected_version) { access_token.version }
       let(:expected_jti) { access_token.uuid }
-      let(:expected_aud) { client_config.access_token_audience }
+      let(:expected_aud) { access_token.audience }
 
       before do
         allow(SecureRandom).to receive(:hex).and_return(expected_jti)
@@ -43,33 +43,7 @@ RSpec.describe SignIn::AccessTokenJwtEncoder do
         expect(decoded_jwt.last_regeneration_time).to eq expected_last_regeneration_time
         expect(decoded_jwt.version).to eq expected_version
         expect(decoded_jwt.jti).to eq expected_jti
-      end
-
-      context 'and client id is MOBILE_CLIENT' do
-        let(:client_id) { SignIn::Constants::Auth::MOBILE_CLIENT }
-
-        it 'returns an encoded jwt with expected audience parameter' do
-          decoded_jwt = OpenStruct.new(JWT.decode(subject, false, nil).first)
-          expect(decoded_jwt.aud).to eq expected_aud
-        end
-      end
-
-      context 'and client id is MOBILE_TEST_CLIENT' do
-        let(:client_id) { SignIn::Constants::Auth::MOBILE_TEST_CLIENT }
-
-        it 'returns an encoded jwt with expected audience parameter' do
-          decoded_jwt = OpenStruct.new(JWT.decode(subject, false, nil).first)
-          expect(decoded_jwt.aud).to eq expected_aud
-        end
-      end
-
-      context 'and client id is WEB_CLIENT' do
-        let(:client_id) { SignIn::Constants::Auth::WEB_CLIENT }
-
-        it 'returns an encoded jwt with expected audience parameter' do
-          decoded_jwt = OpenStruct.new(JWT.decode(subject, false, nil).first)
-          expect(decoded_jwt.aud).to eq expected_aud
-        end
+        expect(decoded_jwt.aud).to eq expected_aud
       end
     end
   end

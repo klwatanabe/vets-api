@@ -84,7 +84,7 @@ module SignIn
     end
 
     def anti_csrf_enabled_client?
-      client_config.anti_csrf?
+      client_config.anti_csrf
     end
 
     def session_expiration
@@ -108,12 +108,8 @@ module SignIn
       @anti_csrf_token ||= session_container.anti_csrf_token
     end
 
-    def client_id
-      @client_id ||= session_container.client_id
-    end
-
     def client_config
-      @client_config ||= SignIn::ClientConfig.new(client_id: client_id)
+      @client_config ||= session_container.client_config
     end
   end
 end

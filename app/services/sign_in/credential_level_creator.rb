@@ -43,9 +43,9 @@ module SignIn
     end
 
     def raise_unverified_credential_blocked_error(code:)
-      raise Errors::UnverifiedCredentialBlockedError,
-            message: 'Unverified credential for authorization requiring verified credential',
-            code: code
+      raise Errors::UnverifiedCredentialBlockedError.new(
+        message: 'Unverified credential for authorization requiring verified credential', code: code
+      )
     end
 
     def create_credential_level
@@ -55,7 +55,7 @@ module SignIn
                           max_ial: max_ial,
                           auto_uplevel: auto_uplevel)
     rescue ActiveModel::ValidationError
-      raise Errors::InvalidCredentialLevelError, message: 'Unsupported credential authorization levels'
+      raise Errors::InvalidCredentialLevelError.new message: 'Unsupported credential authorization levels'
     end
 
     def max_ial
