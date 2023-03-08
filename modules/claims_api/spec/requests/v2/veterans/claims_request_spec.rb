@@ -92,9 +92,9 @@ RSpec.describe 'Claims', type: :request do
           context 'when current user is not a representative of the target veteran' do
             it 'returns a 403' do
               with_okta_user(scopes) do |auth_header|
-                expect_any_instance_of(ClaimsApi::V2::ApplicationController)
+                expect_any_instance_of(ClaimsApi::V2::ClaimsApplicationController)
                   .to receive(:user_is_target_veteran?).and_return(false)
-                expect_any_instance_of(ClaimsApi::V2::ApplicationController)
+                expect_any_instance_of(ClaimsApi::V2::ClaimsApplicationController)
                   .to receive(:user_represents_veteran?).and_return(false)
 
                 get all_claims_path, headers: auth_header
@@ -460,9 +460,9 @@ RSpec.describe 'Claims', type: :request do
         context 'when current user is not a representative of the target veteran' do
           it 'returns a 403' do
             with_okta_user(scopes) do |auth_header|
-              expect_any_instance_of(ClaimsApi::V2::ApplicationController)
+              expect_any_instance_of(ClaimsApi::V2::ClaimsApplicationController)
                 .to receive(:user_is_target_veteran?).and_return(false)
-              expect_any_instance_of(ClaimsApi::V2::ApplicationController)
+              expect_any_instance_of(ClaimsApi::V2::ClaimsApplicationController)
                 .to receive(:user_represents_veteran?).and_return(false)
 
               get claim_by_id_path, headers: auth_header

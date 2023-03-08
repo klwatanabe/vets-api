@@ -6,7 +6,7 @@ require 'claims_api/v2/mock_documents_service'
 module ClaimsApi
   module V2
     module Veterans
-      class ClaimsController < ClaimsApi::V2::ApplicationController
+      class ClaimsController < ClaimsApi::V2::ClaimsApplicationController
         before_action :verify_access!
 
         def index

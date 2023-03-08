@@ -8,9 +8,10 @@ require 'claims_api/claim_logger'
 
 module ClaimsApi
   module V2
-    class ApplicationController < ::OpenidApplicationController
+    class ClaimsApplicationController < ApplicationController
       include ClaimsApi::Error::ErrorHandler
       include ClaimsApi::CcgTokenValidation
+      include ClaimsApi::UserTokenValidation
 
       # fetch_audience: defines the audience used for oauth
       # Overrides the default value defined in OpenidApplicationController

@@ -207,7 +207,7 @@ describe 'Claims',
                   bgs_response[:benefit_claim_details_dto][:ptcpnt_vet_id] = target_veteran.participant_id
                   expect_any_instance_of(BGS::EbenefitsBenefitClaimsStatus)
                     .to receive(:find_benefit_claim_details_by_benefit_claim_id).and_return(bgs_response)
-                  allow_any_instance_of(ClaimsApi::V2::ApplicationController)
+                  allow_any_instance_of(ClaimsApi::V2::ClaimsApplicationController)
                     .to receive(:target_veteran).and_return(target_veteran)
                   submit_request(example.metadata)
                 end

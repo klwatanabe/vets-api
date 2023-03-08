@@ -6,7 +6,7 @@ require 'claims_api/v2/params_validation/power_of_attorney'
 module ClaimsApi
   module V2
     module Veterans
-      class PowerOfAttorneyController < ClaimsApi::V2::ApplicationController
+      class PowerOfAttorneyController < ClaimsApi::V2::ClaimsApplicationController
         include ClaimsApi::PoaVerification
         before_action :verify_access!
 

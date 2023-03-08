@@ -5,7 +5,7 @@ require 'claims_api/v2/params_validation/intent_to_file'
 module ClaimsApi
   module V2
     module Veterans
-      class IntentToFileController < ClaimsApi::V2::ApplicationController
+      class IntentToFileController < ClaimsApi::V2::ClaimsApplicationController
         before_action :verify_access!
 
         # GET to fetch active intent to file by type
