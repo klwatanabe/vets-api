@@ -18,13 +18,13 @@ FactoryBot.define do
       logingov_uuid { nil }
       verified_at { nil }
       sec_id { '123498767' }
-      participant_id { nil }
-      birls_id { nil }
+      participant_id { Faker::Number.number(digits: 8) }
+      birls_id { [Faker::Number.number(digits: 10)] }
       icn { '123498767V234859' }
       mhv_icn { nil }
       multifactor { false }
       mhv_ids { [] }
-      mhv_correlation_id { nil }
+      mhv_correlation_id { Faker::Number.number(digits: 9) }
       mhv_account_type { nil }
       edipi { '384759483' }
       va_patient { nil }
@@ -47,7 +47,7 @@ FactoryBot.define do
       cerner_facility_ids { %w[200MHV] }
       vha_facility_ids { %w[200CRNR 200MHV] }
       vha_facility_hash { { '200CRNR' => %w[123456], '200MHV' => %w[123456] } }
-      vet360_id { SecureRandom. }
+      vet360_id { '1' }
 
       sign_in do
         {
@@ -328,21 +328,12 @@ FactoryBot.define do
     factory :evss_user, traits: [:loa3] do
       first_name { 'WESLEY' }
       last_name { 'FORD' }
-      edipi { nil }
+      edipi { '1007697216' }
+      birls_id { '796043735' }
+      participant_id { '600061742' }
       last_signed_in { Time.zone.parse('2017-12-07T00:55:09Z') }
+      birth_date { '1986-05-06T00:00:00+00:00'.to_date.to_s }
       ssn { '796043735' }
-
-      after(:build) do
-        stub_mpi(
-          build(
-            :mvi_profile,
-            edipi: '1007697216',
-            birls_id: '796043735',
-            participant_id: '600061742',
-            birth_date: '1986-05-06T00:00:00+00:00'.to_date.to_s
-          )
-        )
-      end
     end
 
     factory :no_dob_evss_user, traits: [:loa3] do
