@@ -41,7 +41,6 @@ jobs:
       "Settings.binaries.clamdscan": "clamscan"
       TERM: xterm-256color
       GIT_COMMIT_SHA: ${{ github.sha }}
-      CC_TEST_REPORTER_ID: ${{secrets.CC_TEST_REPORTER_ID}}
 
     services:
       postgres:
@@ -58,28 +57,64 @@ jobs:
         image: circleci/redis:5.0-alpine
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - uses: ruby/setup-ruby@v1
         with:
           bundler-cache: true
-          cache-version: 23
 
       - name: Install System Packages (pdftk, poppler, imagemagick)
         run: |
           sudo apt install imagemagick pdftk poppler-utils
           sudo sed -i 's/^.*policy.*coder.*none.*PDF.*//' /etc/ImageMagick-6/policy.xml
       - name: Setup Database
-        run: rails db:reset
-
+        run: |
+          bundle exec parallel_test -n 14 -e 'bundle exec rake db:reset'
       - name: Run Specs
-        run: rspec spec/ modules -n 16 -o '--color --tty'
+        timeout-minutes: 20
+        run: |
+          bundle exec parallel_rspec spec/ modules/ -n 16 -o '--color --tty'
+      - name: Upload Coverage Report
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: Coverage Report
+          path: coverage
 
-      - name: Publish Test Results
-        uses: docker://ghcr.io/enricomi/publish-unit-test-result-action:v1
+      - name: Upload Test Results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: Test Results
+          path: log/*.xml
+          if-no-files-found: ignore
+
+  publish_results:
+    name: Publish Test Results and Coverage
+    if: always()
+    needs: [tests]
+    runs-on: ubuntu-16-cores-latest
+
+    steps:
+      - uses: actions/download-artifact@v3
+
+      - name: Publish Test Results to GitHub
+        uses: EnricoMi/publish-unit-test-result-action@v2
         if: always()
         with:
           check_name: Test Results
-          comment_on_pr: false
-          files: log/*.xml
+          comment_mode: off
+          files: Test Results/*.xml
           github_token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Fix up coverage report to work with coverage-check-action
+        run: sed -i 's/"line"/"covered_percent"/g' 'Coverage Report/.last_run.json'
+
+      - name: Publish Coverage Report
+        uses: devmasx/coverage-check-action@v1.2.0
+        if: hashFiles('Coverage Report/.last_run.json') != ''
+        with:
+          type: simplecov
+          result_path: Coverage Report/.last_run.json
+          min_coverage: 90
+          token: ${{ secrets.GITHUB_TOKEN }}
