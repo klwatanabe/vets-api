@@ -28,105 +28,58 @@ jobs:
 
   tests:
     name: Test
+    runs-on: ubuntu-16-cores-latest
     env:
       BUNDLE_ENTERPRISE__CONTRIBSYS__COM: ${{ secrets.BUNDLE_ENTERPRISE__CONTRIBSYS__COM }}
       CI: true
+      DATABASE_URL: "postgis://vets-api:postgres@127.0.0.1:5432/vets_api_test?pool=4"
+      DISABLE_BOOTSNAP: true
       RAILS_ENV: test
+      "Settings.test_database_url": "postgis://vets-api:postgres@127.0.0.1:5432/vets_api_test"
+      "Settings.saml.cert_path": "spec/support/certificates/ruby-saml.crt"
+      "Settings.saml.key_path": "spec/support/certificates/ruby-saml.key"
+      "Settings.binaries.clamdscan": "clamscan"
       TERM: xterm-256color
-    runs-on: ubuntu-16-cores-latest
+      GIT_COMMIT_SHA: ${{ github.sha }}
+      CC_TEST_REPORTER_ID: ${{secrets.CC_TEST_REPORTER_ID}}
+
+    services:
+      postgres:
+        image: postgis/postgis:11-2.5
+        env:
+          POSTGRES_USER: vets-api
+          POSTGRES_DB: vets-api_test
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 15
+
+      redis:
+        image: circleci/redis:5.0-alpine
+
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v2
 
-      - uses: docker/login-action@v2
+      - uses: ruby/setup-ruby@v1
         with:
-          username: ${{ secrets.DOCKERHUB_USER }}
-          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+          bundler-cache: true
+          cache-version: 23
 
-      - name: Setup Environment
+      - name: Install System Packages (pdftk, poppler, imagemagick)
         run: |
-          echo "VETS_API_USER_ID=$(id -u)" >> $GITHUB_ENV
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
-
-      - name: Setup Docker
-        run: |
-          docker volume create --name=test_bundle_v2_7_6-cache-v3
-
-      - name: Build Docker Image
-        uses: docker/build-push-action@v4
-        with:
-          build-args: |
-            sidekiq_license=${{ env.BUNDLE_ENTERPRISE__CONTRIBSYS__COM }}
-            userid=${{ env.VETS_API_USER_ID }}
-          context: .
-          target: development
-          push: false
-          load: true
-          tags: vets-api
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      - name: Install gems
-        run: |
-             docker-compose -f docker-compose.test.yml -f docker-compose.gha.yml \
-             run vets-api bash \
-             -c "CI=true RAILS_ENV=test DISABLE_BOOTSNAP=true rails --version"
-
+          sudo apt install imagemagick pdftk poppler-utils
+          sudo sed -i 's/^.*policy.*coder.*none.*PDF.*//' /etc/ImageMagick-6/policy.xml
       - name: Setup Database
-        run: |
-             docker-compose -f docker-compose.test.yml -f docker-compose.gha.yml \
-             run vets-api bash \
-             -c "CI=true RAILS_ENV=test DISABLE_BOOTSNAP=true parallel_test -n 16 -e 'bin/rails db:reset'"
+        run: rails db:reset
 
       - name: Run Specs
-        timeout-minutes: 20
-        run: |
-             docker-compose -f docker-compose.test.yml -f docker-compose.gha.yml \
-             run vets-api bash \
-             -c "CI=true DISABLE_BOOTSNAP=true bundle exec parallel_rspec spec/ modules/ -n 16 -o '--color --tty'"
+        run: rspec spec/ modules -n 16 -o '--color --tty'
 
-      - name: Upload Coverage Report
-        uses: actions/upload-artifact@v3
-        if: always()
-        with:
-          name: Coverage Report
-          path: coverage
-
-      - name: Upload Test Results
-        uses: actions/upload-artifact@v3
-        if: always()
-        with:
-          name: Test Results
-          path: log/*.xml
-          if-no-files-found: ignore
-
-  publish_results:
-    name: Publish Test Results and Coverage
-    if: always()
-    needs: [tests]
-    runs-on: ubuntu-16-cores-latest
-
-    steps:
-      - uses: actions/download-artifact@v3
-
-      - name: Publish Test Results to GitHub
-        uses: EnricoMi/publish-unit-test-result-action@v2
+      - name: Publish Test Results
+        uses: docker://ghcr.io/enricomi/publish-unit-test-result-action:v1
         if: always()
         with:
           check_name: Test Results
-          comment_mode: off
-          files: Test Results/*.xml
+          comment_on_pr: false
+          files: log/*.xml
           github_token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Fix up coverage report to work with coverage-check-action
-        run: sed -i 's/"line"/"covered_percent"/g' 'Coverage Report/.last_run.json'
-
-      - name: Publish Coverage Report
-        uses: devmasx/coverage-check-action@v1.2.0
-        if: hashFiles('Coverage Report/.last_run.json') != ''
-        with:
-          type: simplecov
-          result_path: Coverage Report/.last_run.json
-          min_coverage: 90
-          token: ${{ secrets.GITHUB_TOKEN }}
