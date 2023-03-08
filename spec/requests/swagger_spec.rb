@@ -2315,6 +2315,8 @@ RSpec.describe 'the API documentation', type: %i[apivore request], order: :defin
     end
 
     describe 'profiles' do
+      let(:mhv_user) { create(:user, :loa3) }
+
       it 'supports getting email address data' do
         expect(subject).to validate(:get, '/v0/profile/email', 401)
         VCR.use_cassette('evss/pciu/email') do

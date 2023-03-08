@@ -449,11 +449,11 @@ RSpec.describe User, type: :model do
         end
 
         context 'MHV ids' do
-          let(:user) { build(:user, :loa3, :mpi_attr_sourcing, mhv_ids: [mpi_participant_id]) }
-          let(:mpi_participant_id) { 'some_mpi_participant_id' }
+          let(:user) { build(:user, :loa3, mhv_correlation_id: nil, participant_id: participant_id) }
+          let(:participant_id) { 'some_mpi_participant_id' }
 
           context 'when mhv ids are nil' do
-            let(:mpi_participant_id) { nil }
+            let(:participant_id) { nil }
 
             it 'has a mhv correlation id of nil' do
               expect(user.mhv_correlation_id).to be_nil
@@ -1034,9 +1034,9 @@ RSpec.describe User, type: :model do
   context 'user_verification methods' do
     let(:user) do
       described_class.new(
-        build(:user, :loa3, :mpi_attr_sourcing,
+        build(:user, :loa3,
               idme_uuid: idme_uuid, logingov_uuid: logingov_uuid,
-              edipi: edipi, mhv_ids: [mhv_correlation_id], authn_context: authn_context)
+              edipi: edipi, mhv_correlation_id: mhv_correlation_id, authn_context: authn_context)
       )
     end
     let(:user_verifier_object) do

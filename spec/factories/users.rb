@@ -210,6 +210,7 @@ FactoryBot.define do
     end
 
     trait :loa1 do
+      stub_mpi { false }
       authn_context { LOA::IDME_LOA1_VETS }
       sign_in do
         {
@@ -241,6 +242,7 @@ FactoryBot.define do
     end
 
     trait :ial1 do
+      stub_mpi { false }
       uuid { '42fc7a21-c05f-4e6b-9985-67d11e2fbf76' }
       logingov_uuid { '42fc7a21-c05f-4e6b-9985-67d11e2fbf76' }
       verified_at { '2021-11-09T16:46:27Z' }
@@ -574,21 +576,6 @@ FactoryBot.define do
           current: LOA::THREE,
           highest: LOA::THREE
         }
-      end
-
-      # add an MHV correlation_id and vha_facility_ids corresponding to va_patient
-      after(:build) do |_user, t|
-        stub_mpi(
-          build(
-            :mvi_profile,
-            icn: t.icn,
-            mhv_ids: t.mhv_ids,
-            active_mhv_ids: t.active_mhv_ids,
-            vha_facility_ids: t.vha_facility_ids,
-            cerner_id: t.cerner_id,
-            cerner_facility_ids: t.cerner_facility_ids
-          )
-        )
       end
     end
 
