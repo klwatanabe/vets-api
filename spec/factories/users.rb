@@ -19,11 +19,12 @@ FactoryBot.define do
       verified_at { nil }
       sec_id { '123498767' }
       participant_id { Faker::Number.number(digits: 8) }
-      birls_id { [Faker::Number.number(digits: 10)] }
+      birls_id { Faker::Number.number(digits: 10) }
       icn { '123498767V234859' }
       mhv_icn { nil }
       multifactor { false }
       mhv_ids { [] }
+      active_mhv_ids { [] }
       mhv_correlation_id { Faker::Number.number(digits: 9) }
       mhv_account_type { nil }
       edipi { '384759483' }
@@ -48,6 +49,7 @@ FactoryBot.define do
       vha_facility_ids { %w[200CRNR 200MHV] }
       vha_facility_hash { { '200CRNR' => %w[123456], '200MHV' => %w[123456] } }
       vet360_id { '1' }
+      stub_mpi { true }
 
       sign_in do
         {
@@ -89,7 +91,8 @@ FactoryBot.define do
         given_names = [first_name]
         given_names << middle_name if middle_name.present?
 
-        { address: address,
+        { active_mhv_ids: active_mhv_ids,
+          address: address,
           birls_id: birls_id,
           birth_date: birth_date,
           cerner_id: cerner_id,
@@ -99,6 +102,7 @@ FactoryBot.define do
           gender: gender,
           given_names: given_names,
           home_phone: home_phone,
+          icn: icn,
           mhv_ids: mhv_ids,
           participant_id: participant_id,
           person_types: person_types,
@@ -114,7 +118,7 @@ FactoryBot.define do
       user_identity = create(:user_identity,
                              t.user_identity)
       user.instance_variable_set(:@identity, user_identity)
-      stub_mpi(build(:mvi_profile, t.mpi_profile))
+      stub_mpi(build(:mvi_profile, t.mpi_profile)) unless t.stub_mpi == false
     end
 
     # This is used by the response_builder helper to build a user from saml attributes
@@ -543,7 +547,7 @@ FactoryBot.define do
       email { Faker::Internet.email }
       first_name { Faker::Name.first_name }
       last_name { Faker::Name.last_name }
-      icn { nil }
+      icn { '1000123456V123456' }
       gender { 'M' }
       birth_date { Faker::Time.between(from: 40.years.ago, to: 10.years.ago) }
       ssn { '796111864' }
@@ -554,6 +558,8 @@ FactoryBot.define do
       cerner_facility_ids { [] }
       vha_facility_ids { %w[358 200MHS] }
       vha_facility_hash { { '358' => %w[998877], '200MHS' => %w[998877] } }
+      mhv_ids { %w[12345678901] }
+      active_mhv_ids { mhv_ids }
 
       sign_in do
         {
@@ -575,9 +581,10 @@ FactoryBot.define do
         stub_mpi(
           build(
             :mvi_profile,
-            icn: '1000123456V123456',
-            mhv_ids: %w[12345678901],
-            vha_facility_ids: t.va_patient ? %w[358 200MHS] : [],
+            icn: t.icn,
+            mhv_ids: t.mhv_ids,
+            active_mhv_ids: t.active_mhv_ids,
+            vha_facility_ids: t.vha_facility_ids,
             cerner_id: t.cerner_id,
             cerner_facility_ids: t.cerner_facility_ids
           )

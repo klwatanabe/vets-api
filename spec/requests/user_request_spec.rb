@@ -116,15 +116,9 @@ RSpec.describe 'Fetching user data' do
     end
 
     context 'with missing MHV accounts' do
-      let(:mvi_profile) do
-        build(:mpi_profile_response,
-              :missing_attrs)
-      end
-      let(:mhv_user) { build(:user, :mhv) }
+      let(:mhv_user) { build(:user, :mhv, mhv_ids: nil, active_mhv_ids: nil, mhv_correlation_id: nil) }
 
       before do
-        allow_any_instance_of(MPI::Models::MviProfile).to receive(:active_mhv_ids).and_return(nil)
-        stub_mpi(mvi_profile)
         sign_in_as(mhv_user)
         get v0_user_url, params: nil
       end
@@ -223,10 +217,14 @@ RSpec.describe 'Fetching user data' do
     end
   end
 
+  # user = build(:user, type, icn: SecureRandom.uuid, uuid: rand(1000..100_000))
+  # create(:account, idme_uuid: user.uuid)
+  # user
+
   context 'GET /v0/user - MVI Integration', :skip_mvi do
-    before do
-      sign_in_as(new_user(:loa3))
-    end
+    let(:user) { create(:user, :loa3, stub_mpi: false) }
+
+    before { sign_in_as(user) }
 
     it 'MVI error should only make a request to MVI one time per request!', :aggregate_failures do
       stub_mpi_failure
@@ -251,7 +249,6 @@ RSpec.describe 'Fetching user data' do
         .to trigger_statsd_increment('api.external_http_request.MVI.success', times: 1, value: 1)
         .and not_trigger_statsd_increment('api.external_http_request.MVI.skipped')
         .and not_trigger_statsd_increment('api.external_http_request.MVI.failed')
-
       body  = JSON.parse(response.body)
       error = body.dig('meta', 'errors').first
 
@@ -296,7 +293,7 @@ RSpec.describe 'Fetching user data' do
       Timecop.freeze(start_time)
       # Starts out successful
       stub_mpi_success
-      sign_in_as(new_user)
+      sign_in_as(user)
       expect { get v0_user_url, params: nil }
         .to trigger_statsd_increment('api.external_http_request.MVI.success', times: 1, value: 1)
         .and not_trigger_statsd_increment('api.external_http_request.MVI.failed')
@@ -304,7 +301,7 @@ RSpec.describe 'Fetching user data' do
 
       # Encounters failure and breakers kicks in
       stub_mpi_failure
-      sign_in_as(new_user)
+      sign_in_as(user)
       expect { get v0_user_url, params: nil }
         .to trigger_statsd_increment('api.external_http_request.MVI.failed', times: 1, value: 1)
         .and not_trigger_statsd_increment('api.external_http_request.MVI.skipped')
@@ -313,7 +310,7 @@ RSpec.describe 'Fetching user data' do
 
       # skipped because breakers is active
       stub_mpi_success
-      sign_in_as(new_user)
+      sign_in_as(user)
       expect { get v0_user_url, params: nil }
         .to trigger_statsd_increment('api.external_http_request.MVI.skipped', times: 1, value: 1)
         .and not_trigger_statsd_increment('api.external_http_request.MVI.failed')
@@ -321,7 +318,7 @@ RSpec.describe 'Fetching user data' do
       expect(MPI::Configuration.instance.breakers_service.latest_outage.ended?).to eq(false)
       Timecop.freeze(now)
       # sufficient time has elapsed that new requests are made, resulting in success
-      sign_in_as(new_user)
+      sign_in_as(user)
       expect { get v0_user_url, params: nil }
         .to trigger_statsd_increment('api.external_http_request.MVI.success', times: 1, value: 1)
         .and not_trigger_statsd_increment('api.external_http_request.MVI.skipped')
