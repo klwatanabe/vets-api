@@ -42,6 +42,17 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USER }}
           password: ${{ secrets.DOCKERHUB_PASSWORD }}
 
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1-node16
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-gov-west-1
+
+      - name: Login to ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
       - name: Setup Environment
         run: |
           echo "USER_ID=$(id -u)" >> $GITHUB_ENV
@@ -49,50 +60,40 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 
+      - name: Build Docker Image for Gem Cache
+        uses: docker/build-push-action@v4
+        with:
+          build-args: |
+            BUNDLE_ENTERPRISE__CONTRIBSYS__COM=${{ env.BUNDLE_ENTERPRISE__CONTRIBSYS__COM }}
+            USER_ID=${{ env.USER_ID }}
+          context: .
+          pull: true
+          push: true
+          tags: |
+            ${{ steps.login-ecr.outputs.registry }}/${{ secrets.ECR_REPOSITORY }}:ruby2-7-gem-cache
+          cache-from: type=registry,ref=$ECR_REGISTRY/$ECR_REPOSITORY
+          cache-to: type=inline
+
       - name: Build Docker Image
         uses: docker/build-push-action@v4
         with:
           build-args: |
             BUNDLE_ENTERPRISE__CONTRIBSYS__COM=${{ env.BUNDLE_ENTERPRISE__CONTRIBSYS__COM }}
             USER_ID=${{ env.USER_ID }}
-            CACHE_IMAGE=vets-api
+            CACHE_IMAGE=${{ steps.login-ecr.outputs.registry }}/${{ secrets.ECR_REPOSITORY }}:ruby2-7-gem-cache
           context: .
           push: false
           load: true
           tags: vets-api
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=registry,ref=$ECR_REGISTRY/$ECR_REPOSITORY
+          cache-to: type=inline
 
       - name: Setup Database and Run Specs
         run: |
           docker-compose run web bash \
           -c "CI=true RAILS_ENV=test DISABLE_BOOTSNAP=true; \
-              bundle exec parallel_test -n 16 -e 'bin/rails db:reset' \
-              && bundle exec parallel_rspec spec/ modules/ -n 8 -o '--color --tty'"
-
-      - name: Upload Coverage Report
-        uses: actions/upload-artifact@v3
-        if: always()
-        with:
-          name: Coverage Report
-          path: coverage
-
-      - name: Upload Test Results
-        uses: actions/upload-artifact@v3
-        if: always()
-        with:
-          name: Test Results
-          path: log/*.xml
-          if-no-files-found: ignore
-
-  publish_results:
-    name: Publish Results
-    if: always()
-    needs: [tests]
-    runs-on: ubuntu-16-cores-latest
-
-    steps:
-      - uses: actions/download-artifact@v3
+              bundle exec parallel_test -n 14 -e 'bin/rails db:reset' \
+              && bundle exec parallel_rspec spec/ modules/ -n 14 -o '--color --tty'"
 
       - name: Publish Test Results
         uses: EnricoMi/publish-unit-test-result-action@v2
@@ -100,18 +101,18 @@ jobs:
         with:
           check_name: Test Results
           comment_mode: off
-          files: Test Results/*.xml
+          files: log/*.xml
           github_token: ${{ secrets.GITHUB_TOKEN }}
           check_run_annotations_branch: master, k8s
 
       - name: Fix up coverage report to work with coverage-check-action
-        run: sed -i 's/"line"/"covered_percent"/g' 'Coverage Report/.last_run.json'
+        run: sed -i 's/"line"/"covered_percent"/g' 'coverage/.last_run.json'
 
       - name: Publish Coverage Report
         uses: devmasx/coverage-check-action@v1.2.0
-        if: hashFiles('Coverage Report/.last_run.json') != ''
+        if: hashFiles('coverage/.last_run.json') != ''
         with:
           type: simplecov
-          result_path: Coverage Report/.last_run.json
+          result_path: coverage/.last_run.json
           min_coverage: 90
           token: ${{ secrets.GITHUB_TOKEN }}
