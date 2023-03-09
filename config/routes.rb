@@ -256,6 +256,10 @@ Rails.application.routes.draw do
       end
     end
 
+    namespace :comp_and_pen do
+      resource :direct_deposit, only: %i[show update]
+    end
+
     namespace :profile do
       resource :alternate_phone, only: %i[show create]
       resource :email, only: %i[show create]
@@ -318,10 +322,6 @@ Rails.application.routes.draw do
     get 'terms_and_conditions/:name/versions/latest', to: 'terms_and_conditions#latest'
     get 'terms_and_conditions/:name/versions/latest/user_data', to: 'terms_and_conditions#latest_user_data'
     post 'terms_and_conditions/:name/versions/latest/user_data', to: 'terms_and_conditions#accept_latest'
-
-    resource :mhv_account, only: %i[show create] do
-      post :upgrade
-    end
 
     get 'feature_toggles', to: 'feature_toggles#index'
 
@@ -433,7 +433,7 @@ Rails.application.routes.draw do
 
   mount TestUserDashboard::Engine, at: '/test_user_dashboard' if Settings.test_user_dashboard.env == 'staging'
 
-  if Settings.vsp_enironment == 'localhost' || Settings.vsp_environment == 'development'
+  if %w[test localhost development].include?(Settings.vsp_environment)
     mount MockedAuthentication::Engine, at: '/mocked_authentication'
   end
 

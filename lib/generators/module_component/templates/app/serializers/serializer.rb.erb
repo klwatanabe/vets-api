@@ -1,11 +1,11 @@
 # frozen_string_literal: true
 
-require 'fast_jsonapi'
+require 'jsonapi/serializer'
 
 module <%= class_name %>
   module V0
 	  class <%= @comp_name.camelize %>Serializer
-	    include FastJsonapi::ObjectSerializer
+	    include JSONAPI::Serializer
 	    attributes :message
 	  end
   end

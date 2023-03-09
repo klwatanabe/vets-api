@@ -2,12 +2,12 @@
 
 # VAOS V0 routes and controllers no longer in use
 # :nocov:
-require 'fast_jsonapi'
+require 'jsonapi/serializer'
 
 module VAOS
   module V0
     class RequestEligibilityCriteriaSerializer
-      include FastJsonapi::ObjectSerializer
+      include JSONAPI::Serializer
 
       attributes :id,
                  :request_settings,
