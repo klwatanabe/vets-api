@@ -862,7 +862,7 @@ RSpec.describe User, type: :model do
       end
 
       context 'and mhv_icn attribute is available on the UserIdentity object' do
-        let(:user) { described_class.new(build(:user, :mhv, mhv_icn: 'some-mhv-icn')) }
+        let(:user) { described_class.new(build(:user, :mhv, stub_mpi: false, mhv_icn: 'some-mhv-icn')) }
 
         context 'and MPI Profile birth date does not exist' do
           before do
