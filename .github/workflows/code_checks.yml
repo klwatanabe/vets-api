@@ -78,20 +78,20 @@ jobs:
         run: |
              docker-compose -f docker-compose.test.yml -f docker-compose.gha.yml \
              run vets-api bash \
-             -c "CI=true RAILS_ENV=test DISABLE_BOOTSNAP=true parallel_test -n 16 -e 'bin/rails db:reset'"
+             -c "CI=true RAILS_ENV=test DISABLE_BOOTSNAP=1 parallel_test -n 16 -e 'bin/rails db:reset'"
 
       - name: Debug output for BOOTSNAP
         run: |
              docker-compose -f docker-compose.test.yml -f docker-compose.gha.yml \
              run vets-api bash \
-             -c "CI=true RAILS_ENV=test DISABLE_BOOTSNAP=true parallel_test -n 16 -e 'rails runner puts\ ENV.to_a'"
+             -c "CI=true RAILS_ENV=test DISABLE_BOOTSNAP=1 parallel_test -n 16 -e 'echo CIDBS:; echo $CI; echo $DISABLE_BOOTSNAP'"
 
       - name: Run Specs
         timeout-minutes: 20
         run: |
              docker-compose -f docker-compose.test.yml -f docker-compose.gha.yml \
              run vets-api bash \
-             -c "CI=true RAILS_ENV=test DISABLE_BOOTSNAP=true bundle exec parallel_rspec spec/ modules/ -n 16 -o '--color --tty'"
+             -c "CI=true RAILS_ENV=test DISABLE_BOOTSNAP=1 bundle exec parallel_rspec spec/ modules/ -n 16 -o '--color --tty'"
 
       - name: Upload Coverage Report
         uses: actions/upload-artifact@v3
