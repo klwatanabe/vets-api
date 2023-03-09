@@ -91,11 +91,10 @@ module ClaimsApi
                                               upstream_id: bgs_claim[:benefit_claim_details_dto][:benefit_claim_id],
                                               view: 'show')
           end
-          debugger
           structure.merge!(errors: get_errors(lighthouse_claim))
           structure.merge!(supporting_documents: build_supporting_docs(bgs_claim))
           structure.merge!(tracked_items: map_bgs_tracked_items(bgs_claim))
-          structure.merge!(build_claim_phase_attributes(bgs_claim, 'show'))
+          # structure.merge!(build_claim_phase_attributes(bgs_claim, 'show'))
         end
 
         def map_claims(bgs_claims:, lighthouse_claims:) # rubocop:disable Metrics/MethodLength
@@ -294,8 +293,6 @@ module ClaimsApi
         def format_bgs_phase_chng_dates(data)
           phase_change_date = if data[:phase_chngd_dt].present?
                                 data[:phase_chngd_dt]
-                              elsif data[:benefit_claim_details_dto].present?
-                                data[:benefit_claim_details_dto][:phase_chngd_dt]
                               elsif data[:bnft_claim_lc_status].present?
                                 format_bgs_phase_date(data)
                               else
