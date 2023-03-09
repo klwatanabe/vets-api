@@ -264,40 +264,13 @@ FactoryBot.define do
     end
 
     factory :user_with_no_ids, traits: [:loa3] do
-      after(:build) do
-        stub_mpi(
-          build(
-            :mvi_profile,
-            birls_id: nil,
-            participant_id: nil
-          )
-        )
-      end
-    end
-
-    factory :user_with_no_birls_id, traits: [:loa3] do
-      after(:build) do
-        stub_mpi(
-          build(
-            :mvi_profile,
-            birls_id: nil
-          )
-        )
-      end
-    end
-
-    factory :user_with_no_secid, traits: [:loa3] do
-      after(:build) do
-        stub_mpi(
-          build(
-            :mvi_profile,
-            sec_id: nil
-          )
-        )
-      end
+      birls_id { nil }
+      participant_id { nil }
     end
 
     factory :dependent_user_with_relationship, traits: %i[loa3 dependent] do
+      stub_mpi { false }
+
       after(:build) do
         stub_mpi(
           build(
@@ -310,22 +283,13 @@ FactoryBot.define do
     end
 
     factory :user_with_relationship, traits: [:loa3] do
+      stub_mpi { false }
+
       after(:build) do |_t|
         stub_mpi(
           build(
             :mpi_profile_response,
             :with_relationship
-          )
-        )
-      end
-    end
-
-    factory :vets360_user, traits: [:loa3] do
-      after(:build) do
-        stub_mpi(
-          build(
-            :mvi_profile,
-            vet360_id: '1411684'
           )
         )
       end
@@ -342,43 +306,15 @@ FactoryBot.define do
       ssn { '796043735' }
     end
 
-    factory :no_dob_evss_user, traits: [:loa3] do
-      first_name { 'WESLEY' }
-      last_name { 'FORD' }
-      last_signed_in { Time.zone.parse('2017-12-07T00:55:09Z') }
-      ssn { '796043735' }
-
-      after(:build) do
-        stub_mpi(
-          build(
-            :mvi_profile,
-            edipi: '1007697216',
-            birls_id: '796043735',
-            participant_id: '600061742',
-            birth_date: nil
-          )
-        )
-      end
-    end
-
     factory :unauthorized_evss_user, traits: [:loa3] do
       first_name { 'WESLEY' }
       last_name { 'FORD' }
       edipi { nil }
       last_signed_in { Time.zone.parse('2017-12-07T00:55:09Z') }
       ssn { '796043735' }
-
-      after(:build) do
-        stub_mpi(
-          build(
-            :mvi_profile,
-            edipi: nil,
-            birls_id: '796043735',
-            participant_id: nil,
-            birth_date: '1986-05-06T00:00:00+00:00'.to_date.to_s
-          )
-        )
-      end
+      birls_id { '796043735' }
+      participant_id { nil }
+      birth_date { '1986-05-06T00:00:00+00:00'.to_date.to_s }
     end
 
     factory :disabilities_compensation_user, traits: [:loa3] do
@@ -387,132 +323,20 @@ FactoryBot.define do
       gender { 'F' }
       last_signed_in { Time.zone.parse('2017-12-07T00:55:09Z') }
       ssn { '796068949' }
+      birls_id { '796068948' }
 
       transient do
         multifactor { true }
-      end
-
-      after(:build) do
-        stub_mpi(build(:mvi_profile, birls_id: '796068948'))
-      end
-    end
-
-    factory :unauthorized_bgs_user, traits: [:loa3] do
-      first_name { 'Charles' }
-      last_name { 'Bronson' }
-      last_signed_in { Time.zone.parse('2017-12-07T00:55:09Z') }
-      ssn { nil }
-
-      after(:build) do
-        stub_mpi(
-          build(
-            :mvi_profile,
-            edipi: '1007697216',
-            birls_id: '796043735',
-            participant_id: nil,
-            icn: nil,
-            birth_date: '1986-05-06T00:00:00+00:00'.to_date.to_s
-          )
-        )
-      end
-    end
-
-    factory :blank_gender_user do
-      gender { '' }
-      after(:build) do
-        stub_mpi(
-          build(
-            :mvi_profile,
-            edipi: '1007697216',
-            birls_id: '796043735',
-            participant_id: nil,
-            icn: nil,
-            birth_date: '1986-05-06T00:00:00+00:00'.to_date.to_s
-          )
-        )
-      end
-    end
-
-    factory :user_with_suffix, traits: [:loa3] do
-      first_name { 'Jack' }
-      middle_name { 'Robert' }
-      last_name { 'Smith' }
-      last_signed_in { Time.zone.parse('2017-12-07T00:55:09Z') }
-      ssn { '796043735' }
-
-      after(:build) do
-        stub_mpi(
-          build(
-            :mpi_profile_response,
-            edipi: '1007697216',
-            birls_id: '796043735',
-            participant_id: '600061742',
-            birth_date: '1986-05-06T00:00:00+00:00'.to_date.to_s
-          )
-        )
       end
     end
 
     factory :ch33_dd_user, traits: [:loa3] do
       ssn { '796104437' }
-      icn { nil }
+      icn { '82836359962678900' }
 
       after(:build) do
-        stub_mpi(
-          build(
-            :mvi_profile,
-            icn: '82836359962678900'
-          )
-        )
-
         allow(BGS.configuration).to receive(:env).and_return('prepbepbenefits')
         allow(BGS.configuration).to receive(:client_ip).and_return('10.247.35.119')
-      end
-    end
-
-    trait :user_with_no_idme_uuid do
-      uuid { '133e619f-7b69-4e7a-b571-e4c9478d0a04' }
-      sec_id { '1234' }
-      idme_uuid { nil }
-
-      sign_in do
-        {
-          service_name: SAML::User::AUTHN_CONTEXTS[authn_context][:sign_in][:service_name],
-          auth_broker: SAML::URLService::BROKER_CODE,
-          client_id: SAML::URLService::WEB_CLIENT_ID
-        }
-      end
-
-      loa do
-        { current: LOA::THREE, highest: LOA::THREE }
-      end
-    end
-
-    trait :user_with_no_idme_uuid_or_sec_id do
-      uuid { '133e619f-7b69-4e7a-b571-e4c9478d0a04' }
-      sec_id { nil }
-      logingov_uuid { '256f723a-7b69-4e7a-b571-e4c94785jgof' }
-      idme_uuid { nil }
-
-      sign_in do
-        {
-          service_name: SAML::User::AUTHN_CONTEXTS[authn_context][:sign_in][:service_name],
-          auth_broker: SAML::URLService::BROKER_CODE,
-          client_id: SAML::URLService::WEB_CLIENT_ID
-        }
-      end
-
-      loa do
-        { current: LOA::THREE, highest: LOA::THREE }
-      end
-
-      after(:build) do
-        stub_mpi(
-          build(
-            :mvi_profile,
-            sec_id: nil
-          )
-        )
       end
     end
 
@@ -520,24 +344,10 @@ FactoryBot.define do
       sign_in do
         {
           service_name: SAML::User::AUTHN_CONTEXTS[authn_context][:sign_in][:service_name],
-          auth_broker: SAML::URLService::BROKER_CODE,
-          client_id: SAML::URLService::WEB_CLIENT_ID
+          auth_broker: 'sis',
+          client_id: SAML::URLService::MOBILE_CLIENT_ID
         }
       end
-    end
-
-    trait :mhv_sign_in do
-      authn_context { 'myhealthevet' }
-      mhv_account_type { 'Basic' }
-      email { 'abraham.lincoln@vets.gov' }
-      first_name { nil }
-      middle_name { nil }
-      last_name { nil }
-      gender { nil }
-      birth_date { nil }
-      ssn { nil }
-      mhv_icn { '12345' }
-      multifactor { false }
     end
 
     trait :mhv do
@@ -598,6 +408,9 @@ FactoryBot.define do
       multifactor { true }
       mhv_account_type { nil }
       va_patient { true }
+      icn { '1000123456V123456' }
+      mhv_ids { %w[12345678901] }
+      vha_facility_ids { %w[358] }
 
       sign_in do
         {
@@ -613,66 +426,11 @@ FactoryBot.define do
           highest: LOA::THREE
         }
       end
-
-      # add an MHV correlation_id and vha_facility_ids corresponding to va_patient
-      after(:build) do |_user, t|
-        stub_mpi(
-          build(
-            :mvi_profile,
-            icn: '1000123456V123456',
-            mhv_ids: %w[12345678901],
-            vha_facility_ids: t.va_patient ? %w[358] : []
-          )
-        )
-      end
     end
 
     trait :no_vha_facilities do
       vha_facility_ids {}
       vha_facility_hash {}
-    end
-
-    trait :mvi_profile_street_and_suffix do
-      suffix { 'Jr.' }
-      address {
-        {
-          street: '49119 Jadon Mills',
-          street2: 'Apt. 832',
-          city: 'Washington',
-          state: 'DC',
-          country: 'USA',
-          postal_code: '20500'
-        }
-      }
-    end
-
-    trait :mpi_attr_sourcing do
-      after(:build) do |_user, t|
-        given_names = [t.first_name]
-        given_names << t.middle_name if t.middle_name.present?
-        stub_mpi(
-          build(
-            :mvi_profile,
-            address: t.address,
-            birls_id: t.birls_id,
-            birth_date: t.birth_date,
-            cerner_id: t.cerner_id,
-            cerner_facility_ids: t.cerner_facility_ids,
-            edipi: t.edipi,
-            family_name: t.last_name,
-            gender: t.gender,
-            given_names: given_names,
-            home_phone: t.home_phone,
-            mhv_ids: t.mhv_ids,
-            participant_id: t.participant_id,
-            person_types: t.person_types,
-            ssn: t.ssn,
-            suffix: t.suffix,
-            vha_facility_ids: t.vha_facility_ids,
-            vha_facility_hash: t.vha_facility_hash
-          )
-        )
-      end
     end
   end
 end

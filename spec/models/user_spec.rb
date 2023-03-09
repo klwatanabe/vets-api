@@ -315,7 +315,7 @@ RSpec.describe User, type: :model do
 
       context 'exclusively MPI sourced attributes' do
         context 'address attributes' do
-          let(:user) { build(:user, :loa3, :mpi_attr_sourcing, address: expected_address) }
+          let(:user) { build(:user, :loa3, address: expected_address) }
           let(:expected_address) do
             { street: '123 Colfax Ave',
               street2: 'Unit 456',
@@ -353,7 +353,7 @@ RSpec.describe User, type: :model do
         end
 
         describe '#birls_id' do
-          let(:user) { build(:user, :loa3, :mpi_attr_sourcing, birls_id: mpi_birls_id) }
+          let(:user) { build(:user, :loa3, birls_id: mpi_birls_id) }
           let(:mpi_birls_id) { 'some_mpi_birls_id' }
 
           it 'returns birls_id from the MPI profile' do
@@ -364,7 +364,7 @@ RSpec.describe User, type: :model do
 
         context 'CERNER ids' do
           let(:user) do
-            build(:user, :loa3, :mpi_attr_sourcing,
+            build(:user, :loa3,
                   cerner_id: cerner_id, cerner_facility_ids: cerner_facility_ids)
           end
           let(:cerner_id) { 'some-cerner-id' }
@@ -382,7 +382,7 @@ RSpec.describe User, type: :model do
         end
 
         describe '#edipi_mpi' do
-          let(:user) { build(:user, :loa3, :mpi_attr_sourcing, edipi: expected_edipi) }
+          let(:user) { build(:user, :loa3, edipi: expected_edipi) }
           let(:expected_edipi) { '1234567890' }
 
           it 'fetches edipi from MPI' do
@@ -392,7 +392,7 @@ RSpec.describe User, type: :model do
         end
 
         describe '#gender_mpi' do
-          let(:user) { build(:user, :loa3, :mpi_attr_sourcing, gender: expected_gender) }
+          let(:user) { build(:user, :loa3, gender: expected_gender) }
           let(:expected_gender) { 'F' }
 
           it 'fetches gender from MPI' do
@@ -402,7 +402,7 @@ RSpec.describe User, type: :model do
         end
 
         describe '#home_phone' do
-          let(:user) { build(:user, :loa3, :mpi_attr_sourcing, home_phone: home_phone) }
+          let(:user) { build(:user, :loa3, home_phone: home_phone) }
           let(:home_phone) { '315-867-5309' }
 
           it 'returns home_phone from the MPI profile' do
@@ -413,7 +413,7 @@ RSpec.describe User, type: :model do
 
         context 'name attributes' do
           let(:user) do
-            build(:user, :loa3, :mpi_attr_sourcing,
+            build(:user, :loa3,
                   first_name: first_name, middle_name: middle_name, last_name: last_name, suffix: suffix)
           end
           let(:first_name) { 'some-first-name' }
@@ -477,7 +477,7 @@ RSpec.describe User, type: :model do
         end
 
         describe '#participant_id' do
-          let(:user) { build(:user, :loa3, :mpi_attr_sourcing, participant_id: mpi_participant_id) }
+          let(:user) { build(:user, :loa3, participant_id: mpi_participant_id) }
           let(:mpi_participant_id) { 'some_mpi_participant_id' }
 
           it 'returns participant_id from the MPI profile' do
@@ -487,7 +487,7 @@ RSpec.describe User, type: :model do
         end
 
         describe '#person_types' do
-          let(:user) { build(:user, :loa3, :mpi_attr_sourcing, person_types: expected_person_types) }
+          let(:user) { build(:user, :loa3, person_types: expected_person_types) }
           let(:expected_person_types) { %w[DEP VET] }
 
           it 'returns person_types from the MPI profile' do
@@ -497,7 +497,7 @@ RSpec.describe User, type: :model do
         end
 
         describe '#ssn_mpi' do
-          let(:user) { build(:user, :loa3, :mpi_attr_sourcing, ssn: expected_ssn) }
+          let(:user) { build(:user, :loa3, ssn: expected_ssn) }
           let(:expected_ssn) { '296333851' }
 
           it 'returns ssn from the MPI profile' do
@@ -508,7 +508,7 @@ RSpec.describe User, type: :model do
 
         context 'VHA facility ids' do
           let(:user) do
-            build(:user, :loa3, :mpi_attr_sourcing,
+            build(:user, :loa3,
                   vha_facility_ids: vha_facility_ids, vha_facility_hash: vha_facility_hash)
           end
           let(:vha_facility_ids) { %w[200CRNR 200MHV] }
@@ -557,7 +557,10 @@ RSpec.describe User, type: :model do
             address: mpi_profile.address,
             ssn: mpi_profile.ssn }
         end
-        let(:user) { build(:user, :loa3, :mhv_sign_in, address: nil, mpi_profile: mpi_profile_hash) }
+        let(:user) do
+          build(:user, :loa3, mpi_profile: mpi_profile_hash,
+                              first_name: nil, last_name: nil, birth_date: nil, ssn: nil, gender: nil, address: nil)
+        end
 
         it 'fetches first_name from MPI' do
           expect(user.first_name).to be(user.first_name_mpi)
@@ -613,7 +616,10 @@ RSpec.describe User, type: :model do
 
       context 'when saml user attributes NOT available, icn is available, and user NOT LOA3' do
         let(:mvi_profile) { build(:mvi_profile) }
-        let(:user) { build(:user, :loa1, :mhv_sign_in, mhv_icn: mvi_profile.icn) }
+        let(:user) do
+          build(:user, :loa1, mhv_icn: mvi_profile.icn,
+                              first_name: nil, last_name: nil, birth_date: nil, ssn: nil, gender: nil, address: nil)
+        end
 
         before { stub_mpi(mvi_profile) }
 

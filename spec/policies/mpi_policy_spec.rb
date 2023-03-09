@@ -82,7 +82,7 @@ describe MPIPolicy do
     end
 
     context 'with a user who is missing only participant or birls id' do
-      let(:user) { build(:user_with_no_birls_id) }
+      let(:user) { build(:user, :loa3, birls_id: nil) }
 
       it 'grants access' do
         expect(subject).to permit(user, :mvi)
