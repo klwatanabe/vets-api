@@ -16,9 +16,13 @@ RSpec.describe 'Fetching user data' do
       get v0_user_url, params: nil, headers: v0_user_request_headers
     end
 
-    it 'GET /v0/user - returns proper json' do
-      assert_response :success
-      expect(response).to match_response_schema('user_loa3')
+    context 'dont stub mpi' do
+      let(:mhv_user) { build(:user, :mhv, stub_mpi: false) }
+
+      it 'GET /v0/user - returns proper json' do
+        assert_response :success
+        expect(response).to match_response_schema('user_loa3')
+      end
     end
 
     it 'gives me the list of available prefill forms' do
@@ -68,6 +72,7 @@ RSpec.describe 'Fetching user data' do
 
     context 'with camel header inflection' do
       let(:v0_user_request_headers) { { 'X-Key-Inflection' => 'camel' } }
+      let(:mhv_user) { build(:user, :mhv, stub_mpi: false) }
 
       it 'GET /v0/user - returns proper json' do
         assert_response :success
