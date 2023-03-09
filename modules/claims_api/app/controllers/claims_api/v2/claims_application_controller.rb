@@ -11,7 +11,7 @@ module ClaimsApi
     class ClaimsApplicationController < ApplicationController
       include ClaimsApi::Error::ErrorHandler
       include ClaimsApi::CcgTokenValidation
-      include ClaimsApi::UserTokenValidation
+      include ClaimsApi::TokenValidation
 
       # fetch_audience: defines the audience used for oauth
       # Overrides the default value defined in OpenidApplicationController
@@ -95,11 +95,8 @@ module ClaimsApi
       #
       # raise if current authenticated user is neither the target veteran, nor target veteran representative
       def verify_access!
-        if token.client_credentials_token?
-          validate_ccg_token!
-          return
-        end
-
+        validation_data = validate_token!
+        return if validation_data['data']["attributes"].
         return if user_is_target_veteran? || user_represents_veteran?
 
         raise ::Common::Exceptions::Forbidden
