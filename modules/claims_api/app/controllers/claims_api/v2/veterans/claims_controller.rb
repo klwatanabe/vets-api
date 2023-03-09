@@ -71,11 +71,12 @@ module ClaimsApi
 
         def generate_show_output(bgs_claim:, lighthouse_claim:) # rubocop:disable Metrics/MethodLength
           if lighthouse_claim.present? && bgs_claim.present?
-            bgs_details = bgs_claim[:benefit_claim_details_dto]
+            # bgs_details = bgs_claim[:benefit_claim_details_dto]
             structure = build_claim_structure(
-              data: bgs_details,
+              data: bgs_claim,
               lighthouse_id: lighthouse_claim.id,
-              upstream_id: bgs_details[:benefit_claim_id]
+              upstream_id: bgs_claim[:benefit_claim_details_dto][:benefit_claim_id],
+              view: 'show'
             )
           elsif lighthouse_claim.present? && bgs_claim.blank?
             structure = {
@@ -84,11 +85,13 @@ module ClaimsApi
               status: bgs_phase_status_mapper.name(lighthouse_claim)
             }
           else
-            bgs_details = bgs_claim[:benefit_claim_details_dto]
-            structure = build_claim_structure(data: bgs_details,
+            # bgs_details = bgs_claim[:benefit_claim_details_dto]
+            structure = build_claim_structure(data: bgs_claim,
                                               lighthouse_id: nil,
-                                              upstream_id: bgs_details[:benefit_claim_id])
+                                              upstream_id: bgs_claim[:benefit_claim_details_dto][:benefit_claim_id],
+                                              view: 'show')
           end
+          debugger
           structure.merge!(errors: get_errors(lighthouse_claim))
           structure.merge!(supporting_documents: build_supporting_docs(bgs_claim))
           structure.merge!(tracked_items: map_bgs_tracked_items(bgs_claim))
@@ -106,10 +109,11 @@ module ClaimsApi
               build_claim_structure(
                 data: bgs_claim,
                 lighthouse_id: matching_claim.id,
-                upstream_id: bgs_claim[:benefit_claim_id]
+                upstream_id: bgs_claim[:benefit_claim_id],
+                view: 'index'
               )
             else
-              build_claim_structure(data: bgs_claim, lighthouse_id: nil, upstream_id: bgs_claim[:benefit_claim_id])
+              build_claim_structure(data: bgs_claim, lighthouse_id: nil, upstream_id: bgs_claim[:benefit_claim_id], view: 'index')
             end
           end
 
@@ -166,14 +170,14 @@ module ClaimsApi
           claim_id.to_s.include?('-')
         end
 
-        def build_claim_structure(data:, lighthouse_id:, upstream_id:) # rubocop:disable Metrics/MethodLength
+        def build_claim_structure(data:, lighthouse_id:, upstream_id:, view:) # rubocop:disable Metrics/MethodLength
           {
             claim_date: date_present(data[:claim_dt]),
             claim_id: upstream_id,
-            claim_phase_dates: build_claim_phase_attributes(data, 'index'),
+            claim_phase_dates: build_claim_phase_attributes(data, view),
             claim_type_code: data[:bnft_claim_type_cd],
             claim_type: data[:claim_status_type],
-            close_date: data[:claim_complete_dt].present? ? format_bgs_date(data[:claim_complete_dt]) : nil,
+            close_date: get_close_date(data),
             contention_list: data[:contentions]&.split(',')&.collect(&:strip) || [],
             decision_letter_sent: map_yes_no_to_boolean('decision_notification_sent',
                                                         data[:decision_notification_sent]),
@@ -190,6 +194,16 @@ module ClaimsApi
             submitter_role_code: data[:submtr_role_type_cd],
             temp_jurisdiction: data[:temp_regional_office_jrsdctn]
           }
+        end
+
+        def get_close_date(data)
+          if data[:claim_complete_dt].present? || data[:max_est_claim_complete_dt].present?
+            date = data[:claim_complete_dt] || data[:max_est_claim_complete_dt]
+            format_bgs_date(date)
+          else
+          date = data[:benefit_claim_details_dto][:bnft_claim_lc_status][0][:max_est_claim_complete_dt]
+          format_bgs_date(date)
+          end
         end
 
         def get_phase_type_indicator_array(data)
@@ -282,6 +296,8 @@ module ClaimsApi
                                 data[:phase_chngd_dt]
                               elsif data[:benefit_claim_details_dto].present?
                                 data[:benefit_claim_details_dto][:phase_chngd_dt]
+                              elsif data[:bnft_claim_lc_status].present?
+                                format_bgs_phase_date(data)
                               else
                                 format_bgs_phase_date(data[:benefit_claim_details_dto])
                               end
