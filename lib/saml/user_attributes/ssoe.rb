@@ -208,8 +208,11 @@ module SAML
       def validate!
         multiple_id_validations
         if should_raise_missing_uuid_error
-          data = SAML::UserAttributeError::ERRORS[:uuid_missing].merge({ identifier: mhv_icn })
-          raise SAML::UserAttributeError, data
+          data = SAML::UserAttributeError::ERRORS[:uuid_missing]
+          raise SAML::UserAttributeError.new(code: data[:code],
+                                             message: data[:message],
+                                             tag: data[:tag],
+                                             identifier: mhv_icn)
         end
       end
 
@@ -277,7 +280,7 @@ module SAML
           mismatched_ids_error = SAML::UserAttributeError::ERRORS[multiple_ids_error_type]
           error_data = { mismatched_ids: ids, icn: mhv_icn }
           Rails.logger.warn("[SAML::UserAttributes::SSOe] #{mismatched_ids_error[:message]}, #{error_data}")
-          raise SAML::UserAttributeError, mismatched_ids_error unless mhv_outbound_redirect(mismatched_ids_error)
+          raise SAML::UserAttributeError.new(**mismatched_ids_error) unless mhv_outbound_redirect(mismatched_ids_error)
         end
       end
 

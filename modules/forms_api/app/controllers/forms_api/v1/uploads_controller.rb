@@ -9,7 +9,6 @@ module FormsApi
     class UploadsController < ApplicationController
       include CentralMail::Utilities
       skip_before_action :authenticate
-      skip_before_action :verify_authenticity_token
       skip_after_action :set_csrf_header
 
       FORM_NUMBER_MAP = {
@@ -25,7 +24,7 @@ module FormsApi
 
         central_mail_service = CentralMail::Service.new
         filled_form = {
-          'metadata' => filler.metadata,
+          'metadata' => filler.metadata.to_json,
           'document' => filler.to_faraday_upload(file_path, form_id)
         }
         response = central_mail_service.upload(filled_form)

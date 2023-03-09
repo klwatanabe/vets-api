@@ -1,11 +1,11 @@
 # frozen_string_literal: true
 
-require 'fast_jsonapi'
+require 'jsonapi/serializer'
 
 module Mobile
   module V0
     class VeteransAffairsEligibilitySerializer
-      include FastJsonapi::ObjectSerializer
+      include JSONAPI::Serializer
 
       set_type :va_eligibility
       attributes :services, :cc_supported
