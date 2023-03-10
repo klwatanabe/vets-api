@@ -22,7 +22,6 @@ module ClaimsApi
         raise error_klass('Invalid token') if response.nil?
 
         JSON.parse(response.body) if response.code == 200
-        ttl = token.payload['exp'] - Time.current.utc.to_i
       rescue => e
         raise error_klass('Invalid token') if e.to_s.include?('Unauthorized')
       end
@@ -39,10 +38,14 @@ module ClaimsApi
       attributes = validated_token['attributes']
       ttl = attributes['exp'] - Time.current.utc.to_i
       uid = attributes['uid']
-      icn = attributes['icn']
-      return ClaimsUser.new(attributes['uid'], icn) if icn.nil?
-
-      return ClaimsUser.new(attributes['uid'], attributes['first_name'], attributes['last_name'])
+      act = attributes['act']
+      icn = act['icn']
+      claims_user = ClaimsUser.new(attributes['uid'])
+      claims_user.set_icn(icn) unless icn.nil?
+      unless attributes['last_name'].nil?
+        claims_user.first_name_last_name(attributes['first_name'], attributes['last_name'])
+      end
+      claims_user
     end
   end
 end
