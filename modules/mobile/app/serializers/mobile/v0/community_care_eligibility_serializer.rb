@@ -1,11 +1,11 @@
 # frozen_string_literal: true
 
-require 'fast_jsonapi'
+require 'jsonapi/serializer'
 
 module Mobile
   module V0
     class CommunityCareEligibilitySerializer
-      include FastJsonapi::ObjectSerializer
+      include JSONAPI::Serializer
 
       set_id do |object|
         object.patient_request[:service_type]

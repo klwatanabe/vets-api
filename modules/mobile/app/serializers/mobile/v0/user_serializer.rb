@@ -1,12 +1,12 @@
 # frozen_string_literal: true
 
-require 'fast_jsonapi'
+require 'jsonapi/serializer'
 require 'va_profile/demographics/service'
 
 module Mobile
   module V0
     class UserSerializer
-      include FastJsonapi::ObjectSerializer
+      include JSONAPI::Serializer
 
       ADDRESS_KEYS = %i[
         id

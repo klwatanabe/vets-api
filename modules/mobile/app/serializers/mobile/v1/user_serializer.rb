@@ -1,11 +1,11 @@
 # frozen_string_literal: true
 
-require 'fast_jsonapi'
+require 'jsonapi/serializer'
 
 module Mobile
   module V1
     class UserSerializer < Mobile::V0::UserSerializer
-      include FastJsonapi::ObjectSerializer
+      include JSONAPI::Serializer
 
       private
 

@@ -2,12 +2,12 @@
 
 # VAOS V0 routes and controllers no longer in use
 # :nocov:
-require 'fast_jsonapi'
+require 'jsonapi/serializer'
 
 module VAOS
   module V0
     class CCEligibilitySerializer
-      include FastJsonapi::ObjectSerializer
+      include JSONAPI::Serializer
 
       set_id do |object|
         object.patient_request[:service_type]
