@@ -227,7 +227,7 @@ RSpec.describe 'Fetching user data' do
   # user
 
   context 'GET /v0/user - MVI Integration', :skip_mvi do
-    let(:user) { create(:user, :loa3, stub_mpi: false) }
+    let(:user) { create(:user, :loa3, icn: SecureRandom.uuid, stub_mpi: false) }
 
     before { sign_in_as(user) }
 
@@ -298,7 +298,7 @@ RSpec.describe 'Fetching user data' do
       Timecop.freeze(start_time)
       # Starts out successful
       stub_mpi_success
-      sign_in_as(user)
+      sign_in_as(create(:user, :loa3, icn: SecureRandom.uuid, stub_mpi: false))
       expect { get v0_user_url, params: nil }
         .to trigger_statsd_increment('api.external_http_request.MVI.success', times: 1, value: 1)
         .and not_trigger_statsd_increment('api.external_http_request.MVI.failed')
@@ -306,7 +306,7 @@ RSpec.describe 'Fetching user data' do
 
       # Encounters failure and breakers kicks in
       stub_mpi_failure
-      sign_in_as(user)
+      sign_in_as(create(:user, :loa3, icn: SecureRandom.uuid, stub_mpi: false))
       expect { get v0_user_url, params: nil }
         .to trigger_statsd_increment('api.external_http_request.MVI.failed', times: 1, value: 1)
         .and not_trigger_statsd_increment('api.external_http_request.MVI.skipped')
@@ -315,7 +315,7 @@ RSpec.describe 'Fetching user data' do
 
       # skipped because breakers is active
       stub_mpi_success
-      sign_in_as(user)
+      sign_in_as(create(:user, :loa3, icn: SecureRandom.uuid, stub_mpi: false))
       expect { get v0_user_url, params: nil }
         .to trigger_statsd_increment('api.external_http_request.MVI.skipped', times: 1, value: 1)
         .and not_trigger_statsd_increment('api.external_http_request.MVI.failed')
@@ -323,7 +323,7 @@ RSpec.describe 'Fetching user data' do
       expect(MPI::Configuration.instance.breakers_service.latest_outage.ended?).to eq(false)
       Timecop.freeze(now)
       # sufficient time has elapsed that new requests are made, resulting in success
-      sign_in_as(user)
+      sign_in_as(create(:user, :loa3, icn: SecureRandom.uuid, stub_mpi: false))
       expect { get v0_user_url, params: nil }
         .to trigger_statsd_increment('api.external_http_request.MVI.success', times: 1, value: 1)
         .and not_trigger_statsd_increment('api.external_http_request.MVI.skipped')
