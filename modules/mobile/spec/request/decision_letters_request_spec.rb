@@ -20,7 +20,7 @@ RSpec.describe 'decision letters', type: :request do
   describe 'GET /mobile/v0/decision_letters' do
     context 'with a valid response' do
       it 'returns expected decision letters' do
-        get '/mobile/v0/claims/decision_letters', headers: iam_headers
+        get '/mobile/v0/claims/decision-letters', headers: iam_headers
         expect(response).to have_http_status(:ok)
         decision_letters = response.parsed_body['data']
         first_received_at = decision_letters.first.dig('attributes', 'receivedAt')
