@@ -8,7 +8,7 @@ require 'claims_api/claim_logger'
 
 module ClaimsApi
   module V2
-    class ClaimsApplicationController < ApplicationController
+    class ClaimsApplicationController < ActionController::API
       include ClaimsApi::Error::ErrorHandler
       include ClaimsApi::CcgTokenValidation
       include ClaimsApi::TokenValidation
@@ -95,8 +95,12 @@ module ClaimsApi
       #
       # raise if current authenticated user is neither the target veteran, nor target veteran representative
       def verify_access!
-        validation_data = validate_token!
-        return if validation_data['data']["attributes"].
+        validated_token = validate_token!['data']
+        attributes = validated_token['attributes']
+        actor = attributes['act']
+        return if attributes['type'] == 'system' ## CCG token in this case
+
+        @current_user = user_from_validated_token(validated_token)
         return if user_is_target_veteran? || user_represents_veteran?
 
         raise ::Common::Exceptions::Forbidden
