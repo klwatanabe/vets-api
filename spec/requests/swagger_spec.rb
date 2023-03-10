@@ -1130,7 +1130,7 @@ RSpec.describe 'the API documentation', type: %i[apivore request], order: :defin
       end
 
       context 'when user is missing birls only' do
-        let(:user) { build(:user, :loa3, birls_id: nil) }
+        let(:mhv_user) { build(:user, :loa3, birls_id: nil) }
 
         it 'fails with 422' do
           expect(subject).to validate(:post, '/v0/mvi_users/{id}', 422, headers.merge('id' => '21-0966'))
