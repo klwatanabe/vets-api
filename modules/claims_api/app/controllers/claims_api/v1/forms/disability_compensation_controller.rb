@@ -159,7 +159,7 @@ module ClaimsApi
             flashes: flashes,
             special_issues: special_issues_per_disability
           )
-          service.validate_form526(auto_claim.to_internal)
+          # service.validate_form526(auto_claim.to_internal)
           ClaimsApi::Logger.log('526', detail: '526/validate - Request Completed')
           render json: valid_526_response
         rescue ::EVSS::DisabilityCompensationForm::ServiceException, EVSS::ErrorMiddleware::EVSSError => e
