@@ -69,14 +69,14 @@ module ClaimsApi
       body.to_s
     end
 
-    def parsed_response(res, action, key)
+    def parsed_response(res, action, key = '')
       parsed = Hash.from_xml(res.body)
       parsed.dig('Envelope', 'Body', "#{action}Response", key)
             &.deep_transform_keys(&:underscore)
             &.deep_symbolize_keys || {}
     end
 
-    def make_request(endpoint:, action:, body:, key:) # rubocop:disable Metrics/MethodLength
+    def make_request(endpoint:, action:, body:, key: '') # rubocop:disable Metrics/MethodLength
       connection = log_duration event: 'establish_ssl_connection' do
         Faraday::Connection.new(ssl: { verify_mode: @ssl_verify_mode })
       end
@@ -138,6 +138,45 @@ module ClaimsApi
 
       make_request(endpoint: 'OrgWebServiceBean/OrgWebService', action: 'findPoaHistoryByPtcpntId', body: body,
                    key: 'PoaHistory')
+    end
+
+    def find_benefit_claims_status_by_ptcpnt_id(id)
+      body = Nokogiri::XML::DocumentFragment.parse <<~EOXML
+        <ptcpntId />
+      EOXML
+
+      { ptcpntId: id }.each do |k, v|
+        body.xpath("./*[local-name()='#{k}']")[0].content = v
+      end
+
+      make_request(endpoint: 'EBenefitsBnftClaimStatusWebServiceBean/EBenefitsBnftClaimStatusWebService',
+                   action: 'findBenefitClaimsStatusByPtcpntId', body: body)
+    end
+
+    def find_benefit_claim_details_by_benefit_claim_id(id)
+      body = Nokogiri::XML::DocumentFragment.parse <<~EOXML
+        <bnftClaimId />
+      EOXML
+
+      { ptcpntId: id }.each do |k, v|
+        body.xpath("./*[local-name()='#{k}']")[0].content = v
+      end
+
+      make_request(endpoint: 'EBenefitsBnftClaimStatusWebServiceBean/EBenefitsBnftClaimStatusWebService',
+                   action: 'findBenefitClaimDetailsByBnftClaimId', body: body)
+    end
+
+    def find_tracked_items(id)
+      body = Nokogiri::XML::DocumentFragment.parse <<~EOXML
+        <bnftClaimId />
+      EOXML
+
+      { bnftClaimId: id }.each do |k, v|
+        body.xpath("./*[local-name()='#{k}']")[0].content = v
+      end
+
+      make_request(endpoint: 'DocumentService/DocumentService',
+                   action: 'generateTrackedItems', body: body)
     end
 
     private
