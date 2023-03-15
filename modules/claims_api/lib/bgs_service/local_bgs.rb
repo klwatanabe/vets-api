@@ -127,6 +127,19 @@ module ClaimsApi
                    key: 'PersonDTO')
     end
 
+    def find_poa_history_by_ptcpnt_id(id)
+      body = Nokogiri::XML::DocumentFragment.parse <<~EOXML
+        <ptcpntId />
+      EOXML
+
+      { ptcpntId: id }.each do |k, v|
+        body.xpath("./*[local-name()='#{k}']")[0].content = v
+      end
+
+      make_request(endpoint: 'OrgWebServiceBean/OrgWebService', action: 'findPoaHistoryByPtcpntId', body: body,
+                   key: 'PoaHistory')
+    end
+
     private
 
     def log_duration(event: 'default', **extra_params)
@@ -137,7 +150,7 @@ module ClaimsApi
       duration = (::Process.clock_gettime(::Process::CLOCK_MONOTONIC) - start_time).round(4)
 
       # event should be first key in log, duration last
-      ClaimsApi::Logger.log 'local_bgs', { event: event }.merge(extra_params).merge({ duration: duration })
+      ClaimsApi::Logger.log 'local_bgs', **{ event: event }.merge(extra_params).merge({ duration: duration })
       StatsD.measure("api.claims_api.local_bgs.#{event}.duration", duration, tags: {})
       result
     end
