@@ -91,6 +91,12 @@ module ClaimsApi
       private
 
       def claims_service
+        if target_veteran.edipi.nil? || target_veteran.edipi.empty?
+          raise ::Common::Exceptions::UnprocessableEntity.new(detail:
+            "Unable to locate Veteran's EDIPI in Master Person Index (MPI). " \
+            'Please submit an issue at ask.va.gov or call 1-800-MyVA411 (800-698-2411) for assistance.')
+        end
+        
         ClaimsApi::UnsynchronizedEVSSClaimService.new(target_veteran)
       end
 
@@ -129,7 +135,7 @@ module ClaimsApi
         )
         vet.mpi_record?
         vet.gender = header('X-VA-Gender') || vet.gender_mpi if with_gender
-        vet.edipi = nil # vet.edipi_mpi
+        vet.edipi = vet.edipi_mpi
         vet.participant_id = vet.participant_id_mpi
         vet.icn = vet&.mpi_icn
         vet
