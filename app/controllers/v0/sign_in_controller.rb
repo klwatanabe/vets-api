@@ -338,13 +338,13 @@ module V0
 
     def auth_service(type)
       case type
-<<<<<<< HEAD
+
       when SignIn::Constants::Auth::LOGINGOV
-=======
+
       when 'mocked_authentication'
         SignIn::MockedAuthentication::Service.new
       when SAML::User::LOGINGOV_CSID
->>>>>>> 3e0bd98d8 (Created service.rb and servie_spec.rb for mockedAuthentication login. Also modidified sign_in_controller.rb to include method def auth_service and def mocked_authentication_auth_service)
+         (Created service.rb and servie_spec.rb for mockedAuthentication login. Also modidified sign_in_controller.rb to include method def auth_service and def mocked_authentication_auth_service)
         logingov_auth_service
       else
         idme_auth_service(type)
