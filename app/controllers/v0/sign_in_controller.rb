@@ -342,7 +342,7 @@ module V0
       when SignIn::Constants::Auth::LOGINGOV
 =======
       when 'mocked_authentication'
-      SignIn::MockedAuthentication::Service.new
+        SignIn::MockedAuthentication::Service.new
       when SAML::User::LOGINGOV_CSID
 >>>>>>> 3e0bd98d8 (Created service.rb and servie_spec.rb for mockedAuthentication login. Also modidified sign_in_controller.rb to include method def auth_service and def mocked_authentication_auth_service)
         logingov_auth_service
@@ -362,7 +362,7 @@ module V0
         @idme_auth_service
       end
     end
-   
+
     def mocked_authentication_auth_service
       @mocked_authentication_auth_service ||= MockedAuthentication::SignIn::Service.new
     end
@@ -376,4 +376,3 @@ module V0
     end
   end
 end
-
