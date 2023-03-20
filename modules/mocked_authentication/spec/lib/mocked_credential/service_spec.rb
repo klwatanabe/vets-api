@@ -65,7 +65,7 @@ describe MockedAuthentication::MockedCredential::Service do
   describe '#user_info' do
     context 'when the request is successful' do
       let(:credential_info_code) { SecureRandom.hex }
-       
+
       it 'creates a new MockCredentialInfo' do
         expect(subject.user_info(credential_info_code)).to be_a(OpenStruct)
       end
