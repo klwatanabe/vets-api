@@ -2,7 +2,7 @@
 
 source 'https://rubygems.org'
 
-ruby '~> 3.0.5'
+ruby '~> 3.1.3'
 
 # Modules
 path 'modules' do
@@ -68,7 +68,7 @@ gem 'fitbit_api'
 gem 'flipper'
 gem 'flipper-active_record'
 gem 'flipper-active_support_cache_store'
-gem 'flipper-ui', '0.22.0' # Flipper#552 (CSP) in 0.22.1 is causing our styles not to load
+gem 'flipper-ui'
 gem 'foreman'
 gem 'google-api-client'
 gem 'google-apis-core'
@@ -219,3 +219,7 @@ else
     gem 'sidekiq-pro'
   end
 end
+
+gem 'net-smtp', require: false
+gem 'net-imap', require: false
+gem 'net-pop', require: false
