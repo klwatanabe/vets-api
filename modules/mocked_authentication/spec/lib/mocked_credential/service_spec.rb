@@ -4,30 +4,6 @@ require 'rails_helper'
 require 'mocked_credential/service'
 
 describe MockedAuthentication::MockedCredential::Service do
-  let(:code) { '6805c923-9f37-4b47-a5c9-214391ddffd5' }
-  let(:token) do
-    {
-      access_token: 'AmCGxDQzUAr5rPZ4NgFvUQ',
-      token_type: 'Bearer',
-      expires_in: 900,
-      id_token: 'eyJraWQiOiJmNWNlMTIzOWUzOWQzZGE4MzZmOTYzYmNjZDg1Zjg1ZDU3ZDQzMzVjZmRjNmExNzAzOWYLOL' \
-                'QzNjFhMThiMTNjIiwiYWxnIjoiUlMyNTYifQ.eyJzdWIiOiI2NWY5ZjNiNS01NDQ5LTQ3YTYtYjI3Mi05Z' \
-                'DYwMTllN2MyZTMiLCJpc3MiOiJodHRwczovL2lkcC5pbnQuaWRlbnRpdHlzYW5kYm94Lmdvdi8iLCJlbWF' \
-                'pbCPzPmpvaG4uYnJhbWxleUBhZGhvY3RlYW0udXMiLCJlbHqZbF92ZXJpZmllZCI6dHJ1ZSwiZ2l2ZW5fb' \
-                'mFtZSI6IkpvaG4iLCJmYW1pb1bRfbmFtZSI6IkJyYW1sZXkiLCJiaXJ0aGRhdGUiOiIxOTg5LTAzLTI4Ii' \
-                'wic29jaWFsX3NlY3VyaXR5X251bWJlciI6IjA1Ni03Ni03MTQ5IiwidmVyaWZpZWRfYXQiOjE2MzU0NjUy' \
-                'ODYsImFjciI6Imh0dHA6Ly9pZG1hbmFnZW1lbnQuZ292L25zL2Fzc3VyYW5jZS9pYWwvMiIsIm5vbmNlIj' \
-                'oiYjIwNjc1ZjZjYmYwYWQ5M2YyNGEwMzE3YWU3Njk5OTQiLCJhdWQiOiJ1cm46Z292OmdzYTpvcGVuaWRj' \
-                'b25uZWN0LnByb2ZpbGVzOnNwOnNzbzp2YTpkZXZfc2lnbmluIiwianRpIjoicjA1aWJSenNXSjVrRnloM1' \
-                'ZuVlYtZyIsImF0X2hhc2giOiJsX0dnQmxPc2dkd0tKemc2SEFDYlJBIiwiY19oYXNoIjoiY1otX2F3OERj' \
-                'SUJGTEVpTE9QZVNFUSIsImV4cCI6MTY0NTY0MTY0NSwiaWF0IjoxNjQ1NjQwNzQ1LCJuYmYiOjE2NDU2ND' \
-                'A3NDV9.S3-8X9clNcwlH2RU5sNoYf9HXpcgVK9UGUJumhL2-3rvznrt6yGvkXvY4FuUzWEcI22muxUjbbs' \
-                'ZHjCfDImZ869NTWsI-DKohSNmNnyOom29LJRymJTn3htI5MNmpGwbmNWNuK5HgerPZblL44N1a_rqfTF4l' \
-                'ANQX0u52iIVDarcexpX0e9yS1rEPqi3PDdcwN_1tUYox4us9rgzRZaaoa4iTlFfovY7dfgo_ewqv2EDh7J' \
-                'SfJJQhFhyabkJ9HgNkkc4m0SHqztterZ6lHgIoiJdQot6wsL9pQTYzFzgHV830ltpjVUcLG5vMXw4Kqs3B' \
-                'N9tdSToHdB50Paxyfq9kg'
-    }
-  end
   let(:user_info) do
     OpenStruct.new({
                      sub: user_uuid,
@@ -63,20 +39,35 @@ describe MockedAuthentication::MockedCredential::Service do
   let(:multifactor) { true }
   let(:email) { 'user@test.com' }
   let(:user_uuid) { '12345678-0990-10a1-f038-2839ab281f90' }
+  let(:success_callback_url) { 'http://localhost:3001/auth/login/callback?type=logingov' }
+  let(:failure_callback_url) { 'http://localhost:3001/auth/login/callback?auth=fail&code=007' }
+  let(:state) { 'some-state' }
+  let(:acr) { 'some-acr' }
 
   describe '#token' do
-    context 'when the request is successful' do
-      it 'returns an access token' do
-        subject.token(code)
+    context 'when given a valid code' do
+      let(:code) { '6805c923-9f37-4b47-a5c9-214391ddffd5' }
+
+      it 'returns the code' do
+        expect(subject.token(code)).to eq(code)
+      end
+    end
+
+    context 'when given an empty string' do
+      let(:code) { '' }
+
+      it 'returns an empty string' do
+        expect(subject.token(code)).to eq('')
       end
     end
   end
 
   describe '#user_info' do
     context 'when the request is successful' do
-      let(:mocked_authorization_credential_information) { 'mocked_authorization_credential_information' }
+      let(:credential_info_code) { SecureRandom.hex }
+       
       it 'creates a new MockCredentialInfo' do
-        allow(subject).to receive(:user_info).with(token).and_return(mocked_authorization_credential_information)
+        expect(subject.user_info(credential_info_code)).to be_a(OpenStruct)
       end
     end
   end

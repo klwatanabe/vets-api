@@ -6,7 +6,7 @@ module MockedAuthentication
       end
 
       def user_info(token)
-        mocked_authorization_credential_information = MockedAuthRedis.find(token)
+        mocked_authorization_credential_information = MockCredentialInfo.find(token)
         OpenStruct.new(mocked_authorization_credential_information)
       end
 
