@@ -18,10 +18,10 @@ describe MockedAuthentication::MockedCredential::Service do
                      verified_at: 1_635_465_286
                    })
   end
-  let(:first_name) { 'Bob' }
-  let(:last_name) { 'User' }
-  let(:birth_date) { '1993-01-01' }
-  let(:ssn) { '999-11-9999' }
+  let(:first_name) { 'some-first-name' }
+  let(:last_name) { 'some-last-name' }
+  let(:birth_date) { 'some-birth-date' }
+  let(:ssn) { 'some-ssn' }
   let(:address) do
     {
       formatted: formatted_address,
@@ -33,16 +33,12 @@ describe MockedAuthentication::MockedCredential::Service do
   end
   let(:formatted_address) { "#{street}\n#{locality}, #{region} #{postal_code}" }
   let(:street) { "1 Microsoft Way\nApt 3" }
-  let(:postal_code) { '11364' }
-  let(:region) { 'NY' }
-  let(:locality) { 'Bayside' }
+  let(:postal_code) { 'some-postal-code' }
+  let(:region) { 'some-region' }
+  let(:locality) { 'some-locality' }
   let(:multifactor) { true }
-  let(:email) { 'user@test.com' }
-  let(:user_uuid) { '12345678-0990-10a1-f038-2839ab281f90' }
-  let(:success_callback_url) { 'http://localhost:3001/auth/login/callback?type=logingov' }
-  let(:failure_callback_url) { 'http://localhost:3001/auth/login/callback?auth=fail&code=007' }
-  let(:state) { 'some-state' }
-  let(:acr) { 'some-acr' }
+  let(:email) { 'some-email' }
+  let(:user_uuid) { 'some-user-uuid' }
 
   describe '#token' do
     context 'when given a valid code' do
