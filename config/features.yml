@@ -237,6 +237,10 @@ features:
     actor_type: user
     description: Enables the weekly decision review text error report
     enable_in_development: true
+  decision_review_daily_error_report_enabled:
+    actor_type: user
+    description: Enables the daily error report email
+    enable_in_development: true
   decision_review_daily_stuck_records_report_enabled:
     actor_type: user
     description: Enables the daily decision review stuck records Slack report
@@ -748,9 +752,6 @@ features:
   va_view_dependents_access:
     actor_type: user
     description: Allows us to gate the View/ Modify dependents content in a progressive rollout
-  vba_documents_nca_lob:
-    actor_type: user
-    description: Allows the use of the NCA (National Cemetery Administration) line of business
   yellow_ribbon_mvp_enhancement:
     actor_type: user
     description: Enhances Yellow Ribbon MVP.
