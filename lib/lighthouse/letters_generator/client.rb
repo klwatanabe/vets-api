@@ -33,6 +33,10 @@ module Lighthouse
         begin
           response = @conn.get('eligible-letters', { icn: icn })
         rescue Faraday::ClientError, Faraday::ServerError => e
+          Raven.tags_context(
+            team: 'benefits-claim-appeal-status',
+            feature: 'letters-generator'
+          )
           # rubocop:disable Style/RaiseArgs
           raise Lighthouse::LettersGenerator::ServiceError.new(e)
           # rubocop:enable Style/RaiseArgs
@@ -49,6 +53,10 @@ module Lighthouse
         begin
           response = @conn.get('eligible-letters', { icn: icn })
         rescue Faraday::ClientError, Faraday::ServerError => e
+          Raven.tags_context(
+            team: 'benefits-claim-appeal-status',
+            feature: 'letters-generator'
+          )
           # rubocop:disable Style/RaiseArgs
           raise Lighthouse::LettersGenerator::ServiceError.new(e)
           # rubocop:enable Style/RaiseArgs
@@ -72,6 +80,10 @@ module Lighthouse
         begin
           response = @conn.get("letters/#{letter_type}/letter", { icn: icn }.merge(letter_options))
         rescue Faraday::ClientError, Faraday::ServerError => e
+          Raven.tags_context(
+            team: 'benefits-claim-appeal-status',
+            feature: 'letters-generator'
+          )
           # rubocop:disable Style/RaiseArgs
           raise Lighthouse::LettersGenerator::ServiceError.new(e)
           # rubocop:enable Style/RaiseArgs
