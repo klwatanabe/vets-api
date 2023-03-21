@@ -11,7 +11,7 @@ web_origin_regex: \Ahttps?:\/\/www\.va\.gov\z
 logingov:
   client_id: https://sqa.eauth.va.gov/isam/sps/saml20sp/saml20
   redirect_uri: http://localhost:3000/v0/sign_in/callback
-  logout_redirect_uri: http://localhost:3001
+  logout_redirect_uri: http://localhost:3000/v0/sign_in/logingov_logout_proxy
   client_cert_path: spec/fixtures/sign_in/oauth.crt
   client_key_path: spec/fixtures/sign_in/oauth.key
   oauth_url: https://idp.int.identitysandbox.gov
@@ -911,6 +911,7 @@ flipper:
     - lance.sanchez@gcio.com
     - lucian.snare@adhocteam.us # Lucian Snare - Ad Hoc LLC
     - mattgardner@navapbc.com
+    - marci.mcguire@gmail.com
     - mark.dewey@va.gov
     - metrowebz@gmail.com
     - micah@adhocteam.us
@@ -932,6 +933,8 @@ flipper:
     - rebecca.green@thoughtworks.com
     - regarr@gmail.com # Robin Garrison - AdHoc
     - riley.anderson@oddball.io
+    - robyn.singleton@adhocteam.us
+    - robyn.singleton@va.gov
     - ryan.leahy@adhocteam.us # Ryan Leahy - Adhoc
     - ryan.thurlwell@va.gov
     - sallymaki@navapbc.com
@@ -1092,7 +1095,6 @@ lighthouse:
     version: v1
   direct_deposit:
     host: https://sandbox-api.va.gov
-    path: services/direct-deposit-management/v1/direct-deposit
     access_token:
       aud_claim_url: https://deptva-eval.okta.com/oauth2/ausi0e21hbv5iElEh2p7/v1/token
       client_id: ~

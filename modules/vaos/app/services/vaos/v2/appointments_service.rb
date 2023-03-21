@@ -9,6 +9,7 @@ module VAOS
     class AppointmentsService < VAOS::SessionService
       DIRECT_SCHEDULE_ERROR_KEY = 'DirectScheduleError'
       VAOS_SERVICE_CATEGORY_KEY = 'VAOSServiceCategory'
+      VAOS_TELEHEALTH_DATA_KEY = 'VAOSTelehealthData'
 
       def get_appointments(start_date, end_date, statuses = nil, pagination_params = {})
         params = date_params(start_date, end_date)
@@ -20,6 +21,7 @@ module VAOS
           response = perform(:get, appointments_base_url, params, headers)
           response.body[:data].each do |appt|
             process_service_category(appt)
+            log_telehealth_data(appt[:telehealth]&.[](:atlas)) unless appt[:telehealth]&.[](:atlas).nil?
           end
           {
             data: deserialized_appointments(response.body[:data]),
@@ -42,6 +44,7 @@ module VAOS
         with_monitoring do
           response = perform(:post, appointments_base_url, params, headers)
           process_service_category(response.body)
+          log_telehealth_data(response.body[:telehealth]&.[](:atlas)) unless response.body[:telehealth]&.[](:atlas).nil?
           OpenStruct.new(response.body)
         rescue Common::Exceptions::BackendServiceException => e
           log_direct_schedule_submission_errors(e) if params[:status] == 'booked'
@@ -69,6 +72,18 @@ module VAOS
         {
           status: e.status_code,
           message: e.message
+        }
+      end
+
+      def log_telehealth_data(atlas_data)
+        atlas_entry = { VAOS_TELEHEALTH_DATA_KEY => atlas_details(atlas_data) }
+        Rails.logger.info('VAOS telehealth atlas details', atlas_entry.to_json)
+      end
+
+      def atlas_details(atlas_data)
+        {
+          siteCode: atlas_data&.[](:site_code),
+          address: atlas_data&.[](:address)
         }
       end
 
@@ -106,7 +121,7 @@ module VAOS
       def partial_errors(response)
         if response.status == 200 && response.body[:failures]&.any?
           log_message_to_sentry(
-            'VAOS::AppointmentService#get_appointments has response errors.',
+            'VAOS::V2::AppointmentService#get_appointments has response errors.',
             :info,
             failures: response.body[:failures].to_json
           )

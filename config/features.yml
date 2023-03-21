@@ -202,9 +202,6 @@ features:
   decision_review_sc_email:
     actor_type: user
     description: Send email notification for successful SC submission
-  decision_review_hlr_status_update_throttling:
-    actor_type: user
-    description: Throttles requests to CMP when updating HLR statuses
   decision_review_hlr_pii_expunge_enabled:
     actor_type: user
     description: Enables the higher level review PII expunge job
@@ -236,6 +233,10 @@ features:
   decision_review_weekly_error_report_enabled:
     actor_type: user
     description: Enables the weekly decision review text error report
+    enable_in_development: true
+  decision_review_daily_error_report_enabled:
+    actor_type: user
+    description: Enables the daily error report email
     enable_in_development: true
   decision_review_daily_stuck_records_report_enabled:
     actor_type: user
@@ -478,6 +479,9 @@ features:
   profile_user_claims:
     actor_type: user
     description: When enabled, /v0/user will return user profile claims for accessing service endpoints.
+  profile_show_mhv_notification_settings:
+    actor_type: user
+    description: Display MHV notification settings - RX refill shipment, appointment, secure messaging, and medical images/reports
   profile_show_military_academy_attendance:
     actor_type: user
     description: When enabled, profile service history will include military academy attendance.
@@ -745,9 +749,6 @@ features:
   va_view_dependents_access:
     actor_type: user
     description: Allows us to gate the View/ Modify dependents content in a progressive rollout
-  vba_documents_nca_lob:
-    actor_type: user
-    description: Allows the use of the NCA (National Cemetery Administration) line of business
   yellow_ribbon_mvp_enhancement:
     actor_type: user
     description: Enhances Yellow Ribbon MVP.
@@ -819,3 +820,6 @@ features:
   virtual_agent_show_floating_chatbot:
     actor_type: user
     description: Enables a floating chatbot on the chatbot page - managed by virtual agent team
+  disability_compensation_lighthouse_rated_disabilities_provider:
+    actor_type: user
+    description: If enabled uses the lighthouse rated disabilities endpoint
