@@ -4,7 +4,7 @@ require 'claims_api/v2/params_validation/veteran_identifier'
 
 module ClaimsApi
   module V2
-    class VeteranIdentifierController < ClaimsApi::V2::ClaimsApplicationController
+    class VeteranIdentifierController < ClaimsApi::V2::ApplicationController
       def find
         verify_access! if ccg_flow?(token: token)
         validate_request!(ClaimsApi::V2::ParamsValidation::VeteranIdentifier)

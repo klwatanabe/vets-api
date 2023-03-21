@@ -3,7 +3,7 @@
 module ClaimsApi
   module V2
     module Veterans
-      class DisabilityCompensationController < ClaimsApi::V2::ClaimsApplicationController
+      class DisabilityCompensationController < ClaimsApi::V2::ApplicationController
         def submit; end
 
         def validate; end
