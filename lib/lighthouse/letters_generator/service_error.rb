@@ -13,7 +13,7 @@ module Lighthouse
       def initialize(exception = nil)
         super
         unless exception.nil?
-          r = exception.response
+          r = exception.response[:body]
           @status ||= r['status']
           @title = r['title'] || exception.class.to_s
           @message = r['detail'] || r['message']
