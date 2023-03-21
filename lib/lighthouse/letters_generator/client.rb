@@ -4,6 +4,18 @@ require 'lighthouse/letters_generator/configuration'
 
 module Lighthouse
   module LettersGenerator
+    def self.measure_time(msg)
+      start_time = Process.clock_gettime(Process::CLOCK_MONOTONIC) 
+
+      response = yield
+
+      end_time = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+      elapsed = end_time - start_time
+
+      Rails.logger.info "#{msg}: #{elapsed} seconds"
+      response
+    end
+
     class Client < Common::Client::Base
       LETTER_TYPES = %w[
         benefit_summary
@@ -23,15 +35,22 @@ module Lighthouse
       def initialize(conn = nil)
         super()
         @conn = if conn.nil?
+                  Rails.logger.debug "Using built-in connection"
                   config.connection
                 else
+                  Rails.logger.debug "Using custom connection"
                   conn
                 end
       end
 
       def get_eligible_letter_types(icn)
+        endpoint = 'eligible-letters'
+
         begin
-          response = @conn.get('eligible-letters', { icn: icn })
+          log = "Retrieving eligible letter types and destination from #{config.generator_url}/#{endpoint}"
+          response = Lighthouse::LettersGenerator::measure_time(log) do
+            @conn.get(endpoint, { icn: icn })
+          end
         rescue Faraday::ClientError, Faraday::ServerError => e
           Raven.tags_context(
             team: 'benefits-claim-appeal-status',
@@ -50,8 +69,13 @@ module Lighthouse
 
       # TODO: repeated code #get_eligible_letter_types
       def get_benefit_information(icn)
+        endpoint = 'eligible-letters'
+
         begin
-          response = @conn.get('eligible-letters', { icn: icn })
+          log = "Retrieving benefit information from #{config.generator_url}/#{endpoint}"
+          response = Lighthouse::LettersGenerator::measure_time(log) do
+            @conn.get(endpoint, { icn: icn })
+          end
         rescue Faraday::ClientError, Faraday::ServerError => e
           Raven.tags_context(
             team: 'benefits-claim-appeal-status',
@@ -75,10 +99,14 @@ module Lighthouse
           raise error
         end
 
+        endpoint = "letters/#{letter_type}/letter"
         letter_options = options.select { |_, v| v == true }
 
         begin
-          response = @conn.get("letters/#{letter_type}/letter", { icn: icn }.merge(letter_options))
+          log = "Retrieving benefit information from #{config.generator_url}/#{endpoint}"
+          response = Lighthouse::LettersGenerator::measure_time(log) do
+            @conn.get(endpoint, { icn: icn }.merge(letter_options))
+          end
         rescue Faraday::ClientError, Faraday::ServerError => e
           Raven.tags_context(
             team: 'benefits-claim-appeal-status',
