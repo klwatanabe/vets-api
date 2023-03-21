@@ -5,7 +5,7 @@ require 'lighthouse/letters_generator/configuration'
 module Lighthouse
   module LettersGenerator
     def self.measure_time(msg)
-      start_time = Process.clock_gettime(Process::CLOCK_MONOTONIC) 
+      start_time = Process.clock_gettime(Process::CLOCK_MONOTONIC)
 
       response = yield
 
@@ -35,10 +35,10 @@ module Lighthouse
       def initialize(conn = nil)
         super()
         @conn = if conn.nil?
-                  Rails.logger.debug "Using built-in connection"
+                  Rails.logger.debug 'Using built-in connection'
                   config.connection
                 else
-                  Rails.logger.debug "Using custom connection"
+                  Rails.logger.debug 'Using custom connection'
                   conn
                 end
       end
@@ -48,7 +48,7 @@ module Lighthouse
 
         begin
           log = "Retrieving eligible letter types and destination from #{config.generator_url}/#{endpoint}"
-          response = Lighthouse::LettersGenerator::measure_time(log) do
+          response = Lighthouse::LettersGenerator.measure_time(log) do
             @conn.get(endpoint, { icn: icn })
           end
         rescue Faraday::ClientError, Faraday::ServerError => e
@@ -56,9 +56,7 @@ module Lighthouse
             team: 'benefits-claim-appeal-status',
             feature: 'letters-generator'
           )
-          # rubocop:disable Style/RaiseArgs
-          raise Lighthouse::LettersGenerator::ServiceError.new(e)
-          # rubocop:enable Style/RaiseArgs
+          raise Lighthouse::LettersGenerator::ServiceError.new(e), 'Lighthouse error'
         end
 
         {
@@ -73,7 +71,7 @@ module Lighthouse
 
         begin
           log = "Retrieving benefit information from #{config.generator_url}/#{endpoint}"
-          response = Lighthouse::LettersGenerator::measure_time(log) do
+          response = Lighthouse::LettersGenerator.measure_time(log) do
             @conn.get(endpoint, { icn: icn })
           end
         rescue Faraday::ClientError, Faraday::ServerError => e
@@ -81,9 +79,7 @@ module Lighthouse
             team: 'benefits-claim-appeal-status',
             feature: 'letters-generator'
           )
-          # rubocop:disable Style/RaiseArgs
-          raise Lighthouse::LettersGenerator::ServiceError.new(e)
-          # rubocop:enable Style/RaiseArgs
+          raise Lighthouse::LettersGenerator::ServiceError.new(e), 'Lighthouse error'
         end
 
         { benefitInformation: response.body['benefitInformation'] }
@@ -104,17 +100,12 @@ module Lighthouse
 
         begin
           log = "Retrieving benefit information from #{config.generator_url}/#{endpoint}"
-          response = Lighthouse::LettersGenerator::measure_time(log) do
+          response = Lighthouse::LettersGenerator.measure_time(log) do
             @conn.get(endpoint, { icn: icn }.merge(letter_options))
           end
         rescue Faraday::ClientError, Faraday::ServerError => e
-          Raven.tags_context(
-            team: 'benefits-claim-appeal-status',
-            feature: 'letters-generator'
-          )
-          # rubocop:disable Style/RaiseArgs
-          raise Lighthouse::LettersGenerator::ServiceError.new(e)
-          # rubocop:enable Style/RaiseArgs
+          Raven.tags_context(team: 'benefits-claim-appeal-status', feature: 'letters-generator')
+          raise Lighthouse::LettersGenerator::ServiceError.new(e), 'Lighthouse error'
         end
 
         response.body

@@ -18,8 +18,6 @@ module Lighthouse
       end
 
       def generator_url
-        p "URL: #{SETTINGS.url}"
-        p "PATH: #{SETTINGS.path}"
         URI path_join(SETTINGS.url, SETTINGS.path)
       end
 
