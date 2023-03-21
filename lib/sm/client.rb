@@ -29,6 +29,7 @@ module SM
     # Fetch the list of available constant values for email frequency
     #
     # @return [Hash] an object containing the body of the response
+    #
     def get_preferences_frequency_list
       perform(:get, 'preferences/notification/list', nil, token_headers).body
     end
@@ -37,6 +38,7 @@ module SM
     # Fetch the current email settings, including address and frequency
     #
     # @return [MessagingPreference]
+    #
     def get_preferences
       json = perform(:get, 'preferences/notification', nil, token_headers).body
       frequency = MessagingPreference::FREQUENCY_GET_MAP[json[:data][:notify_me]]
