@@ -11,7 +11,7 @@ web_origin_regex: \Ahttps?:\/\/www\.va\.gov\z
 logingov:
   client_id: https://sqa.eauth.va.gov/isam/sps/saml20sp/saml20
   redirect_uri: http://localhost:3000/v0/sign_in/callback
-  logout_redirect_uri: http://localhost:3001
+  logout_redirect_uri: http://localhost:3000/v0/sign_in/logingov_logout_proxy
   client_cert_path: spec/fixtures/sign_in/oauth.crt
   client_key_path: spec/fixtures/sign_in/oauth.key
   oauth_url: https://idp.int.identitysandbox.gov
@@ -195,6 +195,7 @@ central_mail:
 bip:
   claims:
     url: "https://claims-uat.dev8.bip.va.gov"
+    mock: false
 
 # Settings for VAProfile
 vet360:
@@ -550,6 +551,8 @@ webhooks:
 
 # Settings for VBA Document upload service module
 vba_documents:
+  v2_upload_endpoint_enabled: false
+  v2_enabled: false
   documentation:
     path_enabled_flag: false
   report_enabled: false
@@ -908,6 +911,7 @@ flipper:
     - lance.sanchez@gcio.com
     - lucian.snare@adhocteam.us # Lucian Snare - Ad Hoc LLC
     - mattgardner@navapbc.com
+    - marci.mcguire@gmail.com
     - mark.dewey@va.gov
     - metrowebz@gmail.com
     - micah@adhocteam.us
@@ -929,6 +933,8 @@ flipper:
     - rebecca.green@thoughtworks.com
     - regarr@gmail.com # Robin Garrison - AdHoc
     - riley.anderson@oddball.io
+    - robyn.singleton@adhocteam.us
+    - robyn.singleton@va.gov
     - ryan.leahy@adhocteam.us # Ryan Leahy - Adhoc
     - ryan.thurlwell@va.gov
     - sallymaki@navapbc.com
@@ -1089,7 +1095,6 @@ lighthouse:
     version: v1
   direct_deposit:
     host: https://sandbox-api.va.gov
-    path: services/direct-deposit-management/v1/direct-deposit
     access_token:
       aud_claim_url: https://deptva-eval.okta.com/oauth2/ausi0e21hbv5iElEh2p7/v1/token
       client_id: ~
@@ -1138,6 +1143,10 @@ vbms:
 
 vet_verification:
   key_path: modules/veteran_verification/spec/fixtures/verification_test.pem
+  mock_emis: false
+  mock_emis_host: false
+  mock_bgs: false
+  mock_bgs_url: false
 
 github_stats:
   username: github-stats-rake
@@ -1415,6 +1424,9 @@ test_user_dashboard:
   github_oauth:
     client_id:
     client_secret:
+
+websockets:
+  websocket_settings: false
 
 lighthouse_health_immunization:
   client_id: '0oad0xggirKLf2ger2p7'

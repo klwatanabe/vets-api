@@ -20,6 +20,7 @@ Rails.application.routes.draw do
   post '/v0/sign_in/token', to: 'v0/sign_in#token'
   get '/v0/sign_in/introspect', to: 'v0/sign_in#introspect'
   get '/v0/sign_in/logout', to: 'v0/sign_in#logout'
+  get '/v0/sign_in/logingov_logout_proxy', to: 'v0/sign_in#logingov_logout_proxy'
   get '/v0/sign_in/revoke_all_sessions', to: 'v0/sign_in#revoke_all_sessions'
 
   get '/inherited_proofing/auth', to: 'inherited_proofing#auth'
@@ -43,6 +44,8 @@ Rails.application.routes.draw do
     get 'form1095_bs/download_pdf/:tax_year', to: 'form1095_bs#download_pdf'
     get 'form1095_bs/download_txt/:tax_year', to: 'form1095_bs#download_txt'
     get 'form1095_bs/available_forms', to: 'form1095_bs#available_forms'
+
+    get 'user_transition_availabilities', to: 'user_transition_availabilities#index'
 
     resources :medical_copays, only: %i[index show]
     get 'medical_copays/get_pdf_statement_by_id/:statement_id', to: 'medical_copays#get_pdf_statement_by_id'
@@ -439,7 +442,10 @@ Rails.application.routes.draw do
 
   mount Flipper::UI.app(Flipper.instance) => '/flipper', constraints: Flipper::AdminUserConstraint.new
 
-  mount Coverband::Reporters::Web.new, at: '/coverband', constraints: GithubAuthentication::CoverbandReportersWeb.new
+  if Rails.env.production?
+    require 'coverband'
+    mount Coverband::Reporters::Web.new, at: '/coverband', constraints: GithubAuthentication::CoverbandReportersWeb.new
+  end
 
   # This globs all unmatched routes and routes them as routing errors
   match '*path', to: 'application#routing_error', via: %i[get post put patch delete]

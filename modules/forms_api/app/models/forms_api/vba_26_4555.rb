@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module FormsApi
-  class FormsApi::VBA264555
+  class VBA264555
     include Virtus.model(nullify_blank: true)
 
     attribute :data
@@ -14,15 +14,16 @@ module FormsApi
       {
         'veteranFirstName' => @data.dig('veteran', 'full_name', 'first'),
         'veteranLastName' => @data.dig('veteran', 'full_name', 'last'),
-        'fileNumber' => data.dig('veteran', 'va_file_number'),
-        'zipCode' => data.dig('veteran', 'address', 'postal_code'),
-        'source' => 'va.gov',
+        'fileNumber' => @data.dig('veteran', 'va_file_number').presence || @data.dig('veteran', 'ssn'),
+        'zipCode' => @data.dig('veteran', 'address', 'postal_code'),
+        'source' => 'forms_api',
+        'uuid' => SecureRandom.uuid,
         'hashV' => Digest::SHA256.file(pdf_path).hexdigest,
         'numberAttachments' => 0,
-        'receiveDt' => Time.zone.now.strftime('%Y-%m-%d %H:%M%S'),
+        'receiveDt' => Time.zone.now.strftime('%Y-%m-%d %H:%M:%S'),
         'numberPages' => PdfInfo::Metadata.read(pdf_path).pages,
-        'docType' => '10182',
-        'businessLine' => 'VBA'
+        'businessLine' => 'CMP',
+        'docType' => @data['form_number']
       }
     end
   end

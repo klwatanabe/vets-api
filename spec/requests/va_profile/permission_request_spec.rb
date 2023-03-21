@@ -5,7 +5,7 @@ require 'rails_helper'
 RSpec.describe 'permission' do
   include SchemaMatchers
 
-  let(:user) { build(:vets360_user) }
+  let(:user) { build(:user, :loa3, vet360_id: '1411684') }
   let(:headers) { { 'Content-Type' => 'application/json', 'Accept' => 'application/json' } }
   let(:headers_with_camel) { headers.merge('X-Key-Inflection' => 'camel') }
   let(:frozen_time) { Time.zone.local(2019, 11, 5, 16, 49, 18) }
@@ -13,7 +13,7 @@ RSpec.describe 'permission' do
   before do
     Timecop.freeze(frozen_time)
     sign_in_as(user)
-    Settings.virtual_hosts << 'www.example.com'
+    allow(Settings).to receive(:virtual_hosts).and_return('www.example.com')
   end
 
   after do

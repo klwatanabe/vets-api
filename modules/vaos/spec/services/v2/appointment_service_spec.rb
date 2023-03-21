@@ -43,7 +43,18 @@ describe VAOS::V2::AppointmentsService do
           allow(Rails.logger).to receive(:info).at_least(:once)
           response = subject.post_appointment(va_booked_request_body)
           expect(response[:id]).to be_a(String)
+        end
+      end
+
+      it 'returns the created appointment and logs data' do
+        VCR.use_cassette('vaos/v2/appointments/post_appointments_va_booked_200_and_logs_data',
+                         match_requests_on: %i[method path query]) do
+          allow(Rails.logger).to receive(:info).at_least(:once)
+          response = subject.post_appointment(va_booked_request_body)
+          expect(response[:id]).to be_a(String)
           expect(Rails.logger).to have_received(:info).with('VAOS appointment service category',
+                                                            any_args).at_least(:once)
+          expect(Rails.logger).to have_received(:info).with('VAOS telehealth atlas details',
                                                             any_args).at_least(:once)
         end
       end
@@ -112,12 +123,14 @@ describe VAOS::V2::AppointmentsService do
       end
 
       it 'logs the service categories of the returned appointments' do
-        VCR.use_cassette('vaos/v2/appointments/get_appointments_200_and_log_service_category',
+        VCR.use_cassette('vaos/v2/appointments/get_appointments_200_and_log_data',
                          match_requests_on: %i[method path query], tag: :force_utf8) do
           allow(Rails.logger).to receive(:info).at_least(:once)
           response = subject.get_appointments(start_date3, end_date3)
           expect(response[:data].size).to eq(163)
           expect(Rails.logger).to have_received(:info).with('VAOS appointment service category',
+                                                            any_args).at_least(:once)
+          expect(Rails.logger).to have_received(:info).with('VAOS telehealth atlas details',
                                                             any_args).at_least(:once)
         end
       end
