@@ -38,7 +38,6 @@ module ClaimsApi
         evss_headers
       end
 
-      #
       # For validating the incoming request body
       # @param validator_class [any] Class implementing ActiveModel::Validations
       #
@@ -49,7 +48,6 @@ module ClaimsApi
         raise ::Common::Exceptions::ValidationErrorsBadRequest, validator
       end
 
-      #
       # Veteran being acted on.
       #
       # @return [ClaimsApi::Veteran] Veteran to act on
@@ -63,7 +61,6 @@ module ClaimsApi
                             end
       end
 
-      #
       # Determine if the current authenticated user is an accredited representative
       #
       # @return [boolean] True if current user is an accredited representative, false otherwise
@@ -76,7 +73,6 @@ module ClaimsApi
         ).present?
       end
 
-      #
       # Determine if the current authenticated user is the Veteran being acted on
       #
       # @return [boolean] True if the current user is the Veteran being acted on, false otherwise
@@ -89,7 +85,6 @@ module ClaimsApi
         @current_user.icn == target_veteran.mpi.icn
       end
 
-      #
       # Determine if the current authenticated user is allowed access
       #
       # raise if current authenticated user is neither the target veteran, nor target veteran representative
@@ -104,7 +99,6 @@ module ClaimsApi
         raise ::Common::Exceptions::Forbidden
       end
 
-      #
       # Determine if the current authenticated user is the target veteran's representative
       #
       # @return [boolean] True if the current authenticated user is the target veteran's representative
@@ -133,10 +127,9 @@ module ClaimsApi
       end
 
       def local_bgs_service
-        external_key = "#{target_veteran.participant_id}"
         @local_bgs_service ||= ClaimsApi::LocalBGS.new(
-          external_uid: external_key,
-          external_key: external_key
+          external_uid: target_veteran.participant_id,
+          external_key: target_veteran.participant_id
         )
       end
 

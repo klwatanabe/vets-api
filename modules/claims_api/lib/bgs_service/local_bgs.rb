@@ -69,14 +69,15 @@ module ClaimsApi
       body.to_s
     end
 
-    def parsed_response(res, action, key = '')
+    def parsed_response(res, action, key = nil)
       parsed = Hash.from_xml(res.body)
-      parsed.dig('Envelope', 'Body', "#{action}Response", key)
+
+      parsed&.dig('Envelope', 'Body', "#{action}Response", key)
             &.deep_transform_keys(&:underscore)
             &.deep_symbolize_keys || {}
     end
 
-    def make_request(endpoint:, action:, body:, key: '') # rubocop:disable Metrics/MethodLength
+    def make_request(endpoint:, action:, body:, key: nil) # rubocop:disable Metrics/MethodLength
       connection = log_duration event: 'establish_ssl_connection' do
         Faraday::Connection.new(ssl: { verify_mode: @ssl_verify_mode })
       end
@@ -158,7 +159,7 @@ module ClaimsApi
         <bnftClaimId />
       EOXML
 
-      { ptcpntId: id }.each do |k, v|
+      { bnftClaimId: id }.each do |k, v|
         body.xpath("./*[local-name()='#{k}']")[0].content = v
       end
 
@@ -175,8 +176,7 @@ module ClaimsApi
         body.xpath("./*[local-name()='#{k}']")[0].content = v
       end
 
-      make_request(endpoint: 'DocumentService/DocumentService',
-                   action: 'generateTrackedItems', body: body)
+      make_request(endpoint: 'TrackedItemService/TrackedItemService', action: 'findTrackedItems', body: body)
     end
 
     private

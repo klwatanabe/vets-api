@@ -7,20 +7,12 @@ require 'bgs_service/local_bgs'
 module ClaimsApi
   module V2
     module Veterans
-      class ClaimsController < ClaimsApi::V2::ApplicationController
+      class ClaimsController < ClaimsApi::V2::ApplicationController # rubocop:disable Metrics/ClassLength
         before_action :verify_access!
 
         def index
-          bgs_claims =
-            if Flipper.enabled? :bgs_via_faraday
-              local_bgs_service.find_benefit_claims_status_by_ptcpnt_id(
-                participant_id: target_veteran.participant_id
-              )
-            else
-              bgs_service.ebenefits_benefit_claims_status.find_benefit_claims_status_by_ptcpnt_id(
-                participant_id: target_veteran.participant_id
-              )
-            end
+          bgs_claims = find_bgs_claims!
+
           lighthouse_claims = ClaimsApi::AutoEstablishedClaim.where(veteran_icn: target_veteran.mpi.icn)
 
           render json: [] && return unless bgs_claims || lighthouse_claims
@@ -154,11 +146,33 @@ module ClaimsApi
           lighthouse_claim
         end
 
+        def find_bgs_claims!
+          if Flipper.enabled? :bgs_via_faraday
+            local_bgs_service.find_benefit_claims_status_by_ptcpnt_id(
+              participant_id: target_veteran.participant_id
+            )
+          else
+            bgs_service.ebenefits_benefit_claims_status.find_benefit_claims_status_by_ptcpnt_id(
+              participant_id: target_veteran.participant_id
+            )
+          end
+        rescue Savon::SOAPFault => e
+          # the ebenefits service raises an exception if claims are not found,
+          # so catch the exception here and return a 404 instead
+          if e.message.include?("No BnftClaims found for #{target_veteran.veteran_icn}")
+            raise ::Common::Exceptions::ResourceNotFound.new(detail: 'Claims not found')
+          end
+
+          raise
+        end
+
         def find_bgs_claim!(claim_id:)
           return if claim_id.blank?
 
           if Flipper.enabled? :bgs_via_faraday
-            local_bgs_service.find_benefit_claim_details_by_benefit_claim_id(participant_id: target_veteran.participant_id)
+            local_bgs_service.find_benefit_claim_details_by_benefit_claim_id(
+              benefit_claim_id: claim_id
+            )
           else
             bgs_service.ebenefits_benefit_claims_status.find_benefit_claim_details_by_benefit_claim_id(
               benefit_claim_id: claim_id
@@ -168,6 +182,28 @@ module ClaimsApi
           # the ebenefits service raises an exception if a claim is not found,
           # so catch the exception here and return a 404 instead
           if e.message.include?("No BnftClaim found for #{claim_id}")
+            raise ::Common::Exceptions::ResourceNotFound.new(detail: 'Claim not found')
+          end
+
+          raise
+        end
+
+        def find_tracked_items!(claim_id)
+          return if claim_id.blank?
+
+          if Flipper.enabled? :bgs_via_faraday
+            local_bgs_service.find_tracked_items(claim_id)
+                             .dig(:benefit_claim, :dvlpmt_items) || []
+          else
+            bgs_service
+              .tracked_items
+              .find_tracked_items(claim_id)
+              .dig(:benefit_claim, :dvlpmt_items) || []
+          end
+        rescue Savon::SOAPFault => e
+          # the ebenefits service raises an exception if a claim is not found,
+          # so catch the exception here and return a 404 instead
+          if e.message.include?("No tracked items found for #{claim_id}")
             raise ::Common::Exceptions::ResourceNotFound.new(detail: 'Claim not found')
           end
 
@@ -376,18 +412,8 @@ module ClaimsApi
           claim_id = bgs_claim.dig(:benefit_claim_details_dto, :benefit_claim_id)
           return [] if claim_id.nil?
 
-          tracked_items =
-            if Flipper.enabled? :bgs_via_faraday
-              local_bgs_service # .find_tracked_items(claim_id: claim_id)
-                .tracked_items
-                .find_tracked_items(claim_id)
-                .dig(:benefit_claim, :dvlpmt_items) || []
-            else
-              bgs_service
-                .tracked_items
-                .find_tracked_items(claim_id)
-                .dig(:benefit_claim, :dvlpmt_items) || []
-            end
+          tracked_items = find_tracked_items!(claim_id)
+
           ebenefits_details = bgs_claim[:benefit_claim_details_dto]
 
           tracked_ids = handle_array_or_hash(tracked_items, :dvlpmt_item_id)

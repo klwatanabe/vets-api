@@ -213,4 +213,51 @@ FactoryBot.define do
     phase_type { 'Preparation for Decision' }
     phase_type_change_ind { '45' }
   end
+
+  factory :bgs_response_with_tracked_items, class: OpenStruct do
+    benefit_claim_details_dto { (association :bgs_claim_details_dto_with_tracked_items).to_h }
+  end
+  factory :bgs_claim_details_dto_with_tracked_items, class: OpenStruct do
+    benefit_claim_id { '600236068' }
+    phase_chngd_dt { Faker::Time.backward(days: 5, period: :morning) }
+    phase_type { 'Pending Decision Approval' }
+    ptcpnt_clmant_id { Faker::Number.number(digits: 17) }
+    ptcpnt_vet_id { Faker::Number.number(digits: 17) }
+    phase_type_change_ind { '76' }
+    claim_status_type { 'Compensation' }
+    bnft_claim_lc_status { [(association :bnft_claim_lc_status_one).to_h] }
+    claim_tracked_items { (association :claim_tracked_items_list).to_h }
+  end
+  factory :claim_tracked_items_list, class: OpenStruct do
+    never_received_from_you_list {
+      [(association :tracked_item_never_received_from_you_list_one).to_h,
+       (association :tracked_item_never_received_from_you_list_two).to_h]
+    }
+    neverReceivedFromOthersList { [] }
+  end
+
+  factory :tracked_item_never_received_from_you_list_one, class: OpenStruct do
+    closed_date { Faker::Time.backward(days: 5, period: :morning) }
+    description { 'Continuity - med evid since service needed (Hearing Loss)' }
+    displayed_name { 'Request 3' }
+    dvlpmt_tc { 'CLMNTRQST' }
+    overdue { false }
+    requested_date { Faker::Time.backward(days: 4, period: :morning) }
+    tracked_item_id { 143_315 }
+    tracked_item_status { 'NO_LONGER_REQUIRED' }
+    uploaded { false }
+    uploads_allowed { false }
+  end
+  factory :tracked_item_never_received_from_you_list_two, class: OpenStruct do
+    closed_date { Faker::Time.backward(days: 5, period: :morning) }
+    description { 'Continuity - med evid since service needed (Hearing Loss)' }
+    displayed_name { 'Request 3' }
+    dvlpmt_tc { 'CLMNTRQST' }
+    overdue { false }
+    requested_date { Faker::Time.backward(days: 4, period: :morning) }
+    tracked_item_id { 143_315 }
+    tracked_item_status { 'NO_LONGER_REQUIRED' }
+    uploaded { false }
+    uploads_allowed { false }
+  end
 end

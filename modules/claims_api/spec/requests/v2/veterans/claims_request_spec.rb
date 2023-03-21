@@ -27,6 +27,14 @@ RSpec.describe 'Claims', type: :request do
     end
   end
 
+  let(:tis) do
+    if Flipper.enabled? :bgs_via_faraday
+      ClaimsApi::LocalBGS
+    else
+      BGS::TrackedItemsService
+    end
+  end
+
   describe 'Claims' do
     describe 'index' do
       context 'auth header' do
@@ -968,27 +976,23 @@ RSpec.describe 'Claims', type: :request do
           let(:claim_by_id_with_items_path) do
             "/services/claims/v2/veterans/#{veteran_id}/claims/#{claim_id_with_items}"
           end
+          let(:tracked_items_response) { build(:claim_tracked_items_list).to_h }
 
           it "returns a claim with 'tracked_items'" do
             with_okta_user(scopes) do |auth_header|
-              VCR.use_cassette(
-                'bgs/ebenefits_benefit_claims_status/find_benefit_claim_details_by_benefit_claim_id'
-              ) do
-                VCR.use_cassette('bgs/tracked_items/find_tracked_items') do
-                  VCR.use_cassette('evss/documents/get_claim_documents') do
-                    expect(ClaimsApi::AutoEstablishedClaim)
-                      .to receive(:get_by_id_and_icn).and_return(nil)
+              VCR.use_cassette('bgs/tracked_items/find_tracked_items') do
+                expect(ClaimsApi::AutoEstablishedClaim)
+                  .to receive(:get_by_id_and_icn).and_return(nil)
+                expect_any_instance_of(bcs)
+                  .to receive(:find_tracked_items).and_return(tracked_items_response)
+                get claim_by_id_with_items_path, headers: auth_header
 
-                    get claim_by_id_with_items_path, headers: auth_header
-
-                    json_response = JSON.parse(response.body)
-                    first_doc_id = json_response['data']['attributes'].dig('trackedItems', 0, 'trackedItemId')
-                    expect(response.status).to eq(200)
-                    expect(json_response).to be_an_instance_of(Hash)
-                    expect(json_response['data']['id']).to eq('600236068')
-                    expect(first_doc_id).to eq(325_525)
-                  end
-                end
+                json_response = JSON.parse(response.body)
+                first_doc_id = json_response['data']['attributes'].dig('trackedItems', 0, 'trackedItemId')
+                expect(response.status).to eq(200)
+                expect(json_response).to be_an_instance_of(Hash)
+                expect(json_response['data']['id']).to eq('600236068')
+                expect(first_doc_id).to eq(325_525)
               end
             end
           end
