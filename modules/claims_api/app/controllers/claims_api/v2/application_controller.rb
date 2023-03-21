@@ -8,7 +8,7 @@ require 'claims_api/claim_logger'
 
 module ClaimsApi
   module V2
-    class ApplicationController < ActionController::API
+    class ApplicationController < ::ApplicationController
       include ClaimsApi::Error::ErrorHandler
       include ClaimsApi::CcgTokenValidation
       include ClaimsApi::TokenValidation
