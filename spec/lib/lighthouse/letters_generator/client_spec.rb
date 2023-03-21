@@ -150,7 +150,7 @@ RSpec.describe Lighthouse::LettersGenerator::Client do
         end
 
         client = Lighthouse::LettersGenerator::Client.new(@conn)
- 
+
         # Assert
         expect { client.download_letter('DOLLYPARTON', 'LETTER_TO_GRANDMA') }.to raise_error do |error|
           expect(error).to be_an_instance_of(Lighthouse::LettersGenerator::ServiceError)

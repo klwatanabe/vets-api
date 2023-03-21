@@ -37,7 +37,7 @@ module Lighthouse
           raise Lighthouse::LettersGenerator::ServiceError.new(e)
           # rubocop:enable Style/RaiseArgs
         end
- 
+
         {
           letters: response.body['letters'],
           letter_destination: response.body['letterDestination']
@@ -49,7 +49,9 @@ module Lighthouse
         begin
           response = @conn.get('eligible-letters', { icn: icn })
         rescue Faraday::ClientError, Faraday::ServerError => e
+          # rubocop:disable Style/RaiseArgs
           raise Lighthouse::LettersGenerator::ServiceError.new(e)
+          # rubocop:enable Style/RaiseArgs
         end
 
         { benefitInformation: response.body['benefitInformation'] }
@@ -70,7 +72,9 @@ module Lighthouse
         begin
           response = @conn.get("letters/#{letter_type}/letter", { icn: icn }.merge(letter_options))
         rescue Faraday::ClientError, Faraday::ServerError => e
+          # rubocop:disable Style/RaiseArgs
           raise Lighthouse::LettersGenerator::ServiceError.new(e)
+          # rubocop:enable Style/RaiseArgs
         end
 
         response.body
