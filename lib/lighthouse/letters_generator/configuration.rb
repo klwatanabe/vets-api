@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'common/client/configuration/rest'
 require 'common/client/middleware/response/raise_error'
 require 'lighthouse/auth/client_credentials/jwt_generator'
@@ -9,9 +11,9 @@ module Lighthouse
       SETTINGS = Settings.lighthouse.letters_generator
 
       def path_join(*paths)
-        paths.reduce("") do |acc, p|
-          trimmed_slash = p.gsub(/(^\/+|\/+$)/, '')
-          acc += trimmed_slash + '/'
+        paths.reduce('') do |acc, p|
+          trimmed_slash = p.gsub(%r{(^/+|/+$)}, '')
+          acc + "#{trimmed_slash}/"
         end.chop!
       end
 
@@ -30,7 +32,7 @@ module Lighthouse
 
           faraday.request :multipart
           faraday.request :json
-          faraday.request :authorization, 'Bearer', "#{get_access_token}"
+          faraday.request :authorization, 'Bearer', get_access_token.to_s
 
           faraday.response :betamocks if use_mocks?
           faraday.response :json

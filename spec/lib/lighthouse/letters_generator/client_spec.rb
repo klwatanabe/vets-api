@@ -1,23 +1,25 @@
-# frozen_string_literal true
+# frozen_string_literal: true
+
 require 'rails_helper'
 require 'lighthouse/letters_generator/client'
 require 'lighthouse/letters_generator/service_error'
 
+FAKE_RESPONSES_PATH = 'spec/lib/lighthouse/letters_generator/fakeResponses'
+
 RSpec.describe Lighthouse::LettersGenerator::Client do
-  FAKE_RESPONSES_PATH = 'spec/lib/lighthouse/letters_generator/fakeResponses'
   before do
     @stubs = Faraday::Adapter::Test::Stubs.new
     @conn = Faraday.new { |b| b.adapter(:test, @stubs) }
   end
 
-  context "#get_eligible_letter_types" do
+  describe '#get_eligible_letter_types' do
     it 'returns a list of eligible letter types' do
       # Arrange
-      fakeResponseJson = File.read("#{FAKE_RESPONSES_PATH}/fakeResponse.json")
-      fakeResponseBody = JSON.parse(fakeResponseJson)
+      fake_response_json = File.read("#{FAKE_RESPONSES_PATH}/fakeResponse.json")
+      fake_response_body = JSON.parse(fake_response_json)
 
       @stubs.get('/eligible-letters?icn=DOLLYPARTON') do
-        [ 200, {}, fakeResponseBody ]
+        [200, {}, fake_response_body]
       end
 
       client = Lighthouse::LettersGenerator::Client.new(@conn)
@@ -26,63 +28,63 @@ RSpec.describe Lighthouse::LettersGenerator::Client do
       response = client.get_eligible_letter_types('DOLLYPARTON')
 
       # Assert
-      expect(response[:letters][0]).to have_key("letterType")
-      expect(response[:letters][0]).to have_key("letterName")
+      expect(response[:letters][0]).to have_key('letterType')
+      expect(response[:letters][0]).to have_key('letterName')
       expect(response).to have_key(:letter_destination)
     end
 
-    context "Error handling" do
+    context 'Error handling' do
       it 'handles an error that returns a detailed response' do
-        ## This test covers classes of client errors in lighthouse that 
+        ## This test covers classes of client errors in lighthouse that
         ## have a detailed response, exemplified in fakeBadRequest.json.
         ## Status codes include: 400, 404, 406, 433, 500
         ## Link: https://developer.va.gov/explore/verification/docs/va_letter_generator
 
-        fakeResponseJson = File.read("#{FAKE_RESPONSES_PATH}/fakeBadRequest.json")
-        fakeResponseBody = JSON.parse(fakeResponseJson)
+        fake_response_json = File.read("#{FAKE_RESPONSES_PATH}/fakeBadRequest.json")
+        fake_response_body = JSON.parse(fake_response_json)
         @stubs.get('/eligible-letters?icn=BADREQUEST') do
-          raise Faraday::BadRequestError.new("YIKES", fakeResponseBody)
+          raise Faraday::BadRequestError.new('YIKES', fake_response_body)
         end
 
         client = Lighthouse::LettersGenerator::Client.new(@conn)
 
-        expect {client.get_eligible_letter_types('BADREQUEST')}.to raise_error do |error|
+        expect { client.get_eligible_letter_types('BADREQUEST') }.to raise_error do |error|
           expect(error).to be_an_instance_of(Lighthouse::LettersGenerator::ServiceError)
-          expect(error.status).to be(fakeResponseBody['status'])
-          expect(error.message).to be(fakeResponseBody['detail'])
+          expect(error.status).to be(fake_response_body['status'])
+          expect(error.message).to be(fake_response_body['detail'])
         end
       end
 
       it 'handles an error that returns a simplified response' do
-        ## This test covers classes of client errors in lighthouse that 
+        ## This test covers classes of client errors in lighthouse that
         ## have a detailed response, exemplified in fakeBadRequest.json.
         ## Status codes include: 401, 403, 413, 429
         ## Link: https://developer.va.gov/explore/verification/docs/va_letter_generator
 
-        fakeResponseJson = File.read("#{FAKE_RESPONSES_PATH}/fakeUnauthorized.json")
-        fakeResponseBody = JSON.parse(fakeResponseJson)
+        fake_response_json = File.read("#{FAKE_RESPONSES_PATH}/fakeUnauthorized.json")
+        fake_response_body = JSON.parse(fake_response_json)
         @stubs.get('/eligible-letters?icn=BadActor') do
-          raise Faraday::UnauthorizedError.new("don't go in there", fakeResponseBody)
+          raise Faraday::UnauthorizedError.new("don't go in there", fake_response_body)
         end
 
         client = Lighthouse::LettersGenerator::Client.new(@conn)
 
-        expect {client.get_eligible_letter_types('BadActor')}.to raise_error do |error|
+        expect { client.get_eligible_letter_types('BadActor') }.to raise_error do |error|
           expect(error).to be_an_instance_of(Lighthouse::LettersGenerator::ServiceError)
-          expect(error.title).to eq("Faraday::UnauthorizedError")
+          expect(error.title).to eq('Faraday::UnauthorizedError')
         end
       end
     end
   end
 
-  context "#get_benefit_information" do
+  describe '#get_benefit_information' do
     it 'returns a list of benefit information' do
       # Arrange
-      fakeResponseJson = File.read("#{FAKE_RESPONSES_PATH}/fakeResponse.json")
-      fakeResponseBody = JSON.parse(fakeResponseJson)
+      fake_response_json = File.read("#{FAKE_RESPONSES_PATH}/fakeResponse.json")
+      fake_response_body = JSON.parse(fake_response_json)
 
       @stubs.get('/eligible-letters?icn=DOLLYPARTON') do
-        [ 200, {}, fakeResponseBody ]
+        [200, {}, fake_response_body]
       end
 
       client = Lighthouse::LettersGenerator::Client.new(@conn)
@@ -92,19 +94,18 @@ RSpec.describe Lighthouse::LettersGenerator::Client do
 
       # Assert
       expect(response).to have_key(:benefitInformation)
-      expect(response[:benefitInformation]).not_to be(nil)
+      expect(response[:benefitInformation]).not_to be_nil
     end
-
   end
 
-  context "#download_letter" do
+  describe '#download_letter' do
     it 'returns a letter pdf without letter options' do
       # Arrange
-      fakeResponseJson = File.read("#{FAKE_RESPONSES_PATH}/fakeResponse.json")
-      fakeResponseBody = JSON.parse(fakeResponseJson)
+      fake_response_json = File.read("#{FAKE_RESPONSES_PATH}/fakeResponse.json")
+      fake_response_body = JSON.parse(fake_response_json)
 
       @stubs.get('/letters/BENEFIT_SUMMARY/letter?icn=DOLLYPARTON') do
-        [ 200, {}, fakeResponseBody ]
+        [200, {}, fake_response_body]
       end
 
       # Act
@@ -118,14 +119,16 @@ RSpec.describe Lighthouse::LettersGenerator::Client do
 
     it 'returns a letter pdf with letter options' do
       # Arrange
-      fakeResponseJson = File.read("#{FAKE_RESPONSES_PATH}/fakeResponse.json")
-      fakeResponseBody = JSON.parse(fakeResponseJson)
+      fake_response_json = File.read("#{FAKE_RESPONSES_PATH}/fakeResponse.json")
+      fake_response_body = JSON.parse(fake_response_json)
+      download_path = '/letters/BENEFIT_SUMMARY/letter'
+      query_params = 'icn=DOLLYPARTON?serviceConnectedDisabilities=true&chapter35Eligibility=true'
 
-      @stubs.get('/letters/BENEFIT_SUMMARY/letter?icn=DOLLYPARTON?serviceConnectedDisabilities=true&chapter35Eligibility=true') do
-        [ 200, {}, fakeResponseBody ]
+      @stubs.get("#{download_path}?#{query_params}") do
+        [200, {}, fake_response_body]
       end
 
-      letter_options = fakeResponseBody["benefitInformation"]
+      letter_options = fake_response_body['benefitInformation']
 
       # Act
       client = Lighthouse::LettersGenerator::Client.new(@conn)
@@ -133,38 +136,38 @@ RSpec.describe Lighthouse::LettersGenerator::Client do
 
       # Assert
       @stubs.verify_stubbed_calls
-      expect(response).not_to be(nil)
+      expect(response).not_to be_nil
     end
 
-    context "error handling" do
+    context 'error handling' do
       it 'returns a 400 if the letter type is not valid' do
         # Arrange
-        fakeResponseJson = File.read("#{FAKE_RESPONSES_PATH}/fakeResponse.json")
-        fakeResponseBody = JSON.parse(fakeResponseJson)
+        fake_response_json = File.read("#{FAKE_RESPONSES_PATH}/fakeResponse.json")
+        fake_response_body = JSON.parse(fake_response_json)
 
         @stubs.get('/letters/LETTER_TO_GRANDMA/letter?icn=DOLLYPARTON') do
-          [ 200, {}, fakeResponseBody ]
+          [200, {}, fake_response_body]
         end
 
         client = Lighthouse::LettersGenerator::Client.new(@conn)
-        
+ 
         # Assert
-        expect { client.download_letter('DOLLYPARTON', 'LETTER_TO_GRANDMA')}.to raise_error do |error|
+        expect { client.download_letter('DOLLYPARTON', 'LETTER_TO_GRANDMA') }.to raise_error do |error|
           expect(error).to be_an_instance_of(Lighthouse::LettersGenerator::ServiceError)
           expect(error.status).to eq(400)
         end
       end
 
       it 'handles an error returned from Lighthouse' do
-        fakeResponseJson = File.read("#{FAKE_RESPONSES_PATH}/fakeBadRequest.json")
-        fakeResponseBody = JSON.parse(fakeResponseJson)
+        fake_response_json = File.read("#{FAKE_RESPONSES_PATH}/fakeBadRequest.json")
+        fake_response_body = JSON.parse(fake_response_json)
         @stubs.get('/letters/BENEFITS_SUMMARY/letter?icn=BADREQUEST') do
-          raise Faraday::BadRequestError.new("YIKES", fakeResponseBody)
+          raise Faraday::BadRequestError.new('YIKES', fake_response_body)
         end
 
         client = Lighthouse::LettersGenerator::Client.new(@conn)
 
-        expect {client.download_letter('BADREQUEST', 'BENEFITS_SUMMARY')}.to raise_error do |error|
+        expect { client.download_letter('BADREQUEST', 'BENEFITS_SUMMARY') }.to raise_error do |error|
           expect(error).to be_an_instance_of(Lighthouse::LettersGenerator::ServiceError)
         end
       end
