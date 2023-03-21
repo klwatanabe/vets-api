@@ -267,7 +267,7 @@ module BGS
       log_message_to_sentry(message, :info, {}, { team: 'vfs-ebenefits' })
       response
     rescue => e
-      notify_of_service_exception(e, __method__, 1, :warn)
+      notify_of_service_exception(e, __method__, 1, :warn) # why is this warn?
     end
 
     private

@@ -21,10 +21,12 @@ module BGS
       end
 
       def notify_of_service_exception(error, method, attempt = nil, status = :error)
+        # HERE
         msg = "Unable to #{method}: #{error.message}: try #{attempt} of #{MAX_ATTEMPTS}"
         context = { icn: @user[:icn] }
         tags = { team: 'vfs-ebenefits' }
 
+        # no backtrace because
         return log_message_to_sentry(msg, :warn, context, tags) if status == :warn
 
         log_exception_to_sentry(error, context, tags)

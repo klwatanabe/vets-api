@@ -12,7 +12,7 @@ module V0
       end
 
       claim.process_attachments!
-      dependent_service.submit_686c_form(claim)
+      dependent_service.submit_686c_form(claim) # this enqueues job
 
       Rails.logger.info "ClaimID=#{claim.confirmation_number} Form=#{claim.class::FORM}"
       clear_saved_form(claim.form_id)

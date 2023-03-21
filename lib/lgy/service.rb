@@ -169,7 +169,7 @@ module LGY
 
     def pdf_headers
       {
-        'Accept' => 'application/octet-stream', 'Content-Type' => 'application/octet-stream'
+.         'Accept' => 'application/octet-stream', 'Content-Type' => 'application/octet-stream'
       }
     end
 

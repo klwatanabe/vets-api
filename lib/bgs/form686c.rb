@@ -32,8 +32,8 @@ module BGS
     # rubocop:disable Metrics/MethodLength
     def submit(payload)
       vnp_proc_state_type_cd = get_state_type(payload)
-      proc_id = create_proc_id_and_form(vnp_proc_state_type_cd)
-      veteran = VnpVeteran.new(proc_id: proc_id, payload: payload, user: @user, claim_type: '130DPNEBNADJ').create
+      proc_id = create_proc_id_and_form(vnp_proc_state_type_cd) # create proc id
+      veteran = VnpVeteran.new(proc_id: proc_id, payload: payload, user: @user, claim_type: '130DPNEBNADJ').create # get new increment
 
       process_relationships(proc_id, veteran, payload)
 
@@ -54,14 +54,14 @@ module BGS
           end_product_name: @end_product_name,
           end_product_code: @end_product_code
         }
-      ).create
+      ).create # insert_benefit_claim
       benefit_claim_id = benefit_claim_record[:benefit_claim_id]
       # temporary logging to troubleshoot
       log_message_to_sentry("#{proc_id} - #{benefit_claim_id}", :warn, '', { team: 'vfs-ebenefits' })
 
-      vnp_benefit_claim.update(benefit_claim_record, vnp_benefit_claim_record)
-      prep_manual_claim(benefit_claim_id) if vnp_proc_state_type_cd == 'MANUAL_VAGOV'
-      bgs_service.update_proc(proc_id, proc_state: @proc_state)
+      vnp_benefit_claim.update(benefit_claim_record, vnp_benefit_claim_record) # here
+      prep_manual_claim(benefit_claim_id) if vnp_proc_state_type_cd == 'MANUAL_VAGOV' # here
+      bgs_service.update_proc(proc_id, proc_state: @proc_state) # or here
     end
     # rubocop:enable Metrics/MethodLength
 

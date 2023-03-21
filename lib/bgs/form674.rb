@@ -46,6 +46,9 @@ module BGS
         }
       ).create
 
+      benefit_claim_id = benefit_claim_record[:benefit_claim_id]
+      log_message_to_sentry("#{proc_id} - #{benefit_claim_id}", :warn, '', { team: 'vfs-ebenefits' }) # this in 686c, but not here.
+
       vnp_benefit_claim.update(benefit_claim_record, vnp_benefit_claim_record)
 
       # we only want to add a note if the claim is being set to MANUAL_VAGOV
