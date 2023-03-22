@@ -12,12 +12,13 @@ module ClaimsApi
       include ClaimsApi::Error::ErrorHandler
       include ClaimsApi::CcgTokenValidation
       include ClaimsApi::TokenValidation
+      skip_before_action :authenticate
+      before_action :validate_access
 
-      # fetch_audience: defines the audience used for oauth
-      # Overrides the default value defined in OpenidApplicationController
-      # NOTE: required for Client Credential Grant (CCG) flow
-      def fetch_aud
-        Settings.oidc.isolated_audience.claims
+      def validate_access
+        verify_access!
+      rescue => e
+        render_unauthorized
       end
 
       protected
@@ -55,7 +56,7 @@ module ClaimsApi
       #
       # @return [ClaimsApi::Veteran] Veteran to act on
       def target_veteran
-        @target_veteran ||= if @is_valid_ccg_flow
+        @target_veteran ||= if @validated_token_payload
                               build_target_veteran(veteran_id: params[:veteranId], loa: { current: 3, highest: 3 })
                             elsif user_is_representative?
                               build_target_veteran(veteran_id: params[:veteranId], loa: @current_user.loa)

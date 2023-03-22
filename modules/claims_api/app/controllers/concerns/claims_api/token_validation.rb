@@ -21,9 +21,9 @@ module ClaimsApi
                                      apiKey: Settings.oidc.validation_api_key })
         raise error_klass('Invalid token') if response.nil?
 
-        JSON.parse(response.body) if response.code == 200
+        @validated_token_payload = JSON.parse(response.body) if response.code == 200
       rescue => e
-        raise error_klass('Invalid token') if e.to_s.include?('Unauthorized')
+        raise error_klass('Invalid token') if e.to_s.include?('401')
       end
     end
 
