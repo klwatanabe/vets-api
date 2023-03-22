@@ -13,10 +13,9 @@ module ClaimsApi
       include ClaimsApi::CcgTokenValidation
       include ClaimsApi::TokenValidation
       skip_before_action :authenticate
-      before_action :validate_access
 
-      def validate_access
-        verify_access!
+      def verify_access!
+        verify_access_token!
       rescue => e
         render_unauthorized
       end
@@ -95,7 +94,7 @@ module ClaimsApi
       # Determine if the current authenticated user is allowed access
       #
       # raise if current authenticated user is neither the target veteran, nor target veteran representative
-      def verify_access!
+      def verify_access_token!
         validated_token = validate_token!['data']
         attributes = validated_token['attributes']
         actor = attributes['act']
