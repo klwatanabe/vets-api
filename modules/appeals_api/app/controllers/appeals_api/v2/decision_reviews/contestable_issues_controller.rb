@@ -7,6 +7,7 @@ require 'appeals_api/form_schemas'
 module AppealsApi::V2
   module DecisionReviews
     class ContestableIssuesController < AppealsApi::ApplicationController
+      FORM_NUMBER = 'CONTESTABLE_ISSUES_HEADERS'
       HEADERS = JSON.parse(
         File.read(
           AppealsApi::Engine.root.join('config/schemas/v2/contestable_issues_headers.json')
@@ -124,9 +125,7 @@ module AppealsApi::V2
           render_unprocessable_entity(
             "decision_review_type must be one of: #{VALID_DECISION_REVIEW_TYPES.join(', ')}"
           )
-        end
-
-        if invalid_benefit_type?
+        elsif invalid_benefit_type?
           render_unprocessable_entity(
             "benefit_type must be one of: #{caseflow_benefit_type_mapping.keys.join(', ')}"
           )
@@ -158,7 +157,7 @@ module AppealsApi::V2
       end
 
       def request_headers
-        HEADERS.index_with { |key| request.headers[key] }.compact
+        self.class::HEADERS.index_with { |key| request.headers[key] }.compact
       end
 
       def caseflow_request_headers
@@ -174,7 +173,7 @@ module AppealsApi::V2
         AppealsApi::FormSchemas.new(
           SCHEMA_ERROR_TYPE,
           schema_version: 'v2'
-        ).validate!('CONTESTABLE_ISSUES_HEADERS', request_headers)
+        ).validate!(self.class::FORM_NUMBER, request_headers)
       end
 
       def caseflow_benefit_type_mapping
