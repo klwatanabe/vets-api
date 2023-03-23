@@ -104,7 +104,7 @@ module VAOS
                                            Array.wrap(values).map do |code|
                                              {
                                                user_id: @user.icn,
-                                               detail_code: { code: code }
+                                               detail_code: { code: }
                                              }
                                            end
                                          else
@@ -116,7 +116,7 @@ module VAOS
       raise Common::Exceptions::ValidationErrors, self unless valid?
 
       params = attributes.compact
-      put_request? ? params.merge(patient_identifier: patient_identifier) : params
+      put_request? ? params.merge(patient_identifier:) : params
     end
 
     private

@@ -10,7 +10,7 @@ RSpec.describe V0::SignInController, type: :controller do
       get(:authorize, params: authorize_params)
     end
 
-    let!(:client_config) { create(:client_config, authentication: authentication) }
+    let!(:client_config) { create(:client_config, authentication:) }
     let(:authorize_params) do
       {}.merge(type).merge(code_challenge).merge(code_challenge_method).merge(client_state).merge(client_id).merge(acr)
     end
@@ -69,7 +69,7 @@ RSpec.describe V0::SignInController, type: :controller do
         let(:authentication) { SignIn::Constants::Auth::COOKIE }
         let(:expected_error_status) { :redirect }
         let(:expected_redirect_params) do
-          { auth: 'fail', code: SignIn::Constants::ErrorCode::INVALID_REQUEST, request_id: request_id }.to_query
+          { auth: 'fail', code: SignIn::Constants::ErrorCode::INVALID_REQUEST, request_id: }.to_query
         end
         let(:expected_redirect) do
           uri = URI.parse(client_config.redirect_uri)
@@ -442,7 +442,7 @@ RSpec.describe V0::SignInController, type: :controller do
     let(:mpi_profile) { nil }
     let(:client_id) { client_config.client_id }
     let(:authentication) { SignIn::Constants::Auth::API }
-    let!(:client_config) { create(:client_config, authentication: authentication) }
+    let!(:client_config) { create(:client_config, authentication:) }
 
     before do
       allow(Rails.logger).to receive(:info)
@@ -458,7 +458,7 @@ RSpec.describe V0::SignInController, type: :controller do
       let(:statsd_callback_failure) { SignIn::Constants::Statsd::STATSD_SIS_CALLBACK_FAILURE }
       let(:expected_error_log) { '[SignInService] [V0::SignInController] callback error' }
       let(:expected_error_message) do
-        { errors: expected_error, client_id: client_id, type: type, acr: acr }
+        { errors: expected_error, client_id:, type:, acr: }
       end
 
       it 'renders expected error' do
@@ -488,7 +488,7 @@ RSpec.describe V0::SignInController, type: :controller do
         let(:authentication) { SignIn::Constants::Auth::COOKIE }
         let(:expected_error_status) { :redirect }
         let(:expected_redirect_params) do
-          { auth: 'fail', code: error_code, request_id: request_id }.to_query
+          { auth: 'fail', code: error_code, request_id: }.to_query
         end
         let(:expected_redirect) do
           uri = URI.parse(client_config.redirect_uri)
@@ -497,7 +497,7 @@ RSpec.describe V0::SignInController, type: :controller do
         end
         let(:expected_error_log) { '[SignInService] [V0::SignInController] callback error' }
         let(:expected_error_message) do
-          { errors: expected_error, client_id: client_id, type: type, acr: acr }
+          { errors: expected_error, client_id:, type:, acr: }
         end
         let(:request_id) { SecureRandom.uuid }
 
@@ -569,20 +569,20 @@ RSpec.describe V0::SignInController, type: :controller do
 
       context 'when state is a proper, expected JWT' do
         let(:state_value) do
-          SignIn::StatePayloadJwtEncoder.new(code_challenge: code_challenge,
-                                             code_challenge_method: code_challenge_method,
-                                             acr: acr,
-                                             client_config: client_config,
-                                             type: type,
-                                             client_state: client_state).perform
+          SignIn::StatePayloadJwtEncoder.new(code_challenge:,
+                                             code_challenge_method:,
+                                             acr:,
+                                             client_config:,
+                                             type:,
+                                             client_state:).perform
         end
         let(:uplevel_state_value) do
-          SignIn::StatePayloadJwtEncoder.new(code_challenge: code_challenge,
-                                             code_challenge_method: code_challenge_method,
-                                             acr: acr,
-                                             client_config: client_config,
-                                             type: type,
-                                             client_state: client_state).perform
+          SignIn::StatePayloadJwtEncoder.new(code_challenge:,
+                                             code_challenge_method:,
+                                             acr:,
+                                             client_config:,
+                                             type:,
+                                             client_state:).perform
         end
         let(:code_challenge) { Base64.urlsafe_encode64('some-code-challenge') }
         let(:code_challenge_method) { SignIn::Constants::Auth::CODE_CHALLENGE_METHOD }
@@ -624,7 +624,7 @@ RSpec.describe V0::SignInController, type: :controller do
             end
 
             context 'and code is given that matches expected code for auth service' do
-              let(:response) { OpenStruct.new(access_token: token, id_token: id_token, expires_in: expires_in) }
+              let(:response) { OpenStruct.new(access_token: token, id_token:, expires_in:) }
               let(:id_token) { JWT.encode(id_token_payload, OpenSSL::PKey::RSA.new(2048), 'RS256') }
               let(:expires_in) { 900 }
               let(:id_token_payload) { { acr: login_gov_response_acr } }
@@ -670,10 +670,10 @@ RSpec.describe V0::SignInController, type: :controller do
                 let(:statsd_callback_success) { SignIn::Constants::Statsd::STATSD_SIS_CALLBACK_SUCCESS }
                 let(:expected_logger_context) do
                   {
-                    type: type,
-                    client_id: client_id,
-                    ial: ial,
-                    acr: acr
+                    type:,
+                    client_id:,
+                    ial:,
+                    acr:
                   }
                 end
                 let(:expected_user_attributes) do
@@ -728,8 +728,8 @@ RSpec.describe V0::SignInController, type: :controller do
             let(:user_info) do
               OpenStruct.new(
                 sub: 'some-sub',
-                level_of_assurance: level_of_assurance,
-                credential_ial: credential_ial,
+                level_of_assurance:,
+                credential_ial:,
                 social: '123456789',
                 birth_date: '1-1-2022',
                 fname: 'some-name',
@@ -815,10 +815,10 @@ RSpec.describe V0::SignInController, type: :controller do
                 let(:statsd_callback_success) { SignIn::Constants::Statsd::STATSD_SIS_CALLBACK_SUCCESS }
                 let(:expected_logger_context) do
                   {
-                    type: type,
-                    client_id: client_id,
-                    ial: ial,
-                    acr: acr
+                    type:,
+                    client_id:,
+                    ial:,
+                    acr:
                   }
                 end
 
@@ -856,15 +856,15 @@ RSpec.describe V0::SignInController, type: :controller do
             let(:user_info) do
               OpenStruct.new(
                 sub: 'some-sub',
-                level_of_assurance: level_of_assurance,
-                credential_ial: credential_ial,
+                level_of_assurance:,
+                credential_ial:,
                 dslogon_idvalue: '123456789',
                 dslogon_birth_date: '1-1-2022',
                 dslogon_fname: 'some-name',
                 dslogon_mname: 'some-middle-name',
                 dslogon_lname: 'some-family-name',
                 dslogon_uuid: '987654321',
-                dslogon_assurance: dslogon_assurance,
+                dslogon_assurance:,
                 email: 'some-email'
               )
             end
@@ -920,10 +920,10 @@ RSpec.describe V0::SignInController, type: :controller do
               let(:statsd_callback_success) { SignIn::Constants::Statsd::STATSD_SIS_CALLBACK_SUCCESS }
               let(:expected_logger_context) do
                 {
-                  type: type,
-                  client_id: client_id,
-                  ial: ial,
-                  acr: acr
+                  type:,
+                  client_id:,
+                  ial:,
+                  acr:
                 }
               end
 
@@ -996,11 +996,11 @@ RSpec.describe V0::SignInController, type: :controller do
             let(:user_info) do
               OpenStruct.new(
                 sub: 'some-sub',
-                level_of_assurance: level_of_assurance,
-                credential_ial: credential_ial,
+                level_of_assurance:,
+                credential_ial:,
                 mhv_uuid: '123456789',
-                mhv_icn: mhv_icn,
-                mhv_assurance: mhv_assurance,
+                mhv_icn:,
+                mhv_assurance:,
                 email: 'some-email'
               )
             end
@@ -1045,10 +1045,10 @@ RSpec.describe V0::SignInController, type: :controller do
               let(:statsd_callback_success) { SignIn::Constants::Statsd::STATSD_SIS_CALLBACK_SUCCESS }
               let(:expected_logger_context) do
                 {
-                  type: type,
-                  client_id: client_id,
-                  ial: ial,
-                  acr: acr
+                  type:,
+                  client_id:,
+                  ial:,
+                  acr:
                 }
               end
 
@@ -1122,12 +1122,12 @@ RSpec.describe V0::SignInController, type: :controller do
 
     context 'when error is given' do
       let(:state_value) do
-        SignIn::StatePayloadJwtEncoder.new(code_challenge: code_challenge,
-                                           code_challenge_method: code_challenge_method,
-                                           acr: acr,
-                                           client_config: client_config,
-                                           type: type,
-                                           client_state: client_state).perform
+        SignIn::StatePayloadJwtEncoder.new(code_challenge:,
+                                           code_challenge_method:,
+                                           acr:,
+                                           client_config:,
+                                           type:,
+                                           client_state:).perform
       end
       let(:code_challenge) { Base64.urlsafe_encode64('some-code-challenge') }
       let(:code_challenge_method) { SignIn::Constants::Auth::CODE_CHALLENGE_METHOD }
@@ -1180,7 +1180,7 @@ RSpec.describe V0::SignInController, type: :controller do
     let(:type) { nil }
     let(:client_id) { client_config.client_id }
     let(:authentication) { SignIn::Constants::Auth::API }
-    let!(:client_config) { create(:client_config, authentication: authentication, anti_csrf: anti_csrf) }
+    let!(:client_config) { create(:client_config, authentication:, anti_csrf:) }
     let(:anti_csrf) { false }
     let(:loa) { nil }
 
@@ -1246,9 +1246,9 @@ RSpec.describe V0::SignInController, type: :controller do
         let!(:code_container) do
           create(:code_container,
                  code: code_value,
-                 code_challenge: code_challenge,
-                 client_id: client_id,
-                 user_verification_id: user_verification_id)
+                 code_challenge:,
+                 client_id:,
+                 user_verification_id:)
         end
         let(:code_challenge) { 'some-code-challenge' }
 
@@ -1305,7 +1305,7 @@ RSpec.describe V0::SignInController, type: :controller do
               it 'logs the successful token request' do
                 access_token = JWT.decode(JSON.parse(subject.body)['data']['access_token'], nil, false).first
                 logger_context = {
-                  user_uuid: user_uuid,
+                  user_uuid:,
                   session_id: access_token['session_handle'],
                   token_uuid: access_token['jti']
                 }
@@ -1347,7 +1347,7 @@ RSpec.describe V0::SignInController, type: :controller do
                 access_token_cookie = subject.cookies[access_token_cookie_name]
                 access_token = JWT.decode(access_token_cookie, nil, false).first
                 logger_context = {
-                  user_uuid: user_uuid,
+                  user_uuid:,
                   session_id: access_token['session_handle'],
                   token_uuid: access_token['jti']
                 }
@@ -1369,17 +1369,17 @@ RSpec.describe V0::SignInController, type: :controller do
 
     let!(:user) { create(:user, uuid: user_uuid) }
     let(:user_uuid) { user_verification.credential_identifier }
-    let(:refresh_token_param) { { refresh_token: refresh_token } }
-    let(:anti_csrf_token_param) { { anti_csrf_token: anti_csrf_token } }
+    let(:refresh_token_param) { { refresh_token: } }
+    let(:anti_csrf_token_param) { { anti_csrf_token: } }
     let(:refresh_token) { 'some-refresh-token' }
     let(:anti_csrf_token) { 'some-anti-csrf-token' }
     let(:user_verification) { create(:user_verification) }
     let(:user_account) { user_verification.user_account }
     let(:validated_credential) do
-      create(:validated_credential, user_verification: user_verification, client_config: client_config)
+      create(:validated_credential, user_verification:, client_config:)
     end
     let(:authentication) { SignIn::Constants::Auth::API }
-    let!(:client_config) { create(:client_config, authentication: authentication, anti_csrf: anti_csrf) }
+    let!(:client_config) { create(:client_config, authentication:, anti_csrf:) }
     let(:anti_csrf) { false }
 
     before { allow(Rails.logger).to receive(:info) }
@@ -1411,7 +1411,7 @@ RSpec.describe V0::SignInController, type: :controller do
     context 'when session has been configured with anti csrf enabled' do
       let(:anti_csrf) { true }
       let(:session_container) do
-        SignIn::SessionCreator.new(validated_credential: validated_credential).perform
+        SignIn::SessionCreator.new(validated_credential:).perform
       end
       let(:refresh_token) do
         SignIn::RefreshTokenEncryptor.new(refresh_token: session_container.refresh_token).perform
@@ -1444,7 +1444,7 @@ RSpec.describe V0::SignInController, type: :controller do
 
     context 'when refresh_token is the proper encrypted refresh token format' do
       let(:session_container) do
-        SignIn::SessionCreator.new(validated_credential: validated_credential).perform
+        SignIn::SessionCreator.new(validated_credential:).perform
       end
       let(:refresh_token) do
         SignIn::RefreshTokenEncryptor.new(refresh_token: session_container.refresh_token).perform
@@ -1564,7 +1564,7 @@ RSpec.describe V0::SignInController, type: :controller do
           it 'logs the successful refresh request' do
             access_token = JWT.decode(JSON.parse(subject.body)['data']['access_token'], nil, false).first
             logger_context = {
-              user_uuid: user_uuid,
+              user_uuid:,
               session_id: access_token['session_handle'],
               token_uuid: access_token['jti']
             }
@@ -1606,7 +1606,7 @@ RSpec.describe V0::SignInController, type: :controller do
             access_token_cookie = subject.cookies[access_token_cookie_name]
             access_token = JWT.decode(access_token_cookie, nil, false).first
             logger_context = {
-              user_uuid: user_uuid,
+              user_uuid:,
               session_id: access_token['session_handle'],
               token_uuid: access_token['jti']
             }
@@ -1636,18 +1636,18 @@ RSpec.describe V0::SignInController, type: :controller do
 
     let!(:user) { create(:user, uuid: user_uuid) }
     let(:user_uuid) { user_verification.credential_identifier }
-    let(:refresh_token_param) { { refresh_token: refresh_token } }
+    let(:refresh_token_param) { { refresh_token: } }
     let(:refresh_token) { 'example-refresh-token' }
-    let(:anti_csrf_token_param) { { anti_csrf_token: anti_csrf_token } }
+    let(:anti_csrf_token_param) { { anti_csrf_token: } }
     let(:anti_csrf_token) { 'example-anti-csrf-token' }
     let(:enable_anti_csrf) { false }
     let(:user_verification) { create(:user_verification) }
     let(:user_account) { user_verification.user_account }
     let(:validated_credential) do
-      create(:validated_credential, user_verification: user_verification, client_config: client_config)
+      create(:validated_credential, user_verification:, client_config:)
     end
     let(:authentication) { SignIn::Constants::Auth::API }
-    let!(:client_config) { create(:client_config, authentication: authentication, anti_csrf: anti_csrf) }
+    let!(:client_config) { create(:client_config, authentication:, anti_csrf:) }
     let(:anti_csrf) { false }
 
     shared_examples 'error response' do
@@ -1679,7 +1679,7 @@ RSpec.describe V0::SignInController, type: :controller do
     context 'when session has been configured with anti csrf enabled' do
       let(:anti_csrf) { true }
       let(:session_container) do
-        SignIn::SessionCreator.new(validated_credential: validated_credential).perform
+        SignIn::SessionCreator.new(validated_credential:).perform
       end
       let(:refresh_token) do
         SignIn::RefreshTokenEncryptor.new(refresh_token: session_container.refresh_token).perform
@@ -1711,7 +1711,7 @@ RSpec.describe V0::SignInController, type: :controller do
 
     context 'when refresh_token is encrypted correctly' do
       let(:session_container) do
-        SignIn::SessionCreator.new(validated_credential: validated_credential).perform
+        SignIn::SessionCreator.new(validated_credential:).perform
       end
       let(:refresh_token) do
         SignIn::RefreshTokenEncryptor.new(refresh_token: session_container.refresh_token).perform
@@ -1722,7 +1722,7 @@ RSpec.describe V0::SignInController, type: :controller do
         {
           session_id: expected_session_handle,
           token_uuid: session_container.refresh_token.uuid,
-          user_uuid: user_uuid
+          user_uuid:
         }
       end
 
@@ -1827,7 +1827,7 @@ RSpec.describe V0::SignInController, type: :controller do
     end
     let(:client_id) { { client_id: client_id_value } }
     let(:client_id_value) { client_config.client_id }
-    let!(:client_config) { create(:client_config, logout_redirect_uri: logout_redirect_uri) }
+    let!(:client_config) { create(:client_config, logout_redirect_uri:) }
     let(:logout_redirect_uri) { 'some-logout-redirect-uri' }
 
     shared_context 'error response' do
@@ -1908,7 +1908,7 @@ RSpec.describe V0::SignInController, type: :controller do
         create(:access_token, session_handle: oauth_session.handle, client_id: client_config.client_id)
       end
       let!(:user) do
-        create(:user, :loa3, :api_auth, uuid: access_token_object.user_uuid, logingov_uuid: logingov_uuid)
+        create(:user, :loa3, :api_auth, uuid: access_token_object.user_uuid, logingov_uuid:)
       end
       let(:statsd_success) { SignIn::Constants::Statsd::STATSD_SIS_LOGOUT_SUCCESS }
       let(:logingov_uuid) { 'some-logingov-uuid' }
@@ -1971,7 +1971,7 @@ RSpec.describe V0::SignInController, type: :controller do
             {
               client_id: logingov_client_id,
               post_logout_redirect_uri: logingov_logout_redirect_uri,
-              state: state
+              state:
             }
           end
           let(:expected_url_host) { Settings.logingov.oauth_url }
@@ -2085,7 +2085,7 @@ RSpec.describe V0::SignInController, type: :controller do
       let(:state_payload) do
         {
           logout_redirect: client_logout_redirect_uri,
-          seed: seed
+          seed:
         }
       end
       let(:seed) { 'some-seed' }
@@ -2110,16 +2110,16 @@ RSpec.describe V0::SignInController, type: :controller do
       let!(:user_account) { Login::UserVerifier.new(user.identity).perform.user_account }
       let(:user) { create(:user, :loa3) }
       let(:user_uuid) { user.uuid }
-      let(:oauth_session) { create(:oauth_session, user_account: user_account) }
+      let(:oauth_session) { create(:oauth_session, user_account:) }
       let(:access_token_object) do
-        create(:access_token, session_handle: oauth_session.handle, user_uuid: user_uuid)
+        create(:access_token, session_handle: oauth_session.handle, user_uuid:)
       end
-      let(:oauth_session_count) { SignIn::OAuthSession.where(user_account: user_account).count }
+      let(:oauth_session_count) { SignIn::OAuthSession.where(user_account:).count }
       let(:statsd_success) { SignIn::Constants::Statsd::STATSD_SIS_REVOKE_ALL_SESSIONS_SUCCESS }
       let(:expected_log) { '[SignInService] [V0::SignInController] revoke all sessions' }
       let(:expected_log_params) do
         {
-          user_uuid: user_uuid,
+          user_uuid:,
           session_id: access_token_object.session_handle,
           token_uuid: access_token_object.uuid
         }

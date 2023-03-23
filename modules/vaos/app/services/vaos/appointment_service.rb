@@ -82,8 +82,8 @@ module VAOS
     def log_clinic_details(action, clinic_id, site_code)
       Rails.logger.warn(
         "Clinic does not support VAOS appointment #{action}",
-        clinic_id: clinic_id,
-        site_code: site_code
+        clinic_id:,
+        site_code:
       )
     end
 

@@ -82,13 +82,13 @@ module ClaimsApi
       end
       connection.options.timeout = @timeout
 
-      wsdl = log_duration event: 'connection_wsdl_get', endpoint: endpoint do
+      wsdl = log_duration(event: 'connection_wsdl_get', endpoint:) do
         connection.get("#{Settings.bgs.url}/#{endpoint}?WSDL")
       end
       target_namespace = Hash.from_xml(wsdl.body).dig('definitions', 'targetNamespace')
-      response = log_duration event: 'connection_post', endpoint: endpoint, action: action do
-        connection.post("#{Settings.bgs.url}/#{endpoint}", full_body(action: action,
-                                                                     body: body,
+      response = log_duration(event: 'connection_post', endpoint:, action:) do
+        connection.post("#{Settings.bgs.url}/#{endpoint}", full_body(action:,
+                                                                     body:,
                                                                      namespace: target_namespace),
                         {
                           'Content-Type' => 'text/xml;charset=UTF-8',
@@ -96,7 +96,7 @@ module ClaimsApi
                           'Soapaction' => "\"#{action}\""
                         })
       end
-      log_duration event: 'parsed_response', key: key do
+      log_duration(event: 'parsed_response', key:) do
         parsed_response(response, action, key)
       end
     end
@@ -110,7 +110,7 @@ module ClaimsApi
         body.xpath("./*[local-name()='#{k}']")[0].content = v
       end
 
-      make_request(endpoint: 'ClaimantServiceBean/ClaimantWebService', action: 'findPOAByPtcpntId', body: body,
+      make_request(endpoint: 'ClaimantServiceBean/ClaimantWebService', action: 'findPOAByPtcpntId', body:,
                    key: 'return')
     end
 
@@ -119,11 +119,11 @@ module ClaimsApi
         <ssn />
       EOXML
 
-      { ssn: ssn }.each do |k, v|
+      { ssn: }.each do |k, v|
         body.xpath("./*[local-name()='#{k}']")[0].content = v
       end
 
-      make_request(endpoint: 'PersonWebServiceBean/PersonWebService', action: 'findPersonBySSN', body: body,
+      make_request(endpoint: 'PersonWebServiceBean/PersonWebService', action: 'findPersonBySSN', body:,
                    key: 'PersonDTO')
     end
 
@@ -136,7 +136,7 @@ module ClaimsApi
         body.xpath("./*[local-name()='#{k}']")[0].content = v
       end
 
-      make_request(endpoint: 'OrgWebServiceBean/OrgWebService', action: 'findPoaHistoryByPtcpntId', body: body,
+      make_request(endpoint: 'OrgWebServiceBean/OrgWebService', action: 'findPoaHistoryByPtcpntId', body:,
                    key: 'PoaHistory')
     end
 
@@ -149,7 +149,7 @@ module ClaimsApi
         body.xpath("./*[local-name()='#{k}']")[0].content = v
       end
 
-      make_request(endpoint: 'TrackedItemService/TrackedItemService', action: 'findTrackedItems', body: body,
+      make_request(endpoint: 'TrackedItemService/TrackedItemService', action: 'findTrackedItems', body:,
                    key: 'BenefitClaim')
     end
 
@@ -163,7 +163,7 @@ module ClaimsApi
       duration = (::Process.clock_gettime(::Process::CLOCK_MONOTONIC) - start_time).round(4)
 
       # event should be first key in log, duration last
-      ClaimsApi::Logger.log 'local_bgs', **{ event: event }.merge(extra_params).merge({ duration: duration })
+      ClaimsApi::Logger.log 'local_bgs', **{ event: }.merge(extra_params).merge({ duration: })
       StatsD.measure("api.claims_api.local_bgs.#{event}.duration", duration, tags: {})
       result
     end

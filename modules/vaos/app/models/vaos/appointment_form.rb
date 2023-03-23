@@ -35,7 +35,7 @@ module VAOS
 
       attributes.compact
                 .except(:preferred_email, :time_zone)
-                .merge(patients: patients, direct: direct, providers: providers)
+                .merge(patients:, direct:, providers:)
     end
 
     private
@@ -68,17 +68,17 @@ module VAOS
             unique_id: @user.icn,
             assigning_authority: 'ICN'
           },
-          name: name,
-          contact_information: contact_information,
-          location: location
+          name:,
+          contact_information:,
+          location:
         ]
       }
     end
 
     def contact_information
       {
-        preferred_email: preferred_email,
-        time_zone: time_zone
+        preferred_email:,
+        time_zone:
       }
     end
 

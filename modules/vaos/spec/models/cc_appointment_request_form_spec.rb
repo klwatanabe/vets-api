@@ -5,7 +5,7 @@
 require 'rails_helper'
 
 describe VAOS::CCAppointmentRequestForm, type: :model do
-  subject { build(:cc_appointment_request_form, :creation, user: user) }
+  subject { build(:cc_appointment_request_form, :creation, user:) }
 
   let(:user) { build(:user, :vaos) }
 

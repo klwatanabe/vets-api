@@ -86,7 +86,7 @@ RSpec.describe 'VBA Document Uploads Endpoint', type: :request, retry: 3 do
     after do
       if @attributes
         guid = @attributes['guid']
-        upload = VBADocuments::UploadFile.find_by(guid: guid)
+        upload = VBADocuments::UploadFile.find_by(guid:)
         expect(upload).to be_uploaded
       end
     end

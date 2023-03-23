@@ -5,15 +5,15 @@ require 'rails_helper'
 RSpec.describe SignIn::LoginRedirectUrlGenerator do
   describe '#perform' do
     subject do
-      SignIn::LoginRedirectUrlGenerator.new(user_code_map: user_code_map).perform
+      SignIn::LoginRedirectUrlGenerator.new(user_code_map:).perform
     end
 
     let(:user_code_map) do
       create(:user_code_map,
-             login_code: login_code,
-             type: type,
-             client_config: client_config,
-             client_state: client_state)
+             login_code:,
+             type:,
+             client_config:,
+             client_state:)
     end
     let(:login_code) { 'some-login-code' }
     let(:type) { 'some-type' }
