@@ -32,7 +32,7 @@ path 'modules' do
   gem 'veteran_verification'
 end
 
-gem 'rails', '~> 6.1.7'
+gem 'rails', '~> 7.0.4'
 
 gem 'aasm'
 gem 'active_model_serializers', git: 'https://github.com/department-of-veterans-affairs/active_model_serializers', branch: 'master'
@@ -68,7 +68,7 @@ gem 'fitbit_api'
 gem 'flipper'
 gem 'flipper-active_record'
 gem 'flipper-active_support_cache_store'
-gem 'flipper-ui', '0.22.0' # Flipper#552 (CSP) in 0.22.1 is causing our styles not to load
+gem 'flipper-ui'
 gem 'foreman'
 gem 'google-api-client'
 gem 'google-apis-core'
