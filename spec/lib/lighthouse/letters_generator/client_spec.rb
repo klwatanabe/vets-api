@@ -2,6 +2,7 @@
 
 require 'rails_helper'
 require 'lighthouse/letters_generator/client'
+require 'lighthouse/letters_generator/configuration'
 require 'lighthouse/letters_generator/service_error'
 
 FAKE_RESPONSES_PATH = 'spec/lib/lighthouse/letters_generator/fakeResponses'
@@ -10,6 +11,8 @@ RSpec.describe Lighthouse::LettersGenerator::Client do
   before do
     @stubs = Faraday::Adapter::Test::Stubs.new
     @conn = Faraday.new { |b| b.adapter(:test, @stubs) }
+
+    allow_any_instance_of(Lighthouse::LettersGenerator::Configuration).to receive(:connection).and_return(@conn)
   end
 
   describe '#get_eligible_letter_types' do
@@ -22,7 +25,7 @@ RSpec.describe Lighthouse::LettersGenerator::Client do
         [200, {}, fake_response_body]
       end
 
-      client = Lighthouse::LettersGenerator::Client.new(@conn)
+      client = Lighthouse::LettersGenerator::Client.new
 
       # Act
       response = client.get_eligible_letter_types('DOLLYPARTON')
@@ -46,7 +49,7 @@ RSpec.describe Lighthouse::LettersGenerator::Client do
           raise Faraday::BadRequestError.new('YIKES', fake_response_body)
         end
 
-        client = Lighthouse::LettersGenerator::Client.new(@conn)
+        client = Lighthouse::LettersGenerator::Client.new
 
         expect { client.get_eligible_letter_types('BADREQUEST') }.to raise_error do |error|
           expect(error).to be_an_instance_of(Lighthouse::LettersGenerator::ServiceError)
@@ -67,7 +70,7 @@ RSpec.describe Lighthouse::LettersGenerator::Client do
           raise Faraday::UnauthorizedError.new("don't go in there", fake_response_body)
         end
 
-        client = Lighthouse::LettersGenerator::Client.new(@conn)
+        client = Lighthouse::LettersGenerator::Client.new
 
         expect { client.get_eligible_letter_types('BadActor') }.to raise_error do |error|
           expect(error).to be_an_instance_of(Lighthouse::LettersGenerator::ServiceError)
@@ -87,7 +90,7 @@ RSpec.describe Lighthouse::LettersGenerator::Client do
         [200, {}, fake_response_body]
       end
 
-      client = Lighthouse::LettersGenerator::Client.new(@conn)
+      client = Lighthouse::LettersGenerator::Client.new
 
       # Act
       response = client.get_benefit_information('DOLLYPARTON')
@@ -109,7 +112,7 @@ RSpec.describe Lighthouse::LettersGenerator::Client do
       end
 
       # Act
-      client = Lighthouse::LettersGenerator::Client.new(@conn)
+      client = Lighthouse::LettersGenerator::Client.new
       response = client.download_letter('DOLLYPARTON', 'BENEFIT_SUMMARY')
 
       # Assert
@@ -131,7 +134,7 @@ RSpec.describe Lighthouse::LettersGenerator::Client do
       letter_options = fake_response_body['benefitInformation']
 
       # Act
-      client = Lighthouse::LettersGenerator::Client.new(@conn)
+      client = Lighthouse::LettersGenerator::Client.new
       response = client.download_letter('DOLLYPARTON', 'BENEFIT_SUMMARY', letter_options)
 
       # Assert
@@ -149,7 +152,7 @@ RSpec.describe Lighthouse::LettersGenerator::Client do
           [200, {}, fake_response_body]
         end
 
-        client = Lighthouse::LettersGenerator::Client.new(@conn)
+        client = Lighthouse::LettersGenerator::Client.new
 
         # Assert
         expect { client.download_letter('DOLLYPARTON', 'LETTER_TO_GRANDMA') }.to raise_error do |error|
@@ -165,7 +168,7 @@ RSpec.describe Lighthouse::LettersGenerator::Client do
           raise Faraday::BadRequestError.new('YIKES', fake_response_body)
         end
 
-        client = Lighthouse::LettersGenerator::Client.new(@conn)
+        client = Lighthouse::LettersGenerator::Client.new
 
         expect { client.download_letter('BADREQUEST', 'BENEFITS_SUMMARY') }.to raise_error do |error|
           expect(error).to be_an_instance_of(Lighthouse::LettersGenerator::ServiceError)

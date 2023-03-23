@@ -32,15 +32,8 @@ module Lighthouse
 
       configuration Lighthouse::LettersGenerator::Configuration
 
-      def initialize(conn = nil)
-        super()
-        @conn = if conn.nil?
-                  Rails.logger.debug 'Using built-in connection'
-                  config.connection
-                else
-                  Rails.logger.debug 'Using custom connection'
-                  conn
-                end
+      def initialize
+        super
       end
 
       def get_eligible_letter_types(icn)
@@ -49,7 +42,7 @@ module Lighthouse
         begin
           log = "Retrieving eligible letter types and destination from #{config.generator_url}/#{endpoint}"
           response = Lighthouse::LettersGenerator.measure_time(log) do
-            @conn.get(endpoint, { icn: icn })
+            perform(:get, endpoint, { icn: icn })
           end
         rescue Faraday::ClientError, Faraday::ServerError => e
           Raven.tags_context(
@@ -72,7 +65,7 @@ module Lighthouse
         begin
           log = "Retrieving benefit information from #{config.generator_url}/#{endpoint}"
           response = Lighthouse::LettersGenerator.measure_time(log) do
-            @conn.get(endpoint, { icn: icn })
+            perform(:get, endpoint, { icn: icn })
           end
         rescue Faraday::ClientError, Faraday::ServerError => e
           Raven.tags_context(
@@ -101,7 +94,7 @@ module Lighthouse
         begin
           log = "Retrieving benefit information from #{config.generator_url}/#{endpoint}"
           response = Lighthouse::LettersGenerator.measure_time(log) do
-            @conn.get(endpoint, { icn: icn }.merge(letter_options))
+            perform(:get, endpoint, { icn: icn }.merge(letter_options))
           end
         rescue Faraday::ClientError, Faraday::ServerError => e
           Raven.tags_context(team: 'benefits-claim-appeal-status', feature: 'letters-generator')
