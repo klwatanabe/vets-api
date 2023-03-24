@@ -80,6 +80,16 @@ Branch of Service:   <%= @applicant.serviceBranch %>
 
 Veteran's date of birth: <%= @applicant.veteranDateOfBirth %>
 
+<% if @applicant.minorHighSchoolQuestion %>
+Applicant has graduated high school or received GED? <%= @applicant.minorHighSchoolQuestion %>
+
+<% if @applicant.highSchoolGedGradDate %>
+Date graduated: <%= @applicant.highSchoolGedGradDate %>
+<% else %>
+Date graduated: <%= @applicant.highSchoolGedExpectedGradDate %>
+<% end %>
+<% end %>
+
 <%= veteran_date_of_death_label %>
 <%= value_or_na(@applicant.veteranDateOfDeath) %>
 
