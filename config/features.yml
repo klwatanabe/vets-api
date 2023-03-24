@@ -377,6 +377,12 @@ features:
     actor_type: user
     description: Enables secure messaging
     enable_in_development: true
+  grandfathering_dsl:
+    actor_type: user
+    description: Enables grandfathering from dslogon to login.gov
+  grandfathering_mhv:
+    actor_type: user
+    description: Enables grandfathering from mhv to login.gov
   in_progress_form_custom_expiration:
     actor_type: user
     description: Enable/disable custom expiration dates for forms
