@@ -2,6 +2,7 @@ module ClaimsApi
   class ClaimsUser
     def initialize(id)
       @id = id
+      @loa = 3
     end
 
     def set_icn(icn)
