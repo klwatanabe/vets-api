@@ -70,22 +70,12 @@ class ClaimsApi::RswagConfig
         paths: {},
         servers: [
           {
-            url: 'https://sandbox-api.va.gov/services/claims/{version}',
-            description: 'VA.gov API sandbox environment',
-            variables: {
-              version: {
-                default: 'v1'
-              }
-            }
+            url: 'https://sandbox-api.va.gov/services/claims',
+            description: 'VA.gov API sandbox environment'
           },
           {
-            url: 'https://api.va.gov/services/claims/{version}',
-            description: 'VA.gov API production environment',
-            variables: {
-              version: {
-                default: 'v1'
-              }
-            }
+            url: 'https://api.va.gov/services/claims',
+            description: 'VA.gov API production environment'
           }
         ]
       },
@@ -158,22 +148,12 @@ class ClaimsApi::RswagConfig
         paths: {},
         servers: [
           {
-            url: 'https://sandbox-api.va.gov/services/claims/{version}',
-            description: 'VA.gov API sandbox environment',
-            variables: {
-              version: {
-                default: 'v2'
-              }
-            }
+            url: 'https://sandbox-api.va.gov/services/claims',
+            description: 'VA.gov API sandbox environment'
           },
           {
-            url: 'https://api.va.gov/services/claims/{version}',
-            description: 'VA.gov API production environment',
-            variables: {
-              version: {
-                default: 'v2'
-              }
-            }
+            url: 'https://api.va.gov/services/claims',
+            description: 'VA.gov API production environment'
           }
         ]
       }

@@ -61,7 +61,7 @@
     }
   },
   "paths": {
-    "/claims": {
+    "/v1/claims": {
       "get": {
         "summary": "Find all benefits claims for a Veteran",
         "tags": [
@@ -418,7 +418,7 @@
         }
       }
     },
-    "/claims/{id}": {
+    "/v1/claims/{id}": {
       "get": {
         "summary": "Find Claim by ID",
         "tags": [
@@ -925,7 +925,7 @@
         }
       }
     },
-    "/forms/526": {
+    "/v1/forms/526": {
       "get": {
         "summary": "Get a 526 schema for a claim.",
         "deprecated": true,
@@ -4240,7 +4240,7 @@
         }
       }
     },
-    "/forms/526/{id}": {
+    "/v1/forms/526/{id}": {
       "put": {
         "summary": "Upload a 526 document",
         "tags": [
@@ -4736,7 +4736,7 @@
         }
       }
     },
-    "/forms/526/validate": {
+    "/v1/forms/526/validate": {
       "post": {
         "summary": "Validates a 526 claim form submission.",
         "deprecated": true,
@@ -6498,7 +6498,7 @@
         }
       }
     },
-    "/forms/526/{id}/attachments": {
+    "/v1/forms/526/{id}/attachments": {
       "post": {
         "summary": "Upload documents supporting a 526 claim",
         "tags": [
@@ -6936,7 +6936,7 @@
         }
       }
     },
-    "/forms/0966": {
+    "/v1/forms/0966": {
       "get": {
         "summary": "Get 0966 JSON Schema for form.",
         "deprecated": true,
@@ -7398,7 +7398,7 @@
         }
       }
     },
-    "/forms/0966/active": {
+    "/v1/forms/0966/active": {
       "get": {
         "summary": "Returns last active 0966 Intent to File form submission.",
         "tags": [
@@ -7752,7 +7752,7 @@
         }
       }
     },
-    "/forms/0966/validate": {
+    "/v1/forms/0966/validate": {
       "post": {
         "summary": "Test the 0966 Intent to File form submission.",
         "deprecated": true,
@@ -8055,7 +8055,7 @@
         }
       }
     },
-    "/forms/2122": {
+    "/v1/forms/2122": {
       "get": {
         "summary": "Gets schema for POA form.",
         "deprecated": true,
@@ -9174,7 +9174,7 @@
         }
       }
     },
-    "/forms/2122/{id}": {
+    "/v1/forms/2122/{id}": {
       "put": {
         "summary": "Upload a signed 21-22 document.",
         "tags": [
@@ -10003,7 +10003,7 @@
         }
       }
     },
-    "/forms/2122/active": {
+    "/v1/forms/2122/active": {
       "get": {
         "summary": "Check active POA status.",
         "tags": [
@@ -10330,7 +10330,7 @@
         }
       }
     },
-    "/forms/2122/validate": {
+    "/v1/forms/2122/validate": {
       "post": {
         "summary": "21-22 POA form submission test run.",
         "deprecated": true,
@@ -10990,22 +10990,12 @@
   },
   "servers": [
     {
-      "url": "https://sandbox-api.va.gov/services/claims/{version}",
-      "description": "VA.gov API sandbox environment",
-      "variables": {
-        "version": {
-          "default": "v1"
-        }
-      }
+      "url": "https://sandbox-api.va.gov/services/claims",
+      "description": "VA.gov API sandbox environment"
     },
     {
-      "url": "https://api.va.gov/services/claims/{version}",
-      "description": "VA.gov API production environment",
-      "variables": {
-        "version": {
-          "default": "v1"
-        }
-      }
+      "url": "https://api.va.gov/services/claims",
+      "description": "VA.gov API production environment"
     }
   ]
 }

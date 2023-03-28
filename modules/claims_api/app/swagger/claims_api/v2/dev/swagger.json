@@ -61,7 +61,7 @@
     }
   },
   "paths": {
-    "/veteran-id:find": {
+    "/v2/veteran-id:find": {
       "post": {
         "summary": "Retrieve Veteran ID.",
         "tags": [
@@ -368,7 +368,7 @@
         }
       }
     },
-    "/veterans/{veteranId}/claims": {
+    "/v2/veterans/{veteranId}/claims": {
       "get": {
         "summary": "Find all benefits claims for a Veteran.",
         "tags": [
@@ -669,7 +669,7 @@
         }
       }
     },
-    "/veterans/{veteranId}/claims/{id}": {
+    "/v2/veterans/{veteranId}/claims/{id}": {
       "get": {
         "summary": "Find claim by ID",
         "tags": [
@@ -1374,7 +1374,7 @@
         }
       }
     },
-    "/veterans/{veteranId}/526": {
+    "/v2/veterans/{veteranId}/526": {
       "post": {
         "summary": "Submits form 526",
         "tags": [
@@ -1423,7 +1423,7 @@
         }
       }
     },
-    "/veterans/{veteranId}/526/validate": {
+    "/v2/veterans/{veteranId}/526/validate": {
       "post": {
         "summary": "Validates a 526 claim form submission.",
         "tags": [
@@ -1472,7 +1472,7 @@
         }
       }
     },
-    "/veterans/{veteranId}/526/attachments": {
+    "/v2/veterans/{veteranId}/526/attachments": {
       "post": {
         "summary": "Upload documents supporting a 526 claim",
         "tags": [
@@ -1540,7 +1540,7 @@
         }
       }
     },
-    "/veterans/{veteranId}/claims/{id}/5103": {
+    "/v2/veterans/{veteranId}/claims/{id}/5103": {
       "post": {
         "summary": "Submit Evidence Waiver 5103",
         "tags": [
@@ -1717,7 +1717,7 @@
         }
       }
     },
-    "/veterans/{veteranId}/intent-to-file/{type}": {
+    "/v2/veterans/{veteranId}/intent-to-file/{type}": {
       "get": {
         "summary": "Returns last active Intent to File form submission for given 'type'.",
         "tags": [
@@ -2003,7 +2003,7 @@
         }
       }
     },
-    "/veterans/{veteranId}/intent-to-file": {
+    "/v2/veterans/{veteranId}/intent-to-file": {
       "post": {
         "summary": "Submit form 0966 Intent to File.",
         "tags": [
@@ -2368,7 +2368,7 @@
         }
       }
     },
-    "/veterans/{veteranId}/intent-to-file/validate": {
+    "/v2/veterans/{veteranId}/intent-to-file/validate": {
       "post": {
         "summary": "Validate form 0966 Intent to File.",
         "tags": [
@@ -2657,22 +2657,12 @@
   },
   "servers": [
     {
-      "url": "https://sandbox-api.va.gov/services/claims/{version}",
-      "description": "VA.gov API sandbox environment",
-      "variables": {
-        "version": {
-          "default": "v2"
-        }
-      }
+      "url": "https://sandbox-api.va.gov/services/claims",
+      "description": "VA.gov API sandbox environment"
     },
     {
-      "url": "https://api.va.gov/services/claims/{version}",
-      "description": "VA.gov API production environment",
-      "variables": {
-        "version": {
-          "default": "v2"
-        }
-      }
+      "url": "https://api.va.gov/services/claims",
+      "description": "VA.gov API production environment"
     }
   ]
 }
