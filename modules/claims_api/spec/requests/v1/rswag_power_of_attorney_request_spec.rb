@@ -14,7 +14,7 @@ describe 'Power of Attorney', swagger_doc: 'modules/claims_api/app/swagger/claim
     end
   end
 
-  path '/forms/2122' do
+  path '/v1/forms/2122' do
     get 'Gets schema for POA form.' do
       deprecated true
       tags 'Power of Attorney'
@@ -198,7 +198,7 @@ describe 'Power of Attorney', swagger_doc: 'modules/claims_api/app/swagger/claim
     end
   end
 
-  path '/forms/2122/{id}' do
+  path '/v1/forms/2122/{id}' do
     put 'Upload a signed 21-22 document.' do
       tags 'Power of Attorney'
       operationId 'upload2122Attachment'
@@ -471,7 +471,7 @@ describe 'Power of Attorney', swagger_doc: 'modules/claims_api/app/swagger/claim
     end
   end
 
-  path '/forms/2122/{id}' do
+  path '/v1/forms/2122/{id}' do
     get 'Check POA status by ID.' do
       tags 'Power of Attorney'
       operationId 'get2122poa'
@@ -621,7 +621,7 @@ describe 'Power of Attorney', swagger_doc: 'modules/claims_api/app/swagger/claim
     end
   end
 
-  path '/forms/2122/active' do
+  path '/v1/forms/2122/active' do
     get 'Check active POA status.' do
       tags 'Power of Attorney'
       operationId 'getActive2122Poa'
@@ -764,7 +764,7 @@ describe 'Power of Attorney', swagger_doc: 'modules/claims_api/app/swagger/claim
     end
   end
 
-  path '/forms/2122/validate' do
+  path '/v1/forms/2122/validate' do
     post '21-22 POA form submission test run.' do
       deprecated true
       tags 'Power of Attorney'

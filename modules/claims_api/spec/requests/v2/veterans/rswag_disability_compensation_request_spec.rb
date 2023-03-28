@@ -5,7 +5,7 @@ require 'rails_helper'
 require_relative '../../../support/swagger_shared_components/v2'
 
 describe 'Disability Claims', production: false, swagger_doc: Rswag::TextHelpers.new.claims_api_docs do # rubocop:disable RSpec/DescribeClass
-  path '/veterans/{veteranId}/526' do
+  path '/v2/veterans/{veteranId}/526' do
     post 'Submits form 526' do
       tags 'Disability'
       operationId 'post526Claim'
@@ -48,7 +48,7 @@ describe 'Disability Claims', production: false, swagger_doc: Rswag::TextHelpers
     end
   end
 
-  path '/veterans/{veteranId}/526/validate' do
+  path '/v2/veterans/{veteranId}/526/validate' do
     post 'Validates a 526 claim form submission.' do
       tags 'Disability'
       operationId 'post526ClaimValidate'
@@ -95,7 +95,7 @@ describe 'Disability Claims', production: false, swagger_doc: Rswag::TextHelpers
     end
   end
 
-  path '/veterans/{veteranId}/526/attachments' do
+  path '/v2/veterans/{veteranId}/526/attachments' do
     post 'Upload documents supporting a 526 claim' do
       tags 'Disability'
       operationId 'upload526Attachments'

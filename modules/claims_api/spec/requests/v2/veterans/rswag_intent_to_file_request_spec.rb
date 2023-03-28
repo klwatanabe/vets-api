@@ -6,7 +6,7 @@ require_relative '../../../support/swagger_shared_components/v2'
 
 # doc generation for V2 ITFs temporarily disabled by API-13879
 describe 'IntentToFile', swagger_doc: Rswag::TextHelpers.new.claims_api_docs do
-  path '/veterans/{veteranId}/intent-to-file/{type}' do
+  path '/v2/veterans/{veteranId}/intent-to-file/{type}' do
     get "Returns last active Intent to File form submission for given 'type'." do
       tags 'Intent to File'
       operationId 'active0966itf'
@@ -169,7 +169,7 @@ describe 'IntentToFile', swagger_doc: Rswag::TextHelpers.new.claims_api_docs do
     end
   end
 
-  path '/veterans/{veteranId}/intent-to-file' do
+  path '/v2/veterans/{veteranId}/intent-to-file' do
     post 'Submit form 0966 Intent to File.' do
       tags 'Intent to File'
       operationId 'post0966itf'
@@ -375,7 +375,7 @@ describe 'IntentToFile', swagger_doc: Rswag::TextHelpers.new.claims_api_docs do
     end
   end
 
-  path '/veterans/{veteranId}/intent-to-file/validate' do
+  path '/v2/veterans/{veteranId}/intent-to-file/validate' do
     post 'Validate form 0966 Intent to File.' do
       tags 'Intent to File'
       operationId 'validate0966itf'

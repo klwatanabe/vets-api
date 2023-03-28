@@ -6,7 +6,7 @@ require 'rails_helper'
 require_relative '../../support/swagger_shared_components/v1'
 
 describe 'Intent to file', swagger_doc: 'modules/claims_api/app/swagger/claims_api/v1/swagger.json' do # rubocop:disable RSpec/DescribeClass
-  path '/forms/0966' do
+  path '/v1/forms/0966' do
     get 'Get 0966 JSON Schema for form.' do
       deprecated true
       tags 'Intent to File'
@@ -204,7 +204,7 @@ describe 'Intent to file', swagger_doc: 'modules/claims_api/app/swagger/claims_a
     end
   end
 
-  path '/forms/0966/active' do
+  path '/v1/forms/0966/active' do
     get 'Returns last active 0966 Intent to File form submission.' do
       tags 'Intent to File'
       operationId 'active0966itf'
@@ -375,7 +375,7 @@ describe 'Intent to file', swagger_doc: 'modules/claims_api/app/swagger/claims_a
     end
   end
 
-  path '/forms/0966/validate' do
+  path '/v1/forms/0966/validate' do
     post 'Test the 0966 Intent to File form submission.' do
       deprecated true
       tags 'Intent to File'

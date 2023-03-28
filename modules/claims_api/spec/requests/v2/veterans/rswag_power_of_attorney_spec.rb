@@ -25,7 +25,7 @@ describe 'PowerOfAttorney',
     end
   end
 
-  path '/veterans/{veteranId}/power-of-attorney' do
+  path '/v2/veterans/{veteranId}/power-of-attorney' do
     get 'Find current Power of Attorney for a Veteran.' do
       tags 'Power of Attorney'
       operationId 'findPowerOfAttorney'
@@ -170,7 +170,7 @@ describe 'PowerOfAttorney',
     end
   end
 
-  path '/veterans/{veteranId}/power-of-attorney:appoint-individual' do
+  path '/v2/veterans/{veteranId}/power-of-attorney:appoint-individual' do
     put 'Appoint an individual Power of Attorney for a Veteran.' do
       tags 'Power of Attorney'
       operationId 'appointIndividualPowerOfAttorney'
@@ -337,7 +337,7 @@ describe 'PowerOfAttorney',
     end
   end
 
-  path '/veterans/{veteranId}/power-of-attorney:appoint-organization' do
+  path '/v2/veterans/{veteranId}/power-of-attorney:appoint-organization' do
     put 'Appoint an organization Power of Attorney for a Veteran.' do
       tags 'Power of Attorney'
       operationId 'appointOrganizationPowerOfAttorney'

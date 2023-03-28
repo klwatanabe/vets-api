@@ -10,7 +10,7 @@ describe 'Claims',
     ClaimsApi::LocalBGS
   end
 
-  path '/veterans/{veteranId}/claims' do
+  path '/v2/veterans/{veteranId}/claims' do
     get 'Find all benefits claims for a Veteran.' do
       tags 'Claims'
       operationId 'findClaims'
@@ -142,7 +142,7 @@ describe 'Claims',
     end
   end
 
-  path '/veterans/{veteranId}/claims/{id}' do
+  path '/v2/veterans/{veteranId}/claims/{id}' do
     get 'Find claim by ID' do
       tags 'Claims'
       operationId 'findClaimById'

@@ -6,7 +6,7 @@ require 'rails_helper'
 require_relative '../../support/swagger_shared_components/v1'
 
 describe 'EVSS Claims management', swagger_doc: 'modules/claims_api/app/swagger/claims_api/v1/swagger.json' do  # rubocop:disable RSpec/DescribeClass
-  path '/claims' do
+  path '/v1/claims' do
     get 'Find all benefits claims for a Veteran' do
       tags 'Claims'
       operationId 'findClaims'
@@ -137,7 +137,7 @@ describe 'EVSS Claims management', swagger_doc: 'modules/claims_api/app/swagger/
     end
   end
 
-  path '/claims/{id}' do
+  path '/v1/claims/{id}' do
     get 'Find Claim by ID' do
       tags 'Claims'
       operationId 'findClaimById'

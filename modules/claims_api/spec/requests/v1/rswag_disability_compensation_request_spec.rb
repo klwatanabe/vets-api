@@ -6,7 +6,7 @@ require 'rails_helper'
 require_relative '../../support/swagger_shared_components/v1'
 
 describe 'Disability Claims', swagger_doc: 'modules/claims_api/app/swagger/claims_api/v1/swagger.json' do # rubocop:disable RSpec/DescribeClass
-  path '/forms/526' do
+  path '/v1/forms/526' do
     get 'Get a 526 schema for a claim.' do
       deprecated true
       tags 'Disability'
@@ -243,7 +243,7 @@ describe 'Disability Claims', swagger_doc: 'modules/claims_api/app/swagger/claim
     end
   end
 
-  path '/forms/526/{id}' do
+  path '/v1/forms/526/{id}' do
     put 'Upload a 526 document' do
       tags 'Disability'
       operationId 'upload526Attachment'
@@ -470,7 +470,7 @@ describe 'Disability Claims', swagger_doc: 'modules/claims_api/app/swagger/claim
     end
   end
 
-  path '/forms/526/validate' do
+  path '/v1/forms/526/validate' do
     post 'Validates a 526 claim form submission.' do
       deprecated true
       tags 'Disability'
@@ -629,7 +629,7 @@ describe 'Disability Claims', swagger_doc: 'modules/claims_api/app/swagger/claim
     end
   end
 
-  path '/forms/526/{id}/attachments' do
+  path '/v1/forms/526/{id}/attachments' do
     post 'Upload documents supporting a 526 claim' do
       tags 'Disability'
       operationId 'upload526Attachments'

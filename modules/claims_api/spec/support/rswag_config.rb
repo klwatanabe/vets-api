@@ -68,7 +68,6 @@ class ClaimsApi::RswagConfig
           }
         },
         paths: {},
-        basePath: '/services/claims/v1',
         servers: [
           {
             url: 'https://sandbox-api.va.gov/services/claims/{version}',
@@ -157,7 +156,6 @@ class ClaimsApi::RswagConfig
           }
         },
         paths: {},
-        basePath: '/services/claims/v2',
         servers: [
           {
             url: 'https://sandbox-api.va.gov/services/claims/{version}',
