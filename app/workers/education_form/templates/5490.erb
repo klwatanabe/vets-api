@@ -80,15 +80,16 @@ Branch of Service:   <%= @applicant.serviceBranch %>
 
 Veteran's date of birth: <%= @applicant.veteranDateOfBirth %>
 
-<% if @applicant.minorHighSchoolQuestion %>
-Applicant has graduated high school or received GED? <%= @applicant.minorHighSchoolQuestion %>
+<% unless Rails.env.production? -%>
+<% if @applicant.minorHighSchoolQuestions -%>
+Applicant has graduated high school or received GED? <%= @applicant.minorHighSchoolQuestions.minorHighSchoolQuestion %>
 
-<% if @applicant.highSchoolGedGradDate %>
-Date graduated: <%= @applicant.highSchoolGedGradDate %>
-<% else %>
-Date graduated: <%= @applicant.highSchoolGedExpectedGradDate %>
-<% end %>
-<% end %>
+<% grad_date = @applicant.minorHighSchoolQuestions.highSchoolGedGradDate ? @applicant.minorHighSchoolQuestions.highSchoolGedGradDate : @applicant.minorHighSchoolQuestions.highSchoolGedExpectedGradDate -%>
+<% date_label = %>
+<% date_label = @applicant.minorHighSchoolQuestions.highSchoolGedGradDate ? "Date graduated:" : "Date expected to graduate:" -%>
+<%= date_label %> <%= grad_date %>
+<% end -%>
+<% end -%>
 
 <%= veteran_date_of_death_label %>
 <%= value_or_na(@applicant.veteranDateOfDeath) %>
@@ -164,6 +165,31 @@ Degree/Diploma/Certificate: <%= @applicant.highSchool&.degreeReceived %>
 <%= parse_with_template_path('civilian_benefits_assistance') %>
 
 Source of educational assistance for government employee: <%= @applicant.civilianBenefitsSource %>
+<% end -%>
+<% unless Rails.env.production? -%>
+<% if @applicant.minorHighSchoolQuestions.minorHighSchoolQuestion -%>
+
+          GUARDIAN INFORMATION
+          --------------------
+First name of Parent, Guardian or Custodian: <%= @applicant.minorQuestions.guardianFirstName %>
+
+Middle name of Parent, Guardian or Custodian: <%= @applicant.minorQuestions.guardianMiddleName %>
+
+Last name of Parent, Guardian or Custodian: <%= @applicant.minorQuestions.guardianLastname %>
+
+Address of Parent, Guardian or Custodian:
+
+    Country: <%= @applicant.minorQuestions.guardianAddress.country %>
+    Street: <%= @applicant.minorQuestions.guardianAddress.street %>
+    Street address line 2: <%= @applicant.minorQuestions.guardianAddress.street2 %>
+    City: <%= @applicant.minorQuestions.guardianAddress.city %>
+    State: <%= @applicant.minorQuestions.guardianAddress.state %>
+    Postal code: <%= @applicant.minorQuestions.guardianAddress.postalCode %>
+    Mobile phone number: <%= @applicant.minorQuestions.guardianMobilePhone %>
+    Home phone number: <%= @applicant.minorQuestions.guardianHomePhone %>
+    Email address: <%= @applicant.minorQuestions.confirmEmail %>
+
+<% end -%>
 <% end -%>
 <%= parse_with_template_path('signatures') %>
 
