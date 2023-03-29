@@ -172,7 +172,7 @@ module ClaimsApi
             claim_type_code: data[:bnft_claim_type_cd],
             claim_type: data[:claim_status_type],
             close_date: data[:claim_complete_dt].present? ? format_bgs_date(data[:claim_complete_dt]) : nil,
-            contention_list: data[:contentions]&.split(',')&.collect(&:strip) || [],
+            contention_list: data[:contentions]&.split(/(?<=\)),/)&.collect(&:strip) || [],
             decision_letter_sent: map_yes_no_to_boolean('decision_notification_sent',
                                                         data[:decision_notification_sent]),
             development_letter_sent: map_yes_no_to_boolean('development_letter_sent', data[:development_letter_sent]),
@@ -417,11 +417,9 @@ module ClaimsApi
               closed_date: date_present(item[:date_closed]),
               description: item[:short_nm],
               displayed_name: "Request #{i + 1}", # +1 given a 1 index'd array
-              dvlpmt_tc: item[:dvlpmt_tc],
               opened_date: date_present(item[:date_open]),
               overdue: item[:suspns_dt].nil? ? false : item[:suspns_dt] < Time.zone.now, # EVSS generates this field
               requested_date: date_present(item[:req_dt]),
-              suspense_date: date_present(item[:suspns_dt]),
               tracked_item_id: id.to_i,
               tracked_item_status: status, # EVSS generates this field
               uploaded: !item[:date_rcvd].nil?, # EVSS generates this field
