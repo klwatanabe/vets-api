@@ -104,7 +104,7 @@ All of the OSX instructions assume `homebrew` is your [package manager](https://
    - Install Instructions here: https://postgresapp.com/
    - `sudo mkdir -p /etc/paths.d && echo /Applications/Postgres.app/Contents/Versions/latest/bin | sudo tee /etc/paths.d/postgresapp`
    - `ARCHFLAGS="-arch x86_64" gem install pg -v 1.2.3`
-   1. Alternatively Postgresql 11 & PostGIS 2.5 can be installed with homebrew
+   2. Alternatively Postgresql 11 & PostGIS 2.5 can be installed with homebrew
       - `brew install postgresql@11`
       - `brew services start postgresql@11`
       - Install the `pex` manager to add your Postgresql 11 extensions from [here](https://github.com/petere/pex#installation)
@@ -114,19 +114,19 @@ All of the OSX instructions assume `homebrew` is your [package manager](https://
         ```
    - run postgres (e.g. open postgres.app, create a new server, and click "initialize")
 
-1. Install redis
+2. Install redis
     ```bash
     brew install redis
     brew services start redis
     ```
 
 
-1. Install binary dependencies:
+3. Install binary dependencies:
     ```bash
     brew bundle
     ```
 
-1. Among other things, the above `brew bundle` command installs ClamAV, but does not enable it. To enable ClamAV:
+4. Among other things, the above `brew bundle` command installs ClamAV, but does not enable it. To enable ClamAV:
 
    ```bash
    brew info clamav
@@ -141,12 +141,12 @@ All of the OSX instructions assume `homebrew` is your [package manager](https://
 
    NOTE: Run with `/usr/local/sbin/clamd -c /usr/local/etc/clamav/clamd.conf` and you will also have to override (temporarily) the `config/clamd.conf` file with `-LocalSocket /usr/local/etc/clamav/clamd.sock`
 
-1. Install [pdftk](https://www.pdflabs.com/tools/pdftk-the-pdf-toolkit/pdftk_server-2.02-mac_osx-10.11-setup.pkg)
+5. Install [pdftk](https://www.pdflabs.com/tools/pdftk-the-pdf-toolkit/pdftk_server-2.02-mac_osx-10.11-setup.pkg)
 
    - `curl -o ~/Downloads/pdftk_download.pkg https://www.pdflabs.com/tools/pdftk-the-pdf-toolkit/pdftk_server-2.02-mac_osx-10.11-setup.pkg`
    - `sudo installer -pkg ~/Downloads/pdftk_download.pkg -target /`
 
-1. continue with [Base setup](native.md#base-setup)
+6. continue with [Base setup](native.md#base-setup)
 
 ### Alternative (Ubuntu 20.04 LTS)
 
