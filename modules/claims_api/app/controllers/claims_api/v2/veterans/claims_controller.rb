@@ -389,7 +389,7 @@ module ClaimsApi
             # "NO_LONGER_REQUIRED"
             # "SUBMITTED_AWAITING_REVIEW",
 
-            if item[:received_dt].nil?
+            if item[:receive_dt].nil?
               status = 'NEEDED'
             else
               status = 'SUBMITTED_AWAITING_REVIEW'
