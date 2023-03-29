@@ -2,7 +2,7 @@ module ClaimsApi
   class ClaimsUser
     def initialize(id)
       @id = id
-      @loa = 3
+      @loa = {'current' => 3, 'highest' => 3}
     end
 
     def set_icn(icn)
