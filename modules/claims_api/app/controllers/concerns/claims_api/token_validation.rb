@@ -19,11 +19,11 @@ module ClaimsApi
                                    payload,
                                    { Authorization: "Bearer #{token_string}",
                                      apiKey: Settings.oidc.validation_api_key })
-        raise error_klass('Invalid token') if response.nil?
+        raise raise Common::Exceptions::TokenValidationError.new("Token validation error") if response.nil?
 
         @validated_token_payload = JSON.parse(response.body) if response.code == 200
       rescue => e
-        raise error_klass('Invalid token') if e.to_s.include?('401')
+        raise raise ::Common::Exceptions::Unauthorized if e.to_s.include?('401')
       end
     end
 
