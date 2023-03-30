@@ -16,12 +16,27 @@ describe CovidVaccine::V0::ExpandedRegistrationService do
     create(:covid_vax_expanded_registration, :unsubmitted, :state_enrollment_complete)
   end
 
+<<<<<<< HEAD
   let(:profile) { build(:mpi_profile, { vha_facility_ids: %w[358 516 553 200HD 200IP 200MHV] }) }
   let(:mpi_profile_no_facility) { build(:mpi_profile) }
 
   let(:mpi_profile_response) { create(:find_profile_response, profile:) }
   let(:mpi_profile_not_found) { create(:find_profile_not_found_response) }
   let(:mpi_facility_not_found) { create(:find_profile_response, profile: mpi_profile_no_facility) }
+=======
+  let(:mpi_profile) { build(:mpi_profile, { vha_facility_ids: %w[358 516 553 200HD 200IP 200MHV] }) }
+  let(:mpi_profile_no_facility) { build(:mpi_profile) }
+
+  let(:mpi_profile_response) do
+    create(:find_profile_response, profile: mvi_profile)
+  end
+  let(:mpi_profile_not_found) do
+    create(:find_profile_not_found_response)
+  end
+  let(:mvi_facility_not_found) do
+    create(:find_profile_response, profile: mvi_profile_no_facility)
+  end
+>>>>>>> b4693bfc1 (updates mvi_profile factory to mpi_profile)
 
   vcr_options = { cassette_name: 'covid_vaccine/registration_facilities',
                   match_requests_on: %i[path query],
