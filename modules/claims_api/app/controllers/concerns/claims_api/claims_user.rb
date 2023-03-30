@@ -1,18 +1,18 @@
 module ClaimsApi
   class ClaimsUser
     def initialize(id)
-      @id = id
       @uuid = id
-      @loa = {:current => 3, :highest => 3}
       @identifier = UserIdentifier.new(id)
     end
 
     def set_icn(icn)
-      @icn = icn
       @identifier.set_icn(icn)
     end
 
-    attr_reader :icn
+    def icn
+      @identifier.icn
+    end
+
     attr_reader :uuid
 
     def first_name_last_name(first_name, last_name)
