@@ -115,22 +115,6 @@ module ClaimsApi
 
       private
 
-      #
-      # Determine if the current authenticated user is allowed access
-      #
-      # raise if current authenticated user is neither the target veteran, nor target veteran representative
-      def verify_access_token!
-        validated_token = validate_token!['data']
-        attributes = validated_token['attributes']
-        actor = attributes['act']
-        return if attributes['type'] == 'system' ## CCG token in this case
-
-        @current_user = user_from_validated_token(validated_token)
-        @validated_token = validated_token
-        # return if user_is_target_veteran? || user_represents_veteran?
-        #
-        # raise ::Common::Exceptions::Forbidden
-      end
 
       def claims_service
         edipi_check
@@ -150,21 +134,6 @@ module ClaimsApi
         (request.headers.to_h.keys & headers_to_check).length.positive?
       end
 
-      # def target_veteran(with_gender: false)
-      #   if header_request?
-      #     headers_to_validate = %w[X-VA-SSN X-VA-First-Name X-VA-Last-Name X-VA-Birth-Date]
-      #     validate_headers(headers_to_validate)
-      #     validate_ccg_token! if token.client_credentials_token?
-      #     veteran_from_headers(with_gender: with_gender)
-      #   else
-      #     ClaimsApi::Veteran.from_identity(identity: @current_user)
-      #   end
-      # end
-      #
-      # Veteran being acted on.
-      #
-      # @return [ClaimsApi::Veteran] Veteran to act on
-
       def veteran_from_headers(with_gender: false)
         vet = ClaimsApi::Veteran.new(
           uuid: header('X-VA-SSN')&.gsub(/[^0-9]/, ''),
@@ -181,12 +150,6 @@ module ClaimsApi
         vet.participant_id = vet.participant_id_mpi
         vet.icn = vet&.mpi_icn
         vet
-      end
-
-      def authenticate_token
-        super
-      rescue ::Common::Exceptions::TokenValidationError => e
-        raise ::Common::Exceptions::Unauthorized.new(detail: e.detail)
       end
 
       def set_tags_and_extra_context
