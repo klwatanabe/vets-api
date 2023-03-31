@@ -84,7 +84,7 @@ module ClaimsApi
                                               upstream_id: bgs_details[:benefit_claim_id])
           end
           structure.merge!(errors: get_errors(lighthouse_claim))
-          structure.merge!(supporting_documents: build_supporting_docs(bgs_claim))
+          # structure.merge!(supporting_documents: build_supporting_docs(bgs_claim))
           structure.merge!(tracked_items: map_bgs_tracked_items(bgs_claim))
           structure.merge!(build_claim_phase_attributes(bgs_claim, 'show'))
         end
@@ -395,9 +395,7 @@ module ClaimsApi
               status = 'SUBMITTED_AWAITING_REVIEW'
 
               if item.present?
-                claim_status = bgs_claim.dig(:benefit_claim_details_dto, :bnft_claim_lc_status).max do |stat|
-                  stat[:phase_chngd_dt]
-                end
+                claim_status = [bgs_claim.dig(:benefit_claim_details_dto, :bnft_claim_lc_status)].flatten.first[:phase_type]
                 status = if ['Preparation for Decision',
                              'Pending Decision Approval',
                              'Preparation for Notification',
