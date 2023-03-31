@@ -9,6 +9,12 @@ module ClaimsApi
     included do
       TOKEN_REGEX = /Bearer /.freeze
 
+      def verify_access!
+        verify_access_token!
+      rescue => e
+        render_unauthorized
+      end
+
       #
       # Determine if the current authenticated user is allowed access
       #

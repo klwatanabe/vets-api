@@ -28,12 +28,6 @@ module ClaimsApi
         Settings.oidc.isolated_audience.claims
       end
 
-      def verify_access!
-        verify_access_token!
-      rescue => e
-        render_unauthorized
-      end
-
       protected
 
       def validate_veteran_identifiers(require_birls: false) # rubocop:disable Metrics/MethodLength
