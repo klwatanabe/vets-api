@@ -7,8 +7,7 @@ module VeteranConfirmation
     skip_before_action :authenticate
 
     def set_tags_and_extra_context
-      RequestStore.store0.
-        ['additional_request_attributes'] = { 'source' => 'veteran_confirmation' }
+      RequestStore.store['additional_request_attributes'] = { 'source' => 'veteran_confirmation' }
       Raven.tags_context(source: 'veteran_confirmation')
     end
   end
