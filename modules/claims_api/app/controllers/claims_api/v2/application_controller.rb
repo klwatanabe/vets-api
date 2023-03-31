@@ -13,13 +13,9 @@ module ClaimsApi
       include ClaimsApi::Error::ErrorHandler
       include ClaimsApi::CcgTokenValidation
       include ClaimsApi::TokenValidation
+      include ClaimsApi::TargetVeteran
+      before_action :verify_access!
       skip_before_action :authenticate
-
-      def verify_access!
-        verify_access_token!
-      rescue => e
-        render_unauthorized
-      end
 
       protected
 
@@ -51,19 +47,6 @@ module ClaimsApi
         raise ::Common::Exceptions::ValidationErrorsBadRequest, validator
       end
 
-      #
-      # Veteran being acted on.
-      #
-      # @return [ClaimsApi::Veteran] Veteran to act on
-      def target_veteran
-        @target_veteran ||= if @validated_token_payload
-                              build_target_veteran(veteran_id: params[:veteranId], loa: { current: 3, highest: 3 })
-                            elsif user_is_representative?
-                              build_target_veteran(veteran_id: params[:veteranId], loa: @current_user.loa)
-                            else
-                              ClaimsApi::Veteran.from_identity(identity: @current_user)
-                            end
-      end
 
       #
       # Determine if the current authenticated user is an accredited representative
@@ -91,21 +74,6 @@ module ClaimsApi
         @current_user.icn == target_veteran.mpi.icn
       end
 
-      #
-      # Determine if the current authenticated user is allowed access
-      #
-      # raise if current authenticated user is neither the target veteran, nor target veteran representative
-      def verify_access_token!
-        validated_token = validate_token!['data']
-        attributes = validated_token['attributes']
-        actor = attributes['act']
-        return if attributes['type'] == 'system' ## CCG token in this case
-
-        @current_user = user_from_validated_token(validated_token)
-        return if user_is_target_veteran? || user_represents_veteran?
-
-        raise ::Common::Exceptions::Forbidden
-      end
 
       #
       # Determine if the current authenticated user is the target veteran's representative
