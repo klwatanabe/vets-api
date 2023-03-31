@@ -10,6 +10,7 @@ module ClaimsApi
     end
 
     attr_reader :icn
+    attr_reader :loa
 
     def first_name_last_name(first_name, last_name)
       @first_name = first_name

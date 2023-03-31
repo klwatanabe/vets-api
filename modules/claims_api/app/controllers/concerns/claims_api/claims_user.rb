@@ -13,6 +13,10 @@ module ClaimsApi
       @identifier.icn
     end
 
+    def loa
+      @identifier.loa
+    end
+
     attr_reader :uuid
 
     def first_name_last_name(first_name, last_name)

@@ -23,7 +23,7 @@ module ClaimsApi
 
         @validated_token_payload = JSON.parse(response.body) if response.code == 200
       rescue => e
-        raise raise ::Common::Exceptions::Unauthorized if e.to_s.include?('401')
+        raise  ::Common::Exceptions::Unauthorized if e.to_s.include?('401')
       end
     end
 
@@ -46,6 +46,15 @@ module ClaimsApi
         claims_user.first_name_last_name(attributes['first_name'], attributes['last_name'])
       end
       claims_user
+    end
+
+    def permit_scopes(scopes, actions: [])
+      return false unless @validated_token
+      attributes = @validated_token['attributes']
+      if (actions.empty? ||
+        Array.wrap(actions).map(&:to_s).include?(action_name)) && (Array.wrap(scopes) & attributes['scp']).empty?
+        render_unauthorized
+      end
     end
   end
 end

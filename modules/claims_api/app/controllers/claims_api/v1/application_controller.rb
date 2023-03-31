@@ -8,19 +8,29 @@ require 'mpi/errors/errors'
 
 module ClaimsApi
   module V1
-    class ApplicationController < ::OpenidApplicationController
+    class ApplicationController < ::ApplicationController
       include ClaimsApi::MPIVerification
       include ClaimsApi::HeaderValidation
       include ClaimsApi::JsonFormatValidation
       include ClaimsApi::CcgTokenValidation
+      include ClaimsApi::TokenValidation
 
+      before_action :verify_access!
       before_action :validate_json_format, if: -> { request.post? }
+      before_action :target_veteran
       before_action :validate_veteran_identifiers
+      skip_before_action :authenticate
 
       # fetch_audience: defines the audience used for oauth
       # NOTE: required for oauth through claims_api to function
       def fetch_aud
         Settings.oidc.isolated_audience.claims
+      end
+
+      def verify_access!
+        verify_access_token!
+      rescue => e
+        render_unauthorized
       end
 
       protected
@@ -101,7 +111,25 @@ module ClaimsApi
         end
       end
 
+
       private
+
+      #
+      # Determine if the current authenticated user is allowed access
+      #
+      # raise if current authenticated user is neither the target veteran, nor target veteran representative
+      def verify_access_token!
+        validated_token = validate_token!['data']
+        attributes = validated_token['attributes']
+        actor = attributes['act']
+        return if attributes['type'] == 'system' ## CCG token in this case
+
+        @current_user = user_from_validated_token(validated_token)
+        @validated_token = validated_token
+        # return if user_is_target_veteran? || user_represents_veteran?
+        #
+        # raise ::Common::Exceptions::Forbidden
+      end
 
       def claims_service
         edipi_check
@@ -121,15 +149,28 @@ module ClaimsApi
         (request.headers.to_h.keys & headers_to_check).length.positive?
       end
 
-      def target_veteran(with_gender: false)
-        if header_request?
-          headers_to_validate = %w[X-VA-SSN X-VA-First-Name X-VA-Last-Name X-VA-Birth-Date]
-          validate_headers(headers_to_validate)
-          validate_ccg_token! if token.client_credentials_token?
-          veteran_from_headers(with_gender: with_gender)
-        else
-          ClaimsApi::Veteran.from_identity(identity: @current_user)
-        end
+      # def target_veteran(with_gender: false)
+      #   if header_request?
+      #     headers_to_validate = %w[X-VA-SSN X-VA-First-Name X-VA-Last-Name X-VA-Birth-Date]
+      #     validate_headers(headers_to_validate)
+      #     validate_ccg_token! if token.client_credentials_token?
+      #     veteran_from_headers(with_gender: with_gender)
+      #   else
+      #     ClaimsApi::Veteran.from_identity(identity: @current_user)
+      #   end
+      # end
+      #
+      # Veteran being acted on.
+      #
+      # @return [ClaimsApi::Veteran] Veteran to act on
+      def target_veteran
+        @target_veteran ||= if @validated_token_payload && @current_user.icn != nil
+                              build_target_veteran(veteran_id: @current_user.icn, loa: { current: 3, highest: 3 })
+                            elsif user_is_representative?
+                              build_target_veteran(veteran_id: params[:veteranId], loa: @current_user.loa)
+                            else
+                              raise  ::Common::Exceptions::Unauthorized
+                            end
       end
 
       def veteran_from_headers(with_gender: false)
@@ -167,6 +208,44 @@ module ClaimsApi
             "Unable to locate Veteran's EDIPI in Master Person Index (MPI). " \
             'Please submit an issue at ask.va.gov or call 1-800-MyVA411 (800-698-2411) for assistance.')
         end
+      end
+
+      def build_target_veteran(veteran_id:, loa:)
+        # rubocop:disable Metrics/MethodLength
+        target_veteran ||= ClaimsApi::Veteran.new(
+          mhv_icn: veteran_id,
+          loa: loa
+        )
+        # populate missing veteran attributes with their mpi record
+        found_record = target_veteran.mpi_record?(user_key: veteran_id)
+
+        unless found_record
+          raise ::Common::Exceptions::ResourceNotFound.new(detail:
+                                                             "Unable to locate Veteran's ID/ICN in Master Person Index (MPI). " \
+            'Please submit an issue at ask.va.gov or call 1-800-MyVA411 (800-698-2411) for assistance.')
+        end
+
+        mpi_profile = target_veteran&.mpi&.mvi_response&.profile || {}
+
+        if mpi_profile[:participant_id].blank?
+          raise ::Common::Exceptions::UnprocessableEntity.new(detail:
+                                                                "Unable to locate Veteran's Participant ID in Master Person Index (MPI). " \
+            'Please submit an issue at ask.va.gov or call 1-800-MyVA411 (800-698-2411) for assistance.')
+        end
+
+        target_veteran[:first_name] = mpi_profile[:given_names]&.first
+        if target_veteran[:first_name].nil?
+          raise ::Common::Exceptions::UnprocessableEntity.new(detail: 'Missing first name')
+        end
+
+        target_veteran[:last_name] = mpi_profile[:family_name]
+        target_veteran[:edipi] = mpi_profile[:edipi]
+        target_veteran[:uuid] = mpi_profile[:ssn]
+        target_veteran[:ssn] = mpi_profile[:ssn]
+        target_veteran[:participant_id] = mpi_profile[:participant_id]
+        target_veteran[:last_signed_in] = Time.now.utc
+        target_veteran[:va_profile] = ClaimsApi::Veteran.build_profile(mpi_profile.birth_date)
+        target_veteran
       end
     end
   end
