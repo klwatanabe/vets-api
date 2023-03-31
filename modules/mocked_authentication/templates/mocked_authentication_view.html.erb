@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="none" />
+    <title>VA.gov | Mocked Authentication</title>
+    <link
+      href="https://unpkg.com/@department-of-veterans-affairs/formation/dist/formation.min.css"
+      rel="stylesheet"
+      crossorigin="anonymous"
+    />
+  </head>
+  <style>
+    .code-block {
+      font-family: Consolas, "Andale Mono WT", "Andale Mono", "Lucida Console",
+        "Lucida Sans Typewriter", "DejaVu Sans Mono", "Bitstream Vera Sans Mono",
+        "Liberation Mono", "Nimbus Mono L", Monaco, "Courier New", Courier,
+        monospace;
+      background: #d9d9d9;
+    }
+
+    pre {
+      white-space: pre-wrap;
+      overflow-x: auto;
+      tab-size: 4;
+    }
+
+    code {
+      transform: translateX(-30px);
+      display: block;
+      color: #333;
+    }
+
+    header {
+      position: absolute;
+      width: 100%;
+      top: 0;
+      left: 0;
+      text-align: center;
+    }
+
+    .header-container {
+      min-height: 85px;
+      padding-top: 1em;
+      background: #112e51;
+      color: #fff;
+    }
+
+    .header-warning {
+    }
+
+    footer {
+      position: absolute;
+      height: 2.5rem;
+      width: 100%;
+      bottom: 0;
+      text-align: center;
+    }
+
+    .container {
+      margin: 0 auto;
+      padding: 60px 16px;
+    }
+
+    @media screen and (min-width: 1300px) {
+      .content p {
+        max-width: 460px;
+      }
+
+      main {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .container {
+        margin: 6em auto 0;
+        max-width: 1300px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: 1fr 1fr;
+      }
+    }
+  </style>
+  <body>
+    <noscript>
+      <p>
+        Your browser does not support JavaScript or you do not have JavaScript
+        enabled. Please press the Continue button once to proceed with sign-in.
+      </p>
+    </noscript>
+    <header>
+      <div class="header-container">
+        <h1>Mocked Authentication</h1>
+      </div>
+    </header>
+    <main>
+      <div class="container">
+        <div>
+          <h2>Select a user to contiue</h2>
+          <label>
+            <span style="display: block">
+              Select a user from the dropdown to continue with the mocked
+              authentication flow.
+            </span>
+            <form>
+              <label for="mockeduser">
+              <%
+                select(credential_info, :credential_info) do
+                  all_credentials.each do |c|
+                    tag.option(c.name, value: c.email, data: { c.to_json })
+                  end
+                end
+              %>
+              <%# <select name="mockeduser">
+                <option>Select a user to get started</option>
+                <option>--Rails code to inject users---</option>
+              </select> %>
+              </label>
+            <button>Continue signing in</button>
+          </form>
+        </div>
+        <div class="code-block">
+          <pre>
+        <code>
+        <%
+          credential_info.to_json
+        %>
+        <%# {
+          “email”: “vets.gov.user+0@gmail.com”,
+          “email_verified”: true,
+          “given_name”: “ABRAHAM”,
+          “family_name”: “LINCOLN”,
+          “birthdate”: “1900-01-01”,
+          “social_security_number”: 123456789,
+          “ial”: 2,
+          “address”: “1600 Pennsylvania Ave\nWashington, DC 12345”,
+        } %>
+        </code>
+        </pre>
+        </div>
+        <div class="content">
+          <h2>Can't find a user?</h2>
+          <p>
+            User the instructions found in the
+            <a href="#">vets-api-mockdata repo</a> to create a mocked user.
+          </p>
+          <h2>What is Mocked Authentication?</h2>
+          <p>
+            Read through our
+            <a
+              href="https://github.com/department-of-veterans-affairs/vets-api-mockdata"
+              rel="noopener noreferrer"
+              target="_blank"
+              >documentation</a
+            >
+            to find more information on how to use Mocked Authentication.
+          </p>
+        </div>
+      </div>
+    </main>
+    <footer>
+      Need help? Reach out in the
+      <a
+        href="slack://app.slack.com/client/T03FECE8V/CSFV4QTKN"
+        rel="noopener noreferrer"
+        target="_blank"
+      >
+        #vsp-identity Slack
+      </a>
+      channel.
+    </footer>
+  </body>
+</html>
