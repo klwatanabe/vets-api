@@ -84,7 +84,7 @@ module ClaimsApi
                                               upstream_id: bgs_details[:benefit_claim_id])
           end
           structure.merge!(errors: get_errors(lighthouse_claim))
-          # structure.merge!(supporting_documents: build_supporting_docs(bgs_claim))
+          structure.merge!(supporting_documents: build_supporting_docs(bgs_claim))
           structure.merge!(tracked_items: map_bgs_tracked_items(bgs_claim))
           structure.merge!(build_claim_phase_attributes(bgs_claim, 'show'))
         end
