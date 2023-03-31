@@ -106,9 +106,7 @@ module ClaimsApi
         end
       end
 
-
       private
-
 
       def claims_service
         edipi_check
@@ -158,7 +156,6 @@ module ClaimsApi
             'Please submit an issue at ask.va.gov or call 1-800-MyVA411 (800-698-2411) for assistance.')
         end
       end
-
     end
   end
 end
