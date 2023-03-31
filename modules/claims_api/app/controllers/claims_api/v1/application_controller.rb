@@ -64,7 +64,7 @@ module ClaimsApi
 
         ClaimsApi::Logger.log('validate_identifiers',
                               rid: request.request_id,
-                              require_birls: require_birls,
+                              require_birls:,
                               header_request: header_request?,
                               ptcpnt_id: target_veteran.participant_id.present?,
                               icn: target_veteran&.mpi_icn,
