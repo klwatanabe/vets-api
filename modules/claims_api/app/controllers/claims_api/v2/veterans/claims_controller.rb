@@ -395,7 +395,8 @@ module ClaimsApi
               status = 'SUBMITTED_AWAITING_REVIEW'
 
               if item.present?
-                claim_status = [bgs_claim.dig(:benefit_claim_details_dto, :bnft_claim_lc_status)].flatten.first[:phase_type]
+                claim_status = [bgs_claim.dig(:benefit_claim_details_dto,
+                                              :bnft_claim_lc_status)].flatten.first[:phase_type]
                 status = if ['Preparation for Decision',
                              'Pending Decision Approval',
                              'Preparation for Notification',
