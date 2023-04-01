@@ -47,20 +47,6 @@ module ClaimsApi
         raise ::Common::Exceptions::ValidationErrorsBadRequest, validator
       end
 
-
-      #
-      # Determine if the current authenticated user is an accredited representative
-      #
-      # @return [boolean] True if current user is an accredited representative, false otherwise
-      def user_is_representative?
-        return if @is_valid_ccg_flow
-
-        ::Veteran::Service::Representative.find_by(
-          first_name: @current_user.first_name,
-          last_name: @current_user.last_name
-        ).present?
-      end
-
       #
       # Determine if the current authenticated user is the Veteran being acted on
       #

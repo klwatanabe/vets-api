@@ -20,29 +20,24 @@ module ClaimsApi
       #
       # raise if current authenticated user is neither the target veteran, nor target veteran representative
       def verify_access_token!
-        validated_token = validate_token!['data']
-        attributes = validated_token['attributes']
-        actor = attributes['act']
-        return if attributes['type'] == 'system' ## CCG token in this case
-
-        @current_user = user_from_validated_token(validated_token)
-        @validated_token = validated_token
-        # return if user_is_target_veteran? || user_represents_veteran?
-        #
-        # raise ::Common::Exceptions::Forbidden
+        @validated_token = validate_token!['data']
+        attributes = @validated_token['attributes']
+        @is_valid_ccg_flow ||= attributes['type'] == 'system'
+        return if @is_valid_ccg_flow
+        @current_user = user_from_validated_token(@validated_token)
       end
 
       def validate_token!
-        return nil unless Settings.oidc.validation_url
+        return nil unless Settings.claims_api.token_validation_url
 
         token_string = token_string_from_request
         root_url = request.base_url == 'https://api.va.gov' ? 'https://api.va.gov' : 'https://sandbox-api.va.gov'
         audience = "#{root_url}/services/claims"
         payload = { aud: audience }
-        response = RestClient.post(Settings.oidc.validation_url,
+        response = RestClient.post(Settings.claims_api.token_validation_url,
                                    payload,
                                    { Authorization: "Bearer #{token_string}",
-                                     apiKey: Settings.oidc.validation_api_key })
+                                     apiKey: Settings.claims_api.token_validation_api_key })
         raise raise Common::Exceptions::TokenValidationError.new("Token validation error") if response.nil?
 
         @validated_token_payload = JSON.parse(response.body) if response.code == 200
@@ -64,7 +59,7 @@ module ClaimsApi
       uid = attributes['uid']
       act = attributes['act']
       icn = act['icn']
-      claims_user = ClaimsUser.new(attributes['uid'])
+      claims_user = ClaimsUser.new(uid)
       claims_user.set_icn(icn) unless icn.nil?
       unless attributes['last_name'].nil?
         claims_user.first_name_last_name(attributes['first_name'], attributes['last_name'])

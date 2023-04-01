@@ -55,6 +55,20 @@ module ClaimsApi
         target_veteran[:va_profile] = ClaimsApi::Veteran.build_profile(mpi_profile.birth_date)
         target_veteran
       end
+
+      #
+      # Determine if the current authenticated user is an accredited representative
+      #
+      # @return [boolean] True if current user is an accredited representative, false otherwise
+      def user_is_representative?
+        return if @is_valid_ccg_flow
+
+        ::Veteran::Service::Representative.find_by(
+          first_name: @current_user.first_name,
+          last_name: @current_user.last_name
+        ).present?
+      end
+
     end
   end
 end

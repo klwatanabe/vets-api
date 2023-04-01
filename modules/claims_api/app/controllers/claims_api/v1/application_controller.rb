@@ -22,12 +22,6 @@ module ClaimsApi
       before_action :validate_veteran_identifiers
       skip_before_action :authenticate
 
-      # fetch_audience: defines the audience used for oauth
-      # NOTE: required for oauth through claims_api to function
-      def fetch_aud
-        Settings.oidc.isolated_audience.claims
-      end
-
       protected
 
       def validate_veteran_identifiers(require_birls: false) # rubocop:disable Metrics/MethodLength
