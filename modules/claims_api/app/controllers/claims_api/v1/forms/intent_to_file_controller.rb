@@ -30,13 +30,15 @@ module ClaimsApi
           ClaimsApi::Logger.log('itf', detail: '0966 - Controller Actions Completed')
 
           bgs_response = local_bgs_service.insert_intent_to_file(intent_to_file_options)
-          ClaimsApi::IntentToFile.create!(status: ClaimsApi::IntentToFile::SUBMITTED, cid: token.payload['cid'])
-          ClaimsApi::Logger.log('itf', detail: 'Submitted to BGS')
-          render json: bgs_response,
-                 serializer: ClaimsApi::IntentToFileSerializer
-        rescue Faraday::ServerError => e
-          ClaimsApi::IntentToFile.create!(status: ClaimsApi::IntentToFile::ERRORED, cid: token.payload['cid'])
-          raise ::Common::Exceptions::UnprocessableEntity.new(detail: e.message&.split('>')&.last)
+          if bgs_response.empty?
+            ClaimsApi::IntentToFile.create!(status: ClaimsApi::IntentToFile::ERRORED, cid: token.payload['cid'])
+            raise ::Common::Exceptions::UnprocessableEntity.new(detail: 'Veteran ID not found')
+          else
+            ClaimsApi::IntentToFile.create!(status: ClaimsApi::IntentToFile::SUBMITTED, cid: token.payload['cid'])
+            ClaimsApi::Logger.log('itf', detail: 'Submitted to BGS')
+            render json: bgs_response,
+                   serializer: ClaimsApi::IntentToFileSerializer
+          end
         end
 
         # GET current intent to file status based on type.
@@ -65,7 +67,7 @@ module ClaimsApi
         # @return [JSON] Success if valid, error messages if invalid.
         def validate
           ClaimsApi::Logger.log('itf', detail: '0966/validate - Request Started')
-          add_deprecation_headers_to_response(response: response, link: ClaimsApi::EndpointDeprecation::V1_DEV_DOCS)
+          add_deprecation_headers_to_response(response:, link: ClaimsApi::EndpointDeprecation::V1_DEV_DOCS)
           validate_json_schema
           validate_veteran_identifiers(require_birls: true)
           check_for_invalid_burial_submission! if form_type == 'burial'
@@ -85,7 +87,7 @@ module ClaimsApi
             ssn: target_veteran.ssn
           }
 
-          handle_claimant_fields(options: options, form_attributes: form_attributes, target_veteran: target_veteran)
+          handle_claimant_fields(options:, form_attributes:, target_veteran:)
         end
 
         # BGS requires at least 1 of 'participant_claimant_id' or 'claimant_ssn'

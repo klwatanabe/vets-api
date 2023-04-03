@@ -12,6 +12,12 @@
 # Sorted using http://yaml-sorter.herokuapp.com/
 
 features:
+  binding_flow_modal_dsl:
+    actor_type: user
+    description: Enables grandfathering modal to begin binding from dslogon to login.gov
+  binding_flow_modal_mhv:
+    actor_type: user
+    description: Enables grandfathering modal to begin binding from mhv to login.gov
   caregiver_sigi_enabled:
     actor_type: user
     description: Whether Self-Identifying Gender Identity is enabled for caregiver.
@@ -455,7 +461,7 @@ features:
     actor_type: user
     description: This determines the visibility of the OmniChannel link in the claim status tool
     enable_in_development: true
-  organic_dsl_conversion_experiment:
+  organic_conversion_experiment:
     actor_type: user
     description: Toggle to enable login.gov create account modal experiment
   pdf_warning_banner:
@@ -751,6 +757,9 @@ features:
   va_view_dependents_access:
     actor_type: user
     description: Allows us to gate the View/ Modify dependents content in a progressive rollout
+  vba_documents_skip_dimension_check:
+    actor_type: user
+    description: Allows Benefits Intake to accept any size of PDF, skipping the check for page dimensions
   yellow_ribbon_mvp_enhancement:
     actor_type: user
     description: Enhances Yellow Ribbon MVP.

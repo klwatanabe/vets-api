@@ -40,7 +40,7 @@ class AppealsApi::V2::DecisionReviews::SupplementalClaimsController < AppealsApi
       evidence_submission_indicated: evidence_submission_indicated?,
       api_version: 'V2',
       veteran_icn: request_headers['X-VA-ICN'],
-      metadata: { evidenceType: @json_body.dig(*%w[data attributes evidenceSubmission evidenceType]) }
+      metadata: { evidence_type: @json_body.dig(*%w[data attributes evidenceSubmission evidenceType]) }
     )
 
     render_model_errors(sc) and return unless sc.validate
@@ -138,7 +138,7 @@ class AppealsApi::V2::DecisionReviews::SupplementalClaimsController < AppealsApi
         errors: [
           {
             code: '404',
-            detail: I18n.t('appeals_api.errors.not_found', type: 'SupplementalClaim', id: id),
+            detail: I18n.t('appeals_api.errors.not_found', type: 'SupplementalClaim', id:),
             status: '404',
             title: 'Record not found'
           }
