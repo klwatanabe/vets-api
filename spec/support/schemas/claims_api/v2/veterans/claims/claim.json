@@ -324,10 +324,17 @@
                     "enum": [
                       "ACCEPTED",
                       "INITIAL_REVIEW_COMPLETE",
-                      "NEEDED",
+                      "NEEDED_FROM_YOU",
+                      "NEEDED_FROM_OTHERS",
                       "NO_LONGER_REQUIRED",
                       "SUBMITTED_AWAITING_REVIEW"
                     ]
+                  },
+                  "suspenseDate": {
+                    "format": "date",
+                    "type": "string",
+                    "nullable": true,
+                    "example": "2017-10-18"
                   },
                   "uploaded": {
                     "type": "boolean",
