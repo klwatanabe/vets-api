@@ -55,7 +55,7 @@ module Form526RapidReadyForDecisionConcern
   end
 
   Uploader = RapidReadyForDecision::FastTrackPdfUploadManager
-  PDF_FILENAME_REGEX = /#{Uploader::DOCUMENT_NAME_PREFIX}.*#{Uploader::DOCUMENT_NAME_SUFFIX}/.freeze
+  PDF_FILENAME_REGEX = /#{Uploader::DOCUMENT_NAME_PREFIX}.*#{Uploader::DOCUMENT_NAME_SUFFIX}/
 
   # @return if an RRD pdf has been included as a file to upload
   def rrd_pdf_added_for_uploading?
@@ -117,10 +117,6 @@ module Form526RapidReadyForDecisionConcern
   # @return if this claim submission was processed and fast-tracked by RRD
   def rrd_claim_processed?
     rrd_pdf_added_for_uploading? && rrd_special_issue_set?
-  end
-
-  def notify_mas_tracking
-    RrdMasNotificationMailer.build(self).deliver_now
   end
 
   def notify_mas_all_claims_tracking

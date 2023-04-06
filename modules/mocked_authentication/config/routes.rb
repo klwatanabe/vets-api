@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
 MockedAuthentication::Engine.routes.draw do
-  get '/authorize', to: 'mock_credential#authorize'
+  get '/authorize', to: 'credential#authorize'
+  get '/credential_list', to: 'credential#credential_list'
 end

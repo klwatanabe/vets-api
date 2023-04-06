@@ -19,19 +19,19 @@ describe VAOS::V2::AppointmentsService do
 
   describe '#post_appointment' do
     let(:va_proposed_clinic_request_body) do
-      FactoryBot.build(:appointment_form_v2, :va_proposed_clinic, user: user).attributes
+      FactoryBot.build(:appointment_form_v2, :va_proposed_clinic, user:).attributes
     end
 
     let(:va_proposed_phone_request_body) do
-      FactoryBot.build(:appointment_form_v2, :va_proposed_phone, user: user).attributes
+      FactoryBot.build(:appointment_form_v2, :va_proposed_phone, user:).attributes
     end
 
     let(:va_booked_request_body) do
-      FactoryBot.build(:appointment_form_v2, :va_booked, user: user).attributes
+      FactoryBot.build(:appointment_form_v2, :va_booked, user:).attributes
     end
 
     let(:community_cares_request_body) do
-      FactoryBot.build(:appointment_form_v2, :community_cares, user: user).attributes
+      FactoryBot.build(:appointment_form_v2, :community_cares, user:).attributes
     end
 
     context 'when va appointment create request is valid' do
@@ -52,7 +52,7 @@ describe VAOS::V2::AppointmentsService do
           allow(Rails.logger).to receive(:info).at_least(:once)
           response = subject.post_appointment(va_booked_request_body)
           expect(response[:id]).to be_a(String)
-          expect(Rails.logger).to have_received(:info).with('VAOS appointment service category',
+          expect(Rails.logger).to have_received(:info).with('VAOS appointment service category and type',
                                                             any_args).at_least(:once)
           expect(Rails.logger).to have_received(:info).with('VAOS telehealth atlas details',
                                                             any_args).at_least(:once)
@@ -128,7 +128,7 @@ describe VAOS::V2::AppointmentsService do
           allow(Rails.logger).to receive(:info).at_least(:once)
           response = subject.get_appointments(start_date3, end_date3)
           expect(response[:data].size).to eq(163)
-          expect(Rails.logger).to have_received(:info).with('VAOS appointment service category',
+          expect(Rails.logger).to have_received(:info).with('VAOS appointment service category and type',
                                                             any_args).at_least(:once)
           expect(Rails.logger).to have_received(:info).with('VAOS telehealth atlas details',
                                                             any_args).at_least(:once)

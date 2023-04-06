@@ -1,51 +1,57 @@
 # frozen_string_literal: true
 
 require_relative 'base'
+require 'lighthouse/direct_deposit/parsers/bad_request_parser'
+require 'lighthouse/direct_deposit/parsers/denied_request_parser'
+require 'lighthouse/direct_deposit/parsers/invalid_creds_parser'
 
 module Lighthouse
   module DirectDeposit
-    class Error < Base
-      attribute :status, String
-      attribute :message, String
-      attribute :detail, String
-      attribute :reference, String
+    class Error < StandardError
+      attr_accessor :status
+      attr_writer :body
 
-      # Converts a decoded JSON response from Lighthouse to an instance of the Error model
-      # @param body [Hash] the decoded response body from Lighthouse
-      # @return [Lighthouse::DirectDeposit::Error] the model built from the response body
-      def self.build_from(status, body)
-        case status
-        when 400, 404, 500, 502
-          # 400 (Bad Request), 404 (Not Found), 500 (Internal Server Error), 502 (Bad Gateway)
-          Lighthouse::DirectDeposit::Error.new(
-            status: body['status'],
-            message: body['title'],
-            detail: body['detail'],
-            reference: body['instance']
-          )
-        when 401, 403, 413, 429
-          # 401 (Not Authorized), 403 (Forbidden), 413 (Payload too large), 429 (Too many requests)
-          Lighthouse::DirectDeposit::Error.new(
-            status: status,
-            message: status_message_from(status),
-            detail: body['message']
-          )
-        else
-          Lighthouse::DirectDeposit::Error.new(status: status, message: 'Unknown', detail: 'Unknown Error')
-        end
+      def initialize(response)
+        @status = response.status
+        @body = parse_body(response)
+        super
       end
 
-      def self.status_message_from(code)
-        case code
-        when 401
-          'Not Authorized'
-        when 403
-          'Forbidden'
-        when 413
-          'Payload too large'
-        when 429
-          'Too many requests'
-        end
+      def title
+        @body['title']
+      end
+
+      def body
+        {
+          errors: [@body]
+        }
+      end
+
+      def parse_body(response)
+        parser =
+          if request_denied?(response.body)
+            Lighthouse::DirectDeposit::Parsers::DeniedRequestParser.new(response)
+          elsif invalid_creds?(response.body)
+            Lighthouse::DirectDeposit::Parsers::InvalidCredsParser.new(response)
+          else
+            Lighthouse::DirectDeposit::Parsers::BadRequestParser.new(response)
+          end
+
+        parser.parse_body
+      end
+
+      def ok?
+        false
+      end
+
+      private
+
+      def request_denied?(body)
+        body['message']&.present?
+      end
+
+      def invalid_creds?(body)
+        body['error']&.present?
       end
     end
   end

@@ -38,8 +38,8 @@
             "authorizationUrl": "https://api.va.gov/oauth2/authorization",
             "tokenUrl": "https://api.va.gov/oauth2/token",
             "scopes": {
-              "claim.read": "Retrieve claim data",
-              "claim.write": "Submit claim data"
+              "system/claim.read": "Retrieve claim data",
+              "system/claim.write": "Submit claim data"
             }
           }
         }
@@ -52,8 +52,8 @@
             "authorizationUrl": "https://sandbox-api.va.gov/oauth2/authorization",
             "tokenUrl": "https://sandbox-api.va.gov/oauth2/token",
             "scopes": {
-              "claim.read": "Retrieve claim data",
-              "claim.write": "Submit claim data"
+              "system/claim.read": "Retrieve claim data",
+              "system/claim.write": "Submit claim data"
             }
           }
         }
@@ -71,12 +71,12 @@
         "security": [
           {
             "productionOauth": [
-              "claim.read"
+              "system/claim.read"
             ]
           },
           {
             "sandboxOauth": [
-              "claim.read"
+              "system/claim.read"
             ]
           },
           {
@@ -378,12 +378,12 @@
         "security": [
           {
             "productionOauth": [
-              "claim.read"
+              "system/claim.read"
             ]
           },
           {
             "sandboxOauth": [
-              "claim.read"
+              "system/claim.read"
             ]
           },
           {
@@ -679,12 +679,12 @@
         "security": [
           {
             "productionOauth": [
-              "claim.read"
+              "system/claim.read"
             ]
           },
           {
             "sandboxOauth": [
-              "claim.read"
+              "system/claim.read"
             ]
           },
           {
@@ -731,7 +731,7 @@
                       "claimPhaseDates": {
                         "phaseChangeDate": "2017-10-18",
                         "currentPhaseBack": false,
-                        "latestPhaseType": "Complete",
+                        "latestPhaseType": "COMPLETE",
                         "previousPhases": {
                           "phase1CompleteDate": "2017-10-18"
                         }
@@ -776,31 +776,29 @@
                       "trackedItems": [
                         {
                           "closedDate": null,
-                          "description": null,
-                          "displayedName": "Request 1",
-                          "dvlpmtTc": "CLMNTRQST",
+                          "description": "MG-not a recognized condition",
+                          "displayName": "Request 1",
                           "openedDate": null,
                           "overdue": true,
                           "requestedDate": "2022-02-04",
+                          "status": "NEEDED",
                           "suspenseDate": "2022-03-06",
                           "trackedItemId": 325525,
-                          "trackedItemStatus": "NEEDED",
                           "uploaded": false,
-                          "uploadsAllowed": false
+                          "uploadsAllowed": true
                         },
                         {
                           "closedDate": null,
-                          "description": null,
-                          "displayedName": "Request 2",
-                          "dvlpmtTc": "CLMNTRQST",
+                          "description": "Line of Duty determination from claimant",
+                          "displayName": "Request 2",
                           "openedDate": null,
                           "overdue": true,
                           "requestedDate": "2022-02-04",
+                          "status": "NEEDED",
                           "suspenseDate": "2022-03-06",
                           "trackedItemId": 325524,
-                          "trackedItemStatus": "NEEDED",
                           "uploaded": false,
-                          "uploadsAllowed": false
+                          "uploadsAllowed": true
                         }
                       ]
                     }
@@ -898,6 +896,19 @@
                                 },
                                 "latestPhaseType": {
                                   "type": "string",
+                                  "enum": [
+                                    "CANCELED",
+                                    "CLAIM_RECEIVED",
+                                    "INITIAL_REVIEW",
+                                    "PENDING",
+                                    "EVIDENCE_GATHERING",
+                                    "REVIEW_OF_EVIDENCE",
+                                    "PREPARATION_FOR_DECISION",
+                                    "PENDING_DECISION_APPROVAL",
+                                    "PREPARATION_FOR_NOTIFICATION",
+                                    "ERRORED",
+                                    "COMPLETE"
+                                  ],
                                   "nullable": true,
                                   "description": "The most current phase for the claim"
                                 },
@@ -1115,13 +1126,6 @@
                                     "description": "Description of the tracked item",
                                     "example": "Buddy mentioned - No complete address"
                                   },
-                                  "suspensionDate": {
-                                    "format": "date",
-                                    "type": "string",
-                                    "nullable": true,
-                                    "description": "Suspension date on the tracked item",
-                                    "example": "2017-10-18"
-                                  },
                                   "requestedDate": {
                                     "format": "date",
                                     "type": "string",
@@ -1134,12 +1138,7 @@
                                     "description": "ID of the tracked item",
                                     "example": 293454
                                   },
-                                  "dvlpmtTc": {
-                                    "type": "string",
-                                    "nullable": true,
-                                    "example": "CLMNTRQST"
-                                  },
-                                  "displayedName": {
+                                  "displayName": {
                                     "type": "string",
                                     "nullable": true,
                                     "description": "Request #",
@@ -1158,13 +1157,7 @@
                                     "description": "True if the item is overdue",
                                     "example": true
                                   },
-                                  "suspenseDate": {
-                                    "format": "date",
-                                    "type": "string",
-                                    "nullable": true,
-                                    "example": "2017-10-18"
-                                  },
-                                  "trackedItemStatus": {
+                                  "status": {
                                     "type": "string",
                                     "nullable": true,
                                     "description": "Enum with the status of the tracked item",
@@ -1172,10 +1165,17 @@
                                     "enum": [
                                       "ACCEPTED",
                                       "INITIAL_REVIEW_COMPLETE",
-                                      "NEEDED",
+                                      "NEEDED_FROM_YOU",
+                                      "NEEDED_FROM_OTHERS",
                                       "NO_LONGER_REQUIRED",
                                       "SUBMITTED_AWAITING_REVIEW"
                                     ]
+                                  },
+                                  "suspenseDate": {
+                                    "format": "date",
+                                    "type": "string",
+                                    "nullable": true,
+                                    "example": "2017-10-18"
                                   },
                                   "uploaded": {
                                     "type": "boolean",
@@ -1361,7 +1361,7 @@
         }
       }
     },
-    "/:veteranId/526": {
+    "/veterans/{veteranId}/526": {
       "post": {
         "summary": "Submits form 526",
         "tags": [
@@ -1371,14 +1371,14 @@
         "security": [
           {
             "productionOauth": [
-              "claim.read",
-              "claim.write"
+              "system/claim.read",
+              "system/claim.write"
             ]
           },
           {
             "sandboxOauth": [
-              "claim.read",
-              "claim.write"
+              "system/claim.read",
+              "system/claim.write"
             ]
           },
           {
@@ -1410,7 +1410,7 @@
         }
       }
     },
-    "/:veteranId/526/validate": {
+    "/veterans/{veteranId}/526/validate": {
       "post": {
         "summary": "Validates a 526 claim form submission.",
         "tags": [
@@ -1420,14 +1420,14 @@
         "security": [
           {
             "productionOauth": [
-              "claim.read",
-              "claim.write"
+              "system/claim.read",
+              "system/claim.write"
             ]
           },
           {
             "sandboxOauth": [
-              "claim.read",
-              "claim.write"
+              "system/claim.read",
+              "system/claim.write"
             ]
           },
           {
@@ -1459,7 +1459,7 @@
         }
       }
     },
-    "/:veteranId/526/attachments": {
+    "/veterans/{veteranId}/526/attachments": {
       "post": {
         "summary": "Upload documents supporting a 526 claim",
         "tags": [
@@ -1469,14 +1469,14 @@
         "security": [
           {
             "productionOauth": [
-              "claim.read",
-              "claim.write"
+              "system/claim.read",
+              "system/claim.write"
             ]
           },
           {
             "sandboxOauth": [
-              "claim.read",
-              "claim.write"
+              "system/claim.read",
+              "system/claim.write"
             ]
           },
           {
@@ -1537,12 +1537,12 @@
         "security": [
           {
             "productionOauth": [
-              "claim.write"
+              "system/claim.write"
             ]
           },
           {
             "sandboxOauth": [
-              "claim.write"
+              "system/claim.write"
             ]
           },
           {
@@ -1714,12 +1714,12 @@
         "security": [
           {
             "productionOauth": [
-              "claim.read"
+              "system/claim.read"
             ]
           },
           {
             "sandboxOauth": [
-              "claim.read"
+              "system/claim.read"
             ]
           },
           {
@@ -1756,60 +1756,70 @@
             "content": {
               "application/json": {
                 "example": {
-                  "id": "193685",
-                  "type": "intent_to_file",
-                  "attributes": {
-                    "creationDate": "2021-03-16T19:15:21.000-05:00",
-                    "expirationDate": "2022-03-16T19:15:20.000-05:00",
-                    "type": "compensation",
-                    "status": "active"
+                  "data": {
+                    "id": "193685",
+                    "type": "intent_to_file",
+                    "attributes": {
+                      "creationDate": "2021-03-16T19:15:21.000-05:00",
+                      "expirationDate": "2022-03-16T19:15:20.000-05:00",
+                      "type": "compensation",
+                      "status": "active"
+                    }
                   }
                 },
                 "schema": {
                   "$schema": "http://json-schema.org/draft-04/schema#",
-                  "type": "object",
-                  "additionalProperties": false,
                   "required": [
-                    "id",
-                    "type"
+                    "data"
                   ],
                   "properties": {
-                    "id": {
-                      "type": "string",
-                      "description": "Intent To File ID",
-                      "example": "600131328"
-                    },
-                    "type": {
-                      "type": "string",
-                      "example": "intent_to_file"
-                    },
-                    "attributes": {
+                    "data": {
+                      "type": "object",
+                      "additionalProperties": false,
                       "required": [
-                        "creationDate",
-                        "expirationDate",
-                        "status",
-                        "type"
+                        "id",
+                        "type",
+                        "attributes"
                       ],
                       "properties": {
-                        "creationDate": {
+                        "id": {
                           "type": "string",
-                          "format": "date",
-                          "description": "Date the Intent to File was received at the VA"
-                        },
-                        "expirationDate": {
-                          "type": "string",
-                          "format": "date",
-                          "description": "Date the Intent to File expires, this is 1 year from the createdDate"
-                        },
-                        "status": {
-                          "type": "string",
-                          "description": "The status of the Intent to File",
-                          "example": "active"
+                          "description": "Intent To File ID",
+                          "example": "600131328"
                         },
                         "type": {
                           "type": "string",
-                          "description": "The type of Intent to File filed.",
-                          "example": "compensation"
+                          "example": "intent_to_file"
+                        },
+                        "attributes": {
+                          "required": [
+                            "creationDate",
+                            "expirationDate",
+                            "status",
+                            "type"
+                          ],
+                          "properties": {
+                            "creationDate": {
+                              "type": "string",
+                              "format": "date",
+                              "description": "Date the Intent to File was received at the VA"
+                            },
+                            "expirationDate": {
+                              "type": "string",
+                              "format": "date",
+                              "description": "Date the Intent to File expires, this is 1 year from the createdDate"
+                            },
+                            "status": {
+                              "type": "string",
+                              "description": "The status of the Intent to File",
+                              "example": "active"
+                            },
+                            "type": {
+                              "type": "string",
+                              "description": "The type of Intent to File filed.",
+                              "example": "compensation"
+                            }
+                          }
                         }
                       }
                     }
@@ -1990,14 +2000,14 @@
         "security": [
           {
             "productionOauth": [
-              "claim.read",
-              "claim.write"
+              "system/claim.read",
+              "system/claim.write"
             ]
           },
           {
             "sandboxOauth": [
-              "claim.read",
-              "claim.write"
+              "system/claim.read",
+              "system/claim.write"
             ]
           },
           {
@@ -2025,60 +2035,70 @@
             "content": {
               "application/json": {
                 "example": {
-                  "id": "1",
-                  "type": "intent_to_file",
-                  "attributes": {
-                    "creationDate": "2023-03-16",
-                    "expirationDate": "2024-03-16",
-                    "type": "compensation",
-                    "status": "active"
+                  "data": {
+                    "id": "1",
+                    "type": "intent_to_file",
+                    "attributes": {
+                      "creationDate": "2023-04-03",
+                      "expirationDate": "2024-04-03",
+                      "type": "compensation",
+                      "status": "active"
+                    }
                   }
                 },
                 "schema": {
                   "$schema": "http://json-schema.org/draft-04/schema#",
-                  "type": "object",
-                  "additionalProperties": false,
                   "required": [
-                    "id",
-                    "type"
+                    "data"
                   ],
                   "properties": {
-                    "id": {
-                      "type": "string",
-                      "description": "Intent To File ID",
-                      "example": "600131328"
-                    },
-                    "type": {
-                      "type": "string",
-                      "example": "intent_to_file"
-                    },
-                    "attributes": {
+                    "data": {
+                      "type": "object",
+                      "additionalProperties": false,
                       "required": [
-                        "creationDate",
-                        "expirationDate",
-                        "status",
-                        "type"
+                        "id",
+                        "type",
+                        "attributes"
                       ],
                       "properties": {
-                        "creationDate": {
+                        "id": {
                           "type": "string",
-                          "format": "date",
-                          "description": "Date the Intent to File was received at the VA"
-                        },
-                        "expirationDate": {
-                          "type": "string",
-                          "format": "date",
-                          "description": "Date the Intent to File expires, this is 1 year from the createdDate"
-                        },
-                        "status": {
-                          "type": "string",
-                          "description": "The status of the Intent to File",
-                          "example": "active"
+                          "description": "Intent To File ID",
+                          "example": "600131328"
                         },
                         "type": {
                           "type": "string",
-                          "description": "The type of Intent to File filed.",
-                          "example": "compensation"
+                          "example": "intent_to_file"
+                        },
+                        "attributes": {
+                          "required": [
+                            "creationDate",
+                            "expirationDate",
+                            "status",
+                            "type"
+                          ],
+                          "properties": {
+                            "creationDate": {
+                              "type": "string",
+                              "format": "date",
+                              "description": "Date the Intent to File was received at the VA"
+                            },
+                            "expirationDate": {
+                              "type": "string",
+                              "format": "date",
+                              "description": "Date the Intent to File expires, this is 1 year from the createdDate"
+                            },
+                            "status": {
+                              "type": "string",
+                              "description": "The status of the Intent to File",
+                              "example": "active"
+                            },
+                            "type": {
+                              "type": "string",
+                              "description": "The type of Intent to File filed.",
+                              "example": "compensation"
+                            }
+                          }
                         }
                       }
                     }
@@ -2345,14 +2365,14 @@
         "security": [
           {
             "productionOauth": [
-              "claim.read",
-              "claim.write"
+              "system/claim.read",
+              "system/claim.write"
             ]
           },
           {
             "sandboxOauth": [
-              "claim.read",
-              "claim.write"
+              "system/claim.read",
+              "system/claim.write"
             ]
           },
           {
@@ -2381,7 +2401,7 @@
               "application/json": {
                 "example": {
                   "data": {
-                    "type": "intentToFileValidation",
+                    "type": "intent_to_file_validation",
                     "attributes": {
                       "status": "valid"
                     }

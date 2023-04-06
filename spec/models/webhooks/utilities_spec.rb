@@ -35,7 +35,7 @@ describe Webhooks::Utilities, type: :model do
     # load dependent models
     module Testing
       include Webhooks::Utilities
-      EVENTS = %w[model_event model_event2].freeze
+      EVENTS = %w[model_event model_event2].freeze unless defined? EVENTS
       register_events(*EVENTS, api_name: API_NAME, max_retries: 3) do
         'working!'
       end
@@ -64,7 +64,7 @@ describe Webhooks::Utilities, type: :model do
     expect(subscription.events.eql?(observers)).to be true
 
     Testing::EVENTS.each do |e|
-      params = { consumer_id: consumer_id, consumer_name: consumer_name, event: e, api_guid: api_guid, msg: msg }
+      params = { consumer_id:, consumer_name:, event: e, api_guid:, msg: }
       notifications = Webhooks::Utilities.record_notifications(**params)
       validate_common_columns(subscription, notifications)
       urls = notifications.map(&:callback_url)

@@ -12,6 +12,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+      # Lock back to an @v1-version once https://github.com/ruby/setup-ruby/pull/491 is merged
       - uses: ruby/setup-ruby@v1
         with:
           bundler-cache: true
@@ -22,9 +23,8 @@ jobs:
       - name: Run Rubocop
         run: bundle exec rubocop --parallel --format github
 
-      # Remove no-exit-on-warn when we upgrade to Ruby 3
       - name: Run Brakeman
-        run:  bundle exec brakeman --ensure-latest --confidence-level=2 --format github --no-exit-on-warn
+        run:  bundle exec brakeman --ensure-latest --confidence-level=2 --format github
 
   tests:
     name: Test

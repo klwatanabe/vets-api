@@ -12,7 +12,7 @@ module DirectDeposit
   class Configuration < Common::Client::Configuration::REST
     self.read_timeout = Settings.lighthouse.direct_deposit.timeout || 20
 
-    API_SCOPES = %w[direct.deposit.fake direct.deposit.write].freeze
+    API_SCOPES = %w[direct.deposit.read direct.deposit.write].freeze
     DIRECT_DEPOSIT_PATH = 'services/direct-deposit-management/v1/direct-deposit'
     TOKEN_PATH = 'oauth2/direct-deposit-management/system/v1/token'
 
@@ -34,7 +34,7 @@ module DirectDeposit
     # @return [String] Service name to use in breakers and metrics.
     #
     def service_name
-      'DirectDeposit'
+      'LIGHTHOUSE_DIRECT_DEPOSIT'
     end
 
     ##
@@ -58,14 +58,12 @@ module DirectDeposit
     #
     def connection
       @conn ||= Faraday.new(base_path, headers: base_request_headers, request: request_options) do |faraday|
-        faraday.use      :breakers
-        faraday.use      Faraday::Response::RaiseError
-
-        faraday.request :multipart
+        faraday.use :breakers
         faraday.request :json
 
         faraday.response :betamocks if use_mocks?
         faraday.response :json
+
         faraday.adapter Faraday.default_adapter
       end
     end

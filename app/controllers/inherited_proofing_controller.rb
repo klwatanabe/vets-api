@@ -11,14 +11,14 @@ class InheritedProofingController < ApplicationController
   skip_before_action :verify_authenticity_token, :authenticate, only: [:user_attributes]
   before_action :authenticate_auth_code_access_token, only: [:user_attributes]
 
-  BEARER_PATTERN = /^Bearer /.freeze
+  BEARER_PATTERN = /^Bearer /
 
   def auth
     auth_code = InheritedProofing::MHV::InheritedProofingVerifier.new(@current_user).perform
 
     raise unless auth_code
 
-    render body: logingov_inherited_proofing_service.render_auth(auth_code: auth_code),
+    render body: logingov_inherited_proofing_service.render_auth(auth_code:),
            content_type: 'text/html'
   rescue => e
     render json: { errors: e }, status: :bad_request
@@ -26,7 +26,7 @@ class InheritedProofingController < ApplicationController
 
   def user_attributes
     user_attributes = InheritedProofing::UserAttributesFetcher.new(auth_code: @auth_code).perform
-    encrypted_attributes = InheritedProofing::UserAttributesEncryptor.new(user_attributes: user_attributes).perform
+    encrypted_attributes = InheritedProofing::UserAttributesEncryptor.new(user_attributes:).perform
     render json: { data: encrypted_attributes }
   rescue => e
     render json: { errors: e }, status: :bad_request
@@ -46,7 +46,7 @@ class InheritedProofingController < ApplicationController
   def auth_code_bearer_token
     header = request.authorization
     access_token_jwt = header.gsub(BEARER_PATTERN, '') if header&.match(BEARER_PATTERN)
-    InheritedProofing::JwtDecoder.new(access_token_jwt: access_token_jwt).perform
+    InheritedProofing::JwtDecoder.new(access_token_jwt:).perform
   end
 
   def authenticate_auth_code_access_token

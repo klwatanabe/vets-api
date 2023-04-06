@@ -26,7 +26,7 @@ class AppealsApi::V2::DecisionReviews::HigherLevelReviewsController < AppealsApi
   SCHEMA_ERROR_TYPE = Common::Exceptions::DetailedSchemaErrors
   ALLOWED_COLUMNS = %i[id status code detail created_at updated_at].freeze
   ICN_HEADER = 'X-VA-ICN'
-  ICN_REGEX = /^[0-9]{10}V[0-9]{6}$/.freeze
+  ICN_REGEX = /^[0-9]{10}V[0-9]{6}$/
 
   def index
     veteran_hlrs = AppealsApi::HigherLevelReview.select(ALLOWED_COLUMNS)
@@ -108,7 +108,7 @@ class AppealsApi::V2::DecisionReviews::HigherLevelReviewsController < AppealsApi
 
     return if error.blank?
 
-    render status: status, json: error
+    render status:, json: error
   end
 
   def validation_success

@@ -69,26 +69,43 @@ module ClaimsApi
       body.to_s
     end
 
-    def parsed_response(res, action, key)
+    def parsed_response(res, action, key = nil)
       parsed = Hash.from_xml(res.body)
-      parsed.dig('Envelope', 'Body', "#{action}Response", key)
-            &.deep_transform_keys(&:underscore)
-            &.deep_symbolize_keys || {}
+      if action == 'findIntentToFileByPtcpntIdItfTypeCd'
+        itf_response = []
+        [parsed.dig('Envelope', 'Body', "#{action}Response", key)].flatten.each do |itf|
+          return itf_response if itf.nil?
+
+          temp = itf.deep_transform_keys(&:underscore)
+          &.deep_symbolize_keys
+          itf_response.push(temp)
+        end
+        return itf_response
+      end
+      if key.nil?
+        parsed.dig('Envelope', 'Body', "#{action}Response")
+              &.deep_transform_keys(&:underscore)
+              &.deep_symbolize_keys || {}
+      else
+        parsed.dig('Envelope', 'Body', "#{action}Response", key)
+              &.deep_transform_keys(&:underscore)
+              &.deep_symbolize_keys || {}
+      end
     end
 
-    def make_request(endpoint:, action:, body:, key:) # rubocop:disable Metrics/MethodLength
+    def make_request(endpoint:, action:, body:, key: nil) # rubocop:disable Metrics/MethodLength
       connection = log_duration event: 'establish_ssl_connection' do
         Faraday::Connection.new(ssl: { verify_mode: @ssl_verify_mode })
       end
       connection.options.timeout = @timeout
 
-      wsdl = log_duration event: 'connection_wsdl_get', endpoint: endpoint do
+      wsdl = log_duration(event: 'connection_wsdl_get', endpoint:) do
         connection.get("#{Settings.bgs.url}/#{endpoint}?WSDL")
       end
       target_namespace = Hash.from_xml(wsdl.body).dig('definitions', 'targetNamespace')
-      response = log_duration event: 'connection_post', endpoint: endpoint, action: action do
-        connection.post("#{Settings.bgs.url}/#{endpoint}", full_body(action: action,
-                                                                     body: body,
+      response = log_duration(event: 'connection_post', endpoint:, action:) do
+        connection.post("#{Settings.bgs.url}/#{endpoint}", full_body(action:,
+                                                                     body:,
                                                                      namespace: target_namespace),
                         {
                           'Content-Type' => 'text/xml;charset=UTF-8',
@@ -96,7 +113,8 @@ module ClaimsApi
                           'Soapaction' => "\"#{action}\""
                         })
       end
-      log_duration event: 'parsed_response', key: key do
+
+      log_duration(event: 'parsed_response', key:) do
         parsed_response(response, action, key)
       end
     end
@@ -110,7 +128,7 @@ module ClaimsApi
         body.xpath("./*[local-name()='#{k}']")[0].content = v
       end
 
-      make_request(endpoint: 'ClaimantServiceBean/ClaimantWebService', action: 'findPOAByPtcpntId', body: body,
+      make_request(endpoint: 'ClaimantServiceBean/ClaimantWebService', action: 'findPOAByPtcpntId', body:,
                    key: 'return')
     end
 
@@ -119,11 +137,11 @@ module ClaimsApi
         <ssn />
       EOXML
 
-      { ssn: ssn }.each do |k, v|
+      { ssn: }.each do |k, v|
         body.xpath("./*[local-name()='#{k}']")[0].content = v
       end
 
-      make_request(endpoint: 'PersonWebServiceBean/PersonWebService', action: 'findPersonBySSN', body: body,
+      make_request(endpoint: 'PersonWebServiceBean/PersonWebService', action: 'findPersonBySSN', body:,
                    key: 'PersonDTO')
     end
 
@@ -136,11 +154,94 @@ module ClaimsApi
         body.xpath("./*[local-name()='#{k}']")[0].content = v
       end
 
-      make_request(endpoint: 'OrgWebServiceBean/OrgWebService', action: 'findPoaHistoryByPtcpntId', body: body,
+      make_request(endpoint: 'OrgWebServiceBean/OrgWebService', action: 'findPoaHistoryByPtcpntId', body:,
                    key: 'PoaHistory')
     end
 
+    def find_benefit_claims_status_by_ptcpnt_id(id)
+      body = Nokogiri::XML::DocumentFragment.parse <<~EOXML
+        <ptcpntId />
+      EOXML
+
+      { ptcpntId: id }.each do |k, v|
+        body.xpath("./*[local-name()='#{k}']")[0].content = v
+      end
+
+      make_request(endpoint: 'EBenefitsBnftClaimStatusWebServiceBean/EBenefitsBnftClaimStatusWebService',
+                   action: 'findBenefitClaimsStatusByPtcpntId', body:)
+    end
+
+    def find_benefit_claim_details_by_benefit_claim_id(id)
+      body = Nokogiri::XML::DocumentFragment.parse <<~EOXML
+        <bnftClaimId />
+      EOXML
+
+      { bnftClaimId: id }.each do |k, v|
+        body.xpath("./*[local-name()='#{k}']")[0].content = v
+      end
+
+      make_request(endpoint: 'EBenefitsBnftClaimStatusWebServiceBean/EBenefitsBnftClaimStatusWebService',
+                   action: 'findBenefitClaimDetailsByBnftClaimId', body:)
+    end
+
+    def insert_intent_to_file(options)
+      request_body = construct_itf_body(options)
+      body = Nokogiri::XML::DocumentFragment.parse <<~EOXML
+        <intentToFileDTO>
+        </intentToFileDTO>
+      EOXML
+
+      request_body.each do |k, z|
+        node = Nokogiri::XML::Node.new k.to_s, body
+        node.content = z.to_s
+        opt = body.at('intentToFileDTO')
+        node.parent = opt
+      end
+      make_request(endpoint: 'IntentToFileWebServiceBean/IntentToFileWebService', action: 'insertIntentToFile',
+                   body:, key: 'IntentToFileDTO')
+    end
+
+    def find_tracked_items(id)
+      body = Nokogiri::XML::DocumentFragment.parse <<~EOXML
+        <claimId />
+      EOXML
+
+      { claimId: id }.each do |k, v|
+        body.xpath("./*[local-name()='#{k}']")[0].content = v
+      end
+
+      make_request(endpoint: 'TrackedItemService/TrackedItemService', action: 'findTrackedItems', body:,
+                   key: 'BenefitClaim')
+    end
+
+    def find_intent_to_file_by_ptcpnt_id_itf_type_cd(id, type)
+      body = Nokogiri::XML::DocumentFragment.parse <<~EOXML
+        <ptcpntId></ptcpntId><itfTypeCd></itfTypeCd>
+      EOXML
+
+      ptcpnt_id = body.at 'ptcpntId'
+      ptcpnt_id.content = id.to_s
+      itf_type_cd = body.at 'itfTypeCd'
+      itf_type_cd.content = type.to_s
+
+      make_request(endpoint: 'IntentToFileWebServiceBean/IntentToFileWebService',
+                   action: 'findIntentToFileByPtcpntIdItfTypeCd', body:, key: 'IntentToFileDTO')
+    end
+
     private
+
+    def construct_itf_body(options)
+      request_body = {
+        itfTypeCd: options[:intent_to_file_type_code],
+        ptcpntVetId: options[:participant_vet_id],
+        rcvdDt: options[:received_date],
+        signtrInd: options[:signature_indicated],
+        submtrApplcnTypeCd: options[:submitter_application_icn_type_code]
+      }
+      request_body[:ptcpntClmantId] = options[:participant_claimant_id] if options.key?(:participant_claimant_id)
+      request_body[:clmantSsn] = options[:claimant_ssn] if options.key?(:claimant_ssn)
+      request_body
+    end
 
     def log_duration(event: 'default', **extra_params)
       # Who are we to question sidekiq's use of CLOCK_MONOTONIC to avoid negative durations?
@@ -150,7 +251,7 @@ module ClaimsApi
       duration = (::Process.clock_gettime(::Process::CLOCK_MONOTONIC) - start_time).round(4)
 
       # event should be first key in log, duration last
-      ClaimsApi::Logger.log 'local_bgs', **{ event: event }.merge(extra_params).merge({ duration: duration })
+      ClaimsApi::Logger.log 'local_bgs', **{ event: }.merge(extra_params).merge({ duration: })
       StatsD.measure("api.claims_api.local_bgs.#{event}.duration", duration, tags: {})
       result
     end

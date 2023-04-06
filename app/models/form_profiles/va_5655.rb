@@ -39,7 +39,7 @@ class FormProfiles::VA5655 < FormProfile
 
     file_number =
       begin
-        response = BGS::People::Request.new.find_person_by_participant_id(user: user)
+        response = BGS::People::Request.new.find_person_by_participant_id(user:)
         response.file_number.presence || user.ssn
       rescue
         user.ssn
@@ -64,6 +64,6 @@ class FormProfiles::VA5655 < FormProfile
     last_month = Time.zone.today - 30.days
 
     # Filter to only use recent payments from last 30 days
-    payments&.select { |payment| payment[:payment_date] > last_month }&.last&.[](:payment_amount)
+    payments&.select { |payment| Date.parse(payment[:payment_date].to_s) > last_month }&.last&.[](:payment_amount)
   end
 end

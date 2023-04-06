@@ -143,7 +143,7 @@ class FormProfile
     '26-4555' => ::FormProfiles::VA264555
   }.freeze
 
-  APT_REGEX = /\S\s+((apt|apartment|unit|ste|suite).+)/i.freeze
+  APT_REGEX = /\S\s+((apt|apartment|unit|ste|suite).+)/i
 
   attr_reader :form_id, :user
 
@@ -160,7 +160,7 @@ class FormProfile
   # lookup FormProfile subclass by form_id and initialize (or use FormProfile if lookup fails)
   def self.for(form_id:, user:)
     form_id = form_id.upcase
-    FORM_ID_TO_CLASS.fetch(form_id, self).new(form_id: form_id, user: user)
+    FORM_ID_TO_CLASS.fetch(form_id, self).new(form_id:, user:)
   end
 
   def initialize(form_id:, user:)
@@ -201,7 +201,7 @@ class FormProfile
     form = form_id == '1010EZ' ? '1010ez' : form_id
     form_data = generate_prefill(mappings) if FormProfile.prefill_enabled_forms.include?(form)
 
-    { form_data: form_data, metadata: metadata }
+    { form_data:, metadata: }
   end
 
   private

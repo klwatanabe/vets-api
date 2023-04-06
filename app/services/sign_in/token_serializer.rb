@@ -16,6 +16,10 @@ module SignIn
         {}
       elsif api_authentication_client?
         token_json_response
+      elsif mock_authentication_client?
+        set_cookies
+        set_info_cookie
+        token_json_response
       end
     end
 
@@ -38,9 +42,9 @@ module SignIn
 
     def set_cookie!(name:, value:, expires:, path: '/')
       cookies[name] = {
-        value: value,
-        expires: expires,
-        path: path,
+        value:,
+        expires:,
+        path:,
         secure: Settings.sign_in.cookies_secure,
         httponly: true
       }
@@ -48,7 +52,7 @@ module SignIn
 
     def set_info_cookie
       cookies[Constants::Auth::INFO_COOKIE_NAME] = {
-        value: info_cookie_value,
+        value: info_cookie_value.to_json,
         expires: session_expiration,
         secure: Settings.sign_in.cookies_secure,
         httponly: false,
@@ -58,7 +62,7 @@ module SignIn
 
     def info_cookie_value
       {
-        access_token_expiration: access_token_expiration,
+        access_token_expiration:,
         refresh_token_expiration: session_expiration
       }
     end
@@ -81,6 +85,10 @@ module SignIn
 
     def api_authentication_client?
       client_config.api_auth?
+    end
+
+    def mock_authentication_client?
+      client_config.mock_auth?
     end
 
     def anti_csrf_enabled_client?

@@ -20,7 +20,7 @@ module SignIn
     validates :logout_redirect_uri, presence: true, if: :cookie_auth?
 
     def self.valid_client_id?(client_id:)
-      find_by(client_id: client_id).present?
+      find_by(client_id:).present?
     end
 
     def cookie_auth?
@@ -29,6 +29,16 @@ module SignIn
 
     def api_auth?
       authentication == Constants::Auth::API
+    end
+
+    def mock_auth?
+      authentication == Constants::Auth::MOCK && appropriate_mock_environment?
+    end
+
+    private
+
+    def appropriate_mock_environment?
+      %w[test localhost development].include?(Settings.vsp_environment)
     end
   end
 end

@@ -9,19 +9,19 @@ RSpec.describe 'Evidence Waiver 5103', type: :request,
   let(:claim_id) { '600131328' }
   let(:sub_path) { "/services/claims/v2/veterans/#{veteran_id}/claims/#{claim_id}/5103" }
   let(:error_sub_path) { "/services/claims/v2/veterans/#{veteran_id}/claims/abc123/5103" }
-  let(:scopes) { %w[claim.read] }
+  let(:scopes) { %w[system/claim.read] }
   let(:ews) { build(:claims_api_evidence_waiver_submission) }
   let(:payload) do
     { 'ver' => 1,
       'cid' => '0oa8r55rjdDAH5Vaj2p7',
-      'scp' => ['claim.write', 'claim.read'],
+      'scp' => ['system/claim.write', 'system/claim.read'],
       'sub' => '0oa8r55rjdDAH5Vaj2p7' }
   end
 
   describe '5103 Waiver' do
     describe 'submit' do
       context 'Vet flow' do
-        let(:ccg_token) { OpenStruct.new(client_credentials_token?: true, payload: payload) }
+        let(:ccg_token) { OpenStruct.new(client_credentials_token?: true, payload:) }
 
         context 'when provided' do
           context 'when valid' do
