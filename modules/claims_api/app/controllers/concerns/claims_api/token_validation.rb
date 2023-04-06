@@ -37,7 +37,7 @@ module ClaimsApi
         response = RestClient.post(Settings.claims_api.token_validation_url,
                                    payload,
                                    { Authorization: "Bearer #{token_string}",
-                                     apiKey: Settings.claims_api.token_validation_api_key })
+                                     apiKey: Settings.claims_api.token_validation })
         raise raise Common::Exceptions::TokenValidationError.new("Token validation error") if response.nil?
 
         @validated_token_payload = JSON.parse(response.body) if response.code == 200
