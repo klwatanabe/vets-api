@@ -24,6 +24,7 @@ module ClaimsApi
         attributes = @validated_token['attributes']
         @is_valid_ccg_flow ||= attributes['type'] == 'system'
         return if @is_valid_ccg_flow
+
         @current_user = user_from_validated_token(@validated_token)
       end
 
@@ -42,7 +43,7 @@ module ClaimsApi
 
         @validated_token_payload = JSON.parse(response.body) if response.code == 200
       rescue => e
-        raise  ::Common::Exceptions::Unauthorized if e.to_s.include?('401')
+        raise ::Common::Exceptions::Unauthorized if e.to_s.include?('401')
       end
     end
 
@@ -69,6 +70,7 @@ module ClaimsApi
 
     def permit_scopes(scopes, actions: [])
       return false unless @validated_token
+
       attributes = @validated_token['attributes']
       if (actions.empty? ||
         Array.wrap(actions).map(&:to_s).include?(action_name)) && (Array.wrap(scopes) & attributes['scp']).empty?

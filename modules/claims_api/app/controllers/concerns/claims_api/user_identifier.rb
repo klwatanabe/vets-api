@@ -2,7 +2,7 @@ module ClaimsApi
   class UserIdentifier
     def initialize(id)
       @id = id
-      @loa = {:current => 3, :highest => 3}
+      @loa = { :current => 3, :highest => 3 }
     end
 
     def set_icn(icn)

@@ -60,7 +60,6 @@ module ClaimsApi
         @current_user.icn == target_veteran.mpi.icn
       end
 
-
       #
       # Determine if the current authenticated user is the target veteran's representative
       #

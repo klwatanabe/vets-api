@@ -13,7 +13,7 @@ module ClaimsApi
                             elsif user_is_representative?
                               build_target_veteran(veteran_id: params[:veteranId], loa: @current_user.loa)
                             else
-                              raise  ::Common::Exceptions::Unauthorized
+                              raise ::Common::Exceptions::Unauthorized
                             end
       end
 
@@ -29,7 +29,7 @@ module ClaimsApi
         unless found_record
           raise ::Common::Exceptions::ResourceNotFound.new(detail:
                                                              "Unable to locate Veteran's ID/ICN in Master Person Index (MPI). " \
-            'Please submit an issue at ask.va.gov or call 1-800-MyVA411 (800-698-2411) for assistance.')
+                                                             'Please submit an issue at ask.va.gov or call 1-800-MyVA411 (800-698-2411) for assistance.')
         end
 
         mpi_profile = target_veteran&.mpi&.mvi_response&.profile || {}
@@ -37,7 +37,7 @@ module ClaimsApi
         if mpi_profile[:participant_id].blank?
           raise ::Common::Exceptions::UnprocessableEntity.new(detail:
                                                                 "Unable to locate Veteran's Participant ID in Master Person Index (MPI). " \
-            'Please submit an issue at ask.va.gov or call 1-800-MyVA411 (800-698-2411) for assistance.')
+                                                                'Please submit an issue at ask.va.gov or call 1-800-MyVA411 (800-698-2411) for assistance.')
         end
 
         target_veteran[:first_name] = mpi_profile[:given_names]&.first
@@ -68,8 +68,6 @@ module ClaimsApi
           last_name: @current_user.last_name
         ).present?
       end
-
     end
   end
 end
-
