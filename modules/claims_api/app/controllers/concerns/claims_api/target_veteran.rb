@@ -39,7 +39,7 @@ module ClaimsApi
         if mpi_profile[:participant_id].blank?
           raise ::Common::Exceptions::UnprocessableEntity.new(detail:
                                                                 "Unable to locate Veteran's Participant ID " \
-                                                                "in Master Person Index (MPI). " \
+                                                                'in Master Person Index (MPI). ' \
                                                                 'Please submit an issue at ask.va.gov ' \
                                                                 'or call 1-800-MyVA411 (800-698-2411) for assistance.')
         end
