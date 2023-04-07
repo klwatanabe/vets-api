@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module ClaimsApi
   class ClaimsUser
     def initialize(id)
@@ -17,16 +19,12 @@ module ClaimsApi
       @identifier.loa
     end
 
-    attr_reader :uuid
+    attr_reader :uuid, :first_name, :last_name
 
     def first_name_last_name(first_name, last_name)
       @first_name = first_name
       @last_name = last_name
       @identifier.first_name_last_name(first_name, last_name)
     end
-
-    attr_reader :first_name
-
-    attr_reader :last_name
   end
 end
