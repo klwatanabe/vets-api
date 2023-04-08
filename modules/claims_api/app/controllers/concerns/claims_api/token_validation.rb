@@ -34,10 +34,10 @@ module ClaimsApi
         root_url = request.base_url == 'https://api.va.gov' ? 'https://api.va.gov' : 'https://sandbox-api.va.gov'
         audience = "#{root_url}/services/claims"
         payload = { aud: audience }
-        response = RestClient.post(Settings.claims_api.token_validation_url,
+        response = RestClient.post(Settings.claims_api.token_validation.url,
                                    payload,
                                    { Authorization: "Bearer #{token_string}",
-                                     apiKey: Settings.claims_api.token_validation })
+                                     apiKey: Settings.claims_api.token_validation.api_key })
         raise raise Common::Exceptions::TokenValidationError, 'Token validation error' if response.nil?
 
         @validated_token_payload = JSON.parse(response.body) if response.code == 200
