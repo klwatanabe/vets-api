@@ -5,10 +5,9 @@ require 'rest-client'
 module ClaimsApi
   module TokenValidation
     extend ActiveSupport::Concern
+    TOKEN_REGEX = /Bearer /
 
     included do
-      TOKEN_REGEX = /Bearer /.freeze
-
       def verify_access!
         verify_access_token!
       rescue => e
