@@ -410,7 +410,8 @@ evss:
 
 # Settings for GI Bill Data Service
 gids:
-  url: https://dev.va.gov/gids
+  #url: https://dev.va.gov/gids
+  url: localhost:4000
   open_timeout: 1
   read_timeout: 1
 
