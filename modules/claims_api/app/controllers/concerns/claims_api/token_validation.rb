@@ -10,7 +10,7 @@ module ClaimsApi
     included do
       def verify_access!
         verify_access_token!
-      rescue => e
+      rescue
         render_unauthorized
       end
 
@@ -38,7 +38,7 @@ module ClaimsApi
                                    payload,
                                    { Authorization: "Bearer #{token_string}",
                                      apiKey: Settings.claims_api.token_validation })
-        raise raise Common::Exceptions::TokenValidationError.new("Token validation error") if response.nil?
+        raise raise Common::Exceptions::TokenValidationError, 'Token validation error' if response.nil?
 
         @validated_token_payload = JSON.parse(response.body) if response.code == 200
       rescue => e
@@ -50,12 +50,11 @@ module ClaimsApi
       auth_request = request.authorization.to_s
       return unless auth_request[TOKEN_REGEX]
 
-      token_string = auth_request.sub(TOKEN_REGEX, '').gsub(/^"|"$/, '')
+      auth_request.sub(TOKEN_REGEX, '').gsub(/^"|"$/, '')
     end
 
     def user_from_validated_token(validated_token)
       attributes = validated_token['attributes']
-      ttl = attributes['exp'] - Time.current.utc.to_i
       uid = attributes['uid']
       act = attributes['act']
       icn = act['icn']
@@ -72,7 +71,7 @@ module ClaimsApi
 
       attributes = @validated_token['attributes']
       if (actions.empty? ||
-        Array.wrap(actions).map(&:to_s).include?(action_name)) && (Array.wrap(scopes) & attributes['scp']).empty?
+        Array.wrap(actions).map(&:to_s).include?(action_name)) && !Array.wrap(scopes).intersect?(attributes['scp'])
         render_unauthorized
       end
     end
