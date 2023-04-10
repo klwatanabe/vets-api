@@ -34,6 +34,11 @@ module ClaimsApi
         root_url = request.base_url == 'https://api.va.gov' ? 'https://api.va.gov' : 'https://sandbox-api.va.gov'
         audience = "#{root_url}/services/claims"
         payload = { aud: audience }
+        token_validation_url = if Settings.claims_api.token_validation.url.nil?
+                                 'https://dev-api.va.gov/internal/auth/v3/validation'
+                               else
+                                 Settings.claims_api.token_validation.url
+                               end
         response = RestClient.post(Settings.claims_api.token_validation.url,
                                    payload,
                                    { Authorization: "Bearer #{token_string}",
