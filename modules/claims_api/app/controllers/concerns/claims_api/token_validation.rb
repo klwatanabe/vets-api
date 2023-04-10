@@ -39,7 +39,7 @@ module ClaimsApi
                                else
                                  Settings.claims_api.token_validation.url
                                end
-        response = RestClient.post(Settings.claims_api.token_validation.url,
+        response = RestClient.post(token_validation_url,
                                    payload,
                                    { Authorization: "Bearer #{token_string}",
                                      apiKey: Settings.claims_api.token_validation.api_key })
