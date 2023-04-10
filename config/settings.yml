@@ -59,6 +59,7 @@ sign_in:
   mock_auth_url: http://localhost:3000/mock_auth_frontend
   mock_redirect_uri: http://localhost:3000/v0/sign_in/callback
   mock_credential_dir: '../vets-api-mockdata'
+  mockdata_sync_api_key: ~
 
 lockbox:
   master_key: "0d78eaf0e90d4e7b8910c9112e16e66d8b00ec4054a89aa426e32712a13371e9"
@@ -293,7 +294,7 @@ modules_appeals_api:
       # Absolute path to the private key file matching the jwk:
       private_key_path: ''
   slack:
-    api_token: ''
+    api_key: ''
     appeals_channel_id: ''
   documentation:
     path_enabled_flag: false
@@ -580,7 +581,7 @@ vba_documents:
       - vagov-arn
   slack:
     enabled: false
-    api_token: ''
+    api_key: ''
     channel_id: ''
     default_alert_email: ''
     in_flight_notification_hung_time_in_days: 14
@@ -1112,7 +1113,7 @@ lighthouse:
     use_mocks: false
     access_token:
       path: oauth2/va-letter-generator/system/v1/token
-      client_id: ~ 
+      client_id: ~
       rsa_key: ~
       aud_claim_url: https://deptva-eval.okta.com/oauth2/ausftw7zk6eHr7gMN2p7/v1/token
   benefits_reference_data:
@@ -1217,6 +1218,7 @@ vanotify:
         preneeds_burial_form_email: preneeds_burial_form_email_template_id
         contact_info_change: fake_template_id
         form1990_confirmation_email: form1990_confirmation_email_template_id
+        form1990e_confirmation_email: form1990e_confirmation_email_template_id
         form526_confirmation_email: fake_template_id
         form526_submission_failed_email: fake_template_id
         form5490_confirmation_email: form5490_confirmation_email_template_id
@@ -1251,7 +1253,7 @@ va_forms:
   # A notification for when a forms url has changed
   slack:
     enabled: false
-    api_token: ''
+    api_key: ''
     channel_id: ''
 
 # Settings for connecting to genISIS, this is the storage system for the COVID Research initiative

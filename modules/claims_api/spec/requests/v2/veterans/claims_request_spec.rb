@@ -839,8 +839,9 @@ RSpec.describe 'Claims', type: :request do
 
                   json_response = JSON.parse(response.body)
                   expect(response.status).to eq(200)
-                  claim_contentions_res = json_response['data']['attributes']['contentionList']
-                  expect(claim_contentions_res).to eq(['c1 (New)', 'c2 (Old)', 'c3 (Unknown)'])
+                  claim_contentions_res = json_response['data']['attributes']['contentions']
+                  expect(claim_contentions_res).to eq([{ 'name' => 'c1 (New)' }, { 'name' => 'c2 (Old)' },
+                                                       { 'name' => 'c3 (Unknown)' }])
                 end
               end
             end
@@ -864,8 +865,9 @@ RSpec.describe 'Claims', type: :request do
 
                   json_response = JSON.parse(response.body)
                   expect(response.status).to eq(200)
-                  claim_contentions_res = json_response['data']['attributes']['contentionList']
-                  expect(claim_contentions_res).to eq(['Low back strain (New)', 'Knee, internal derangement (New)'])
+                  claim_contentions_res = json_response['data']['attributes']['contentions']
+                  expect(claim_contentions_res).to eq([{ 'name' => 'Low back strain (New)' },
+                                                       { 'name' => 'Knee, internal derangement (New)' }])
                 end
               end
             end
@@ -1032,14 +1034,17 @@ RSpec.describe 'Claims', type: :request do
 
                     json_response = JSON.parse(response.body)
                     first_doc_id = json_response['data']['attributes'].dig('trackedItems', 0, 'trackedItemId')
+                    resp_tracked_items = json_response['data']['attributes']['trackedItems']
                     expect(response.status).to eq(200)
                     expect(json_response).to be_an_instance_of(Hash)
                     expect(json_response['data']['id']).to eq('600236068')
                     expect(first_doc_id).to eq(325_525)
-                    expect(json_response['data']['attributes']['trackedItems'][0]['description']).to eq(
+                    expect(resp_tracked_items[0]['description']).to eq(nil)
+                    expect(resp_tracked_items[7]['description']).to start_with('On your application,')
+                    expect(json_response['data']['attributes']['trackedItems'][0]['displayName']).to eq(
                       'MG-not a recognized condition'
                     )
-                    expect(json_response['data']['attributes']['trackedItems'][1]['description']).to eq(
+                    expect(json_response['data']['attributes']['trackedItems'][1]['displayName']).to eq(
                       'Line of Duty determination from claimant'
                     )
                   end
