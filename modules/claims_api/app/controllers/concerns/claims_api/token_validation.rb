@@ -28,17 +28,15 @@ module ClaimsApi
       end
 
       def validate_token!
-        return nil unless Settings.claims_api.token_validation_url
-
-        token_string = token_string_from_request
-        root_url = request.base_url == 'https://api.va.gov' ? 'https://api.va.gov' : 'https://sandbox-api.va.gov'
-        audience = "#{root_url}/services/claims"
-        payload = { aud: audience }
         token_validation_url = if Settings.claims_api.token_validation.url.nil?
                                  'https://dev-api.va.gov/internal/auth/v3/validation'
                                else
                                  Settings.claims_api.token_validation.url
                                end
+        token_string = token_string_from_request
+        root_url = request.base_url == 'https://api.va.gov' ? 'https://api.va.gov' : 'https://sandbox-api.va.gov'
+        audience = "#{root_url}/services/claims"
+        payload = { aud: audience }
         response = RestClient.post(token_validation_url,
                                    payload,
                                    { Authorization: "Bearer #{token_string}",
