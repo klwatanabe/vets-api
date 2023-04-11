@@ -61,6 +61,14 @@ Applicant has graduated high school or received GED? <%= @applicant.minorHighSch
 
 <% end -%>
 <% end -%>
+<% unless Rails.env.production? -%>
+Restorative training: <%= yesno(@applicant.restorativeTraining) %>
+
+Vocational training: <%= yesno(@applicant.vocationalTraining) %>
+
+Would you like to receive vocational and educational counseling?: <%= yesno(@applicant.educationalCounseling) %>
+
+<% end -%>
 Name:   <%= full_name(@applicant.relativeFullName) %>
 
 Address:
@@ -117,6 +125,7 @@ Veteran's date of birth: <%= @applicant.veteranDateOfBirth %>
 Is qualifying individual on active duty: <%= yesno(@applicant.currentlyActiveDuty) %>
 
 Outstanding felony or warrant: <%= yesno(@applicant.outstandingFelony) %>
+<% if Rails.env.production? -%>
 
                   TYPE AND PROGRAM OF EDUCATION OR TRAINING
                   -----------------------------------------
@@ -136,7 +145,7 @@ Vocational training: <%= yesno(@applicant.vocationalTraining) %>
 In what state do you anticipate living while participating in this training: <%= @applicant.trainingState %>
 
 Would you like to receive vocational and educational counseling?: <%= yesno(@applicant.educationalCounseling) %>
-
+<% end -%>
 
                     APPLICATION HISTORY
                     -------------------
@@ -160,7 +169,7 @@ Served on active duty?: <%= yesno(@applicant.toursOfDuty.present?) %>
 
 <%= parse_with_template_path('tours_of_duty') %>
 
-
+<% if Rails.env.production? -%>
                     EDUCATION INFORMATION
                     ---------------------
 
@@ -178,6 +187,7 @@ Hours: <%= hours_and_type(@applicant.highSchool) %>
 Degree/Diploma/Certificate: <%= @applicant.highSchool&.degreeReceived %>
 
 <%= parse_with_template_path('post_high_school_trainings') %>
+<% end -%>
 <% if Rails.env.production? -%>
           ENTITLEMENT TO AND USAGE OF ADDITIONAL TYPES OF ASSISTANCE
           ----------------------------------------------------------
