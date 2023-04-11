@@ -15,16 +15,16 @@ module V1
     REDIRECT_URLS = %w[signup mhv mhv_verified dslogon dslogon_verified idme idme_verified idme_signup
                        idme_signup_verified logingov logingov_verified logingov_signup
                        logingov_signup_verified custom mfa verify slo].freeze
-    STATSD_SSO_NEW_KEY = 'api.auth.new'
-    STATSD_SSO_SAMLREQUEST_KEY = 'api.auth.saml_request'
-    STATSD_SSO_SAMLRESPONSE_KEY = 'api.auth.saml_response'
-    STATSD_SSO_CALLBACK_KEY = 'api.auth.saml_callback'
-    STATSD_SSO_CALLBACK_TOTAL_KEY = 'api.auth.login_callback.total'
-    STATSD_SSO_CALLBACK_FAILED_KEY = 'api.auth.login_callback.failed'
-    STATSD_LOGIN_NEW_USER_KEY = 'api.auth.new_user'
-    STATSD_LOGIN_STATUS_SUCCESS = 'api.auth.login.success'
-    STATSD_LOGIN_STATUS_FAILURE = 'api.auth.login.failure'
-    STATSD_LOGIN_LATENCY = 'api.auth.latency'
+    STATSD_SSO_NEW_KEY = 'api_auth_new'
+    STATSD_SSO_SAMLREQUEST_KEY = 'api_auth_saml_request'
+    STATSD_SSO_SAMLRESPONSE_KEY = 'api_auth_saml_response'
+    STATSD_SSO_CALLBACK_KEY = 'api_auth_saml_callback'
+    STATSD_SSO_CALLBACK_TOTAL_KEY = 'api_auth_login_callback_total'
+    STATSD_SSO_CALLBACK_FAILED_KEY = 'api_auth_login_callback_failed'
+    STATSD_LOGIN_NEW_USER_KEY = 'api_auth_new_user'
+    STATSD_LOGIN_STATUS_SUCCESS = 'api_auth_login_success'
+    STATSD_LOGIN_STATUS_FAILURE = 'api_auth_login_failure'
+    STATSD_LOGIN_LATENCY = 'api_auth_latency'
     VERSION_TAG = 'version:v1'
     FIM_INVALID_MESSAGE_TIMESTAMP = 'invalid_message_timestamp'
 
