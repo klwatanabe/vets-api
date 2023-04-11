@@ -29,7 +29,7 @@ module ClaimsApi
 
       def validate_token!
         token_validation_url = if Settings.claims_api.token_validation.url.nil?
-                                 'https://dev-api.va.gov/internal/auth/v3/validation'
+                                 'https://sandbox-api.va.gov/internal/auth/v3/validation'
                                else
                                  Settings.claims_api.token_validation.url
                                end
