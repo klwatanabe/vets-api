@@ -38,7 +38,7 @@ RSpec.describe 'health/rx/prescriptions', type: :request do
 
   describe 'GET /mobile/v0/health/rx/prescriptions/refill', :aggregate_failures do
     it 'returns all successful refills' do
-      VCR.use_cassette('rx_refill/prescriptions/refills_prescriptions') do
+      VCR.use_cassette('rx_refill/prescriptions/refills_prescriptions', match_requests_on: %i[method headers uri]) do
         put '/mobile/v0/health/rx/prescriptions/refill', params: { ids: %w[21530889 21539942] }, headers: iam_headers
       end
       expect(response).to have_http_status(:ok)

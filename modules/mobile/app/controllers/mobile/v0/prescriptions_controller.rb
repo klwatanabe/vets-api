@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'rx/client'
+require_relative '../../../services/mobile/v0/prescriptions/client'
 
 module Mobile
   module V0
@@ -76,7 +76,7 @@ module Mobile
       private
 
       def client
-        @client ||= Rx::Client.new(session: { user_id: @current_user.mhv_correlation_id }).authenticate
+        @client ||= Mobile::V0::Rx::Client.new(session: { user_id: @current_user.mhv_correlation_id }).authenticate
       end
 
       def pagination_params
