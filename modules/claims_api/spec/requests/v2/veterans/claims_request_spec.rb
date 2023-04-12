@@ -495,7 +495,7 @@ RSpec.describe 'Claims', type: :request do
                 claim_attributes = json_response['data']['attributes']
                 expect(claim_attributes['claimPhaseDates']['currentPhaseBack']).to eq(false)
                 expect(claim_attributes['claimPhaseDates']['latestPhaseType']).to eq('Preparation for Decision')
-                expect(claim_attributes['claimPhaseDates']['previousPhases']).to include("phase4CompleteDate")
+                expect(claim_attributes['claimPhaseDates']['previousPhases']).to include('phase4CompleteDate')
               end
             end
           end
