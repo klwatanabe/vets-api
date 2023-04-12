@@ -6,7 +6,7 @@ require 'claims_api/v2/mock_documents_service'
 module ClaimsApi
   module V2
     module Veterans
-      class ClaimsController < ClaimsApi::V2::ApplicationController # rubocop:disable Metrics/ClassLength
+      class ClaimsController < ClaimsApi::V2::ApplicationController
         before_action :verify_access!
 
         def index
@@ -247,7 +247,7 @@ module ClaimsApi
 
         def get_completed_phase_number_from_phase_details(details)
           if details[:phase_type_change_ind].present?
-            return if details[:phase_type_change_ind] == 'N'
+            return 'N' if details[:phase_type_change_ind] == 'N'
 
             details[:phase_type_change_ind].split('').first
           end
@@ -255,21 +255,10 @@ module ClaimsApi
 
         def get_bgs_phase_completed_dates(data)
           phase_dates = {}
-
-          if data&.dig(:benefit_claim_details_dto, :bnft_claim_lc_status).is_a?(Array)
-            max_completed_phase = 0
-            data[:benefit_claim_details_dto][:bnft_claim_lc_status].each_with_index do |lc, i|
-              completed_phase_number = get_completed_phase_number_from_phase_details(lc)
-              if i.zero?
-                max_completed_phase = completed_phase_number
-                phase_dates["phase#{completed_phase_number}CompleteDate"] = date_present(lc[:phase_chngd_dt])
-              elsif completed_phase_number.present? && completed_phase_number < max_completed_phase
-                phase_dates["phase#{completed_phase_number}CompleteDate"] = date_present(lc[:phase_chngd_dt])
-              end
-            end
-          else
-            date = data[:benefit_claim_details_dto][:bnft_claim_lc_status][:phase_chngd_dt]
-            phase_dates['phase1CompleteDate'] = date_present(date)
+          data_array = [data&.dig(:benefit_claim_details_dto, :bnft_claim_lc_status)]&.flatten&.compact
+          data_array.each_with_index do |lc, _i|
+            completed_phase_number = get_completed_phase_number_from_phase_details(lc)
+            phase_dates["phase#{completed_phase_number}CompleteDate"] = date_present(lc[:phase_chngd_dt])
           end
 
           phase_dates
