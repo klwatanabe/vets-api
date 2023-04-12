@@ -137,6 +137,9 @@ FactoryBot.define do
   factory :bgs_response_with_one_lc_status, class: OpenStruct do
     benefit_claim_details_dto { (association :bgs_claim_details_dto_with_one_lc_status).to_h }
   end
+  factory :bgs_response_with_can_lc_status, class: OpenStruct do
+    benefit_claim_details_dto { (association :bgs_canceled_claim_details_dto_with_one_lc_status).to_h }
+  end
   factory :bgs_response_with_lc_status, class: OpenStruct do
     benefit_claim_details_dto { (association :bgs_claim_details_dto_with_lc_status).to_h }
   end
@@ -162,6 +165,16 @@ FactoryBot.define do
     phase_type_change_ind { '76' }
     claim_status_type { 'Compensation' }
     bnft_claim_lc_status { [(association :bnft_claim_lc_status_one).to_h] }
+  end
+  factory :bgs_canceled_claim_details_dto_with_one_lc_status, class: OpenStruct do
+    benefit_claim_id { '111111111' }
+    phase_chngd_dt { Faker::Time.backward(days: 5, period: :morning) }
+    phase_type { 'Canceled' }
+    ptcpnt_clmant_id { Faker::Number.number(digits: 17) }
+    ptcpnt_vet_id { Faker::Number.number(digits: 17) }
+    phase_type_change_ind { '45' }
+    claim_status_type { 'Compensation' }
+    bnft_claim_lc_status { [(association :bnft_claim_lc_status_five).to_h] }
   end
   factory :bgs_claim_details_dto_with_lc_status, class: OpenStruct do
     benefit_claim_id { '111111111' }
@@ -207,9 +220,9 @@ FactoryBot.define do
     phase_type_change_ind { '34' }
   end
   factory :bnft_claim_lc_status_five, class: OpenStruct do
-    max_est_claim_complete_dt { Faker::Time.backward(days: 5, period: :morning) }
-    min_est_claim_complete_dt { Faker::Time.backward(days: 7, period: :morning) }
-    phase_chngd_dt { Faker::Time.backward(days: 6, period: :morning) }
+    max_est_claim_complete_dt { Faker::Time.backward(days: 5, period: :morning).to_date }
+    min_est_claim_complete_dt { Faker::Time.backward(days: 7, period: :morning).to_date }
+    phase_chngd_dt { Faker::Time.backward(days: 6, period: :morning).to_date }
     phase_type { 'Preparation for Decision' }
     phase_type_change_ind { '45' }
   end

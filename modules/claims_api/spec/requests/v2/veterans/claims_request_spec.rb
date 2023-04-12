@@ -445,6 +445,7 @@ RSpec.describe 'Claims', type: :request do
 
     describe 'show' do
       let(:bgs_claim_response) { build(:bgs_response_with_one_lc_status).to_h }
+      let(:canceled_bgs_claim) { build(:bgs_response_with_can_lc_status).to_h }
 
       before do
         allow_any_instance_of(ClaimsApi::V2::Veterans::ClaimsController)
@@ -471,6 +472,30 @@ RSpec.describe 'Claims', type: :request do
                 expect(claim_attributes['claimPhaseDates']['currentPhaseBack']).to eq(true)
                 expect(claim_attributes['claimPhaseDates']['latestPhaseType']).to eq('Claim Received')
                 expect(claim_attributes['claimPhaseDates']['previousPhases']).to be_truthy
+              end
+            end
+          end
+        end
+
+        it 'lists the correct phase number with the phase change date' do
+          lh_claim = create(:auto_established_claim, status: 'PENDING', veteran_icn: veteran_id,
+                                                     evss_id: '111111111')
+          with_okta_user(scopes) do |auth_header|
+            VCR.use_cassette('bgs/tracked_items/find_tracked_items') do
+              VCR.use_cassette('evss/documents/get_claim_documents') do
+                expect_any_instance_of(bcs)
+                  .to receive(:find_benefit_claim_details_by_benefit_claim_id).and_return(canceled_bgs_claim)
+                expect(ClaimsApi::AutoEstablishedClaim)
+                  .to receive(:get_by_id_and_icn).and_return(lh_claim)
+
+                get claim_by_id_path, headers: auth_header
+
+                json_response = JSON.parse(response.body)
+                expect(response.status).to eq(200)
+                claim_attributes = json_response['data']['attributes']
+                expect(claim_attributes['claimPhaseDates']['currentPhaseBack']).to eq(false)
+                expect(claim_attributes['claimPhaseDates']['latestPhaseType']).to eq('Preparation for Decision')
+                expect(claim_attributes['claimPhaseDates']['previousPhases']).to include("phase4CompleteDate")
               end
             end
           end
