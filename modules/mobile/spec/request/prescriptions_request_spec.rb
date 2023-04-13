@@ -41,6 +41,7 @@ RSpec.describe 'health/rx/prescriptions', type: :request do
       VCR.use_cassette('rx_refill/prescriptions/refills_prescriptions', match_requests_on: %i[method headers uri]) do
         put '/mobile/v0/health/rx/prescriptions/refill', params: { ids: %w[21530889 21539942] }, headers: iam_headers
       end
+      binding.pry
       expect(response).to have_http_status(:ok)
       attributes = response.parsed_body.dig('data', 'attributes')
       expect(attributes).to eq({ 'failedStationList' => '',
