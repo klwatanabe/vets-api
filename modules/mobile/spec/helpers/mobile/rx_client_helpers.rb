@@ -12,7 +12,7 @@ module Mobile
 
       def authenticated_client
         Mobile::V0::Rx::Client.new(session: { user_id: 123,
-                                              expires_at: Time.current + 60 * 60,
+                                              expires_at: Time.current + (60 * 60),
                                               token: TOKEN })
       end
     end
