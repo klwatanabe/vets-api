@@ -5,10 +5,12 @@ require 'support/rx_client_helpers'
 require 'support/shared_examples_for_mhv'
 require_relative '../support/iam_session_helper'
 require_relative '../support/matchers/json_schema_matcher'
+require_relative '../helpers/mobile/rx_client_helpers'
+require 'support/vcr'
 
 RSpec.describe 'health/rx/prescriptions', type: :request do
   include JsonSchemaMatchers
-  include Rx::ClientHelpers
+  include Mobile::Rx::ClientHelpers
 
   let(:mhv_account_type) { 'Premium' }
   let(:json_body_headers) { { 'Content-Type' => 'application/json', 'Accept' => 'application/json' } }
@@ -22,7 +24,12 @@ RSpec.describe 'health/rx/prescriptions', type: :request do
 
   before(:all) do
     @original_cassette_dir = VCR.configure(&:cassette_library_dir)
-    VCR.configure { |c| c.cassette_library_dir = 'modules/mobile/spec/support/vcr_cassettes' }
+    VCR.configure do |c|
+      c.cassette_library_dir = 'modules/mobile/spec/support/vcr_cassettes'
+      c.register_request_matcher (:user_agent_header) do |request1, request2|
+        request1.headers['User-Agent'] == request2.headers['User-Agent']
+      end
+    end
   end
 
   after(:all) { VCR.configure { |c| c.cassette_library_dir = @original_cassette_dir } }
@@ -30,7 +37,7 @@ RSpec.describe 'health/rx/prescriptions', type: :request do
   before do
     allow(Settings.mhv.rx).to receive(:collection_caching_enabled).and_return(true)
     allow_any_instance_of(MHVAccountTypeService).to receive(:mhv_account_type).and_return(mhv_account_type)
-    allow(Rx::Client).to receive(:new).and_return(authenticated_client)
+    allow(Mobile::V0::Rx::Client).to receive(:new).and_return(authenticated_client)
     current_user = build(:iam_user, :mhv)
 
     iam_sign_in(current_user)
@@ -38,7 +45,7 @@ RSpec.describe 'health/rx/prescriptions', type: :request do
 
   describe 'GET /mobile/v0/health/rx/prescriptions/refill', :aggregate_failures do
     it 'returns all successful refills' do
-      VCR.use_cassette('rx_refill/prescriptions/refills_prescriptions', match_requests_on: %i[method headers uri]) do
+      VCR.use_cassette('rx_refill/prescriptions/refills_prescriptions', match_requests_on: %i[method user_agent_header uri]) do
         put '/mobile/v0/health/rx/prescriptions/refill', params: { ids: %w[21530889 21539942] }, headers: iam_headers
       end
       expect(response).to have_http_status(:ok)
@@ -54,7 +61,7 @@ RSpec.describe 'health/rx/prescriptions', type: :request do
 
     context 'refill multiple prescription, one of which is non-refillable' do
       it 'returns error and successful refills' do
-        VCR.use_cassette('rx_refill/prescriptions/refills_prescriptions_with_error') do
+        VCR.use_cassette('rx_refill/prescriptions/refills_prescriptions_with_error', match_requests_on: %i[method user_agent_header uri]) do
           put '/mobile/v0/health/rx/prescriptions/refill', params: { ids: %w[7417954 6970769 8398465] },
                                                            headers: iam_headers
         end
@@ -75,7 +82,7 @@ RSpec.describe 'health/rx/prescriptions', type: :request do
 
     context 'refill multiple non-refillable prescriptions' do
       it 'returns error and successful refills' do
-        VCR.use_cassette('rx_refill/prescriptions/refills_prescriptions_with_multiple_errors') do
+        VCR.use_cassette('rx_refill/prescriptions/refills_prescriptions_with_multiple_errors', match_requests_on: %i[method user_agent_header uri]) do
           put '/mobile/v0/health/rx/prescriptions/refill', params: { ids: %w[7417954 6970769 8398465] },
                                                            headers: iam_headers
         end
@@ -117,7 +124,7 @@ RSpec.describe 'health/rx/prescriptions', type: :request do
 
     context 'refill multiple prescription, one of which does not exist' do
       it 'returns error and successful refills' do
-        VCR.use_cassette('rx_refill/prescriptions/refills_prescriptions_not_found') do
+        VCR.use_cassette('rx_refill/prescriptions/refills_prescriptions_not_found', match_requests_on: %i[method user_agent_header uri]) do
           put '/mobile/v0/health/rx/prescriptions/refill', params: { ids: %w[21530889 21539942 123456] },
                                                            headers: iam_headers
         end
@@ -140,7 +147,7 @@ RSpec.describe 'health/rx/prescriptions', type: :request do
       it 'flushes prescription cache on refill' do
         set_cache
 
-        VCR.use_cassette('rx_refill/prescriptions/refills_prescriptions') do
+        VCR.use_cassette('rx_refill/prescriptions/refills_prescriptions', match_requests_on: %i[method user_agent_header uri]) do
           put '/mobile/v0/health/rx/prescriptions/refill', params: { ids: %w[21530889 21539942] },
                                                            headers: iam_headers
         end
@@ -155,7 +162,7 @@ RSpec.describe 'health/rx/prescriptions', type: :request do
   describe 'GET /mobile/v0/health/rx/prescriptions', :aggregate_failures do
     context 'with a valid MHV response and no failed facilities' do
       it 'returns 200' do
-        VCR.use_cassette('rx_refill/prescriptions/gets_a_list_of_all_prescriptions') do
+        VCR.use_cassette('rx_refill/prescriptions/gets_a_list_of_all_prescriptions', match_requests_on: %i[method user_agent_header uri]) do
           get '/mobile/v0/health/rx/prescriptions', headers: iam_headers
         end
         expect(response).to have_http_status(:ok)
@@ -165,7 +172,7 @@ RSpec.describe 'health/rx/prescriptions', type: :request do
 
     context 'with a valid EVSS response and failed facilities' do
       it 'returns 200 and omits failed facilities' do
-        VCR.use_cassette('rx_refill/prescriptions/handles_failed_stations') do
+        VCR.use_cassette('rx_refill/prescriptions/handles_failed_stations', match_requests_on: %i[method user_agent_header uri]) do
           get '/mobile/v0/health/rx/prescriptions', headers: iam_headers
         end
         expect(response).to have_http_status(:ok)
@@ -190,7 +197,7 @@ RSpec.describe 'health/rx/prescriptions', type: :request do
         unauthorized_user = build(:iam_user)
         iam_sign_in(unauthorized_user)
 
-        VCR.use_cassette('rx_refill/prescriptions/gets_a_list_of_all_prescriptions') do
+        VCR.use_cassette('rx_refill/prescriptions/gets_a_list_of_all_prescriptions', match_requests_on: %i[method user_agent_header uri]) do
           get '/mobile/v0/health/rx/prescriptions', headers: iam_headers
         end
         expect(response).to have_http_status(:forbidden)
@@ -206,7 +213,7 @@ RSpec.describe 'health/rx/prescriptions', type: :request do
       it 'forms meta data' do
         params = { page: { number: 2, size: 3 } }
 
-        VCR.use_cassette('rx_refill/prescriptions/gets_a_list_of_all_prescriptions') do
+        VCR.use_cassette('rx_refill/prescriptions/gets_a_list_of_all_prescriptions', match_requests_on: %i[method user_agent_header uri]) do
           get '/mobile/v0/health/rx/prescriptions', params:, headers: iam_headers
         end
         expect(response).to have_http_status(:ok)
@@ -224,7 +231,7 @@ RSpec.describe 'health/rx/prescriptions', type: :request do
         params = { filter: { refill_status: { eq: 'refillinprocess' } } }
 
         it 'returns all prescriptions that are refillinprocess status' do
-          VCR.use_cassette('rx_refill/prescriptions/gets_a_list_of_all_prescriptions') do
+          VCR.use_cassette('rx_refill/prescriptions/gets_a_list_of_all_prescriptions', match_requests_on: %i[method user_agent_header uri]) do
             get '/mobile/v0/health/rx/prescriptions', params:, headers: iam_headers
           end
           expect(response).to have_http_status(:ok)
@@ -239,7 +246,7 @@ RSpec.describe 'health/rx/prescriptions', type: :request do
         params = { filter: { is_refillable: { eq: 'true' }, is_trackable: { eq: 'true' } } }
 
         it 'returns all prescriptions that are both trackable and refillable' do
-          VCR.use_cassette('rx_refill/prescriptions/gets_a_list_of_all_prescriptions') do
+          VCR.use_cassette('rx_refill/prescriptions/gets_a_list_of_all_prescriptions', match_requests_on: %i[method user_agent_header uri]) do
             get '/mobile/v0/health/rx/prescriptions', params:, headers: iam_headers
           end
           expect(response).to have_http_status(:ok)
@@ -256,7 +263,7 @@ RSpec.describe 'health/rx/prescriptions', type: :request do
         end
 
         it 'returns all prescriptions that are both trackable and refillable' do
-          VCR.use_cassette('rx_refill/prescriptions/gets_a_list_of_all_prescriptions') do
+          VCR.use_cassette('rx_refill/prescriptions/gets_a_list_of_all_prescriptions', match_requests_on: %i[method user_agent_header uri]) do
             get '/mobile/v0/health/rx/prescriptions', params:, headers: iam_headers
           end
           expect(response).to have_http_status(:ok)
@@ -271,7 +278,7 @@ RSpec.describe 'health/rx/prescriptions', type: :request do
         params = { page: { number: 1, size: 59 }, filter: { refill_status: { not_eq: 'refillinprocess' } } }
 
         it 'returns all prescriptions that are not refillinprocess status' do
-          VCR.use_cassette('rx_refill/prescriptions/gets_a_list_of_all_prescriptions') do
+          VCR.use_cassette('rx_refill/prescriptions/gets_a_list_of_all_prescriptions', match_requests_on: %i[method user_agent_header uri]) do
             get '/mobile/v0/health/rx/prescriptions', params:, headers: iam_headers
           end
           expect(response).to have_http_status(:ok)
@@ -288,7 +295,7 @@ RSpec.describe 'health/rx/prescriptions', type: :request do
         params = { filter: { quantity: { eq: '8' } } }
 
         it 'cannot filter by unexpected field' do
-          VCR.use_cassette('rx_refill/prescriptions/gets_a_list_of_all_prescriptions') do
+          VCR.use_cassette('rx_refill/prescriptions/gets_a_list_of_all_prescriptions', match_requests_on: %i[method user_agent_header uri]) do
             get '/mobile/v0/health/rx/prescriptions', params:, headers: iam_headers
           end
           expect(response).to have_http_status(:bad_request)
@@ -307,7 +314,7 @@ RSpec.describe 'health/rx/prescriptions', type: :request do
         let(:params) { { sort: 'refill_status' } }
 
         it 'sorts prescriptions by ASC refill_status' do
-          VCR.use_cassette('rx_refill/prescriptions/gets_a_list_of_all_prescriptions') do
+          VCR.use_cassette('rx_refill/prescriptions/gets_a_list_of_all_prescriptions', match_requests_on: %i[method user_agent_header uri]) do
             get '/mobile/v0/health/rx/prescriptions', params:, headers: iam_headers
           end
 
@@ -324,7 +331,7 @@ RSpec.describe 'health/rx/prescriptions', type: :request do
         let(:params) { { sort: '-refill_status' } }
 
         it 'sorts prescriptions by DESC refill_status' do
-          VCR.use_cassette('rx_refill/prescriptions/gets_a_list_of_all_prescriptions') do
+          VCR.use_cassette('rx_refill/prescriptions/gets_a_list_of_all_prescriptions', match_requests_on: %i[method user_agent_header uri]) do
             get '/mobile/v0/health/rx/prescriptions', params:, headers: iam_headers
           end
 
@@ -342,7 +349,7 @@ RSpec.describe 'health/rx/prescriptions', type: :request do
         let(:params) { { sort: 'quantity' } }
 
         it 'sorts prescriptions by refill_status' do
-          VCR.use_cassette('rx_refill/prescriptions/gets_a_list_of_all_prescriptions') do
+          VCR.use_cassette('rx_refill/prescriptions/gets_a_list_of_all_prescriptions', match_requests_on: %i[method user_agent_header uri]) do
             get '/mobile/v0/health/rx/prescriptions', params:, headers: iam_headers
           end
 
@@ -362,7 +369,7 @@ RSpec.describe 'health/rx/prescriptions', type: :request do
         params = { 'page' => { number: 2, size: 3 }, 'sort' => '-refill_date',
                    filter: { refill_status: { eq: 'refillinprocess' } } }
 
-        VCR.use_cassette('rx_refill/prescriptions/gets_a_list_of_all_prescriptions') do
+        VCR.use_cassette('rx_refill/prescriptions/gets_a_list_of_all_prescriptions', match_requests_on: %i[method user_agent_header uri]) do
           get '/mobile/v0/health/rx/prescriptions', params:, headers: iam_headers
         end
         expect(response).to have_http_status(:ok)
@@ -388,7 +395,7 @@ RSpec.describe 'health/rx/prescriptions', type: :request do
   describe 'GET /mobile/v0/health/rx/prescriptions/:id/tracking', :aggregate_failures do
     context 'when id is found' do
       it 'returns 200' do
-        VCR.use_cassette('rx_refill/prescriptions/gets_tracking_for_a_prescription') do
+        VCR.use_cassette('rx_refill/prescriptions/gets_tracking_for_a_prescription', match_requests_on: %i[method user_agent_header uri]) do
           get '/mobile/v0/health/rx/prescriptions/13650541/tracking', headers: iam_headers
         end
         expect(response).to have_http_status(:ok)
@@ -398,7 +405,7 @@ RSpec.describe 'health/rx/prescriptions', type: :request do
 
     context 'when record is not found' do
       it 'returns 404' do
-        VCR.use_cassette('rx_refill/prescriptions/tracking_error_id') do
+        VCR.use_cassette('rx_refill/prescriptions/tracking_error_id', match_requests_on: %i[method user_agent_header uri]) do
           get '/mobile/v0/health/rx/prescriptions/1/tracking', headers: iam_headers
         end
 
@@ -408,7 +415,7 @@ RSpec.describe 'health/rx/prescriptions', type: :request do
 
     context 'with empty otherPrescriptions section' do
       it 'returns 200 with ' do
-        VCR.use_cassette('rx_refill/prescriptions/gets_tracking_with_empty_other_prescriptions') do
+        VCR.use_cassette('rx_refill/prescriptions/gets_tracking_with_empty_other_prescriptions', match_requests_on: %i[method user_agent_header uri]) do
           get '/mobile/v0/health/rx/prescriptions/13650541/tracking', headers: iam_headers
         end
 

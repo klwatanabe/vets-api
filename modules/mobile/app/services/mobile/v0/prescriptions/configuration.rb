@@ -20,7 +20,7 @@ module Mobile
       # HTTP client configuration for {Rx::Client}, sets the token, base path and a service name for breakers and metrics
       #
       class Configuration < ::Rx::Configuration
-        self.user_agent = 'Mobile App'
+        self.user_agent = 'VA Mobile App Agent'
         self.base_request_headers = {
           'Accept' => 'application/json',
           'Content-Type' => 'application/json',
