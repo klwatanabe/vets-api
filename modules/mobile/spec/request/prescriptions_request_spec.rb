@@ -5,6 +5,7 @@ require 'support/rx_client_helpers'
 require 'support/shared_examples_for_mhv'
 require_relative '../support/iam_session_helper'
 require_relative '../support/matchers/json_schema_matcher'
+require_relative '../../app/services/mobile/v0/prescriptions/client'
 
 RSpec.describe 'health/rx/prescriptions', type: :request do
   include JsonSchemaMatchers
@@ -30,7 +31,7 @@ RSpec.describe 'health/rx/prescriptions', type: :request do
   before do
     allow(Settings.mhv.rx).to receive(:collection_caching_enabled).and_return(true)
     allow_any_instance_of(MHVAccountTypeService).to receive(:mhv_account_type).and_return(mhv_account_type)
-    allow(Rx::Client).to receive(:new).and_return(authenticated_client)
+    allow(Mobile::V0::Rx::Client).to receive(:new).and_return(authenticated_client)
     current_user = build(:iam_user, :mhv)
 
     iam_sign_in(current_user)
