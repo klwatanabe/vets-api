@@ -30,16 +30,17 @@ RSpec.describe SignIn::UserCreator do
              type: type)
     end
     let(:client_state) { SecureRandom.alphanumeric(SignIn::Constants::Auth::CLIENT_STATE_MINIMUM_LENGTH) }
-    let(:client_id) { SignIn::Constants::Auth::MOBILE_CLIENT }
+    let(:client_id) { client_config.client_id }
+    let(:client_config) { create(:client_config) }
     let(:code_challenge) { 'some-code-challenge' }
     let(:type) { service_name }
-    let(:current_ial) { IAL::TWO }
-    let(:max_ial) { IAL::TWO }
+    let(:current_ial) { SignIn::Constants::Auth::IAL_TWO }
+    let(:max_ial) { SignIn::Constants::Auth::IAL_TWO }
     let(:logingov_uuid) { SecureRandom.hex }
     let(:icn) { 'some-icn' }
-    let(:loa) { { current: LOA::THREE, highest: LOA::THREE } }
+    let(:loa) { { current: SignIn::Constants::Auth::LOA_THREE, highest: SignIn::Constants::Auth::LOA_THREE } }
     let(:csp_email) { 'some-csp-email' }
-    let(:service_name) { SAML::User::LOGINGOV_CSID }
+    let(:service_name) { SignIn::Constants::Auth::LOGINGOV }
     let(:auth_broker) { SignIn::Constants::Auth::BROKER_CODE }
     let!(:user_verification) { create(:logingov_user_verification, logingov_uuid: logingov_uuid) }
     let(:user_uuid) { user_verification.backing_credential_identifier }
@@ -91,7 +92,7 @@ RSpec.describe SignIn::UserCreator do
       expect(user_code_map.login_code).to eq(login_code)
       expect(user_code_map.type).to eq(type)
       expect(user_code_map.client_state).to eq(client_state)
-      expect(user_code_map.client_id).to eq(client_id)
+      expect(user_code_map.client_config).to eq(client_config)
     end
 
     it 'creates a code container mapped to expected login code' do

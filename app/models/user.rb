@@ -138,7 +138,7 @@ class User < Common::RedisStore
   end
 
   def mhv_correlation_id
-    identity.mhv_correlation_id || mpi.mhv_correlation_id
+    identity.mhv_correlation_id || mpi_mhv_correlation_id
   end
 
   def middle_name
@@ -171,6 +171,7 @@ class User < Common::RedisStore
   delegate :icn, to: :mpi, prefix: true
   delegate :icn_with_aaid, to: :mpi
   delegate :id_theft_flag, to: :mpi
+  delegate :mhv_correlation_id, to: :mpi, prefix: true
   delegate :mhv_ien, to: :mpi
   delegate :mhv_iens, to: :mpi, prefix: true
   delegate :participant_id, to: :mpi
@@ -323,13 +324,6 @@ class User < Common::RedisStore
       ID_CARD_ALLOWED_STATUSES.include?(veteran_status.title38_status)
   rescue # Default to false for any veteran_status error
     false
-  end
-
-  def mhv_account
-    @mhv_account ||= MHVAccount.find_or_initialize_by(user_uuid: uuid,
-                                                      mhv_correlation_id: mhv_correlation_id,
-                                                      user_account: user_account)
-                               .tap { |m| m.user = self } # MHV account should not re-initialize use
   end
 
   def in_progress_forms

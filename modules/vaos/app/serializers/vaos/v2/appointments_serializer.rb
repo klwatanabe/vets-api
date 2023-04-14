@@ -1,9 +1,11 @@
 # frozen_string_literal: true
 
+# VAOS V2 serializer not in use
+# :nocov:
 module VAOS
   module V2
     class AppointmentsSerializer
-      include FastJsonapi::ObjectSerializer
+      include JSONAPI::Serializer
 
       set_id :id
 
@@ -33,3 +35,4 @@ module VAOS
     end
   end
 end
+# :nocov:

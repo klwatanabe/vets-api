@@ -2,6 +2,7 @@
 
 require 'claims_api/bgs_claim_status_mapper'
 require 'claims_api/v2/mock_documents_service'
+require 'bgs_service/local_bgs'
 
 module ClaimsApi
   module V2
@@ -10,9 +11,8 @@ module ClaimsApi
         before_action :verify_access!
 
         def index
-          bgs_claims = bgs_service.ebenefits_benefit_claims_status.find_benefit_claims_status_by_ptcpnt_id(
-            participant_id: target_veteran.participant_id
-          )
+          bgs_claims = find_bgs_claims!
+
           lighthouse_claims = ClaimsApi::AutoEstablishedClaim.where(veteran_icn: target_veteran.mpi.icn)
 
           render json: [] && return unless bgs_claims || lighthouse_claims
@@ -31,6 +31,8 @@ module ClaimsApi
             raise ::Common::Exceptions::ResourceNotFound.new(detail: 'Claim not found')
           end
 
+          validate_id_with_icn(bgs_claim, lighthouse_claim, params[:veteranId])
+
           output = generate_show_output(bgs_claim: bgs_claim, lighthouse_claim: lighthouse_claim)
           blueprint_options = { base_url: request.base_url, veteran_id: params[:veteranId], view: :show, root: :data }
 
@@ -39,13 +41,27 @@ module ClaimsApi
 
         private
 
-        def bgs_service
-          BGS::Services.new(external_uid: target_veteran.participant_id,
-                            external_key: target_veteran.participant_id)
-        end
-
         def evss_docs_service
           EVSS::DocumentsService.new(auth_headers)
+        end
+
+        def bgs_phase_status_mapper
+          ClaimsApi::BGSClaimStatusMapper.new
+        end
+
+        def validate_id_with_icn(bgs_claim, lighthouse_claim, request_icn)
+          claim_prtcpnt_id = if bgs_claim&.dig(:benefit_claim_details_dto).present?
+                               bgs_claim&.dig(:benefit_claim_details_dto, :ptcpnt_vet_id)
+                             end
+          veteran_icn = if lighthouse_claim.present? && lighthouse_claim['veteran_icn'].present?
+                          lighthouse_claim['veteran_icn']
+                        end
+
+          if claim_prtcpnt_id != target_veteran.participant_id && veteran_icn != request_icn
+            raise ::Common::Exceptions::ResourceNotFound.new(
+              detail: 'Invalid claim ID for the veteran identified.'
+            )
+          end
         end
 
         def generate_show_output(bgs_claim:, lighthouse_claim:) # rubocop:disable Metrics/MethodLength
@@ -60,7 +76,7 @@ module ClaimsApi
             structure = {
               lighthouse_id: lighthouse_claim.id,
               type: lighthouse_claim.claim_type,
-              status: lighthouse_claim.status.capitalize
+              status: bgs_phase_status_mapper.name(lighthouse_claim)
             }
           else
             bgs_details = bgs_claim[:benefit_claim_details_dto]
@@ -101,10 +117,9 @@ module ClaimsApi
             mapped_claims << {
               lighthouse_id: remaining_claim.id,
               type: remaining_claim.claim_type,
-              status: remaining_claim.status.capitalize
+              status: bgs_phase_status_mapper.name(remaining_claim)
             }
           end
-
           mapped_claims
         end
 
@@ -142,6 +157,36 @@ module ClaimsApi
           raise
         end
 
+        def find_bgs_claims!
+          bgs_service.ebenefits_benefit_claims_status.find_benefit_claims_status_by_ptcpnt_id(
+            participant_id: target_veteran.participant_id
+          )
+        rescue Savon::SOAPFault => e
+          # the ebenefits service raises an exception if a participant id is not found,
+          # so catch the exception here and return a 422 instead
+          if e.message.include?('No Person found for ptcpnt_id')
+            raise ::Common::Exceptions::UnprocessableEntity.new(detail:
+              "Unable to locate Veteran's Participant ID in Benefits Gateway Services (BGS). " \
+              'Please submit an issue at ask.va.gov or call 1-800-MyVA411 (800-698-2411) for assistance.')
+          end
+
+          raise
+        end
+
+        def find_tracked_items!(claim_id)
+          return if claim_id.blank?
+
+          local_bgs_service.find_tracked_items(claim_id)[:dvlpmt_items] || []
+        rescue Savon::SOAPFault => e
+          # the ebenefits service raises an exception if a claim tracked items are not found,
+          # so catch the exception here and return a 404 instead
+          if e.message.include?("No tracked items found for #{claim_id}")
+            raise ::Common::Exceptions::ResourceNotFound.new(detail: 'Claim tracked items not found')
+          end
+
+          raise
+        end
+
         def looking_for_lighthouse_claim?(claim_id:)
           claim_id.to_s.include?('-')
         end
@@ -154,7 +199,7 @@ module ClaimsApi
             claim_type_code: data[:bnft_claim_type_cd],
             claim_type: data[:claim_status_type],
             close_date: data[:claim_complete_dt].present? ? format_bgs_date(data[:claim_complete_dt]) : nil,
-            contention_list: data[:contentions]&.split(','),
+            contention_list: data[:contentions]&.split(',')&.collect(&:strip) || [],
             decision_letter_sent: map_yes_no_to_boolean('decision_notification_sent',
                                                         data[:decision_notification_sent]),
             development_letter_sent: map_yes_no_to_boolean('development_letter_sent', data[:development_letter_sent]),
@@ -179,10 +224,6 @@ module ClaimsApi
           data.split('')
         end
 
-        def get_bgs_phase_name(data, phase_number)
-          ClaimsApi::BGSClaimStatusMapper.new(data[:benefit_claim_details_dto], phase_number).name_from_phase
-        end
-
         def current_phase_back(data)
           return false if data[:benefit_claim_details_dto][:phase_type_change_ind].nil?
 
@@ -199,24 +240,34 @@ module ClaimsApi
             data[:benefit_claim_details_dto][:bnft_claim_lc_status][:phase_type]
           else
             pt_ind_array = get_phase_type_indicator_array(data)
-            claim = get_bgs_phase_name(data, pt_ind_array.last.to_i)
-            claim.bgs_status_from_phase(pt_ind_array.last.to_i)
+            mapper.get_phase_from_phase_type_ind(pt_ind_array.last)
           end
         end
 
-        def bgs_details_is_array?(bgs_details)
-          bgs_details&.dig(:benefit_claim_details_dto, :bnft_claim_lc_status).is_a?(Array)
+        def get_current_status_from_hash(data)
+          if data&.dig('benefit_claim_details_dto', 'bnft_claim_lc_status').present?
+            data[:benefit_claim_details_dto][:bnft_claim_lc_status].last do |lc|
+              phase_number = get_phase_number_from_phase_details(lc)
+              bgs_phase_status_mapper.name(lc[:phase_type], phase_number || nil)
+            end
+          elsif data&.dig(:phase_type).present?
+            bgs_phase_status_mapper.name(data[:phase_type])
+          end
+        end
+
+        def get_phase_number_from_phase_details(details)
+          if details[:phase_type_change_ind].present?
+            details[:phase_type_change_ind] == 'N' ? '1' : details[:phase_type_change_ind].split('').last
+          end
         end
 
         def get_bgs_phase_completed_dates(data)
           phase_dates = {}
 
-          if bgs_details_is_array?(data)
+          if data&.dig(:benefit_claim_details_dto, :bnft_claim_lc_status).is_a?(Array)
             data[:benefit_claim_details_dto][:bnft_claim_lc_status].each do |lc|
-              unless lc[:phase_type_change_ind].nil?
-                phase_number = lc[:phase_type_change_ind] == 'N' ? '1' : lc[:phase_type_change_ind].split('').last
-                phase_dates["phase#{phase_number}CompleteDate"] = date_present(lc[:phase_chngd_dt])
-              end
+              phase_number = get_phase_number_from_phase_details(lc)
+              phase_dates["phase#{phase_number}CompleteDate"] = date_present(lc[:phase_chngd_dt])
             end
           else
             date = data[:benefit_claim_details_dto][:bnft_claim_lc_status][:phase_chngd_dt]
@@ -256,6 +307,8 @@ module ClaimsApi
                                 data[:phase_chngd_dt]
                               elsif data[:benefit_claim_details_dto].present?
                                 data[:benefit_claim_details_dto][:phase_chngd_dt]
+                              elsif data[:bnft_claim_lc_status].present?
+                                format_bgs_phase_date(data)
                               else
                                 format_bgs_phase_date(data[:benefit_claim_details_dto])
                               end
@@ -264,11 +317,21 @@ module ClaimsApi
         end
 
         def detect_current_status(data)
-          return if data[:bnft_claim_lc_status].nil? && data.exclude?(:claim_status)
+          if data[:bnft_claim_lc_status].nil? && data.exclude?(:claim_status) && data.exclude?(:phase_type)
+            return 'NO_STATUS_PROVIDED'
+          end
 
-          phase_data = data[:bnft_claim_lc_status].nil? == true ? data[:claim_status] : data[:bnft_claim_lc_status]
+          phase_data = if data[:phase_type].present?
+                         data[:phase_type]
+                       elsif data[:bnft_claim_lc_status].present?
+                         data[:bnft_claim_lc_status]
+                       else
+                         data[:claim_status]
+                       end
 
-          bgs_details_is_array?(data) ? cast_claim_lc_status(phase_data) : phase_data
+          return bgs_phase_status_mapper.name(phase_data) if phase_data.is_a?(String)
+
+          phase_data.is_a?(Array) ? cast_claim_lc_status(phase_data) : get_current_status_from_hash(phase_data)
         end
 
         def get_errors(lighthouse_claim)
@@ -287,10 +350,11 @@ module ClaimsApi
         def cast_claim_lc_status(phase_data)
           return if phase_data.blank?
 
-          stat = [phase_data].flatten.max_by do |t|
-            t[:phase_chngd_dt]
+          phase = [phase_data].flatten.max do |a, b|
+            a[:phase_chngd_dt] <=> b[:phase_chngd_dt]
           end
-          stat[:phase_type]
+          phase_number = get_phase_number_from_phase_details(phase_data.last)
+          bgs_phase_status_mapper.name(phase[:phase_type], phase_number || nil)
         end
 
         def map_yes_no_to_boolean(key, value)
@@ -325,10 +389,8 @@ module ClaimsApi
           claim_id = bgs_claim.dig(:benefit_claim_details_dto, :benefit_claim_id)
           return [] if claim_id.nil?
 
-          tracked_items = bgs_service
-                          .tracked_items
-                          .find_tracked_items(claim_id)
-                          .dig(:benefit_claim, :dvlpmt_items) || []
+          tracked_items = find_tracked_items!(claim_id)
+
           ebenefits_details = bgs_claim[:benefit_claim_details_dto]
 
           tracked_ids = handle_array_or_hash(tracked_items, :dvlpmt_item_id)
@@ -376,12 +438,11 @@ module ClaimsApi
               end
             end
 
-            uploads_allowed = ['NEEDED", "SUBMITTED_AWAITING_REVIEW", "INITIAL_REVIEW_COMPLETE']
-                              .include? status ? true : false
+            uploads_allowed = %w[NEEDED SUBMITTED_AWAITING_REVIEW INITIAL_REVIEW_COMPLETE].include?(status)
 
             {
               closed_date: date_present(item[:date_closed]),
-              description: item[:items],
+              description: item[:short_nm],
               displayed_name: "Request #{i + 1}", # +1 given a 1 index'd array
               dvlpmt_tc: item[:dvlpmt_tc],
               opened_date: date_present(item[:date_open]),

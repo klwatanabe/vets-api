@@ -16,6 +16,10 @@ module SignIn
         {}
       elsif api_authentication_client?
         token_json_response
+      elsif mock_authentication_client?
+        set_cookies
+        set_info_cookie
+        token_json_response
       end
     end
 
@@ -83,8 +87,12 @@ module SignIn
       client_config.api_auth?
     end
 
+    def mock_authentication_client?
+      client_config.mock_auth?
+    end
+
     def anti_csrf_enabled_client?
-      client_config.anti_csrf?
+      client_config.anti_csrf
     end
 
     def session_expiration
@@ -108,12 +116,8 @@ module SignIn
       @anti_csrf_token ||= session_container.anti_csrf_token
     end
 
-    def client_id
-      @client_id ||= session_container.client_id
-    end
-
     def client_config
-      @client_config ||= SignIn::ClientConfig.new(client_id: client_id)
+      @client_config ||= session_container.client_config
     end
   end
 end

@@ -1,9 +1,11 @@
 # frozen_string_literal: true
 
+# VAOS V2 serializer not in use
+# :nocov:
 module VAOS
   module V2
     class ProvidersSerializer
-      include FastJsonapi::ObjectSerializer
+      include JSONAPI::Serializer
 
       set_id :provider_identifier
 
@@ -21,3 +23,4 @@ module VAOS
     end
   end
 end
+# :nocov:

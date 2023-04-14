@@ -35,7 +35,7 @@ describe AppealsApi::V2::DecisionReviews::HigherLevelReviewsController, type: :r
         uuid_2 = create(:higher_level_review_v2, veteran_icn: '1013062086V794840').id
         create(:higher_level_review_v2, veteran_icn: 'something_else')
 
-        get(path, headers: @minimum_required_headers)
+        get(path, headers: { 'X-VA-ICN' => '1013062086V794840' })
 
         expect(parsed['data'].length).to eq(2)
         # Returns HLRs in desc creation date, so expect 2 before 1
@@ -51,9 +51,29 @@ describe AppealsApi::V2::DecisionReviews::HigherLevelReviewsController, type: :r
         create(:higher_level_review_v2, veteran_icn: 'someone_else')
         create(:higher_level_review_v2, veteran_icn: 'also_someone_else')
 
-        get(path, headers: @minimum_required_headers)
+        get(path, headers: { 'X-VA-ICN' => '1013062086V794840' })
 
         expect(parsed['data'].length).to eq(0)
+      end
+    end
+
+    context 'when no ICN is provided' do
+      it 'returns a 422 error' do
+        get(path, headers: @headers_extra.except('X-VA-ICN'))
+
+        expect(response.status).to eq(422)
+        expect(parsed['errors']).to be_an Array
+        expect(parsed['errors'][0]['detail']).to include('X-VA-ICN is required')
+      end
+    end
+
+    context 'when provided ICN is in an invalid format' do
+      it 'returns a 422 error' do
+        get(path, headers: { 'X-VA-ICN' => '1393231' })
+
+        expect(response.status).to eq(422)
+        expect(parsed['errors']).to be_an Array
+        expect(parsed['errors'][0]['detail']).to include('X-VA-ICN has an invalid format')
       end
     end
   end
@@ -107,6 +127,30 @@ describe AppealsApi::V2::DecisionReviews::HigherLevelReviewsController, type: :r
         expect(hlr.veteran_icn).to eq('1013062086V794840')
         # since icn is already provided in header, the icn updater sidekiq worker is redundant and skipped
         expect(icn_updater_sidekiq_worker).not_to have_received(:perform_async)
+      end
+    end
+
+    context 'when icn header is present but does not meet length requirements' do
+      let(:icn) { '1393231' }
+
+      it 'returns a 422 error with details' do
+        post(path, params: @data_extra, headers: @minimum_required_headers.merge({ 'X-VA-ICN' => icn }))
+
+        expect(response).to have_http_status(:unprocessable_entity)
+        expect(parsed['errors'][0]['title']).to eql('Invalid length')
+        expect(parsed['errors'][0]['detail']).to include("'#{icn}' did not fit within the defined length limits")
+      end
+    end
+
+    context 'when icn header is present but does not meet pattern requirements' do
+      let(:icn) { '49392810394830103' }
+
+      it 'returns a 422 error with details' do
+        post(path, params: @data_extra, headers: @minimum_required_headers.merge({ 'X-VA-ICN' => icn }))
+
+        expect(response).to have_http_status(:unprocessable_entity)
+        expect(parsed['errors'][0]['title']).to eql('Invalid pattern')
+        expect(parsed['errors'][0]['detail']).to include("'#{icn}' did not match the defined pattern")
       end
     end
 
@@ -257,7 +301,10 @@ describe AppealsApi::V2::DecisionReviews::HigherLevelReviewsController, type: :r
     context 'with oauth' do
       let(:oauth_path) { new_base_path 'forms/200996' }
 
-      it_behaves_like('an endpoint with OpenID auth', %w[claim.write]) do
+      it_behaves_like(
+        'an endpoint with OpenID auth',
+        AppealsApi::HigherLevelReviews::V0::HigherLevelReviewsController::OAUTH_SCOPES[:POST]
+      ) do
         def make_request(auth_header)
           post(oauth_path, params: @data, headers: @headers.merge(auth_header))
         end
@@ -270,7 +317,9 @@ describe AppealsApi::V2::DecisionReviews::HigherLevelReviewsController, type: :r
           orig_body = JSON.parse(response.body)
           orig_body['data']['id'] = 'ignored'
 
-          with_openid_auth(%w[claim.write]) do |auth_header|
+          with_openid_auth(
+            AppealsApi::HigherLevelReviews::V0::HigherLevelReviewsController::OAUTH_SCOPES[:POST]
+          ) do |auth_header|
             post(oauth_path, params: @data, headers: @headers.merge(auth_header))
           end
           oauth_status = response.status
@@ -349,10 +398,37 @@ describe AppealsApi::V2::DecisionReviews::HigherLevelReviewsController, type: :r
       end
     end
 
+    context 'when icn header is present but does not meet length requirements' do
+      let(:icn) { '1393231' }
+
+      it 'returns a 422 error with details' do
+        post(path, params: @data_extra, headers: @minimum_required_headers.merge({ 'X-VA-ICN' => icn }))
+
+        expect(response).to have_http_status(:unprocessable_entity)
+        expect(parsed['errors'][0]['title']).to eql('Invalid length')
+        expect(parsed['errors'][0]['detail']).to include("'#{icn}' did not fit within the defined length limits")
+      end
+    end
+
+    context 'when icn header is present but does not meet pattern requirements' do
+      let(:icn) { '49392810394830103' }
+
+      it 'returns a 422 error with details' do
+        post(path, params: @data_extra, headers: @minimum_required_headers.merge({ 'X-VA-ICN' => icn }))
+
+        expect(response).to have_http_status(:unprocessable_entity)
+        expect(parsed['errors'][0]['title']).to eql('Invalid pattern')
+        expect(parsed['errors'][0]['detail']).to include("'#{icn}' did not match the defined pattern")
+      end
+    end
+
     context 'with oauth' do
       let(:oauth_path) { new_base_path 'forms/200996/validate' }
 
-      it_behaves_like('an endpoint with OpenID auth', %w[claim.write]) do
+      it_behaves_like(
+        'an endpoint with OpenID auth',
+        AppealsApi::HigherLevelReviews::V0::HigherLevelReviewsController::OAUTH_SCOPES[:POST]
+      ) do
         def make_request(auth_header)
           post(oauth_path, params: @data, headers: @headers.merge(auth_header))
         end
@@ -363,7 +439,9 @@ describe AppealsApi::V2::DecisionReviews::HigherLevelReviewsController, type: :r
         orig_status = response.status
         orig_body = JSON.parse(response.body)
 
-        with_openid_auth(%w[claim.write]) do |auth_header|
+        with_openid_auth(
+          AppealsApi::HigherLevelReviews::V0::HigherLevelReviewsController::OAUTH_SCOPES[:POST]
+        ) do |auth_header|
           post(oauth_path, params: @data, headers: @headers.merge(auth_header))
         end
         oauth_status = response.status
@@ -420,7 +498,10 @@ describe AppealsApi::V2::DecisionReviews::HigherLevelReviewsController, type: :r
     let(:orig_path) { base_path "higher_level_reviews/#{uuid}" }
     let(:oauth_path) { new_base_path("forms/200996/#{uuid}") }
 
-    it_behaves_like('an endpoint with OpenID auth', %w[claim.read]) do
+    it_behaves_like(
+      'an endpoint with OpenID auth',
+      AppealsApi::HigherLevelReviews::V0::HigherLevelReviewsController::OAUTH_SCOPES[:GET]
+    ) do
       def make_request(auth_header)
         get(oauth_path, headers: auth_header)
       end
@@ -431,7 +512,9 @@ describe AppealsApi::V2::DecisionReviews::HigherLevelReviewsController, type: :r
       orig_status = response.status
       orig_body = JSON.parse(response.body)
 
-      with_openid_auth(%w[claim.read]) do |auth_header|
+      with_openid_auth(
+        AppealsApi::HigherLevelReviews::V0::HigherLevelReviewsController::OAUTH_SCOPES[:GET]
+      ) do |auth_header|
         get(oauth_path, headers: auth_header)
       end
       oauth_status = response.status

@@ -5,7 +5,6 @@ Mobile::Engine.routes.draw do
 
   namespace :v0 do
     get '/appeal/:id', to: 'claims_and_appeals#get_appeal'
-    get '/appointment_requests/:appointment_request_id/messages', to: 'appointment_request_messages#index'
     get '/appointments', to: 'appointments#index'
     put '/appointments/cancel/:id', to: 'appointments#cancel'
     get '/appointments/community_care/eligibility/:service_type', to: 'community_care_eligibility#show'
@@ -17,6 +16,8 @@ Mobile::Engine.routes.draw do
     put '/appointments/preferences', to: 'appointment_preferences#update'
     post '/appointment', to: 'appointments#create'
     get '/claims-and-appeals-overview', to: 'claims_and_appeals#index'
+    get '/claims/decision-letters', to: 'decision_letters#index'
+    get '/claims/decision-letters/:document_id/download', to: 'decision_letters#download'
     get '/claim/:id', to: 'claims_and_appeals#get_claim'
     post '/claim/:id/documents', to: 'claims_and_appeals#upload_document'
     post '/claim/:id/documents/multi-image', to: 'claims_and_appeals#upload_multi_image_document'

@@ -323,9 +323,18 @@
     :cache_multiple_responses:
       :uid_location: header
       :uid_locator: 'va_eauth_pnid'
-  - :method: :post
+  - :method: :get
     :path: "/wss-lettergenerator-services-web/rest/letters/v1/*"
-    :file_path: "evss/letters/download"
+    :file_path: "evss/letters/download_pdf"
+    :cache_multiple_responses:
+      :uid_location: "url"
+      :uid_locator: "\/wss-lettergenerator-services-web/rest/letters/v1\/(.+)"
+  - :method: :post
+    :path: "/wss-lettergenerator-services-web/rest/letters/v1/*/generate"
+    :file_path: "evss/letters/download_pdf"
+    :cache_multiple_responses:
+      :uid_location: "url"
+      :uid_locator: "\/wss-lettergenerator-services-web/rest/letters/v1\/(.+)\/generate"
 
   # GIBS
   - :method: :get
@@ -701,7 +710,7 @@
       :response_delay: 0.2
       :cache_multiple_responses:
         :uid_location: body
-        :uid_locator: 'SSN4":[\s]*"(\w+)"'
+        :uid_locator: 'dob":[\s]*"\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])"'
     - :method: :get
       :path: <%= "/#{Settings.check_in.lorota_v2.base_path}/data/*" %>
       :file_path: "/lorota/data"
@@ -736,6 +745,10 @@
       :path: <%= "/#{Settings.check_in.chip_api_v2.base_path}/token" %>
       :file_path: "/chip/token/default"
       :response_delay: 0.2
+    - :method: :post
+      :path: <%= "/#{Settings.check_in.chip_api_v2.base_path}/actions/initiate-check-in/*" %>
+      :file_path: "/chip/initiate-check-in/default"
+      :response_delay: 10
     - :method: :post
       :path: <%= "/#{Settings.check_in.chip_api_v2.base_path}/actions/check-in/*" %>
       :file_path: "/chip/check-in/default"
@@ -811,3 +824,27 @@
       :cache_multiple_responses:
         :uid_location: 'query'
         :uid_locator: 'edipi'
+
+# Lighthouse Benefits Claims API
+- :name: "Lighthouse Benefits Claims"
+  :base_uri: <%= "#{URI(Settings.lighthouse.benefits_claims.host).host}:#{URI(Settings.lighthouse.benefits_claims.host).port}" %>
+  :endpoints:
+    - :method: :get
+      :path: "/services/claims/v2/veterans/*/claims"
+      :file_path: "/lighthouse/benefits_claims/index"
+      :cache_multiple_responses:
+        :uid_location: "url"
+        :uid_locator: "\/services/claims/v2/veterans\/(.+)\/claims"
+    - :method: :get
+      :path: "/services/claims/v2/veterans/*/claims/*"
+      :file_path: "/lighthouse/benefits_claims/show"
+      :cache_multiple_responses:
+        :uid_location: "url"
+        :uid_locator: "\/services/claims/v2/veterans\/(?:.+)\/claims\/(.+)"
+    - :method: :post
+      :path: "/services/claims/v2/veterans/*/claims/*/5103"
+      :file_path: "/lighthouse/benefits_claims/submit_5103"
+      :cache_multiple_responses:
+        :uid_location: "url"
+        :uid_locator: "\/services/claims/v2/veterans\/(?:.+)\/claims\/(?:.+)/5103"
+

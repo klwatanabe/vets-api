@@ -9,13 +9,16 @@ require AppealsApi::Engine.root.join('spec', 'spec_helper.rb')
 # rubocop:disable RSpec/VariableName, RSpec/ScatteredSetup, RSpec/RepeatedExample, Layout/LineLength
 describe 'Notice of Disagreements', swagger_doc: DocHelpers.output_json_path, type: :request do
   include DocHelpers
-  let(:apikey) { 'apikey' }
-  let(:Authorization) { 'Bearer TEST_TOKEN' }
+  if DocHelpers.decision_reviews?
+    let(:apikey) { 'apikey' }
+  else
+    let(:Authorization) { 'Bearer TEST_TOKEN' }
+  end
 
   p = DocHelpers.decision_reviews? ? '/notice_of_disagreements' : '/forms/10182'
   path p do
     post 'Creates a new Notice of Disagreement' do
-      scopes = %w[claim.write]
+      scopes = AppealsApi::NoticeOfDisagreements::V0::NoticeOfDisagreementsController::OAUTH_SCOPES[:POST]
       tags 'Notice of Disagreements'
       operationId 'createNod'
       description 'Submits an appeal of type Notice of Disagreement.' \
@@ -43,7 +46,12 @@ describe 'Notice of Disagreements', swagger_doc: DocHelpers.output_json_path, ty
       parameter file_number_header_params
       let(:'X-VA-File-Number') { '987654321' }
 
-      parameter AppealsApi::SwaggerSharedComponents.header_params[:veteran_icn_header]
+      parameter AppealsApi::SwaggerSharedComponents.header_params[:veteran_icn_header].merge(
+        {
+          required: !DocHelpers.decision_reviews?
+        }
+      )
+      let(:'X-VA-ICN') { '1234567890V123456' } unless DocHelpers.decision_reviews?
 
       parameter AppealsApi::SwaggerSharedComponents.header_params[:veteran_first_name_header]
       let(:'X-VA-First-Name') { 'first' }
@@ -133,7 +141,7 @@ describe 'Notice of Disagreements', swagger_doc: DocHelpers.output_json_path, ty
   p = DocHelpers.decision_reviews? ? '/notice_of_disagreements/{uuid}' : '/forms/10182/{uuid}'
   path p do
     get 'Shows a specific Notice of Disagreement. (a.k.a. the Show endpoint)' do
-      scopes = %w[claim.read]
+      scopes = AppealsApi::NoticeOfDisagreements::V0::NoticeOfDisagreementsController::OAUTH_SCOPES[:GET]
       tags 'Notice of Disagreements'
       operationId 'showNod'
       description 'Returns all of the data associated with a specific Notice of Disagreement.'
@@ -188,7 +196,7 @@ describe 'Notice of Disagreements', swagger_doc: DocHelpers.output_json_path, ty
   else
     path '/schemas/{schema_type}' do
       get 'Gets the Notice of Disagreement JSON Schema.' do
-        scopes = %w[claim.read]
+        scopes = AppealsApi::NoticeOfDisagreements::V0::NoticeOfDisagreementsController::OAUTH_SCOPES[:GET]
         tags 'Notice of Disagreements'
         operationId 'nodSchema'
         description 'Returns the [JSON Schema](https://json-schema.org/) for the `POST /forms/10182` endpoint.'
@@ -231,7 +239,7 @@ describe 'Notice of Disagreements', swagger_doc: DocHelpers.output_json_path, ty
   p = DocHelpers.decision_reviews? ? '/notice_of_disagreements/validate' : '/forms/10182/validate'
   path p do
     post 'Validates a POST request body against the JSON schema.' do
-      scopes = %w[claim.write]
+      scopes = AppealsApi::NoticeOfDisagreements::V0::NoticeOfDisagreementsController::OAUTH_SCOPES[:POST]
       desc_path = DocHelpers.decision_reviews? ? '/notice_of_disagreements' : '/forms/10182'
 
       tags 'Notice of Disagreements'
@@ -255,7 +263,12 @@ describe 'Notice of Disagreements', swagger_doc: DocHelpers.output_json_path, ty
       parameter AppealsApi::SwaggerSharedComponents.header_params[:veteran_file_number_header]
       let(:'X-VA-File-Number') { '987654321' }
 
-      parameter AppealsApi::SwaggerSharedComponents.header_params[:veteran_icn_header]
+      parameter AppealsApi::SwaggerSharedComponents.header_params[:veteran_icn_header].merge(
+        {
+          required: !DocHelpers.decision_reviews?
+        }
+      )
+      let(:'X-VA-ICN') { '1234567890V123456' } unless DocHelpers.decision_reviews?
 
       parameter AppealsApi::SwaggerSharedComponents.header_params[:veteran_first_name_header]
       let(:'X-VA-First-Name') { 'first' }
@@ -322,7 +335,7 @@ describe 'Notice of Disagreements', swagger_doc: DocHelpers.output_json_path, ty
   p = DocHelpers.decision_reviews? ? '/notice_of_disagreements/evidence_submissions' : '/evidence_submissions'
   path p do
     post 'Get a location for subsequent evidence submission document upload PUT request' do
-      scopes = %w[claim.write]
+      scopes = AppealsApi::NoticeOfDisagreements::V0::NoticeOfDisagreementsController::OAUTH_SCOPES[:POST]
       tags 'Notice of Disagreements'
       operationId 'postNoticeOfDisagreementEvidenceSubmission'
       description <<~DESC
@@ -382,7 +395,7 @@ describe 'Notice of Disagreements', swagger_doc: DocHelpers.output_json_path, ty
 
   path '/nod_upload_path' do
     put 'Accepts Notice of Disagreement Evidence Submission document upload.' do
-      scopes = %w[claim.write]
+      scopes = AppealsApi::NoticeOfDisagreements::V0::NoticeOfDisagreementsController::OAUTH_SCOPES[:POST]
       tags 'Notice of Disagreements'
       operationId 'putNoticeOfDisagreementEvidenceSubmission'
       description File.read(DocHelpers.output_directory_file_path('put_description.md'))
@@ -431,7 +444,7 @@ describe 'Notice of Disagreements', swagger_doc: DocHelpers.output_json_path, ty
   p = DocHelpers.decision_reviews? ? '/notice_of_disagreements/evidence_submissions/{uuid}' : '/evidence_submissions/{uuid}'
   path p do
     get 'Returns all of the data associated with a specific Notice of Disagreement Evidence Submission.' do
-      scopes = %w[claim.read]
+      scopes = AppealsApi::NoticeOfDisagreements::V0::NoticeOfDisagreementsController::OAUTH_SCOPES[:GET]
       tags 'Notice of Disagreements'
       operationId 'getNoticeOfDisagreementEvidenceSubmission'
       description 'Returns all of the data associated with a specific Notice of Disagreement Evidence Submission.'

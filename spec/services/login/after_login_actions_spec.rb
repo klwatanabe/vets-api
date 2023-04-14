@@ -148,5 +148,63 @@ RSpec.describe Login::AfterLoginActions do
         end
       end
     end
+
+    context 'UserIdentity & MPI ID validations' do
+      let(:loa3_user) { build(:user, :loa3, mpi_profile: mpi_profile) }
+      let(:mpi_profile) { {} }
+      let(:expected_error_data) do
+        { identity_value: expected_identity_value, mpi_value: expected_mpi_value, icn: loa3_user.icn }
+      end
+      let(:expected_error_message) do
+        "[SessionsController version:v1] User Identity & MPI #{validation_id} values conflict"
+      end
+
+      before do
+        allow(Rails.logger).to receive(:warn)
+      end
+
+      shared_examples 'identity-mpi id validation' do
+        it 'logs a warning when Identity & MPI values conflict' do
+          expect(Rails.logger).to receive(:warn).at_least(:once).with(expected_error_message, expected_error_data)
+          described_class.new(loa3_user).perform
+        end
+      end
+
+      context 'ssn validation' do
+        let(:mpi_profile) { { ssn: Faker::Number.number(digits: 9) } }
+        let(:expected_identity_value) { loa3_user.identity.ssn }
+        let(:expected_mpi_value) { loa3_user.ssn_mpi }
+        let(:validation_id) { 'SSN' }
+        let(:expected_error_data) { { icn: loa3_user.icn } }
+
+        it_behaves_like 'identity-mpi id validation'
+      end
+
+      context 'edipi validation' do
+        let(:mpi_profile) { { edipi: Faker::Number.number(digits: 10) } }
+        let(:expected_identity_value) { loa3_user.identity.edipi }
+        let(:expected_mpi_value) { loa3_user.edipi_mpi }
+        let(:validation_id) { 'EDIPI' }
+
+        it_behaves_like 'identity-mpi id validation'
+      end
+
+      context 'icn validation' do
+        let(:mpi_profile) { { icn: '1234567V01112538' } }
+        let(:expected_identity_value) { loa3_user.identity.icn }
+        let(:expected_mpi_value) { loa3_user.mpi_icn }
+        let(:validation_id) { 'ICN' }
+
+        it_behaves_like 'identity-mpi id validation'
+      end
+
+      context 'MHV correlation id validation' do
+        let(:expected_identity_value) { loa3_user.identity.mhv_correlation_id }
+        let(:expected_mpi_value) { loa3_user.mpi_mhv_correlation_id }
+        let(:validation_id) { 'MHV Correlation ID' }
+
+        it_behaves_like 'identity-mpi id validation'
+      end
+    end
   end
 end

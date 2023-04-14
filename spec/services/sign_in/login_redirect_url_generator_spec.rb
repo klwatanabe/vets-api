@@ -9,71 +9,48 @@ RSpec.describe SignIn::LoginRedirectUrlGenerator do
     end
 
     let(:user_code_map) do
-      create(:user_code_map, login_code: login_code, type: type, client_id: client_id, client_state: client_state)
+      create(:user_code_map,
+             login_code: login_code,
+             type: type,
+             client_config: client_config,
+             client_state: client_state)
     end
     let(:login_code) { 'some-login-code' }
     let(:type) { 'some-type' }
-    let(:client_id) { 'some-client-id' }
     let(:client_state) { 'some-client-state' }
-    let(:expected_redirect_uri) { "#{redirect_uri}?#{code_param}#{state_param}#{type_param}" }
-    let(:code_param) { "code=#{login_code}" }
-    let(:type_param) { "&type=#{type}" }
-    let(:state_param) { "&state=#{client_state}" }
+    let(:client_config) { create(:client_config) }
+    let(:redirect_uri) { client_config.redirect_uri }
+    let(:client_id) { client_config.client_id }
 
-    context 'when client_id is set to mobile' do
-      let(:client_id) { SignIn::Constants::Auth::MOBILE_CLIENT }
-      let(:redirect_uri) { Settings.sign_in.client_redirect_uris.mobile }
-
-      it 'returns expected redirect uri for mobile client' do
-        expect(subject).to eq(expected_redirect_uri)
-      end
+    it 'renders the oauth_get_form template' do
+      expect(subject).to include('form id="oauth-form"')
     end
 
-    context 'when client_id is set to mobile_test' do
-      let(:client_id) { SignIn::Constants::Auth::MOBILE_TEST_CLIENT }
-      let(:redirect_uri) { Settings.sign_in.client_redirect_uris.mobile_test }
-
-      before do
-        allow(Settings.sign_in.client_redirect_uris).to receive(:mobile_test).and_return(redirect_uri)
-      end
-
-      it 'returns expected redirect uri for mobile test client' do
-        expect(subject).to eq(expected_redirect_uri)
-      end
+    it 'directs to the given redirect url set in the client configuration' do
+      expect(subject).to include("action=\"#{redirect_uri}\"")
     end
 
-    context 'when client_id is set to web' do
-      let(:client_id) { SignIn::Constants::Auth::WEB_CLIENT }
-      let(:redirect_uri) { Settings.sign_in.client_redirect_uris.web }
-
-      before do
-        allow(Settings.sign_in.client_redirect_uris).to receive(:web).and_return(redirect_uri)
-      end
-
-      it 'returns expected redirect uri for web client' do
-        expect(subject).to eq(expected_redirect_uri)
-      end
+    it 'includes expected code param' do
+      expect(subject).to include("value=\"#{login_code}\"")
     end
 
-    context 'when client_id is set to an arbitrary value' do
-      let(:client_id) { 'some-client-id' }
-      let(:redirect_uri) { 'some-redirect-uri' }
-      let(:expected_error) { ActiveModel::ValidationError }
-      let(:expected_error_log) { 'Validation failed: Client is not included in the list' }
+    it 'includes expected type param' do
+      expect(subject).to include("value=\"#{type}\"")
+    end
 
-      it 'raises an invalid client error' do
-        expect { subject }.to raise_exception(expected_error, expected_error_log)
+    context 'when client_state is not nil' do
+      let(:client_state) { 'some-client-state' }
+
+      it 'includes expected state param' do
+        expect(subject).to include("value=\"#{client_state}\"")
       end
     end
 
     context 'when client_state is nil' do
-      let(:client_id) { SignIn::Constants::Auth::WEB_CLIENT }
-      let(:redirect_uri) { Settings.sign_in.client_redirect_uris.web }
       let(:client_state) { nil }
-      let(:state_param) { nil }
 
-      it 'returns expected redirect uri without state param' do
-        expect(subject).to eq(expected_redirect_uri)
+      it 'does not include expected state param' do
+        expect(subject).not_to include("value=\"#{client_state}\"")
       end
     end
   end

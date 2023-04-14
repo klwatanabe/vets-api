@@ -7,10 +7,10 @@ RSpec.describe SignIn::AttributeValidator do
     subject { SignIn::AttributeValidator.new(user_attributes: user_attributes).perform }
 
     let(:user_attributes) { { current_ial: current_ial } }
-    let(:current_ial) { IAL::ONE }
+    let(:current_ial) { SignIn::Constants::Auth::IAL_ONE }
 
     context 'when credential is not verified' do
-      let(:current_ial) { IAL::ONE }
+      let(:current_ial) { SignIn::Constants::Auth::IAL_ONE }
 
       it 'returns nil' do
         expect(subject).to be nil
@@ -40,7 +40,7 @@ RSpec.describe SignIn::AttributeValidator do
       let(:idme_uuid) { nil }
       let(:mhv_correlation_id) { nil }
       let(:edipi) { nil }
-      let(:current_ial) { IAL::TWO }
+      let(:current_ial) { SignIn::Constants::Auth::IAL_TWO }
       let(:ssn) { nil }
       let(:birth_date) { nil }
       let(:email) { nil }
@@ -354,7 +354,7 @@ RSpec.describe SignIn::AttributeValidator do
       end
 
       context 'and authentication is with mhv' do
-        let(:service_name) { SAML::User::MHV_ORIGINAL_CSID }
+        let(:service_name) { SignIn::Constants::Auth::MHV }
         let(:mhv_icn) { 'some-icn' }
         let(:idme_uuid) { 'some-idme-uuid' }
         let(:csp_id) { idme_uuid }
@@ -471,7 +471,7 @@ RSpec.describe SignIn::AttributeValidator do
       end
 
       context 'and authentication is with logingov' do
-        let(:service_name) { SAML::User::LOGINGOV_CSID }
+        let(:service_name) { SignIn::Constants::Auth::LOGINGOV }
         let(:logingov_uuid) { 'some-logingov-uuid' }
         let(:csp_id) { logingov_uuid }
         let(:first_name) { 'some-first-name' }
@@ -686,7 +686,7 @@ RSpec.describe SignIn::AttributeValidator do
       end
 
       context 'and authentication is with dslogon' do
-        let(:service_name) { SAML::User::DSLOGON_CSID }
+        let(:service_name) { SignIn::Constants::Auth::DSLOGON }
         let(:edipi) { 'some-edipi' }
         let(:idme_uuid) { 'some-idme-uuid' }
         let(:csp_id) { idme_uuid }
@@ -752,7 +752,7 @@ RSpec.describe SignIn::AttributeValidator do
       end
 
       context 'and authentication is with idme' do
-        let(:service_name) { SAML::User::IDME_CSID }
+        let(:service_name) { SignIn::Constants::Auth::IDME }
         let(:idme_uuid) { 'some-idme-uuid' }
         let(:csp_id) { idme_uuid }
         let(:first_name) { 'some-first-name' }

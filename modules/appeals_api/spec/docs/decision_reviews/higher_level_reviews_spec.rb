@@ -9,13 +9,16 @@ require AppealsApi::Engine.root.join('spec', 'spec_helper.rb')
 # rubocop:disable RSpec/VariableName, RSpec/ScatteredSetup, RSpec/RepeatedExample, RSpec/RepeatedDescription, Layout/LineLength
 describe 'Higher-Level Reviews', swagger_doc: DocHelpers.output_json_path, type: :request do
   include DocHelpers
-  let(:apikey) { 'apikey' }
-  let(:Authorization) { 'Bearer TEST_TOKEN' }
+  if DocHelpers.decision_reviews?
+    let(:apikey) { 'apikey' }
+  else
+    let(:Authorization) { 'Bearer TEST_TOKEN' }
+  end
 
   p = DocHelpers.decision_reviews? ? '/higher_level_reviews' : '/forms/200996'
   path p do
     post 'Creates a new Higher-Level Review' do
-      scopes = %w[claim.write]
+      scopes = AppealsApi::HigherLevelReviews::V0::HigherLevelReviewsController::OAUTH_SCOPES[:POST]
       description 'Submits an appeal of type Higher Level Review. ' \
                   'This endpoint is the same as submitting [VA Form 20-0996](https://www.va.gov/decision-reviews/higher-level-review/request-higher-level-review-form-20-0996)' \
                   ' via mail or fax directly to the Board of Veterans’ Appeals.'
@@ -40,7 +43,12 @@ describe 'Higher-Level Reviews', swagger_doc: DocHelpers.output_json_path, type:
       parameter AppealsApi::SwaggerSharedComponents.header_params[:veteran_ssn_header]
       let(:'X-VA-SSN') { '000000000' }
 
-      parameter AppealsApi::SwaggerSharedComponents.header_params[:veteran_icn_header]
+      parameter AppealsApi::SwaggerSharedComponents.header_params[:veteran_icn_header].merge(
+        {
+          required: !DocHelpers.decision_reviews?
+        }
+      )
+      let(:'X-VA-ICN') { '1234567890V123456' } unless DocHelpers.decision_reviews?
 
       parameter AppealsApi::SwaggerSharedComponents.header_params[:veteran_first_name_header]
       let(:'X-VA-First-Name') { 'first' }
@@ -168,7 +176,7 @@ describe 'Higher-Level Reviews', swagger_doc: DocHelpers.output_json_path, type:
   p = DocHelpers.decision_reviews? ? '/higher_level_reviews/{uuid}' : '/forms/200996/{uuid}'
   path p do
     get 'Shows a specific Higher-Level Review. (a.k.a. the Show endpoint)' do
-      scopes = %w[claim.read]
+      scopes = AppealsApi::HigherLevelReviews::V0::HigherLevelReviewsController::OAUTH_SCOPES[:GET]
       description 'Returns all of the data associated with a specific Higher-Level Review.'
       tags 'Higher-Level Reviews'
       operationId 'showHlr'
@@ -206,7 +214,7 @@ describe 'Higher-Level Reviews', swagger_doc: DocHelpers.output_json_path, type:
   if DocHelpers.decision_reviews?
     path '/higher_level_reviews/contestable_issues/{benefit_type}' do
       get 'Returns all contestable issues for a specific veteran.' do
-        scopes = %w[claim.read]
+        scopes = AppealsApi::HigherLevelReviews::V0::HigherLevelReviewsController::OAUTH_SCOPES[:GET]
         tags 'Higher-Level Reviews'
         operationId 'hlrContestableIssues'
         description = 'Returns all issues associated with a Veteran that have been decided by a ' \
@@ -224,6 +232,7 @@ describe 'Higher-Level Reviews', swagger_doc: DocHelpers.output_json_path, type:
         file_num_override = { description: 'Either X-VA-SSN or X-VA-File-Number is required' }
         parameter AppealsApi::SwaggerSharedComponents.header_params[:veteran_file_number_header].merge(file_num_override)
         parameter AppealsApi::SwaggerSharedComponents.header_params[:va_receipt_date]
+        parameter AppealsApi::SwaggerSharedComponents.header_params[:veteran_icn_header]
 
         response '200', 'JSON:API response returning all contestable issues for a specific veteran.' do
           schema '$ref' => '#/components/schemas/contestableIssues'
@@ -362,7 +371,7 @@ describe 'Higher-Level Reviews', swagger_doc: DocHelpers.output_json_path, type:
   else
     path '/schemas/{schema_type}' do
       get 'Gets JSON schema related to Higher-Level Review.' do
-        scopes = %w[claim.read]
+        scopes = AppealsApi::HigherLevelReviews::V0::HigherLevelReviewsController::OAUTH_SCOPES[:GET]
         tags 'Higher-Level Reviews'
         operationId 'hlrSchema'
         description 'Returns the [JSON Schema](https://json-schema.org) related to the `POST /forms/200996` endpoint'
@@ -405,7 +414,7 @@ describe 'Higher-Level Reviews', swagger_doc: DocHelpers.output_json_path, type:
   p = DocHelpers.decision_reviews? ? '/higher_level_reviews/validate' : '/forms/200996/validate'
   path p do
     post 'Validates a POST request body against the JSON schema.' do
-      scopes = %w[claim.write]
+      scopes = AppealsApi::HigherLevelReviews::V0::HigherLevelReviewsController::OAUTH_SCOPES[:POST]
       tags 'Higher-Level Reviews'
       operationId 'hlrValidate'
       description 'Like the POST /higher_level_reviews, but only does the validations <b>—does not submit anything.</b>'
@@ -427,7 +436,12 @@ describe 'Higher-Level Reviews', swagger_doc: DocHelpers.output_json_path, type:
       parameter AppealsApi::SwaggerSharedComponents.header_params[:veteran_ssn_header]
       let(:'X-VA-SSN') { '000000000' }
 
-      parameter AppealsApi::SwaggerSharedComponents.header_params[:veteran_icn_header]
+      parameter AppealsApi::SwaggerSharedComponents.header_params[:veteran_icn_header].merge(
+        {
+          required: !DocHelpers.decision_reviews?
+        }
+      )
+      let(:'X-VA-ICN') { '1234567890V123456' } unless DocHelpers.decision_reviews?
 
       parameter AppealsApi::SwaggerSharedComponents.header_params[:veteran_first_name_header]
       let(:'X-VA-First-Name') { 'first' }

@@ -18,13 +18,13 @@ module VBADocuments
 
     # If add_file_key is true the file is added to the returned hash as the parent key.
     # Useful for the rake task vba_documents:inspect_pdf
-    # pdf can be a String file path or the result of 'VBADocuments::MultipartParser.parse(tempfile.path)['contents']'
+    # pdf can be a String file path or the parts result of 'VBADocuments::MultipartParser.parse(tempfile.path)'
     def initialize(pdf:, add_file_key: false)
       if pdf.is_a?(String)
         raise ArgumentError, "Invalid file #{pdf}, does not exist!" unless File.exist? pdf
 
         @file = pdf
-        @parts = VBADocuments::MultipartParser.parse(@file)['contents']
+        @parts = VBADocuments::MultipartParser.parse(@file)
       else
         @parts = pdf
       end
@@ -75,8 +75,7 @@ module VBADocuments
     def add_line_of_business(data, parts_metadata)
       if parts_metadata.key? 'businessLine'
         data['line_of_business'] = parts_metadata['businessLine'].to_s.upcase
-        data['submitted_line_of_business'] =
-          CentralMail::Utilities.valid_lob[parts_metadata['businessLine'].to_s.upcase]
+        data['submitted_line_of_business'] = VALID_LOB[parts_metadata['businessLine'].to_s.upcase]
       end
     end
 
@@ -90,7 +89,8 @@ module VBADocuments
           height: dimensions[:height].round(2),
           width: dimensions[:width].round(2),
           oversized_pdf: dimensions[:height] > 21 || dimensions[:width] > 21
-        }
+        },
+        sha256_checksum: Digest::SHA256.file(pdf).hexdigest
       }
     end
   end

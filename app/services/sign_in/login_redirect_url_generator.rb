@@ -2,35 +2,43 @@
 
 module SignIn
   class LoginRedirectUrlGenerator
-    attr_reader :client_id, :login_code, :client_state, :type
+    attr_reader :client_config, :login_code, :client_state, :type
 
     def initialize(user_code_map:)
       @login_code = user_code_map.login_code
       @type = user_code_map.type
-      @client_id = user_code_map.client_id
+      @client_config = user_code_map.client_config
       @client_state = user_code_map.client_state
     end
 
     def perform
-      redirect_uri = get_client_id_mapped_redirect_uri
-      redirect_uri_params = get_redirect_uri_params
-      redirect_uri.query = redirect_uri_params.to_query
-      redirect_uri.to_s
+      renderer.render(template: 'oauth_get_form',
+                      locals: { url: redirect_uri, params: redirect_uri_params },
+                      format: :html)
     end
 
     private
 
-    def get_client_id_mapped_redirect_uri
-      client_config = SignIn::ClientConfig.new(client_id: client_id)
-      URI.parse(client_config.redirect_uri)
+    def redirect_uri
+      @redirect_uri ||= client_config.redirect_uri
     end
 
-    def get_redirect_uri_params
-      params = {}
-      params[:code] = login_code
-      params[:type] = type
-      params[:state] = client_state if client_state.present?
-      params
+    def redirect_uri_params
+      @redirect_uri_params ||= begin
+        params = {}
+        params[:code] = login_code
+        params[:type] = type
+        params[:state] = client_state if client_state.present?
+        params
+      end
+    end
+
+    def renderer
+      @renderer ||= begin
+        renderer = ActionController::Base.renderer
+        renderer.controller.prepend_view_path(Rails.root.join('lib', 'sign_in', 'templates'))
+        renderer
+      end
     end
   end
 end

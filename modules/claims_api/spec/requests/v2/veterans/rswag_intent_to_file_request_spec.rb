@@ -5,30 +5,30 @@ require 'rails_helper'
 require_relative '../../../support/swagger_shared_components/v2'
 
 # doc generation for V2 ITFs temporarily disabled by API-13879
-describe 'IntentToFile', swagger_doc: Rswag::TextHelpers.new.claims_api_docs,
-                         production: false do
+describe 'IntentToFile', swagger_doc: Rswag::TextHelpers.new.claims_api_docs do
   path '/veterans/{veteranId}/intent-to-file/{type}' do
     get "Returns last active Intent to File form submission for given 'type'." do
       tags 'Intent to File'
       operationId 'active0966itf'
       security [
-        { productionOauth: ['claim.read'] },
-        { sandboxOauth: ['claim.read'] },
+        { productionOauth: ['system/claim.read'] },
+        { sandboxOauth: ['system/claim.read'] },
         { bearer_token: [] }
       ]
       produces 'application/json'
-      description "Returns Veteran's last active Intent to File submission for given 'type'."
+      description "Returns Veteran's last active Intent to File submission for given benefit type."
 
       parameter name: 'veteranId',
                 in: :path,
                 required: true,
                 type: :string,
+                example: '1012667145V762142',
                 description: 'ID of Veteran'
       parameter name: 'type',
                 in: :path,
                 required: true,
                 type: :string,
-                description: 'Type of Intent to File to return. Available values - compensation, pension, burial'
+                description: 'Type of Intent to File to return. Available values - compensation, pension, survivor.'
       let(:veteranId) { '1013062086V794840' } # rubocop:disable RSpec/VariableName
       let(:type) { 'compensation' }
       let(:Authorization) { 'Bearer token' }
@@ -52,7 +52,7 @@ describe 'IntentToFile', swagger_doc: Rswag::TextHelpers.new.claims_api_docs,
               symbolize_names: true
             )
           end
-          let(:scopes) { %w[claim.read] }
+          let(:scopes) { %w[system/claim.read] }
 
           before do |example|
             Timecop.freeze(Time.zone.parse('2022-01-01T08:00:00Z'))
@@ -85,7 +85,7 @@ describe 'IntentToFile', swagger_doc: Rswag::TextHelpers.new.claims_api_docs,
           schema JSON.parse(File.read(Rails.root.join('spec', 'support', 'schemas', 'claims_api', 'v2', 'errors',
                                                       'default.json')))
 
-          let(:scopes) { %w[claim.read] }
+          let(:scopes) { %w[system/claim.read] }
 
           before do |example|
             submit_request(example.metadata)
@@ -111,7 +111,7 @@ describe 'IntentToFile', swagger_doc: Rswag::TextHelpers.new.claims_api_docs,
                                                       'default.json')))
 
           let(:veteran) { OpenStruct.new(mpi: nil, participant_id: nil) }
-          let(:scopes) { %w[claim.read] }
+          let(:scopes) { %w[system/claim.read] }
 
           before do |example|
             with_okta_user(scopes) do
@@ -142,7 +142,7 @@ describe 'IntentToFile', swagger_doc: Rswag::TextHelpers.new.claims_api_docs,
               Rails.root.join('spec', 'support', 'schemas', 'claims_api', 'v2', 'errors', 'default.json')
             )
           )
-          let(:scopes) { %w[claim.read] }
+          let(:scopes) { %w[system/claim.read] }
 
           before do |example|
             with_okta_user(scopes) do
@@ -174,18 +174,19 @@ describe 'IntentToFile', swagger_doc: Rswag::TextHelpers.new.claims_api_docs,
       tags 'Intent to File'
       operationId 'post0966itf'
       security [
-        { productionOauth: ['claim.read', 'claim.write'] },
-        { sandboxOauth: ['claim.read', 'claim.write'] },
+        { productionOauth: ['system/claim.read', 'system/claim.write'] },
+        { sandboxOauth: ['system/claim.read', 'system/claim.write'] },
         { bearer_token: [] }
       ]
       consumes 'application/json'
       produces 'application/json'
-      description 'Establishes an intent to file for disability compensation and pension claims.'
+      description 'Establishes an Intent to File for disability compensation, pension, and survivor claims.'
 
       parameter name: 'veteranId',
                 in: :path,
                 required: true,
                 type: :string,
+                example: '1012667145V762142',
                 description: 'ID of Veteran'
       let(:veteranId) { '1013062086V794840' } # rubocop:disable RSpec/VariableName
       let(:type) { 'compensation' }
@@ -202,7 +203,7 @@ describe 'IntentToFile', swagger_doc: Rswag::TextHelpers.new.claims_api_docs,
             )
           )
 
-          let(:scopes) { %w[claim.write] }
+          let(:scopes) { %w[system/claim.write] }
           let(:data) do
             {
               type: 'compensation'
@@ -219,7 +220,7 @@ describe 'IntentToFile', swagger_doc: Rswag::TextHelpers.new.claims_api_docs,
           end
 
           before do |example|
-            allow_any_instance_of(BGS::IntentToFileWebService).to receive(:insert_intent_to_file).and_return(
+            allow_any_instance_of(ClaimsApi::LocalBGS).to receive(:insert_intent_to_file).and_return(
               stub_response
             )
 
@@ -247,7 +248,7 @@ describe 'IntentToFile', swagger_doc: Rswag::TextHelpers.new.claims_api_docs,
           schema JSON.parse(File.read(Rails.root.join('spec', 'support', 'schemas', 'claims_api', 'v2', 'errors',
                                                       'default.json')))
 
-          let(:scopes) { %w[claim.write] }
+          let(:scopes) { %w[system/claim.write] }
           let(:data) do
             {
               type: 'some-invalid-value'
@@ -279,7 +280,7 @@ describe 'IntentToFile', swagger_doc: Rswag::TextHelpers.new.claims_api_docs,
           schema JSON.parse(File.read(Rails.root.join('spec', 'support', 'schemas', 'claims_api', 'v2', 'errors',
                                                       'default.json')))
 
-          let(:scopes) { %w[claim.write] }
+          let(:scopes) { %w[system/claim.write] }
           let(:data) do
             {
               type: 'compensation'
@@ -311,7 +312,7 @@ describe 'IntentToFile', swagger_doc: Rswag::TextHelpers.new.claims_api_docs,
           schema JSON.parse(File.read(Rails.root.join('spec', 'support', 'schemas', 'claims_api', 'v2', 'errors',
                                                       'default.json')))
 
-          let(:scopes) { %w[claim.write] }
+          let(:scopes) { %w[system/claim.write] }
           let(:data) do
             {
               type: 'compensation'
@@ -337,6 +338,40 @@ describe 'IntentToFile', swagger_doc: Rswag::TextHelpers.new.claims_api_docs,
           end
         end
       end
+
+      describe 'Getting a 422 response' do
+        response '422', 'Unprocessable entity' do
+          schema JSON.parse(File.read(Rails.root.join('spec', 'support', 'schemas', 'claims_api', 'v2', 'errors',
+                                                      'default.json')))
+
+          let(:scopes) { %w[system/claim.write] }
+          let(:data) { { type: 'survivor', claimantSsn: '796111863' } }
+          let(:veteranId) { '1013062086V794840' } # rubocop:disable RSpec/VariableName
+
+          before do |example|
+            stub_poa_verification
+            stub_mpi
+
+            with_okta_user(scopes) do
+              VCR.use_cassette('bgs/intent_to_file_web_service/insert_intent_to_file') do
+                submit_request(example.metadata)
+              end
+            end
+          end
+
+          after do |example|
+            example.metadata[:response][:content] = {
+              'application/json' => {
+                example: JSON.parse(response.body, symbolize_names: true)
+              }
+            }
+          end
+
+          it 'returns a 422 response' do |example|
+            assert_response_matches_metadata(example.metadata)
+          end
+        end
+      end
     end
   end
 
@@ -345,18 +380,19 @@ describe 'IntentToFile', swagger_doc: Rswag::TextHelpers.new.claims_api_docs,
       tags 'Intent to File'
       operationId 'validate0966itf'
       security [
-        { productionOauth: ['claim.read', 'claim.write'] },
-        { sandboxOauth: ['claim.read', 'claim.write'] },
+        { productionOauth: ['system/claim.read', 'system/claim.write'] },
+        { sandboxOauth: ['system/claim.read', 'system/claim.write'] },
         { bearer_token: [] }
       ]
       consumes 'application/json'
       produces 'application/json'
-      description 'Validates an intent to file for disability compensation and pension claims.'
+      description 'Validates an Intent to File for disability compensation, pension, and survivor claims.'
 
       parameter name: 'veteranId',
                 in: :path,
                 required: true,
                 type: :string,
+                example: '1012667145V762142',
                 description: 'ID of Veteran'
       let(:veteranId) { '1013062086V794840' } # rubocop:disable RSpec/VariableName
       let(:type) { 'compensation' }
@@ -373,7 +409,7 @@ describe 'IntentToFile', swagger_doc: Rswag::TextHelpers.new.claims_api_docs,
             )
           )
 
-          let(:scopes) { %w[claim.write] }
+          let(:scopes) { %w[system/claim.write] }
           let(:data) do
             {
               type: 'compensation'
@@ -418,7 +454,7 @@ describe 'IntentToFile', swagger_doc: Rswag::TextHelpers.new.claims_api_docs,
           schema JSON.parse(File.read(Rails.root.join('spec', 'support', 'schemas', 'claims_api', 'v2', 'errors',
                                                       'default.json')))
 
-          let(:scopes) { %w[claim.write] }
+          let(:scopes) { %w[system/claim.write] }
           let(:data) do
             {
               type: 'some-invalid-value'
@@ -450,7 +486,7 @@ describe 'IntentToFile', swagger_doc: Rswag::TextHelpers.new.claims_api_docs,
           schema JSON.parse(File.read(Rails.root.join('spec', 'support', 'schemas', 'claims_api', 'v2', 'errors',
                                                       'default.json')))
 
-          let(:scopes) { %w[claim.write] }
+          let(:scopes) { %w[system/claim.write] }
           let(:data) do
             {
               type: 'compensation'
@@ -482,7 +518,7 @@ describe 'IntentToFile', swagger_doc: Rswag::TextHelpers.new.claims_api_docs,
           schema JSON.parse(File.read(Rails.root.join('spec', 'support', 'schemas', 'claims_api', 'v2', 'errors',
                                                       'default.json')))
 
-          let(:scopes) { %w[claim.write] }
+          let(:scopes) { %w[system/claim.write] }
           let(:data) do
             {
               type: 'compensation'

@@ -2,9 +2,13 @@
 
 require 'rails_helper'
 require 'token_validation/v2/client'
+require 'bgs_service/local_bgs'
 
 RSpec.describe 'IntentToFiles', type: :request do
   let(:veteran_id) { '1013062086V794840' }
+  let(:iws) do
+    ClaimsApi::LocalBGS
+  end
 
   describe 'IntentToFiles' do
     describe 'type' do
@@ -17,7 +21,7 @@ RSpec.describe 'IntentToFiles', type: :request do
 
       let(:type) { 'compensation' }
       let(:itf_type_path) { "/services/claims/v2/veterans/#{veteran_id}/intent-to-file/#{type}" }
-      let(:scopes) { %w[claim.read] }
+      let(:scopes) { %w[system/claim.read] }
 
       describe 'auth header' do
         let(:stub_response) do
@@ -63,10 +67,10 @@ RSpec.describe 'IntentToFiles', type: :request do
         context "when given an invalid 'type' path param" do
           let(:type) { 'some-invalid-value' }
 
-          it 'returns a 404' do
+          it 'returns a 400' do
             with_okta_user(scopes) do |auth_header|
               get itf_type_path, headers: auth_header
-              expect(response.status).to eq(404)
+              expect(response.status).to eq(400)
             end
           end
         end
@@ -167,7 +171,7 @@ RSpec.describe 'IntentToFiles', type: :request do
 
               parsed_response = JSON.parse(response.body)
               expect(response.status).to eq(200)
-              expect(parsed_response['id']).to eq('2')
+              expect(parsed_response['data']['id']).to eq('2')
             end
           end
         end
@@ -314,13 +318,13 @@ RSpec.describe 'IntentToFiles', type: :request do
 
     describe 'submit' do
       before do
-        allow_any_instance_of(BGS::IntentToFileWebService).to receive(:insert_intent_to_file).and_return(
+        allow_any_instance_of(iws).to receive(:insert_intent_to_file).and_return(
           stub_response
         )
       end
 
       let(:itf_submit_path) { "/services/claims/v2/veterans/#{veteran_id}/intent-to-file" }
-      let(:scopes) { %w[claim.write] }
+      let(:scopes) { %w[system/claim.write] }
       let(:data) do
         {
           type: 'compensation'
@@ -405,29 +409,50 @@ RSpec.describe 'IntentToFiles', type: :request do
             end
           end
 
-          context "when optional 'participant_claimant_id' is invalid" do
-            context "when optional 'participant_claimant_id' is blank" do
-              it 'returns a 400' do
+          context "when ITF type is 'survivor'" do
+            context "when optional 'claimantSsn' is provided" do
+              it 'returns a 200' do
                 with_okta_user(scopes) do |auth_header|
-                  invalid_data = data
-                  invalid_data[:participant_claimant_id] = ''
+                  survivor_data = data
+                  survivor_data[:type] = 'survivor'
+                  survivor_data[:claimantSsn] = '123456789'
+                  post itf_submit_path, params: survivor_data, headers: auth_header
+                  expect(response.status).to eq(200)
+                end
+              end
 
-                  post itf_submit_path, params: invalid_data, headers: auth_header
-                  expect(response.status).to eq(400)
+              context "when 'claimantSsn' contains separators" do
+                it 'returns a 200' do
+                  with_okta_user(scopes) do |auth_header|
+                    survivor_data = data
+                    survivor_data[:type] = 'survivor'
+                    survivor_data[:claimantSsn] = '123-45-6789'
+                    post itf_submit_path, params: survivor_data, headers: auth_header
+                    expect(response.status).to eq(200)
+                  end
                 end
               end
             end
-          end
 
-          context "when optional 'participant_vet_id' is invalid" do
-            context "when optional 'participant_vet_id' is blank" do
-              it 'returns a 400' do
+            context 'when no optional parameters are provided' do
+              it 'returns a 422' do
                 with_okta_user(scopes) do |auth_header|
-                  invalid_data = data
-                  invalid_data[:participant_vet_id] = ''
+                  survivor_data = data
+                  survivor_data[:type] = 'survivor'
+                  post itf_submit_path, params: survivor_data, headers: auth_header
+                  expect(response.status).to eq(422)
+                end
+              end
+            end
 
-                  post itf_submit_path, params: invalid_data, headers: auth_header
-                  expect(response.status).to eq(400)
+            context 'when invalid parameter is provided' do
+              it 'returns a 422' do
+                with_okta_user(scopes) do |auth_header|
+                  survivor_data = data
+                  survivor_data[:type] = 'survivor'
+                  survivor_data[:claimantSsn] = 'abcdefghi'
+                  post itf_submit_path, params: survivor_data, headers: auth_header
+                  expect(response.status).to eq(422)
                 end
               end
             end
@@ -480,13 +505,13 @@ RSpec.describe 'IntentToFiles', type: :request do
 
     describe 'validate' do
       before do
-        allow_any_instance_of(BGS::IntentToFileWebService).to receive(:insert_intent_to_file).and_return(
+        allow_any_instance_of(iws).to receive(:insert_intent_to_file).and_return(
           stub_response
         )
       end
 
       let(:itf_validate_path) { "/services/claims/v2/veterans/#{veteran_id}/intent-to-file/validate" }
-      let(:scopes) { %w[claim.write] }
+      let(:scopes) { %w[system/claim.write] }
       let(:data) do
         {
           type: 'compensation'
@@ -533,6 +558,20 @@ RSpec.describe 'IntentToFiles', type: :request do
         end
 
         context 'when payload is invalid' do
+          context "when 'type' is survivor" do
+            context "when 'claimantSsn' is blank" do
+              it 'returns a 422' do
+                with_okta_user(scopes) do |auth_header|
+                  invalid_data = data
+                  invalid_data[:type] = 'survivor'
+                  invalid_data[:claimantSsn] = ''
+                  post itf_validate_path, params: invalid_data, headers: auth_header
+                  expect(response.status).to eq(422)
+                end
+              end
+            end
+          end
+
           context "when 'type' is invalid" do
             context "when 'type' is blank" do
               it 'returns a 400' do
@@ -563,34 +602,6 @@ RSpec.describe 'IntentToFiles', type: :request do
                 with_okta_user(scopes) do |auth_header|
                   invalid_data = data
                   invalid_data[:type] = 'foo'
-
-                  post itf_validate_path, params: invalid_data, headers: auth_header
-                  expect(response.status).to eq(400)
-                end
-              end
-            end
-          end
-
-          context "when optional 'participant_claimant_id' is invalid" do
-            context "when optional 'participant_claimant_id' is blank" do
-              it 'returns a 400' do
-                with_okta_user(scopes) do |auth_header|
-                  invalid_data = data
-                  invalid_data[:participant_claimant_id] = ''
-
-                  post itf_validate_path, params: invalid_data, headers: auth_header
-                  expect(response.status).to eq(400)
-                end
-              end
-            end
-          end
-
-          context "when optional 'participant_vet_id' is invalid" do
-            context "when optional 'participant_vet_id' is blank" do
-              it 'returns a 400' do
-                with_okta_user(scopes) do |auth_header|
-                  invalid_data = data
-                  invalid_data[:participant_vet_id] = ''
 
                   post itf_validate_path, params: invalid_data, headers: auth_header
                   expect(response.status).to eq(400)

@@ -3,7 +3,6 @@
 require_dependency 'vba_documents/upload_validator'
 require_dependency 'vba_documents/payload_manager'
 require_dependency 'vba_documents/multipart_parser'
-require_dependency 'vba_documents/upload_integrity_checker'
 
 require 'sidekiq'
 require 'vba_documents/object_store'
@@ -63,20 +62,16 @@ module VBADocuments
         @upload.update(metadata: @upload.metadata.merge(original_file_metadata(tempfile)))
 
         parts = VBADocuments::MultipartParser.parse(tempfile.path)
-        inspector = VBADocuments::PDFInspector.new(pdf: parts['contents'])
+        inspector = VBADocuments::PDFInspector.new(pdf: parts)
         @upload.update(uploaded_pdf: inspector.pdf_data)
 
         # Validations
-        validate_parts(@upload, parts['contents'])
-        validate_metadata(parts['contents'][META_PART_NAME], submission_version: @upload.metadata['version'].to_i)
-        validate_documents(parts['contents'])
+        validate_parts(@upload, parts)
+        validate_metadata(parts[META_PART_NAME], submission_version: @upload.metadata['version'].to_i)
+        validate_documents(parts)
 
-        if Flipper.enabled?(:vba_documents_file_checksum)
-          VBADocuments::UploadIntegrityChecker.new(@upload, parts).check_integrity
-        end
-
-        metadata = perfect_metadata(@upload, parts['contents'], timestamp)
-        response = submit(metadata, parts['contents'])
+        metadata = perfect_metadata(@upload, parts, timestamp)
+        response = submit(metadata, parts)
 
         process_response(response)
         log_submission(@upload, metadata)
@@ -87,7 +82,7 @@ module VBADocuments
         retry_errors(e, @upload)
       ensure
         tempfile.close
-        close_part_files(parts['contents']) if parts.present? && parts['contents'].present?
+        close_part_files(parts) if parts.present?
       end
       response
     end
@@ -97,7 +92,8 @@ module VBADocuments
       {
         'size' => tempfile.size,
         'base64_encoded' => VBADocuments::MultipartParser.base64_encoded?(tempfile.path),
-        'original_checksum' => Digest::SHA256.file(tempfile).hexdigest
+        'sha256_checksum' => Digest::SHA256.file(tempfile).hexdigest,
+        'md5_checksum' => Digest::MD5.file(tempfile).hexdigest
       }
     end
 

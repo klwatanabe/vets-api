@@ -136,9 +136,31 @@ describe SignIn::Idme::Service do
   end
 
   describe '#user_info' do
+    let(:test_client_cert_path) { 'spec/fixtures/sign_in/oauth_test.crt' }
+    let(:test_client_key_path) { 'spec/fixtures/sign_in/oauth_test.key' }
+
+    before do
+      allow(Settings.idme).to receive(:client_cert_path).and_return(test_client_cert_path)
+      allow(Settings.idme).to receive(:client_key_path).and_return(test_client_key_path)
+    end
+
     it 'returns user attributes' do
       VCR.use_cassette('identity/idme_200_responses') do
         expect(subject.user_info(token)).to eq(user_info)
+      end
+    end
+
+    context 'when log_credential is enabled in idme configuration' do
+      before do
+        allow_any_instance_of(SignIn::Idme::Configuration).to receive(:log_credential).and_return(true)
+        allow(MockedAuthentication::Mockdata::Writer).to receive(:save_credential)
+      end
+
+      it 'makes a call to mocked authentication writer to save the credential' do
+        VCR.use_cassette('identity/idme_200_responses') do
+          expect(MockedAuthentication::Mockdata::Writer).to receive(:save_credential)
+          subject.user_info(token)
+        end
       end
     end
 
@@ -224,12 +246,11 @@ describe SignIn::Idme::Service do
   describe '#normalized_attributes' do
     before { subject.type = type }
 
-    let(:client_id) { SignIn::Constants::Auth::WEB_CLIENT }
     let(:expected_standard_attributes) do
       {
         idme_uuid: user_uuid,
-        current_ial: IAL::TWO,
-        max_ial: IAL::TWO,
+        current_ial: SignIn::Constants::Auth::IAL_TWO,
+        max_ial: SignIn::Constants::Auth::IAL_TWO,
         service_name: service_name,
         csp_email: email,
         multifactor: multifactor,
@@ -239,13 +260,15 @@ describe SignIn::Idme::Service do
     end
     let(:service_name) { SignIn::Constants::Auth::IDME }
     let(:auto_uplevel) { false }
-    let(:authn_context) { LOA::IDME_LOA3 }
+    let(:authn_context) { SignIn::Constants::Auth::IDME_LOA3 }
     let(:auth_broker) { SignIn::Constants::Auth::BROKER_CODE }
-    let(:credential_level) { create(:credential_level, current_ial: IAL::TWO, max_ial: IAL::TWO) }
+    let(:credential_level) do
+      create(:credential_level, current_ial: SignIn::Constants::Auth::IAL_TWO,
+                                max_ial: SignIn::Constants::Auth::IAL_TWO)
+    end
 
     context 'when type is idme' do
       let(:type) { SignIn::Constants::Auth::IDME }
-      let(:authn_context) { LOA::IDME_LOA3 }
       let(:service_name) { SignIn::Constants::Auth::IDME }
       let(:user_info) do
         OpenStruct.new(
@@ -307,7 +330,7 @@ describe SignIn::Idme::Service do
 
     context 'when type is dslogon' do
       let(:type) { SignIn::Constants::Auth::DSLOGON }
-      let(:authn_context) { LOA::IDME_DSLOGON_LOA3 }
+      let(:authn_context) { SignIn::Constants::Auth::IDME_DSLOGON_LOA3 }
       let(:service_name) { SignIn::Constants::Auth::DSLOGON }
       let(:user_info) do
         OpenStruct.new(
@@ -352,7 +375,7 @@ describe SignIn::Idme::Service do
 
     context 'when type is mhv' do
       let(:type) { SignIn::Constants::Auth::MHV }
-      let(:authn_context) { LOA::IDME_MHV_LOA3 }
+      let(:authn_context) { SignIn::Constants::Auth::IDME_MHV_LOA3 }
       let(:service_name) { SignIn::Constants::Auth::MHV }
       let(:user_info) do
         OpenStruct.new(

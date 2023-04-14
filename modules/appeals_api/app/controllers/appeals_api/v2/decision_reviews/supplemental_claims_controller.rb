@@ -9,6 +9,7 @@ class AppealsApi::V2::DecisionReviews::SupplementalClaimsController < AppealsApi
   include AppealsApi::MPIVeteran
 
   skip_before_action :authenticate
+  before_action :validate_index_headers, only: %i[index]
   before_action :validate_json_format, if: -> { request.post? }
   before_action :validate_json_schema, only: %i[create validate]
 
@@ -21,10 +22,12 @@ class AppealsApi::V2::DecisionReviews::SupplementalClaimsController < AppealsApi
   )['definitions']['scCreateParameters']['properties'].keys
   SCHEMA_ERROR_TYPE = Common::Exceptions::DetailedSchemaErrors
   ALLOWED_COLUMNS = %i[id status code detail created_at updated_at].freeze
+  ICN_HEADER = 'X-VA-ICN'
+  ICN_REGEX = /^[0-9]{10}V[0-9]{6}$/
 
   def index
     veteran_scs = AppealsApi::SupplementalClaim.select(ALLOWED_COLUMNS)
-                                               .where(veteran_icn: target_veteran.mpi_icn)
+                                               .where(veteran_icn: request_headers['X-VA-ICN'])
                                                .order(created_at: :desc)
     render json: AppealsApi::SupplementalClaimSerializer.new(veteran_scs).serializable_hash
   end
@@ -36,14 +39,15 @@ class AppealsApi::V2::DecisionReviews::SupplementalClaimsController < AppealsApi
       source: request_headers['X-Consumer-Username'].presence&.strip,
       evidence_submission_indicated: evidence_submission_indicated?,
       api_version: 'V2',
-      veteran_icn: request_headers['X-VA-ICN'].presence&.strip
+      veteran_icn: request_headers['X-VA-ICN'],
+      metadata: { evidenceType: @json_body.dig(*%w[data attributes evidenceSubmission evidenceType]) }
     )
 
     render_model_errors(sc) and return unless sc.validate
 
     sc.save
 
-    pdf_version = 'v2'
+    pdf_version = Flipper.enabled?(:decision_review_supplemental_claim_pdf_v3) ? 'v3' : 'v2'
     AppealsApi::PdfSubmitJob.perform_async(sc.id, 'AppealsApi::SupplementalClaim', pdf_version)
     AppealsApi::AddIcnUpdater.perform_async(sc.id, 'AppealsApi::SupplementalClaim') if sc.veteran_icn.blank?
 
@@ -77,6 +81,18 @@ class AppealsApi::V2::DecisionReviews::SupplementalClaimsController < AppealsApi
 
   private
 
+  def validate_index_headers
+    validation_errors = []
+
+    if request_headers[ICN_HEADER].blank?
+      validation_errors << { status: 422, detail: "#{ICN_HEADER} is required" }
+    elsif !ICN_REGEX.match?(request_headers[ICN_HEADER])
+      validation_errors << { status: 422, detail: "#{ICN_HEADER} has an invalid format. Pattern: #{ICN_REGEX.inspect}" }
+    end
+
+    render json: { errors: validation_errors }, status: :unprocessable_entity if validation_errors.present?
+  end
+
   def validate_json_schema
     validate_json_schema_for_headers
     validate_json_schema_for_body
@@ -108,7 +124,7 @@ class AppealsApi::V2::DecisionReviews::SupplementalClaimsController < AppealsApi
   end
 
   def request_headers
-    HEADERS.index_with { |key| request.headers[key] }.compact
+    self.class::HEADERS.index_with { |key| request.headers[key] }.compact
   end
 
   def render_model_errors(model)

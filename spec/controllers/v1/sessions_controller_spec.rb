@@ -495,8 +495,6 @@ RSpec.describe V1::SessionsController, type: :controller do
 
     describe 'GET sessions/slo/new' do
       before do
-        mhv_account = double('mhv_account', ineligible?: false, needs_terms_acceptance?: false, upgraded?: true)
-        allow(MHVAccount).to receive(:find_or_initialize_by).and_return(mhv_account)
         Session.find(token).to_hash.each { |k, v| session[k] = v }
       end
 
@@ -530,10 +528,6 @@ RSpec.describe V1::SessionsController, type: :controller do
 
       context 'verifying' do
         let(:authn_context) { IAL::LOGIN_GOV_IAL1 }
-        let(:version) { 'v1' }
-        let(:expected_ssn_log) do
-          "SessionsController version:#{version} message:SSN from MPI Lookup does not match UserIdentity cache"
-        end
 
         it 'uplevels an LOA 1 session to LOA 3', :aggregate_failures do
           SAMLRequestTracker.create(
@@ -545,17 +539,6 @@ RSpec.describe V1::SessionsController, type: :controller do
           expect(existing_user.multifactor).to be_falsey
           expect(existing_user.loa).to eq(highest: IAL::ONE, current: IAL::ONE)
           expect(existing_user.ssn).to eq('796111863')
-          allow(StringHelpers).to receive(:levenshtein_distance).and_return(8)
-          expect(controller).to receive(:log_message_to_sentry).with(
-            expected_ssn_log,
-            :warn,
-            identity_compared_with_mpi: {
-              length: [9, 9],
-              only_digits: [true, true],
-              encoding: %w[UTF-8 UTF-8],
-              levenshtein_distance: 8
-            }
-          )
           expect(Raven).to receive(:tags_context).once
 
           callback_tags = ['status:success', "context:#{IAL::LOGIN_GOV_IAL1}", 'version:v1']
@@ -584,6 +567,65 @@ RSpec.describe V1::SessionsController, type: :controller do
 
             expect { post(:saml_callback, params: { RelayState: '{"type": "idme"}' }) }
               .to trigger_statsd_increment(described_class::STATSD_LOGIN_STATUS_SUCCESS, tags: callback_tags, **once)
+          end
+        end
+
+        context 'UserIdentity & MPI ID validations' do
+          let(:loa3_user) { build(:user, :loa3, uuid: uuid, idme_uuid: uuid, stub_mpi: false) }
+          let(:mpi_profile) { build(:mvi_profile) }
+          let(:expected_error_data) do
+            { identity_value: expected_identity_value, mpi_value: expected_mpi_value, icn: loa3_user.icn }
+          end
+          let(:expected_error_message) do
+            "[SessionsController version:v1] User Identity & MPI #{validation_id} values conflict"
+          end
+
+          before do
+            allow(Rails.logger).to receive(:warn)
+            allow_any_instance_of(User).to receive(:mpi_profile).and_return(mpi_profile)
+          end
+
+          shared_examples 'identity-mpi id validation' do
+            it 'logs a warning when Identity & MPI values conflict' do
+              expect(Rails.logger).to receive(:warn).at_least(:once).with(expected_error_message, expected_error_data)
+              post(:saml_callback)
+            end
+          end
+
+          context 'ssn validation' do
+            let(:expected_identity_value) { loa3_user.identity.ssn }
+            let(:expected_mpi_value) { loa3_user.ssn_mpi }
+            let(:validation_id) { 'SSN' }
+            let(:expected_error_data) { { icn: loa3_user.icn } }
+
+            it_behaves_like 'identity-mpi id validation'
+          end
+
+          context 'edipi validation' do
+            let(:mpi_profile) { build(:mvi_profile, edipi: Faker::Number.number(digits: 10)) }
+            let(:expected_identity_value) { loa3_user.identity.edipi }
+            let(:expected_mpi_value) { loa3_user.edipi_mpi }
+            let(:validation_id) { 'EDIPI' }
+
+            it_behaves_like 'identity-mpi id validation'
+          end
+
+          context 'icn validation' do
+            let(:mpi_profile) { build(:mvi_profile, icn: 'some-mpi-icn') }
+            let(:expected_identity_value) { loa3_user.identity.icn }
+            let(:expected_mpi_value) { loa3_user.mpi_icn }
+            let(:validation_id) { 'ICN' }
+
+            it_behaves_like 'identity-mpi id validation'
+          end
+
+          context 'MHV correlation id validation' do
+            let(:mpi_profile) { build(:mvi_profile, mhv_ids: [Faker::Number.number(digits: 11)]) }
+            let(:expected_identity_value) { loa3_user.identity.mhv_correlation_id }
+            let(:expected_mpi_value) { loa3_user.mpi_mhv_correlation_id }
+            let(:validation_id) { 'MHV Correlation ID' }
+
+            it_behaves_like 'identity-mpi id validation'
           end
         end
       end
@@ -616,12 +658,11 @@ RSpec.describe V1::SessionsController, type: :controller do
           it 'logs a message to Sentry' do
             allow(saml_user).to receive(:changing_multifactor?).and_return(true)
             expect(Raven).to receive(:extra_context).with(current_user_uuid: uuid, current_user_icn: '11111111111')
-            expect(Raven).to receive(:extra_context).with(saml_uuid: 'invalid', saml_icn: '11111111111')
+            expect(Raven).to receive(:extra_context).with({ saml_uuid: 'invalid', saml_icn: '11111111111' })
             expect(Raven).to receive(:capture_message).with(
               "Couldn't locate exiting user after MFA establishment",
               level: 'warning'
             )
-            expect(Raven).to receive(:capture_message).at_least(:once)
             expect(Raven).to receive(:extra_context).at_least(:once) # From PostURLService#initialize
             with_settings(Settings.sentry, dsn: 'T') do
               post(:saml_callback, params: { RelayState: '{"type": "mfa"}' })

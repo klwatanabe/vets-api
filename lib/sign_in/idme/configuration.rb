@@ -35,7 +35,7 @@ module SignIn
       end
 
       def idme_scope
-        LOA::IDME_LOA3
+        Constants::Auth::IDME_LOA3
       end
 
       def auth_path
@@ -80,6 +80,10 @@ module SignIn
 
       def ssl_cert
         OpenSSL::X509::Certificate.new(File.read(client_cert_path))
+      end
+
+      def log_credential
+        false
       end
 
       # Faraday connection object with breakers, snakecase and json response middleware

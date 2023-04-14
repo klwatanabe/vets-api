@@ -8,15 +8,20 @@ RSpec.describe 'Claims', type: :request do
   let(:claim_id) { '600131328' }
   let(:all_claims_path) { "/services/claims/v2/veterans/#{veteran_id}/claims" }
   let(:claim_by_id_path) { "/services/claims/v2/veterans/#{veteran_id}/claims/#{claim_id}" }
-  let(:scopes) { %w[claim.read] }
+  let(:scopes) { %w[system/claim.read] }
   let(:profile) do
     MPI::Responses::FindProfileResponse.new(
-      {
-        status: 'OK',
-        profile: FactoryBot.build(:mvi_profile,
-                                  participant_id: nil,
-                                  participant_ids: [])
-      }
+      status: 'OK',
+      profile: FactoryBot.build(:mvi_profile,
+                                participant_id: nil,
+                                participant_ids: [])
+    )
+  end
+
+  let(:profile_erroneous_icn) do
+    MPI::Responses::FindProfileResponse.new(
+      status: 'OK',
+      profile: FactoryBot.build(:mvi_profile, icn: '667711332299')
     )
   end
 
@@ -170,10 +175,13 @@ RSpec.describe 'Claims', type: :request do
         end
 
         it 'are listed' do
-          lighthouse_claim = create(:auto_established_claim, status: 'PENDING', veteran_icn: veteran_id,
-                                                             evss_id: '600098193')
+          lighthouse_claim = build(:auto_established_claim, status: 'PEND', veteran_icn: veteran_id,
+                                                            evss_id: '600098193')
+          lighthouse_claim_two = build(:auto_established_claim, status: 'CAN', veteran_icn: veteran_id,
+                                                                evss_id: '600098194')
           lh_claims = []
-          lh_claims.append(lighthouse_claim)
+          lh_claims << lighthouse_claim
+          lh_claims << lighthouse_claim_two
 
           with_okta_user(scopes) do |auth_header|
             VCR.use_cassette('bgs/tracked_items/find_tracked_items') do
@@ -187,6 +195,9 @@ RSpec.describe 'Claims', type: :request do
               json_response = JSON.parse(response.body)
               expect(response.status).to eq(200)
               claim = json_response['data'].first
+              claim_two = json_response['data'][1]
+              expect(claim['attributes']['status']).to eq('COMPLETE')
+              expect(claim_two['attributes']['status']).to eq('CANCELED')
               expect(claim['attributes']['claimPhaseDates']['phaseChangeDate']).to eq('2017-10-18')
             end
           end
@@ -201,7 +212,8 @@ RSpec.describe 'Claims', type: :request do
                 benefit_claims_dto: {
                   benefit_claim: [
                     {
-                      benefit_claim_id: '111111111'
+                      benefit_claim_id: '111111111',
+                      claim_status: 'Preparation for notification'
                     }
                   ]
                 }
@@ -212,7 +224,7 @@ RSpec.describe 'Claims', type: :request do
                 OpenStruct.new(
                   id: '0958d973-36fb-43ef-8801-2718bd33c825',
                   evss_id: '111111111',
-                  status: 'Pending'
+                  status: 'Preparation for notification'
                 )
               ]
             end
@@ -228,10 +240,12 @@ RSpec.describe 'Claims', type: :request do
                   get all_claims_path, headers: auth_header
 
                   json_response = JSON.parse(response.body)
+
                   expect(response.status).to eq(200)
                   expect(json_response['data']).to be_an_instance_of(Array)
                   expect(json_response.count).to eq(1)
                   claim = json_response['data'].first
+                  expect(claim['attributes']['status']).to eq('PREPARATION_FOR_NOTIFICATION')
                   expect(claim['id']).to eq('111111111')
                   expect(claim['attributes']['lighthouseId']).to eq('0958d973-36fb-43ef-8801-2718bd33c825')
                 end
@@ -245,7 +259,8 @@ RSpec.describe 'Claims', type: :request do
                 benefit_claims_dto: {
                   benefit_claim: [
                     {
-                      benefit_claim_id: '111111111'
+                      benefit_claim_id: '111111111',
+                      phase_type: 'claim received'
                     }
                   ]
                 }
@@ -268,6 +283,7 @@ RSpec.describe 'Claims', type: :request do
                   expect(json_response['data']).to be_an_instance_of(Array)
                   expect(json_response.count).to eq(1)
                   claim = json_response['data'].first
+                  expect(claim['attributes']['status']).to eq('CLAIM_RECEIVED')
                   expect(claim['id']).to eq('111111111')
                   expect(claim['attributes']['lighthouseId']).to be nil
                 end
@@ -288,7 +304,7 @@ RSpec.describe 'Claims', type: :request do
                 OpenStruct.new(
                   id: '0958d973-36fb-43ef-8801-2718bd33c825',
                   evss_id: '111111111',
-                  status: 'pending'
+                  status: 'pend'
                 )
               ]
             end
@@ -309,8 +325,9 @@ RSpec.describe 'Claims', type: :request do
                   expect(json_response['data']).to be_an_instance_of(Array)
                   expect(json_response.count).to eq(1)
                   claim = json_response['data'].first
+                  expect(claim['attributes']['status']).to eq('PENDING')
                   expect(claim['attributes']['lighthouseId']).to eq('0958d973-36fb-43ef-8801-2718bd33c825')
-                  expect(claim['attributes']['claimId']).to be nil
+                  expect(claim['id']).to be nil
                 end
               end
             end
@@ -353,7 +370,7 @@ RSpec.describe 'Claims', type: :request do
             allow(JWT).to receive(:decode).and_return(nil)
             allow(Token).to receive(:new).and_return(ccg_token)
             allow_any_instance_of(TokenValidation::V2::Client).to receive(:token_valid?).and_return(true)
-
+            allow_any_instance_of(ClaimsApi::Veteran).to receive(:mpi_record?).and_return(true)
             allow_any_instance_of(MPIData)
               .to receive(:mvi_response).and_return(profile)
 
@@ -370,8 +387,44 @@ RSpec.describe 'Claims', type: :request do
       end
     end
 
+    describe 'show with validate_id_with_icn' do
+      let(:bgs_claim_response) { build(:bgs_response_with_one_lc_status).to_h }
+
+      describe ' BGS attributes' do
+        it 'are listed' do
+          lh_claim = create(:auto_established_claim, status: 'PENDING', veteran_icn: veteran_id,
+                                                     evss_id: '111111111')
+          with_okta_user(scopes) do |auth_header|
+            VCR.use_cassette('bgs/tracked_items/find_tracked_items') do
+              VCR.use_cassette('evss/documents/get_claim_documents') do
+                bgs_claim_response[:benefit_claim_details_dto][:ptcpnt_vet_id] = '600061742'
+                expect_any_instance_of(BGS::EbenefitsBenefitClaimsStatus)
+                  .to receive(:find_benefit_claim_details_by_benefit_claim_id).and_return(bgs_claim_response)
+                expect(ClaimsApi::AutoEstablishedClaim)
+                  .to receive(:get_by_id_and_icn).and_return(lh_claim)
+
+                get claim_by_id_path, headers: auth_header
+
+                json_response = JSON.parse(response.body)
+                expect(response.status).to eq(200)
+                expect(json_response['data']['attributes']['claimPhaseDates']['currentPhaseBack']).to eq(true)
+                expect(json_response['data']['attributes']['claimPhaseDates']['latestPhaseType'])
+                  .to eq('Claim Received')
+                expect(json_response['data']['attributes']['claimPhaseDates']['previousPhases']).to be_truthy
+              end
+            end
+          end
+        end
+      end
+    end
+
     describe 'show' do
       let(:bgs_claim_response) { build(:bgs_response_with_one_lc_status).to_h }
+
+      before do
+        allow_any_instance_of(ClaimsApi::V2::Veterans::ClaimsController)
+          .to receive(:validate_id_with_icn).and_return(nil)
+      end
 
       describe ' BGS attributes' do
         it 'are listed' do
@@ -628,7 +681,7 @@ RSpec.describe 'Claims', type: :request do
                   json_response = JSON.parse(response.body)
                   expect(response.status).to eq(200)
                   expect(json_response).to be_an_instance_of(Hash)
-                  expect(json_response['data']['attributes']['status']).to eq('CLAIM_RECEIVED')
+                  expect(json_response['data']['attributes']['status']).to eq('EVIDENCE_GATHERING_REVIEW_DECISION')
                 end
               end
             end
@@ -676,7 +729,7 @@ RSpec.describe 'Claims', type: :request do
                   json_response = JSON.parse(response.body)
                   expect(response.status).to eq(200)
                   expect(json_response).to be_an_instance_of(Hash)
-                  expect(json_response['data']['attributes']['status']).to eq('CLAIM_RECEIVED')
+                  expect(json_response['data']['attributes']['status']).to eq('EVIDENCE_GATHERING_REVIEW_DECISION')
                 end
               end
             end
@@ -710,7 +763,7 @@ RSpec.describe 'Claims', type: :request do
                   json_response = JSON.parse(response.body)
                   expect(response.status).to eq(200)
                   expect(json_response).to be_an_instance_of(Hash)
-                  expect(json_response['data']['attributes']['status']).to eq('CLAIM_RECEIVED')
+                  expect(json_response['data']['attributes']['status']).to eq('EVIDENCE_GATHERING_REVIEW_DECISION')
                 end
               end
             end
@@ -757,7 +810,35 @@ RSpec.describe 'Claims', type: :request do
                   expect(response.status).to eq(200)
                   expect(json_response).to be_an_instance_of(Hash)
                   expect(json_response['data']['attributes']['claimType']).to eq('Compensation')
-                  expect(json_response['data']['attributes']['status']).to eq('CLAIM_RECEIVED')
+                  expect(json_response['data']['attributes']['status']).to eq('EVIDENCE_GATHERING_REVIEW_DECISION')
+                end
+              end
+            end
+          end
+        end
+      end
+
+      describe 'when handling a BGS claim' do
+        context 'it retrieves the contentions list' do
+          it 'lists the contentions without leading spaces' do
+            lh_claim = create(:auto_established_claim, status: 'PENDING', veteran_icn: veteran_id,
+                                                       evss_id: '111111111')
+            claim_contentions = bgs_claim_response
+            claim_contentions[:benefit_claim_details_dto][:contentions] = ' c1,  c2, c3'
+            with_okta_user(scopes) do |auth_header|
+              VCR.use_cassette('bgs/tracked_items/find_tracked_items') do
+                VCR.use_cassette('evss/documents/get_claim_documents') do
+                  expect_any_instance_of(BGS::EbenefitsBenefitClaimsStatus)
+                    .to receive(:find_benefit_claim_details_by_benefit_claim_id).and_return(claim_contentions)
+                  expect(ClaimsApi::AutoEstablishedClaim)
+                    .to receive(:get_by_id_and_icn).and_return(lh_claim)
+
+                  get claim_by_id_path, headers: auth_header
+
+                  json_response = JSON.parse(response.body)
+                  expect(response.status).to eq(200)
+                  claim_contentions_res = json_response['data']['attributes']['contentionList']
+                  expect(claim_contentions_res).to eq(%w[c1 c2 c3])
                 end
               end
             end
@@ -878,6 +959,31 @@ RSpec.describe 'Claims', type: :request do
         end
       end
 
+      describe 'ICN' do
+        context 'when not found' do
+          let(:ccg_token) { OpenStruct.new(client_credentials_token?: true, payload: { 'scp' => [] }) }
+
+          it 'returns a 404' do
+            allow(JWT).to receive(:decode).and_return(nil)
+            allow(Token).to receive(:new).and_return(ccg_token)
+            allow_any_instance_of(TokenValidation::V2::Client).to receive(:token_valid?).and_return(true)
+
+            allow_any_instance_of(MPIData)
+              .to receive(:mvi_response).and_return(profile_erroneous_icn)
+
+            get "/services/claims/v2/veterans/#{profile_erroneous_icn.profile.icn}/claims/#{claim_id}",
+                headers: { 'Authorization' => 'Bearer HelloWorld' }
+
+            expect(response.status).to eq(404)
+            json_response = JSON.parse(response.body)
+            expect(json_response['errors'][0]['detail']).to eq(
+              "Unable to locate Veteran's ID/ICN in Master Person Index (MPI). " \
+              'Please submit an issue at ask.va.gov or call 1-800-MyVA411 (800-698-2411) for assistance.'
+            )
+          end
+        end
+      end
+
       describe "handling the 'tracked_items'" do
         context 'it has tracked items' do
           let(:claim_id_with_items) { '600236068' }
@@ -903,6 +1009,12 @@ RSpec.describe 'Claims', type: :request do
                     expect(json_response).to be_an_instance_of(Hash)
                     expect(json_response['data']['id']).to eq('600236068')
                     expect(first_doc_id).to eq(325_525)
+                    expect(json_response['data']['attributes']['trackedItems'][0]['description']).to eq(
+                      'MG-not a recognized condition'
+                    )
+                    expect(json_response['data']['attributes']['trackedItems'][1]['description']).to eq(
+                      'Line of Duty determination from claimant'
+                    )
                   end
                 end
               end

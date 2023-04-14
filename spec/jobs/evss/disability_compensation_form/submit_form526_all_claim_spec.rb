@@ -69,12 +69,15 @@ RSpec.describe EVSS::DisabilityCompensationForm::SubmitForm526AllClaim, type: :j
           [open_claims_cassette, rated_disabilities_cassette, submit_form_cassette, mas_cassette]
         end
 
+        before { allow(StatsD).to receive(:increment) }
+
         it 'sends form526 to the MAS endpoint successfully' do
           subject.perform_async(submission.id)
           described_class.drain
           expect(Form526JobStatus.last.status).to eq 'success'
           rrd_submission = Form526Submission.find(Form526JobStatus.last.form526_submission_id)
           expect(rrd_submission.form.dig('rrd_metadata', 'mas_packetId')).to eq '12345'
+          expect(StatsD).to have_received(:increment).with('worker.rapid_ready_for_decision.notify_mas.success').once
         end
 
         it 'sends an email for tracking purposes' do
@@ -90,6 +93,7 @@ RSpec.describe EVSS::DisabilityCompensationForm::SubmitForm526AllClaim, type: :j
             subject.perform_async(submission.id)
             described_class.drain
             expect(ActionMailer::Base.deliveries.last.subject).to eq "Failure: MA claim - #{submitted_claim_id}"
+            expect(StatsD).to have_received(:increment).with('worker.rapid_ready_for_decision.notify_mas.failure').once
           end
         end
 
@@ -135,34 +139,13 @@ RSpec.describe EVSS::DisabilityCompensationForm::SubmitForm526AllClaim, type: :j
                  saved_claim_id: saved_claim.id)
         end
 
-        context 'when tracking but not APCAS notification is enabled for all claims' do
-          it 'sends only one email' do
-            Flipper.enable(:rrd_mas_all_claims_tracking)
-            Flipper.disable(:rrd_mas_all_claims_notification)
-            subject.perform_async(submission.id)
-            described_class.drain
-            expect(ActionMailer::Base.deliveries.length).to eq 1
-          end
-        end
-
         context 'when tracking and APCAS notification are enabled for all claims' do
           it 'calls APCAS and sends two emails' do
-            Flipper.enable(:rrd_mas_all_claims_tracking)
-            Flipper.enable(:rrd_mas_all_claims_notification)
             VCR.use_cassette('mail_automation/mas_initiate_apcas_request') do
               subject.perform_async(submission.id)
             end
             described_class.drain
             expect(ActionMailer::Base.deliveries.length).to eq 2
-          end
-        end
-
-        context 'when all claims tracking is disabled' do
-          it 'does not send an email' do
-            Flipper.disable(:rrd_mas_all_claims_tracking)
-            subject.perform_async(submission.id)
-            described_class.drain
-            expect(ActionMailer::Base.deliveries.length).to eq 0
           end
         end
       end

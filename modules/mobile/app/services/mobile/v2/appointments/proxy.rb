@@ -19,6 +19,7 @@ module Mobile
           # or the upstream serice does not use them.
           response = vaos_v2_appointments_service.get_appointments(start_date, end_date, statuses.join(','),
                                                                    pagination_params)
+
           appointments = response[:data]
           filterer = PresentationFilter.new(include_pending: include_pending)
           appointments = appointments.keep_if { |appt| filterer.user_facing?(appt) }

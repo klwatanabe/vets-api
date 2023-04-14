@@ -1,4 +1,3 @@
-dev_branch = 'master'
 staging_branch = 'master'
 main_branch = 'master'
 
@@ -44,7 +43,7 @@ pipeline {
     }
 
     stage('Build AMI') {
-      when { anyOf { branch dev_branch; branch staging_branch; branch main_branch } }
+      when { anyOf { branch staging_branch; branch main_branch } }
 
       steps {
         // hack to get the commit hash, some plugin is swallowing git variables and I can't figure out which one
@@ -60,24 +59,6 @@ pipeline {
       }
     }
 
-    stage('Deploy dev') {
-      when { branch dev_branch }
-
-      steps {
-        build job: 'deploys/vets-api-server-vagov-dev', parameters: [
-          booleanParam(name: 'notify_slack', value: true),
-          booleanParam(name: 'migration_status', value: true),
-          stringParam(name: 'ref', value: commit),
-        ], wait: false
-
-        // build job: 'deploys/vets-api-worker-vagov-dev', parameters: [
-        //   booleanParam(name: 'notify_slack', value: true),
-        //   booleanParam(name: 'migration_status', value: false),
-        //   stringParam(name: 'ref', value: commit),
-        // ], wait: false
-      }
-    }
-
     stage('Deploy staging') {
       when { branch staging_branch }
 
@@ -88,11 +69,6 @@ pipeline {
           stringParam(name: 'ref', value: commit),
         ], wait: false
 
-        build job: 'deploys/vets-api-worker-vagov-staging', parameters: [
-          booleanParam(name: 'notify_slack', value: true),
-          booleanParam(name: 'migration_status', value: false),
-          stringParam(name: 'ref', value: commit),
-        ], wait: false
       }
     }
   }

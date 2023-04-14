@@ -940,6 +940,8 @@ RSpec.describe 'the API documentation', type: %i[apivore request], order: :defin
     describe 'disability compensation' do
       before do
         create(:in_progress_form, form_id: FormProfiles::VA526ez::FORM_ID, user_uuid: mhv_user.uuid)
+        # TODO: remove Flipper feature toggle when lighthouse provider is implemented
+        Flipper.disable('disability_compensation_lighthouse_rated_disabilities_provider')
       end
 
       let(:form526v2) do
@@ -1130,7 +1132,7 @@ RSpec.describe 'the API documentation', type: %i[apivore request], order: :defin
       end
 
       context 'when user is missing birls only' do
-        let(:mhv_user) { build(:user_with_no_birls_id) }
+        let(:mhv_user) { build(:user, :loa3, birls_id: nil) }
 
         it 'fails with 422' do
           expect(subject).to validate(:post, '/v0/mvi_users/{id}', 422, headers.merge('id' => '21-0966'))
@@ -1766,8 +1768,8 @@ RSpec.describe 'the API documentation', type: %i[apivore request], order: :defin
 
     context 'without EVSS mock' do
       before do
-        Settings.evss.mock_gi_bill_status = false
-        Settings.evss.mock_letters = false
+        allow(Settings.evss).to receive(:mock_gi_bill_status).and_return(false)
+        allow(Settings.evss).to receive(:mock_letters).and_return(false)
       end
 
       it 'supports getting EVSS Gi Bill Status' do
@@ -2314,14 +2316,9 @@ RSpec.describe 'the API documentation', type: %i[apivore request], order: :defin
       end
     end
 
-    describe 'mhv accounts' do
-      it 'supports getting mhv account data' do
-        expect(subject).to validate(:get, '/v0/mhv_account', 401)
-        expect(subject).to validate(:get, '/v0/mhv_account', 200, headers)
-      end
-    end
-
     describe 'profiles' do
+      let(:mhv_user) { create(:user, :loa3) }
+
       it 'supports getting email address data' do
         expect(subject).to validate(:get, '/v0/profile/email', 401)
         VCR.use_cassette('evss/pciu/email') do
@@ -2407,7 +2404,7 @@ RSpec.describe 'the API documentation', type: %i[apivore request], order: :defin
       it 'supports getting full name data' do
         expect(subject).to validate(:get, '/v0/profile/full_name', 401)
 
-        user = build(:user_with_suffix, :loa3)
+        user = build(:user, :loa3, middle_name: 'Robert')
         headers = { '_headers' => { 'Cookie' => sign_in(user, nil, true) } }
 
         expect(subject).to validate(:get, '/v0/profile/full_name', 200, headers)
@@ -2927,7 +2924,7 @@ RSpec.describe 'the API documentation', type: %i[apivore request], order: :defin
     end
 
     describe 'profile/person/status/:transaction_id' do
-      let(:user_without_vet360_id) { build(:user_with_suffix, :loa3) }
+      let(:user_without_vet360_id) { build(:user, :loa3) }
       let(:headers) { { '_headers' => { 'Cookie' => sign_in(user_without_vet360_id, nil, true) } } }
 
       before do
@@ -3460,7 +3457,7 @@ RSpec.describe 'the API documentation', type: %i[apivore request], order: :defin
         it 'validates the route' do
           VCR.use_cassette 'lgy/application_put' do
             # rubocop:disable Layout/LineLength
-            params = { lgy_coe_claim: { form: '{"files":[{"name":"Example.pdf","size":60217, "confirmationCode":"a7b6004e-9a61-4e94-b126-518ec9ec9ad0", "isEncrypted":false,"attachmentType":"Discharge or separation papers (DD214)"}],"relevantPriorLoans": [{"dateRange": {"from":"2002-05-01T00:00:00.000Z","to":"2003-01-01T00:00:00. 000Z"},"propertyAddress":{"propertyAddress1":"123 Faker St", "propertyAddress2":"2","propertyCity":"Fake City", "propertyState":"AL","propertyZip":"11111"}, "vaLoanNumber":"111222333444","propertyOwned":true, "willRefinance":true}],"intent":"ONETIMERESTORATION", "vaLoanIndicator":true,"periodsOfService": [{"serviceBranch":"Air National Guard","dateRange": {"from":"2001-01-01T00:00:00.000Z","to":"2002-02-02T00:00:00. 000Z"}}],"identity":"ADSM","contactPhone":"2222222222", "contactEmail":"veteran@example.com","applicantAddress": {"country":"USA","street":"140 FAKER ST","street2":"2", "city":"FAKE CITY","state":"MT","postalCode":"80129"}, "fullName":{"first":"Alexander","middle":"Guy", "last":"Cook","suffix":"Jr."},"dateOfBirth":"1950-01-01","privacyAgreementAccepted":true}' } }
+            params = { lgy_coe_claim: { form: '{"files":[{"name":"Example.pdf","size":60217, "confirmationCode":"a7b6004e-9a61-4e94-b126-518ec9ec9ad0", "isEncrypted":false,"attachmentType":"Discharge or separation papers (DD214)"}],"relevantPriorLoans": [{"dateRange": {"from":"2002-05-01T00:00:00.000Z","to":"2003-01-01T00:00:00. 000Z"},"propertyAddress":{"propertyAddress1":"123 Faker St", "propertyAddress2":"2","propertyCity":"Fake City", "propertyState":"AL","propertyZip":"11111"}, "vaLoanNumber":"111222333444","propertyOwned":true,"intent":"ONETIMERESTORATION"}], "vaLoanIndicator":true,"periodsOfService": [{"serviceBranch":"Air National Guard","dateRange": {"from":"2001-01-01T00:00:00.000Z","to":"2002-02-02T00:00:00. 000Z"}}],"identity":"ADSM","contactPhone":"2222222222", "contactEmail":"veteran@example.com","applicantAddress": {"country":"USA","street":"140 FAKER ST","street2":"2", "city":"FAKE CITY","state":"MT","postalCode":"80129"}, "fullName":{"first":"Alexander","middle":"Guy", "last":"Cook","suffix":"Jr."},"dateOfBirth":"1950-01-01","privacyAgreementAccepted":true}' } }
             # rubocop:enable Layout/LineLength
             expect(subject).to validate(:post, '/v0/coe/submit_coe_claim', 200, headers.merge({ '_data' => params }))
           end

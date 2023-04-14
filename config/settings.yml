@@ -1,6 +1,6 @@
 hostname: 127.0.0.1:3000 # possible fallback for unsafe request.host
 
-vsp_environment:
+vsp_environment: localhost
 
 virtual_hosts: ["127.0.0.1", "localhost"] # Safe host names
 
@@ -11,7 +11,7 @@ web_origin_regex: \Ahttps?:\/\/www\.va\.gov\z
 logingov:
   client_id: https://sqa.eauth.va.gov/isam/sps/saml20sp/saml20
   redirect_uri: http://localhost:3000/v0/sign_in/callback
-  logout_redirect_uri: http://localhost:3001
+  logout_redirect_uri: http://localhost:3000/v0/sign_in/logingov_logout_proxy
   client_cert_path: spec/fixtures/sign_in/oauth.crt
   client_key_path: spec/fixtures/sign_in/oauth.key
   oauth_url: https://idp.int.identitysandbox.gov
@@ -56,11 +56,9 @@ sign_in:
   cookies_secure: false
   info_cookie_domain: localhost
   auto_uplevel: true
-  client_redirect_uris:
-    mobile: 'vamobile://login-success'
-    web: 'http://localhost:3001/auth/login/callback'
-    web_logout: 'http://localhost:3001'
-    mobile_test: 'http://localhost:4001/auth/sis/login-success'
+  mock_auth_url: http://localhost:3000/mock_auth_frontend
+  mock_redirect_uri: http://localhost:3000/v0/sign_in/callback
+  mock_credential_dir: '../vets-api-mockdata'
 
 lockbox:
   master_key: "0d78eaf0e90d4e7b8910c9112e16e66d8b00ec4054a89aa426e32712a13371e9"
@@ -195,6 +193,7 @@ central_mail:
 bip:
   claims:
     url: "https://claims-uat.dev8.bip.va.gov"
+    mock: false
 
 # Settings for VAProfile
 vet360:
@@ -271,7 +270,28 @@ dhp:
 # Settings for modules/appeals_api
 modules_appeals_api:
   token_validation:
-    api_key: ''
+    appeals_status:
+      api_key: ''
+    contestable_issues:
+      api_key: ''
+    higher_level_reviews:
+      api_key: ''
+    legacy_appeals:
+      api_key: ''
+    notice_of_disagreements:
+      api_key: ''
+    supplemental_claims:
+      api_key: ''
+  # The token generation values below are only used for development rake tasks.
+  token_generation:
+    # URI to the well-known configuration endpoint for appeals auth:
+    config_uri: ''
+    ccg:
+      # Get a client ID by submitting your public jwk here - make sure to check the box for the API under
+      # "Client Credentials Grant APIs": https://developer.va.gov/onboarding/request-sandbox-access
+      client_id: ''
+      # Absolute path to the private key file matching the jwk:
+      private_key_path: ''
   slack:
     api_token: ''
     appeals_channel_id: ''
@@ -322,6 +342,9 @@ vre_readiness:
   prefill: true
 
 coe:
+  prefill: true
+
+adapted_housing:
   prefill: true
 
 # Settings for EVSS
@@ -526,6 +549,8 @@ webhooks:
 
 # Settings for VBA Document upload service module
 vba_documents:
+  v2_upload_endpoint_enabled: false
+  v2_enabled: false
   documentation:
     path_enabled_flag: false
   report_enabled: false
@@ -760,6 +785,7 @@ maintenance:
     carma: P6XLE0T
     appeals: P9S4RFU
     arcgis: P45YBFA
+    coe: PXXXXXX
     dslogon: P9DJJAV
     emis: P0HNT0I
     es: PH7OPR4
@@ -817,6 +843,7 @@ flipper:
     - alastair@adhocteam.us
     - alex.wilson@oddball.io # Alex Wilson - Oddball
     - andrew.herzberg@adhocteam.us
+    - anthony@themostudio.com
     - bill.ryan@adhocteam.us
     - bradley.gross@b3groupinc.com
     - brian.seek@civicactions.com # Brian Seek (Civic Actions), FE Engineer Health Care Experience/Check-In
@@ -858,6 +885,7 @@ flipper:
     - jlinn@governmentcio.com
     - joe.hall@thoughtworks.com # Virtual Agent
     - joeyn414@gmail.com # Joe Niquette (Oddball), Identity, Sr Security Engineer
+    - jonathan.nelson@adhocteam.us
     - john.bramley@adhocteam.us # John Bramley (AdHoc), Identity, Backend Engineer
     - julie.adair@agile6.com # Julie Adair (Agile6), Product Manager Health Care Experience/Check-In
     - jwolf@governmentcio.com # Jason Wolf Product Manager for GCIO
@@ -865,6 +893,7 @@ flipper:
     - kabrown@thoughtworks.com
     - kadams@governmentcio.com
     - kathleen.crawford@gcio.com
+    - kcoulter@pluribusdigital.com
     - kenneth.gary@va.gov
     - kenneth.santiago2010@gmail.com
     - kevin.musiorski@gcio.com # Kevin Musiorski (GCIO), Engineer
@@ -881,6 +910,7 @@ flipper:
     - lance.sanchez@gcio.com
     - lucian.snare@adhocteam.us # Lucian Snare - Ad Hoc LLC
     - mattgardner@navapbc.com
+    - marci.mcguire@gmail.com
     - mark.dewey@va.gov
     - metrowebz@gmail.com
     - micah@adhocteam.us
@@ -890,6 +920,7 @@ flipper:
     - michael.chelen@va.gov
     - michael.pelz-sherman@gcio.com
     - michelle.middaugh@adhocteam.us
+    - mmiller@pluribusdigital.com
     - n.ratana@gmail.com
     - nathaniel.buck@gmail.com # AFS - My Education Benefits
     - narin@adhocteam.us
@@ -901,6 +932,8 @@ flipper:
     - rebecca.green@thoughtworks.com
     - regarr@gmail.com # Robin Garrison - AdHoc
     - riley.anderson@oddball.io
+    - robyn.singleton@adhocteam.us
+    - robyn.singleton@va.gov
     - ryan.leahy@adhocteam.us # Ryan Leahy - Adhoc
     - ryan.thurlwell@va.gov
     - sallymaki@navapbc.com
@@ -969,6 +1002,7 @@ flipper:
     - Jarred.Simon@va.gov # Jarred Simon GCIO VFEP FE Dev
     - NOAH.STERN@va.gov # Noah Sterngo GCIO VFEP BE Dev
     - GREGG.PUHALA@va.gov # Gregg Puhala GCIO VFEP BE Dev
+    - derrick.ellerbie@agile6.com # Derrick Ellerbie - Engineer - Agile 6
 
 bgs:
   application: ~
@@ -1049,12 +1083,8 @@ lighthouse:
   api_key: fake_key
   benefits_claims:
     host: https://sandbox-api.va.gov
-    path: services/claims/v2/veterans
     access_token:
       aud_claim_url: https://deptva-eval.okta.com/oauth2/ausdg7guis2TYDlFe2p7/v1/token
-      api_scopes:
-        - claim.read
-        - claim.write
       client_id: ~
       rsa_key: ~
     use_mocks: false
@@ -1065,7 +1095,7 @@ lighthouse:
   direct_deposit:
     host: https://sandbox-api.va.gov
     access_token:
-      aud_claim_url: https://deptva-eval.okta.com/oauth2/1234567890/v1/token
+      aud_claim_url: https://deptva-eval.okta.com/oauth2/ausi0e21hbv5iElEh2p7/v1/token
       client_id: ~
       rsa_key: ~
     use_mocks: false
@@ -1112,6 +1142,10 @@ vbms:
 
 vet_verification:
   key_path: modules/veteran_verification/spec/fixtures/verification_test.pem
+  mock_emis: false
+  mock_emis_host: false
+  mock_bgs: false
+  mock_bgs_url: false
 
 github_stats:
   username: github-stats-rake
@@ -1155,6 +1189,7 @@ vanotify:
         form527ez_confirmation_email: form527ez_confirmation_email_template_id
         preneeds_burial_form_email: preneeds_burial_form_email_template_id
         contact_info_change: fake_template_id
+        form1990_confirmation_email: form1990_confirmation_email_template_id
         form526_confirmation_email: fake_template_id
         form526_submission_failed_email: fake_template_id
         form5490_confirmation_email: form5490_confirmation_email_template_id
@@ -1388,6 +1423,9 @@ test_user_dashboard:
   github_oauth:
     client_id:
     client_secret:
+
+websockets:
+  websocket_settings: false
 
 lighthouse_health_immunization:
   client_id: '0oad0xggirKLf2ger2p7'

@@ -2,7 +2,7 @@
 
 source 'https://rubygems.org'
 
-ruby '~> 2.7.6'
+ruby '~> 3.0.5'
 
 # Modules
 path 'modules' do
@@ -19,6 +19,7 @@ path 'modules' do
   gem 'health_quest'
   gem 'meb_api'
   gem 'mobile'
+  gem 'mocked_authentication'
   gem 'my_health'
   gem 'openid_auth'
   gem 'test_user_dashboard'
@@ -31,7 +32,7 @@ path 'modules' do
   gem 'veteran_verification'
 end
 
-gem 'rails', '~> 6.1.7'
+gem 'rails', github: 'rails/rails', branch: '6-1-stable'
 
 gem 'aasm'
 gem 'active_model_serializers', git: 'https://github.com/department-of-veterans-affairs/active_model_serializers', branch: 'master'
@@ -52,7 +53,7 @@ gem 'clam_scan'
 gem 'combine_pdf'
 gem 'config'
 gem 'connect_vbms', git: 'https://github.com/department-of-veterans-affairs/connect_vbms.git', branch: 'master', require: 'vbms'
-gem 'coverband'
+gem 'coverband', require: false
 gem 'date_validator'
 gem 'ddtrace'
 gem 'dogstatsd-ruby'
@@ -62,7 +63,6 @@ gem 'ethon', '>=0.13.0'
 gem 'faraday'
 gem 'faraday_middleware'
 gem 'fastimage'
-gem 'fast_jsonapi'
 gem 'fhir_client'
 gem 'fitbit_api'
 gem 'flipper'
@@ -74,7 +74,6 @@ gem 'google-api-client'
 gem 'google-apis-core'
 gem 'google-apis-generator'
 gem 'googleauth'
-gem 'google-cloud-bigquery'
 gem 'google-protobuf' # For Datadog Profiling
 gem 'govdelivery-tms', '2.8.4', require: 'govdelivery/tms/mail/delivery_method'
 gem 'gyoku'
@@ -84,12 +83,12 @@ gem 'ice_nine'
 gem 'iso_country_codes'
 gem 'json'
 gem 'jsonapi-parser'
+gem 'jsonapi-serializer'
 gem 'json-schema'
 gem 'json_schemer'
 gem 'jwe'
 gem 'jwt'
 gem 'kms_encrypted'
-gem 'levenshtein-ffi'
 gem 'liquid'
 gem 'lockbox'
 gem 'mail'
@@ -153,8 +152,6 @@ gem 'with_advisory_lock'
 group :development do
   gem 'guard-rubocop'
   gem 'seedbank'
-  gem 'spring', platforms: :ruby # Spring speeds up development by keeping your application running in the background
-  gem 'spring-commands-rspec'
 
   # Include the IANA Time Zone Database on Windows, where Windows doesn't ship with a timezone database.
   # POSIX systems should have this already, so we're not going to bring it in on other platforms
@@ -193,7 +190,7 @@ group :development, :test do
   gem 'guard-rspec'
   gem 'parallel_tests'
   gem 'pry-byebug'
-  gem 'rack-test', require: 'rack/test'
+  gem 'rack-test', '1.1.0', require: 'rack/test'
   gem 'rack-vcr'
   gem 'rainbow' # Used to colorize output for rake tasks
   gem 'rspec-instrumentation-matcher'

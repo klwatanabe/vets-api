@@ -6,6 +6,7 @@ require 'common/client/errors'
 require 'evss/disability_compensation_auth_headers'
 require 'evss/disability_compensation_form/form4142'
 require 'evss/disability_compensation_form/service'
+require 'evss/disability_compensation_form/non_breakered_service'
 require 'form526_backup_submission/service'
 require 'form526_backup_submission/utilities/convert_to_pdf'
 require 'decision_review_v1/utilities/form_4142_processor'
@@ -392,6 +393,34 @@ module Sidekiq
             Common::FileHelpers.delete_file_if_exists(actual_path_to_file) if ::Rails.env.production?
           end
         end
+      end
+    end
+
+    class NonBreakeredProcessor < Processor
+      def get_form526_pdf
+        headers = submission.auth_headers
+        submission_create_date = submission.created_at.iso8601
+        form_json = JSON.parse(submission.form_json)[FORM_526]
+        form_json[FORM_526]['claimDate'] ||= submission_create_date
+        form_json[FORM_526]['applicationExpirationDate'] = 365.days.from_now.iso8601 if @ignore_expiration
+        resp = EVSS::DisabilityCompensationForm::NonBreakeredService.new(headers).get_form526(form_json.to_json)
+        b64_enc_body = resp.body['pdf']
+        content = Base64.decode64(b64_enc_body)
+        file = write_to_tmp_file(content)
+        docs << {
+          type: FORM_526_DOC_TYPE,
+          file: file
+        }
+      end
+    end
+
+    class NonBreakeredForm526BackgroundLoader
+      extend ActiveSupport::Concern
+      include Sidekiq::Worker
+      sidekiq_options retry: false
+      def perform(id)
+        NonBreakeredProcessor.new(id, get_upload_location_on_instantiation: false,
+                                      ignore_expiration: true).upload_pdf_submission_to_s3
       end
     end
   end

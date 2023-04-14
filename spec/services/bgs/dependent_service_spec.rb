@@ -3,12 +3,13 @@
 require 'rails_helper'
 
 RSpec.describe BGS::DependentService do
-  let(:user) { FactoryBot.create(:evss_user, :loa3) }
+  let(:user) { FactoryBot.create(:evss_user, :loa3, birth_date: birth_date) }
+  let(:birth_date) { '1809-02-12' }
   let(:claim) { double('claim') }
   let(:vet_info) do
     {
       'veteran_information' => {
-        'birth_date' => '1809-02-12',
+        'birth_date' => birth_date,
         'full_name' => {
           'first' => 'WESLEY', 'last' => 'FORD', 'middle' => nil
         },
@@ -42,41 +43,7 @@ RSpec.describe BGS::DependentService do
       end
     end
 
-    context 'when 686 is true and 674 is false' do
-      before do
-        allow(claim).to receive(:submittable_686?).and_return(true)
-        allow(claim).to receive(:submittable_674?).and_return(false)
-      end
-
-      it 'fires jobs correctly' do
-        VCR.use_cassette('bgs/dependent_service/submit_686c_form') do
-          service = BGS::DependentService.new(user)
-          expect(BGS::SubmitForm686cJob).to receive(:perform_async).with(user.uuid, claim.id, vet_info)
-          expect(BGS::SubmitForm674Job).not_to receive(:perform_async).with(user.uuid, claim.id, vet_info)
-          expect(VBMS::SubmitDependentsPdfJob).to receive(:perform_async).with(claim.id, vet_info, true, false)
-          service.submit_686c_form(claim)
-        end
-      end
-    end
-
-    context 'when 686 is false and 674 is true' do
-      before do
-        allow(claim).to receive(:submittable_686?).and_return(false)
-        allow(claim).to receive(:submittable_674?).and_return(true)
-      end
-
-      it 'fires jobs correctly' do
-        VCR.use_cassette('bgs/dependent_service/submit_686c_form') do
-          service = BGS::DependentService.new(user)
-          expect(BGS::SubmitForm686cJob).not_to receive(:perform_async).with(user.uuid, claim.id, vet_info)
-          expect(BGS::SubmitForm674Job).to receive(:perform_in).with(0, user.uuid, claim.id, vet_info)
-          expect(VBMS::SubmitDependentsPdfJob).to receive(:perform_async).with(claim.id, vet_info, false, true)
-          service.submit_686c_form(claim)
-        end
-      end
-    end
-
-    context 'when 686 is true and 674 is true' do
+    context 'enqueues SubmitForm686cJob and SubmitDependentsPdfJob' do
       before do
         allow(claim).to receive(:submittable_686?).and_return(true)
         allow(claim).to receive(:submittable_674?).and_return(true)
@@ -86,7 +53,6 @@ RSpec.describe BGS::DependentService do
         VCR.use_cassette('bgs/dependent_service/submit_686c_form') do
           service = BGS::DependentService.new(user)
           expect(BGS::SubmitForm686cJob).to receive(:perform_async).with(user.uuid, claim.id, vet_info)
-          expect(BGS::SubmitForm674Job).to receive(:perform_in).with(2.minutes, user.uuid, claim.id, vet_info)
           expect(VBMS::SubmitDependentsPdfJob).to receive(:perform_async).with(claim.id, vet_info, true, true)
           service.submit_686c_form(claim)
         end

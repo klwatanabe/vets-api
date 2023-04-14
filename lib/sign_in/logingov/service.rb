@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'sign_in/logingov/configuration'
+require 'mockdata/writer'
 
 module SignIn
   module Logingov
@@ -9,9 +10,7 @@ module SignIn
 
       SCOPE = 'profile profile:verified_at address email social_security_number openid'
 
-      def render_auth(state: SecureRandom.hex, acr: IAL::LOGIN_GOV_IAL1)
-        renderer = ActionController::Base.renderer
-        renderer.controller.prepend_view_path(Rails.root.join('lib', 'sign_in', 'templates'))
+      def render_auth(state: SecureRandom.hex, acr: Constants::Auth::LOGIN_GOV_IAL1)
         Rails.logger.info("[SignIn][Logingov][Service] Rendering auth, state: #{state}, acr: #{acr}")
         renderer.render(template: 'oauth_get_form',
                         locals: {
@@ -20,7 +19,7 @@ module SignIn
                           {
                             acr_values: acr,
                             client_id: config.client_id,
-                            nonce: nonce,
+                            nonce: random_seed,
                             prompt: config.prompt,
                             redirect_uri: config.redirect_uri,
                             response_type: config.response_type,
@@ -31,8 +30,15 @@ module SignIn
                         format: :html)
       end
 
-      def render_logout
-        "#{sign_out_url}?#{sign_out_params(config.logout_redirect_uri, SecureRandom.hex).to_query}"
+      def render_logout(client_logout_redirect_uri)
+        "#{sign_out_url}?#{sign_out_params(config.logout_redirect_uri,
+                                           encode_logout_redirect(client_logout_redirect_uri)).to_query}"
+      end
+
+      def render_logout_redirect(state)
+        state_hash = JSON.parse(Base64.decode64(state))
+        logout_redirect_uri = state_hash['logout_redirect']
+        renderer.render(template: 'oauth_get_form', locals: { url: URI.parse(logout_redirect_uri).to_s }, format: :html)
       end
 
       def token(code)
@@ -47,6 +53,7 @@ module SignIn
 
       def user_info(token)
         response = perform(:get, config.userinfo_path, nil, { 'Authorization' => "Bearer #{token}" })
+        log_credential(response.body) if config.log_credential
         OpenStruct.new(response.body)
       rescue Common::Client::Errors::ClientError => e
         raise_client_error(e, 'UserInfo')
@@ -90,6 +97,10 @@ module SignIn
         'USA'
       end
 
+      def log_credential(credential)
+        MockedAuthentication::Mockdata::Writer.save_credential(credential: credential, credential_type: 'logingov')
+      end
+
       def raise_client_error(client_error, function_name)
         status = client_error.status
         description = client_error.body && client_error.body[:error]
@@ -98,7 +109,7 @@ module SignIn
       end
 
       def get_authn_context(current_ial)
-        current_ial == IAL::TWO ? IAL::LOGIN_GOV_IAL2 : IAL::LOGIN_GOV_IAL1
+        current_ial == Constants::Auth::IAL_TWO ? Constants::Auth::LOGIN_GOV_IAL2 : Constants::Auth::LOGIN_GOV_IAL1
       end
 
       def auth_url
@@ -130,20 +141,39 @@ module SignIn
         }.to_json
       end
 
+      def encode_logout_redirect(logout_redirect_uri)
+        Base64.encode64(logout_state_payload(logout_redirect_uri).to_json)
+      end
+
+      def logout_state_payload(logout_redirect_uri)
+        {
+          logout_redirect: logout_redirect_uri,
+          seed: random_seed
+        }
+      end
+
       def client_assertion_jwt
         jwt_payload = {
           iss: config.client_id,
           sub: config.client_id,
           aud: token_url,
           jti: SecureRandom.hex,
-          nonce: nonce,
+          nonce: random_seed,
           exp: Time.now.to_i + config.client_assertion_expiration_seconds
         }
         JWT.encode(jwt_payload, config.ssl_key, 'RS256')
       end
 
-      def nonce
-        @nonce ||= SecureRandom.hex
+      def random_seed
+        @random_seed ||= SecureRandom.hex
+      end
+
+      def renderer
+        @renderer ||= begin
+          renderer = ActionController::Base.renderer
+          renderer.controller.prepend_view_path(Rails.root.join('lib', 'sign_in', 'templates'))
+          renderer
+        end
       end
     end
   end

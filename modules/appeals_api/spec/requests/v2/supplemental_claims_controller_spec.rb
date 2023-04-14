@@ -19,9 +19,6 @@ describe AppealsApi::V2::DecisionReviews::SupplementalClaimsController, type: :r
   let(:extra_data) { fixture_to_s 'valid_200995_extra.json', version: 'v2' }
   let(:headers) { fixture_as_json 'valid_200995_headers.json', version: 'v2' }
   let(:max_headers) { fixture_as_json 'valid_200995_headers_extra.json', version: 'v2' }
-  let(:min_data_no_evidence) { fixture_to_s 'valid_200995_no_evidence.json', version: 'v2' }
-  let(:min_data_invalid_evidence) { fixture_to_s 'invalid_200995_evidence.json', version: 'v2' }
-  let(:data_missing_retrieve_from) { fixture_to_s 'invalid_200995_missing_retrieve_from.json', version: 'v2' }
 
   let(:parsed) { JSON.parse(response.body) }
 
@@ -34,7 +31,7 @@ describe AppealsApi::V2::DecisionReviews::SupplementalClaimsController, type: :r
         uuid_2 = create(:supplemental_claim, veteran_icn: '1013062086V794840').id
         create(:supplemental_claim, veteran_icn: 'something_else')
 
-        get(path, headers: headers)
+        get(path, headers: max_headers)
 
         expect(parsed['data'].length).to eq(2)
         # Returns SCs in desc creation date, so expect 2 before 1
@@ -50,9 +47,29 @@ describe AppealsApi::V2::DecisionReviews::SupplementalClaimsController, type: :r
         create(:supplemental_claim, veteran_icn: 'someone_else')
         create(:supplemental_claim, veteran_icn: 'also_someone_else')
 
-        get(path, headers: headers)
+        get(path, headers: max_headers)
 
         expect(parsed['data'].length).to eq(0)
+      end
+    end
+
+    context 'when no ICN is provided' do
+      it 'returns a 422 error' do
+        get(path, headers: max_headers.except('X-VA-ICN'))
+
+        expect(response.status).to eq(422)
+        expect(parsed['errors']).to be_an Array
+        expect(parsed['errors'][0]['detail']).to include('X-VA-ICN is required')
+      end
+    end
+
+    context 'when provided ICN is in an invalid format' do
+      it 'returns a 422 error' do
+        get(path, headers: { 'X-VA-ICN' => '1393231' })
+
+        expect(response.status).to eq(422)
+        expect(parsed['errors']).to be_an Array
+        expect(parsed['errors'][0]['detail']).to include('X-VA-ICN has an invalid format')
       end
     end
   end
@@ -68,10 +85,18 @@ describe AppealsApi::V2::DecisionReviews::SupplementalClaimsController, type: :r
         sc = AppealsApi::SupplementalClaim.find(sc_guid)
 
         expect(sc.source).to eq('va.gov')
-        expect(sc.veteran_icn).to be_nil
+        expect(sc.veteran_icn).to eq('1013062086V794840')
         expect(parsed['data']['type']).to eq('supplementalClaim')
         expect(parsed['data']['attributes']['status']).to eq('pending')
         expect(parsed.dig('data', 'attributes', 'formData')).to be_a Hash
+      end
+
+      it 'stores the evidenceType(s) in metadata' do
+        post(path, params: data, headers: headers)
+        sc = AppealsApi::SupplementalClaim.find(parsed['data']['id'])
+        data_evidence_type = JSON.parse(data).dig(*%w[data attributes evidenceSubmission evidenceType])
+
+        expect(sc.metadata).to eq({ 'evidenceType' => data_evidence_type })
       end
     end
 
@@ -92,6 +117,32 @@ describe AppealsApi::V2::DecisionReviews::SupplementalClaimsController, type: :r
         expect(sc.veteran_icn).to eq('1013062086V794840')
         # since icn is already provided in header, the icn updater sidekiq worker is redundant and skipped
         expect(icn_updater_sidekiq_worker).not_to have_received(:perform_async)
+      end
+    end
+
+    context 'when icn header is present but does not meet length requirements' do
+      let(:icn) { '1393231' }
+
+      it 'returns a 422 error with details' do
+        post(path, params: extra_data, headers: headers.merge({ 'X-VA-ICN' => icn }))
+
+        expect(response).to have_http_status(:unprocessable_entity)
+        error = JSON.parse(response.body)['errors'][0]
+        expect(error['title']).to eql('Invalid length')
+        expect(error['detail']).to include("'#{icn}' did not fit within the defined length limits")
+      end
+    end
+
+    context 'when icn header is present but does not meet pattern requirements' do
+      let(:icn) { '49392810394830103' }
+
+      it 'returns a 422 error with details' do
+        post(path, params: extra_data, headers: headers.merge({ 'X-VA-ICN' => icn }))
+
+        expect(response).to have_http_status(:unprocessable_entity)
+        error = JSON.parse(response.body)['errors'][0]
+        expect(error['title']).to eql('Invalid pattern')
+        expect(error['detail']).to include("'#{icn}' did not match the defined pattern")
       end
     end
 
@@ -224,27 +275,37 @@ describe AppealsApi::V2::DecisionReviews::SupplementalClaimsController, type: :r
         sc = AppealsApi::SupplementalClaim.find(sc_guid)
 
         expect(sc.evidence_submission_indicated).to be_truthy
+        expect(sc.metadata['evidenceType']).to eq %w[upload]
       end
 
       it 'with no evidence' do
-        post(path, params: min_data_no_evidence, headers: headers)
+        mod_data = JSON.parse(data)
+        mod_data['data']['attributes']['evidenceSubmission']['evidenceType'] = %w[none]
+        post(path, params: mod_data.to_json, headers: headers)
 
         sc_guid = JSON.parse(response.body)['data']['id']
         sc = AppealsApi::SupplementalClaim.find(sc_guid)
 
         expect(sc.evidence_submission_indicated).to be_falsey
+        expect(sc.metadata['evidenceType']).to eq %w[none]
       end
 
       it 'evidenceType with both none and retrieval' do
-        post(path, params: min_data_invalid_evidence, headers: headers)
+        mod_data = JSON.parse(data)
+        mod_data['data']['attributes']['evidenceSubmission']['evidenceType'] = %w[none retrieval]
+        post(path, params: mod_data.to_json, headers: headers)
+
         expect(response.status).to eq(422)
         expect(parsed['errors']).not_to be_empty
         expect(parsed['errors'][1]['title']).to eq('Invalid array')
       end
 
       it 'without retrieval section' do
-        post(path, params: data_missing_retrieve_from, headers: headers)
-        pp parsed['errors']
+        mod_data = JSON.parse(data)
+        mod_data['data']['attributes']['evidenceSubmission']['evidenceType'] = %w[retrieval]
+
+        post(path, params: mod_data.to_json, headers: headers)
+
         puts parsed['errors'][0]['title']
         puts parsed['errors'][0]['meta']['missing_fields'][0]
 
@@ -265,6 +326,20 @@ describe AppealsApi::V2::DecisionReviews::SupplementalClaimsController, type: :r
         sc = AppealsApi::SupplementalClaim.find(sc_guid)
 
         expect(sc.evidence_submission_indicated).to be_falsey
+        expect(sc.metadata['evidenceType']).to eq %w[retrieval]
+      end
+
+      it 'with both retrieval and upload evidence' do
+        headers_with_nvc = JSON.parse(fixture_to_s('valid_200995_headers_extra.json', version: 'v2'))
+        mod_data = JSON.parse(fixture_to_s('valid_200995_extra.json', version: 'v2'))
+        mod_data['data']['attributes']['evidenceSubmission']['evidenceType'] = %w[retrieval upload]
+        post(path, params: mod_data.to_json, headers: headers_with_nvc)
+
+        sc_guid = JSON.parse(response.body)['data']['id']
+        sc = AppealsApi::SupplementalClaim.find(sc_guid)
+
+        expect(sc.evidence_submission_indicated).to be_truthy
+        expect(sc.metadata['evidenceType']).to match_array %w[retrieval upload]
       end
     end
 
@@ -343,7 +418,10 @@ describe AppealsApi::V2::DecisionReviews::SupplementalClaimsController, type: :r
     context 'with oauth' do
       let(:oauth_path) { new_base_path 'forms/200995' }
 
-      it_behaves_like('an endpoint with OpenID auth', %w[claim.write]) do
+      it_behaves_like(
+        'an endpoint with OpenID auth',
+        AppealsApi::SupplementalClaims::V0::SupplementalClaimsController::OAUTH_SCOPES[:POST]
+      ) do
         def make_request(auth_header)
           post(oauth_path, params: data, headers: headers.merge(auth_header))
         end
@@ -356,7 +434,9 @@ describe AppealsApi::V2::DecisionReviews::SupplementalClaimsController, type: :r
           orig_body = JSON.parse(response.body)
           orig_body['data']['id'] = 'ignored'
 
-          with_openid_auth(%w[claim.write]) do |auth_header|
+          with_openid_auth(
+            AppealsApi::SupplementalClaims::V0::SupplementalClaimsController::OAUTH_SCOPES[:POST]
+          ) do |auth_header|
             post(oauth_path, params: data, headers: headers.merge(auth_header))
           end
           oauth_status = response.status
@@ -433,10 +513,39 @@ describe AppealsApi::V2::DecisionReviews::SupplementalClaimsController, type: :r
       end
     end
 
+    context 'when icn header is present but does not meet length requirements' do
+      let(:icn) { '1393231' }
+
+      it 'returns a 422 error with details' do
+        post(path, params: extra_data, headers: headers.merge({ 'X-VA-ICN' => icn }))
+
+        expect(response).to have_http_status(:unprocessable_entity)
+        error = JSON.parse(response.body)['errors'][0]
+        expect(error['title']).to eql('Invalid length')
+        expect(error['detail']).to include("'#{icn}' did not fit within the defined length limits")
+      end
+    end
+
+    context 'when icn header is present but does not meet pattern requirements' do
+      let(:icn) { '49392810394830103' }
+
+      it 'returns a 422 error with details' do
+        post(path, params: extra_data, headers: headers.merge({ 'X-VA-ICN' => icn }))
+
+        expect(response).to have_http_status(:unprocessable_entity)
+        error = JSON.parse(response.body)['errors'][0]
+        expect(error['title']).to eql('Invalid pattern')
+        expect(error['detail']).to include("'#{icn}' did not match the defined pattern")
+      end
+    end
+
     context 'with oauth' do
       let(:oauth_path) { new_base_path 'forms/200995/validate' }
 
-      it_behaves_like('an endpoint with OpenID auth', %w[claim.write]) do
+      it_behaves_like(
+        'an endpoint with OpenID auth',
+        AppealsApi::SupplementalClaims::V0::SupplementalClaimsController::OAUTH_SCOPES[:POST]
+      ) do
         def make_request(auth_header)
           post(oauth_path, params: data, headers: headers.merge(auth_header))
         end
@@ -447,7 +556,9 @@ describe AppealsApi::V2::DecisionReviews::SupplementalClaimsController, type: :r
         orig_status = response.status
         orig_body = JSON.parse(response.body)
 
-        with_openid_auth(%w[claim.write]) do |auth_header|
+        with_openid_auth(
+          AppealsApi::SupplementalClaims::V0::SupplementalClaimsController::OAUTH_SCOPES[:POST]
+        ) do |auth_header|
           post(oauth_path, params: data, headers: headers.merge(auth_header))
         end
         oauth_status = response.status
@@ -503,7 +614,10 @@ describe AppealsApi::V2::DecisionReviews::SupplementalClaimsController, type: :r
       let(:orig_path) { "#{path}#{uuid}" }
       let(:oauth_path) { new_base_path("forms/200995/#{uuid}") }
 
-      it_behaves_like('an endpoint with OpenID auth', %w[claim.read]) do
+      it_behaves_like(
+        'an endpoint with OpenID auth',
+        AppealsApi::SupplementalClaims::V0::SupplementalClaimsController::OAUTH_SCOPES[:GET]
+      ) do
         def make_request(auth_header)
           get(oauth_path, headers: auth_header)
         end
@@ -514,7 +628,9 @@ describe AppealsApi::V2::DecisionReviews::SupplementalClaimsController, type: :r
         orig_status = response.status
         orig_body = JSON.parse(response.body)
 
-        with_openid_auth(%w[claim.read]) do |auth_header|
+        with_openid_auth(
+          AppealsApi::SupplementalClaims::V0::SupplementalClaimsController::OAUTH_SCOPES[:GET]
+        ) do |auth_header|
           get(oauth_path, headers: auth_header)
         end
         oauth_status = response.status

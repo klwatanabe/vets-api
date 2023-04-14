@@ -12,7 +12,7 @@
         "id": {
           "type": "string",
           "nullable": true,
-          "description": "Claim ID in VBMS",
+          "description": "Claim ID in VBMS. If a claim was submitted with Lighthouse and not successfully established upstream, it could have a null claimId.",
           "example": "600131328"
         },
         "type": {
@@ -58,6 +58,19 @@
                 },
                 "latestPhaseType": {
                   "type": "string",
+                  "enum": [
+                    "CANCELED",
+                    "CLAIM_RECEIVED",
+                    "INITIAL_REVIEW",
+                    "PENDING",
+                    "EVIDENCE_GATHERING",
+                    "REVIEW_OF_EVIDENCE",
+                    "PREPARATION_FOR_DECISION",
+                    "PENDING_DECISION_APPROVAL",
+                    "PREPARATION_FOR_NOTIFICATION",
+                    "ERRORED",
+                    "COMPLETE"
+                  ],
                   "nullable": true,
                   "description": "The most current phase for the claim"
                 },
@@ -203,7 +216,8 @@
                 "EVIDENCE_GATHERING_REVIEW_DECISION",
                 "PREPARATION_FOR_NOTIFICATION",
                 "COMPLETE",
-                "ERRORED"
+                "ERRORED",
+                "CANCELED"
               ]
             },
             "submitterApplicationCode": {
@@ -241,7 +255,6 @@
                   "uploadDate": {
                     "format": "date",
                     "type": "string",
-                    "nullable": true,
                     "description": "Date and time document was uploaded",
                     "nullable": true
                   }
@@ -325,7 +338,14 @@
                     "type": "string",
                     "nullable": true,
                     "description": "Enum with the status of the tracked item",
-                    "example": "NO_LONGER_REQUIRED"
+                    "example": "NO_LONGER_REQUIRED",
+                    "enum": [
+                      "ACCEPTED",
+                      "INITIAL_REVIEW_COMPLETE",
+                      "NEEDED",
+                      "NO_LONGER_REQUIRED",
+                      "SUBMITTED_AWAITING_REVIEW"
+                    ]
                   },
                   "uploaded": {
                     "type": "boolean",

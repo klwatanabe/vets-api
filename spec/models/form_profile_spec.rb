@@ -6,11 +6,10 @@ require 'decision_review/schemas'
 RSpec.describe FormProfile, type: :model do
   include SchemaMatchers
 
-  let(:user) { build(:user, :loa3, :mvi_profile_street_and_suffix) }
-  let(:mvi_profile) { build(:mvi_profile, suffix: 'Jr.') }
+  let(:user) { build(:user, :loa3, suffix: 'Jr.', address: build(:mvi_profile_address)) }
 
   before do
-    stub_mpi(mvi_profile)
+    Flipper.disable(:hca_vaprofile_military_info)
     stub_evss_pciu(user)
     described_class.instance_variable_set(:@mappings, nil)
   end
@@ -515,8 +514,7 @@ RSpec.describe FormProfile, type: :model do
       'postNov111998Combat' => true,
       'gender' => user.gender,
       'homePhone' => us_phone,
-      'veteranSocialSecurityNumber' => user.ssn,
-      'vaCompensationType' => 'highDisability'
+      'veteranSocialSecurityNumber' => user.ssn
     }
   end
 
@@ -825,6 +823,61 @@ RSpec.describe FormProfile, type: :model do
       'mainPhone' => us_phone,
       'email' => user.pciu_email
     }
+  end
+
+  let(:v26_4555_expected) do
+    {
+      'veteran' => {
+        'fullName' => {
+          'first' => user.first_name&.capitalize,
+          'last' => user.last_name&.capitalize,
+          'suffix' => user.suffix
+        },
+        'ssn' => '796111863',
+        'dateOfBirth' => '1809-02-12',
+        'homePhone' => '14445551212',
+        'email' => user.pciu_email,
+        'address' => {
+          'street' => street_check[:street],
+          'street2' => street_check[:street2],
+          'city' => user.address[:city],
+          'state' => user.address[:state],
+          'country' => user.address[:country],
+          'postal_code' => user.address[:postal_code][0..4]
+        }
+      }
+    }
+  end
+
+  describe '#initialize_military_information_vaprofile' do
+    context 'when va profile is down in production' do
+      before do
+        allow(Rails.env).to receive(:production?).and_return(true)
+      end
+
+      it 'logs exception and returns empty hash' do
+        expect(form_profile).to receive(:log_exception_to_sentry).with(
+          instance_of(VCR::Errors::UnhandledHTTPRequestError), {}, prefill: :vaprofile_military
+        )
+
+        expect(form_profile.send(:initialize_military_information_vaprofile)).to eq({})
+      end
+    end
+
+    it 'prefills military data from va profile' do
+      VCR.use_cassette('va_profile/military_personnel/post_read_service_histories_200') do
+        expect(form_profile.send(:initialize_military_information_vaprofile)).to eq(
+          {
+            'hca_last_service_branch' => 'army',
+            'last_entry_date' => '2012-03-02',
+            'last_discharge_date' => '2018-10-31',
+            'discharge_type' => 'other',
+            'post_nov111998_combat' => false,
+            'sw_asia_combat' => false
+          }
+        )
+      end
+    end
   end
 
   describe '#pciu_us_phone' do
@@ -1157,6 +1210,7 @@ RSpec.describe FormProfile, type: :model do
           28-8832
           28-1900
           26-1880
+          26-4555
         ].each do |form_id|
           it "returns prefilled #{form_id}" do
             expect_prefilled(form_id)

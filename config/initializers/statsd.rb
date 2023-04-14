@@ -78,7 +78,7 @@ Rails.application.reloader.to_prepare do
   StatsD.increment(SignIn::Constants::Statsd::STATSD_SIS_LOGOUT_SUCCESS, 0)
   StatsD.increment(SignIn::Constants::Statsd::STATSD_SIS_AUTHORIZE_FAILURE, 0)
   StatsD.increment(SignIn::Constants::Statsd::STATSD_SIS_CALLBACK_FAILURE, 0)
-  SignIn::Constants::Auth::CLIENT_IDS.each do |client_id|
+  %w[vamobile vaweb].each do |client_id|
     SignIn::Constants::Auth::CSP_TYPES.each do |type|
       SignIn::Constants::Auth::ACR_VALUES.each do |acr|
         StatsD.increment(SignIn::Constants::Statsd::STATSD_SIS_AUTHORIZE_SUCCESS, 0,
@@ -378,4 +378,12 @@ Rails.application.reloader.to_prepare do
 
   StatsD.increment("#{VEText::Service::STATSD_KEY_PREFIX}.app_lookup.success", 0)
   StatsD.increment("#{VEText::Service::STATSD_KEY_PREFIX}.app_lookup.failure", 0)
+
+  # init user_avc_updater_logger
+  Login::UserAcceptableVerifiedCredentialUpdaterLogger::ADDED_TYPES.each do |added_type|
+    Login::UserAcceptableVerifiedCredentialUpdaterLogger::FROM_TYPES.each do |from_type|
+      StatsD.increment("api.user_avc_updater.#{from_type}.#{added_type}.added", 0)
+    end
+    StatsD.increment("api.user_avc_updater.mhv_dslogon.#{added_type}.added", 0)
+  end
 end

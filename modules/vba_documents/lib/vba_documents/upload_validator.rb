@@ -12,7 +12,7 @@ module VBADocuments
     include CentralMail::Utilities
     include PDFUtilities
 
-    VALID_VETERAN_NAME_REGEX = %r{^[a-zA-Z\-/\s]{1,50}$}.freeze
+    VALID_VETERAN_NAME_REGEX = %r{^[a-zA-Z\-/\s]{1,50}$}
 
     def validate_parts(model, parts)
       unless parts.key?(META_PART_NAME)
@@ -75,17 +75,15 @@ module VBADocuments
       metadata['source'] = "#{model.consumer_name} via VA API"
       metadata['receiveDt'] = timestamp.in_time_zone('US/Central').strftime('%Y-%m-%d %H:%M:%S')
       metadata['uuid'] = model.guid
-      metadata['hashV'] = Digest::SHA256.file(parts[DOC_PART_NAME]).hexdigest
+      metadata['hashV'] = model.uploaded_pdf.dig('content', 'sha256_checksum')
       metadata['numberPages'] = model.uploaded_pdf.dig('content', 'page_count')
       attachment_names = parts.keys.select { |k| k.match(/attachment\d+/) }
       metadata['numberAttachments'] = attachment_names.size
-      attachment_names.each_with_index do |att, i|
-        metadata["ahash#{i + 1}"] = Digest::SHA256.file(parts[att]).hexdigest
+      attachment_names.each_index do |i|
+        metadata["ahash#{i + 1}"] = model.uploaded_pdf.dig('content', 'attachments', i, 'sha256_checksum')
         metadata["numberPages#{i + 1}"] = model.uploaded_pdf.dig('content', 'attachments', i, 'page_count')
       end
-      if metadata.key? 'businessLine'
-        metadata['businessLine'] = CentralMail::Utilities.valid_lob[metadata['businessLine'].to_s.upcase]
-      end
+      metadata['businessLine'] = VALID_LOB[metadata['businessLine'].to_s.upcase] if metadata.key? 'businessLine'
       metadata['businessLine'] = AppealsApi::LineOfBusiness.new(model).value if model.appeals_consumer?
       metadata
     end
@@ -104,15 +102,12 @@ module VBADocuments
       return if lob.to_s.empty? && !(submission_version && submission_version >= 2)
 
       if lob.to_s.blank? && submission_version >= 2
-        msg = "The businessLine metadata field is missing or empty. Valid values are: #{
-              CentralMail::Utilities.valid_lob.keys.join(',')}"
+        msg = "The businessLine metadata field is missing or empty. Valid values are: #{VALID_LOB.keys.join(',')}"
         raise VBADocuments::UploadError.new(code: 'DOC102', detail: msg)
       end
 
-      unless CentralMail::Utilities.valid_lob.keys.include?(lob.to_s.upcase)
-        msg = "Invalid businessLine provided - {#{lob}}, valid values are: #{
-              CentralMail::Utilities.valid_lob.keys.join(',')}"
-
+      unless VALID_LOB.keys.include?(lob.to_s.upcase)
+        msg = "Invalid businessLine provided - {#{lob}}, valid values are: #{VALID_LOB.keys.join(',')}"
         raise VBADocuments::UploadError.new(code: 'DOC102', detail: msg)
       end
     end

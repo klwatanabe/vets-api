@@ -141,8 +141,11 @@ module V1
 
     def mhv_unverified_validation(user_session_form)
       if html_escaped_relay_state['type'] == 'mhv_verified' && user_session_form.user.loa[:current] < LOA::THREE
-        Rails.logger.warn('SessionsController version:v1 mhv basic account blocked for mhv_verified type')
-        raise SAML::UserAttributeError, SAML::UserAttributeError::ERRORS[:mhv_unverified_blocked]
+        mhv_unverified_error = SAML::UserAttributeError::ERRORS[:mhv_unverified_blocked]
+        Rails.logger.warn("SessionsController version:v1 #{mhv_unverified_error[:message]}")
+        raise SAML::UserAttributeError.new(message: mhv_unverified_error[:message],
+                                           code: mhv_unverified_error[:code],
+                                           tag: mhv_unverified_error[:tag])
       end
     end
 
@@ -385,16 +388,6 @@ module V1
     def log_persisted_session_and_warnings
       obscure_token = Session.obscure_token(@session_object.token)
       Rails.logger.info("Logged in user with id #{@session_object&.uuid}, token #{obscure_token}")
-      # We want to log when SSNs do not match between MVI and SAML Identity. And might take future
-      # action if this appears to be happening frequently.
-      if current_user.ssn_mismatch?
-        additional_context = StringHelpers.heuristics(current_user.identity.ssn, current_user.ssn_mpi)
-        log_message_to_sentry(
-          'SessionsController version:v1 message:SSN from MPI Lookup does not match UserIdentity cache',
-          :warn,
-          identity_compared_with_mpi: additional_context
-        )
-      end
     end
 
     def html_escaped_relay_state
