@@ -2264,13 +2264,13 @@ RSpec.describe 'the API documentation', type: %i[apivore request], order: :defin
       end
 
       context 'PUT' do
-        it 'returns a 201' do
+        it 'returns a 200' do
           headers = { '_headers' => { 'Cookie' => sign_in(user, nil, true) } }
           params = { account_number: '1234567890', account_type: 'CHECKING', routing_number: '031000503' }
-          VCR.use_cassette('lighthouse/direct_deposit/update/201_response') do
+          VCR.use_cassette('lighthouse/direct_deposit/update/200_response') do
             expect(subject).to validate(:put,
                                         '/v0/profile/direct_deposits/disability_compensations',
-                                        201,
+                                        200,
                                         headers.merge('_data' => params))
           end
         end
@@ -2953,7 +2953,7 @@ RSpec.describe 'the API documentation', type: %i[apivore request], order: :defin
       before do
         # vet360_id appears in the API request URI so we need it to match the cassette
         allow_any_instance_of(MPIData).to receive(:response_from_redis_or_service).and_return(
-          create(:find_profile_response, profile: build(:mvi_profile, vet360_id: '1'))
+          create(:find_profile_response, profile: build(:mpi_profile, vet360_id: '1'))
         )
       end
 
