@@ -2,7 +2,6 @@
 
 require 'rx/client'
 
-
 module Rx
   module ClientHelpers
     HOST = Settings.mhv.rx.host
