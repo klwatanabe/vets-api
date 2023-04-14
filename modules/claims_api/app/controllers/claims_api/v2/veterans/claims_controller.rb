@@ -457,7 +457,7 @@ module ClaimsApi
               overdue: item[:suspns_dt].nil? ? false : item[:suspns_dt] < Time.zone.now, # EVSS generates this field
               status:, # EVSS generates this field
               suspense_date: date_present(item[:suspns_dt]),
-              tracked_item_id: id.to_i,
+              id: id.to_i,
               uploaded: item[:receive_dt].present?, # EVSS generates this field
               uploads_allowed: # EVSS generates this field
             }
@@ -496,9 +496,15 @@ module ClaimsApi
               document_type_label: doc['document_type_label'],
               original_file_name: doc['original_file_name'],
               tracked_item_id: doc['tracked_item_id'],
-              upload_date: date_present(doc['upload_date'])
+              upload_date: upload_date(doc['upload_date'])
             }
           end
+        end
+
+        def upload_date(upload_date)
+          return if upload_date.nil?
+
+          Time.zone.at(upload_date / 1000).strftime('%Y-%m-%d')
         end
 
         def build_claim_phase_attributes(bgs_claim, view)
