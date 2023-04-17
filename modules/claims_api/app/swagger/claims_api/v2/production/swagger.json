@@ -792,27 +792,27 @@
                       "trackedItems": [
                         {
                           "closedDate": null,
+                          "requestedDate": "2022-02-04",
+                          "receivedDate": null,
                           "description": null,
                           "displayName": "MG-not a recognized condition",
-                          "openedDate": null,
                           "overdue": true,
-                          "requestedDate": "2022-02-04",
                           "status": "INITIAL_REVIEW_COMPLETE",
                           "suspenseDate": "2022-03-06",
-                          "trackedItemId": 325525,
+                          "id": 325525,
                           "uploaded": false,
                           "uploadsAllowed": true
                         },
                         {
                           "closedDate": null,
+                          "requestedDate": "2022-02-04",
+                          "receivedDate": null,
                           "description": null,
                           "displayName": "Line of Duty determination from claimant",
-                          "openedDate": null,
                           "overdue": true,
-                          "requestedDate": "2022-02-04",
                           "status": "INITIAL_REVIEW_COMPLETE",
                           "suspenseDate": "2022-03-06",
-                          "trackedItemId": 325524,
+                          "id": 325524,
                           "uploaded": false,
                           "uploadsAllowed": true
                         }
@@ -1151,7 +1151,7 @@
                                     "description": "Date the tracked item was requested",
                                     "example": "2017-10-18"
                                   },
-                                  "trackedItemId": {
+                                  "id": {
                                     "type": "integer",
                                     "description": "ID of the tracked item",
                                     "example": 293454
@@ -1162,11 +1162,11 @@
                                     "description": "Description of the tracked item",
                                     "example": "Buddy mentioned - No complete address"
                                   },
-                                  "openedDate": {
+                                  "receivedDate": {
                                     "format": "date",
                                     "type": "string",
                                     "nullable": true,
-                                    "description": "Date the tracked item was opened",
+                                    "description": "Date the tracked item was received",
                                     "example": "2017-10-18"
                                   },
                                   "overdue": {
@@ -1891,8 +1891,8 @@
                     "id": "1",
                     "type": "intent_to_file",
                     "attributes": {
-                      "creationDate": "2023-04-06",
-                      "expirationDate": "2024-04-06",
+                      "creationDate": "2023-04-12",
+                      "expirationDate": "2024-04-12",
                       "type": "compensation",
                       "status": "active"
                     }
