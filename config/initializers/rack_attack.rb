@@ -48,7 +48,7 @@ class Rack::Attack
   end
 
   throttle('check_in/ip', limit: 10, period: 1.minute) do |req|
-    req.remote_ip if req.path.starts_with?('/check_in')
+    req.remote_ip if req.path.starts_with?('/check_in') && !Settings.vsp_environment.match?(/local|development|staging/)
   end
 
   throttle('medical_copays/ip', limit: 20, period: 1.minute) do |req|
@@ -64,7 +64,7 @@ class Rack::Attack
     # Requests are allowed if the return value is truthy
     req.ip.match?(/100.103.248.(\b[0-9]\b|\b[1-9][0-9]\b|1[0-9]{2}|2[0-4][0-9]|25[0-5])
                   |100.103.251.(12[8-9]|1[3-9]\d|2[0-4]\d|25[0-5])
-                  |10.247.104./)
+                  |10.247./)
   end
 
   # Source: https://github.com/kickstarter/rack-attack#x-ratelimit-headers-for-well-behaved-clients

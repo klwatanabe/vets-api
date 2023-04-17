@@ -185,7 +185,7 @@ RSpec.describe InheritedProofingController, type: :controller do
 
           context 'and there is a mhv identity data object for the given auth code in the access token' do
             let!(:mhv_identity_data) { create(:mhv_identity_data, code: auth_code, user_uuid: user.uuid) }
-            let(:user) { create(:user, :mpi_attr_sourcing, :mhv) }
+            let(:user) { create(:user, :mhv) }
 
             before do
               allow_any_instance_of(InheritedProofing::UserAttributesEncryptor)
@@ -216,7 +216,7 @@ RSpec.describe InheritedProofingController, type: :controller do
   end
 
   describe 'GET callback' do
-    subject { get :callback, params: { auth_code: auth_code } }
+    subject { get :callback, params: { auth_code: } }
 
     let(:audit_data_auth_code) { SecureRandom.hex }
     let(:auth_code) { audit_data_auth_code }
@@ -317,7 +317,7 @@ RSpec.describe InheritedProofingController, type: :controller do
 
         it 'saves an inherited proofing verification attached to the expected user account' do
           expect { subject }.to change(InheritedProofVerifiedUserAccount, :count).from(0).to(1)
-          expect(InheritedProofVerifiedUserAccount.find_by(user_account: user_account)).not_to be(nil)
+          expect(InheritedProofVerifiedUserAccount.find_by(user_account:)).not_to be(nil)
         end
 
         it 'resets the current session' do

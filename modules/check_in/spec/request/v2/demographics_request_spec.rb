@@ -57,7 +57,7 @@ RSpec.describe 'V2::Demographics', type: :request do
 
       it 'returns bad request' do
         VCR.use_cassette 'check_in/lorota/token/token_200' do
-          post '/check_in/v2/sessions', session_params_with_dob
+          post '/check_in/v2/sessions', **session_params_with_dob
           expect(response.status).to eq(200)
         end
 
@@ -98,7 +98,7 @@ RSpec.describe 'V2::Demographics', type: :request do
 
       it 'returns error response' do
         VCR.use_cassette 'check_in/lorota/token/token_200' do
-          post '/check_in/v2/sessions', session_params_with_dob
+          post '/check_in/v2/sessions', **session_params_with_dob
           expect(response.status).to eq(200)
         end
 
@@ -109,7 +109,7 @@ RSpec.describe 'V2::Demographics', type: :request do
 
         VCR.use_cassette('check_in/chip/confirm_demographics/confirm_demographics_504', match_requests_on: [:host]) do
           VCR.use_cassette('check_in/chip/token/token_200') do
-            patch "/check_in/v2/demographics/#{id}", params: params
+            patch "/check_in/v2/demographics/#{id}", params:
           end
         end
         expect(response.status).to eq(400)
@@ -157,7 +157,7 @@ RSpec.describe 'V2::Demographics', type: :request do
 
       it 'returns valid response' do
         VCR.use_cassette 'check_in/lorota/token/token_200' do
-          post '/check_in/v2/sessions', session_params_with_dob
+          post '/check_in/v2/sessions', **session_params_with_dob
           expect(response.status).to eq(200)
         end
 
@@ -168,7 +168,7 @@ RSpec.describe 'V2::Demographics', type: :request do
 
         VCR.use_cassette('check_in/chip/confirm_demographics/confirm_demographics_200', match_requests_on: [:host]) do
           VCR.use_cassette('check_in/chip/token/token_200') do
-            patch "/check_in/v2/demographics/#{id}", params: params
+            patch "/check_in/v2/demographics/#{id}", params:
           end
         end
         expect(response.status).to eq(200)

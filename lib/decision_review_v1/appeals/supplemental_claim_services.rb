@@ -33,7 +33,7 @@ module DecisionReviewV1
       # @return [Faraday::Response]
       #
       def create_supplemental_claim(request_body:, user:)
-        with_monitoring_and_error_handling(user: user) do
+        with_monitoring_and_error_handling do
           request_body = request_body.to_json if request_body.is_a?(Hash)
           headers = create_supplemental_claims_headers(user)
           response, bm = run_and_benchmark_if_enabled do
@@ -43,7 +43,7 @@ module DecisionReviewV1
           validate_against_schema json: response.body, schema: SC_CREATE_RESPONSE_SCHEMA,
                                   append_to_error_class: ' (SC_V1)'
 
-          submission_info_message = parse_lighthouse_response_to_log_msg(data: response.body['data'], bm: bm)
+          submission_info_message = parse_lighthouse_response_to_log_msg(data: response.body['data'], bm:)
           ::Rails.logger.info(submission_info_message)
           response
         end
@@ -58,12 +58,15 @@ module DecisionReviewV1
       # @return [Faraday::Response]
       #
       def process_form4142_submission(request_body:, form4142:, user:, response:)
-        with_monitoring_and_error_handling(user: user) do
+        appeal_submission_id = response.body['data']['id']
+        with_monitoring_and_error_handling do
           form4142_response, bm = run_and_benchmark_if_enabled do
-            new_body = get_and_rejigger_required_info(request_body: request_body, form4142: form4142, user: user)
-            submit_form4142(form_data: new_body, response: response)
+            new_body = get_and_rejigger_required_info(request_body:, form4142:, user:)
+            submit_form4142(form_data: new_body, response:)
           end
-          form4142_submission_info_message = parse_form412_response_to_log_msg(data: form4142_response, bm: bm)
+          form4142_submission_info_message = parse_form412_response_to_log_msg(
+            appeal_submission_id:, data: form4142_response, bm:
+          )
           ::Rails.logger.info(form4142_submission_info_message)
           form4142_response
         end
@@ -102,7 +105,7 @@ module DecisionReviewV1
       #
       def get_supplemental_claim_upload_url(sc_uuid:, file_number:)
         with_monitoring_and_error_handling do
-          perform :post, 'supplemental_claims/evidence_submissions', { sc_uuid: sc_uuid },
+          perform :post, 'supplemental_claims/evidence_submissions', { sc_uuid: },
                   { 'X-VA-SSN' => file_number.to_s.strip.presence }
         end
       end
@@ -161,7 +164,7 @@ module DecisionReviewV1
       def queue_submit_evidence_uploads(sc_evidences, appeal_submission_id)
         sc_evidences.map do |upload|
           asu = AppealSubmissionUpload.create!(decision_review_evidence_attachment_guid: upload['confirmationCode'],
-                                               appeal_submission_id: appeal_submission_id)
+                                               appeal_submission_id:)
 
           DecisionReview::SubmitUpload.perform_async(asu.id)
         end
@@ -170,7 +173,7 @@ module DecisionReviewV1
       private
 
       def submit_form4142(form_data:, response:)
-        processor = DecisionReviewV1::Processor::Form4142Processor.new(form_data: form_data, response: response)
+        processor = DecisionReviewV1::Processor::Form4142Processor.new(form_data:, response:)
         CentralMail::Service.new.upload(processor.request_body)
       end
     end

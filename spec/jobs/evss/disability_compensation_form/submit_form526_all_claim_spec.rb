@@ -15,6 +15,8 @@ RSpec.describe EVSS::DisabilityCompensationForm::SubmitForm526AllClaim, type: :j
   end
 
   describe '.perform_async' do
+    define_negated_matcher :not_change, :change
+
     let(:saved_claim) { FactoryBot.create(:va526ez) }
     let(:submitted_claim_id) { 600_130_094 }
     let(:submission) do
@@ -40,7 +42,9 @@ RSpec.describe EVSS::DisabilityCompensationForm::SubmitForm526AllClaim, type: :j
       subject.perform_async(submission.id)
       expect_any_instance_of(Sidekiq::Form526JobStatusTracker::Metrics).to receive(:increment_retryable).once
       expect(Form526JobStatus).to receive(:upsert).twice
-      expect { described_class.drain }.to raise_error(error_class)
+      expect do
+        described_class.drain
+      end.to raise_error(error_class).and not_change(Sidekiq::Form526BackupSubmissionProcess::Submit.jobs, :size)
     end
 
     context 'with a successful submission job' do
@@ -52,7 +56,7 @@ RSpec.describe EVSS::DisabilityCompensationForm::SubmitForm526AllClaim, type: :j
 
       it 'submits successfully' do
         subject.perform_async(submission.id)
-        described_class.drain
+        expect { described_class.drain }.not_to change(Sidekiq::Form526BackupSubmissionProcess::Submit.jobs, :size)
         expect(Form526JobStatus.last.status).to eq 'success'
       end
 
@@ -69,12 +73,15 @@ RSpec.describe EVSS::DisabilityCompensationForm::SubmitForm526AllClaim, type: :j
           [open_claims_cassette, rated_disabilities_cassette, submit_form_cassette, mas_cassette]
         end
 
+        before { allow(StatsD).to receive(:increment) }
+
         it 'sends form526 to the MAS endpoint successfully' do
           subject.perform_async(submission.id)
           described_class.drain
           expect(Form526JobStatus.last.status).to eq 'success'
           rrd_submission = Form526Submission.find(Form526JobStatus.last.form526_submission_id)
           expect(rrd_submission.form.dig('rrd_metadata', 'mas_packetId')).to eq '12345'
+          expect(StatsD).to have_received(:increment).with('worker.rapid_ready_for_decision.notify_mas.success').once
         end
 
         it 'sends an email for tracking purposes' do
@@ -90,6 +97,7 @@ RSpec.describe EVSS::DisabilityCompensationForm::SubmitForm526AllClaim, type: :j
             subject.perform_async(submission.id)
             described_class.drain
             expect(ActionMailer::Base.deliveries.last.subject).to eq "Failure: MA claim - #{submitted_claim_id}"
+            expect(StatsD).to have_received(:increment).with('worker.rapid_ready_for_decision.notify_mas.failure').once
           end
         end
 
@@ -135,34 +143,13 @@ RSpec.describe EVSS::DisabilityCompensationForm::SubmitForm526AllClaim, type: :j
                  saved_claim_id: saved_claim.id)
         end
 
-        context 'when tracking but not APCAS notification is enabled for all claims' do
-          it 'sends only one email' do
-            Flipper.enable(:rrd_mas_all_claims_tracking)
-            Flipper.disable(:rrd_mas_all_claims_notification)
-            subject.perform_async(submission.id)
-            described_class.drain
-            expect(ActionMailer::Base.deliveries.length).to eq 1
-          end
-        end
-
         context 'when tracking and APCAS notification are enabled for all claims' do
           it 'calls APCAS and sends two emails' do
-            Flipper.enable(:rrd_mas_all_claims_tracking)
-            Flipper.enable(:rrd_mas_all_claims_notification)
             VCR.use_cassette('mail_automation/mas_initiate_apcas_request') do
               subject.perform_async(submission.id)
             end
             described_class.drain
             expect(ActionMailer::Base.deliveries.length).to eq 2
-          end
-        end
-
-        context 'when all claims tracking is disabled' do
-          it 'does not send an email' do
-            Flipper.disable(:rrd_mas_all_claims_tracking)
-            subject.perform_async(submission.id)
-            described_class.drain
-            expect(ActionMailer::Base.deliveries.length).to eq 0
           end
         end
       end
@@ -252,21 +239,32 @@ RSpec.describe EVSS::DisabilityCompensationForm::SubmitForm526AllClaim, type: :j
     context 'with a client error' do
       it 'sets the job_status to "non_retryable_error"' do
         VCR.use_cassette('evss/disability_compensation_form/submit_400') do
-          expect_any_instance_of(described_class).to receive(:log_exception_to_sentry)
-          subject.perform_async(submission.id)
-          expect_any_instance_of(Sidekiq::Form526JobStatusTracker::Metrics).to receive(:increment_non_retryable).once
-          described_class.drain
-          form_job_status = Form526JobStatus.last
-          expect(form_job_status.error_class).to eq 'EVSS::DisabilityCompensationForm::ServiceException'
-          expect(form_job_status.job_class).to eq 'SubmitForm526AllClaim'
-          expect(form_job_status.status).to eq Form526JobStatus::STATUS[:non_retryable_error]
-          expect(form_job_status.error_message).to eq(
-            '[{"key"=>"form526.serviceInformation.ConfinementPastActiveDutyDate", "severity"=>"ERROR", "text"=>"The ' \
-            'confinement start date is too far in the past"}, {"key"=>"form526.serviceInformation.' \
-            'ConfinementWithInServicePeriod", "severity"=>"ERROR", "text"=>"Your period of confinement must be ' \
-            'within a single period of service"}, {"key"=>"form526.veteran.homelessness.pointOfContact.' \
-            'pointOfContactName.Pattern", "severity"=>"ERROR", "text"=>"must match \\"([a-zA-Z0-9-/]+( ?))*$\\""}]'
-          )
+          VCR.use_cassette('form526_backup/200_lighthouse_intake_upload_location') do
+            VCR.use_cassette('form526_backup/200_evss_get_pdf') do
+              VCR.use_cassette('form526_backup/200_lighthouse_intake_upload') do
+                backup_klass = Sidekiq::Form526BackupSubmissionProcess::Submit
+                expect_any_instance_of(described_class).to receive(:log_exception_to_sentry)
+                subject.perform_async(submission.id)
+                expect_any_instance_of(
+                  Sidekiq::Form526JobStatusTracker::Metrics
+                ).to receive(:increment_non_retryable).once
+                expect { described_class.drain }.to change(backup_klass.jobs, :size).by(1)
+                form_job_status = Form526JobStatus.last
+                expect(form_job_status.error_class).to eq 'EVSS::DisabilityCompensationForm::ServiceException'
+                expect(form_job_status.job_class).to eq 'SubmitForm526AllClaim'
+                expect(form_job_status.status).to eq Form526JobStatus::STATUS[:non_retryable_error]
+                expect(form_job_status.error_message).to eq(
+                  '[{"key"=>"form526.serviceInformation.ConfinementPastActiveDutyDate", ' \
+                  '"severity"=>"ERROR", "text"=>"The ' \
+                  'confinement start date is too far in the past"}, {"key"=>"form526.serviceInformation.' \
+                  'ConfinementWithInServicePeriod", "severity"=>"ERROR", "text"=>"Your period of confinement must be ' \
+                  'within a single period of service"}, {"key"=>"form526.veteran.homelessness.pointOfContact.' \
+                  'pointOfContactName.Pattern", "severity"=>"ERROR", ' \
+                  '"text"=>"must match \\"([a-zA-Z0-9-/]+( ?))*$\\""}]'
+                )
+              end
+            end
+          end
         end
       end
     end

@@ -56,18 +56,77 @@ class AppealsApi::RswagConfig
 
   private
 
-  def security_schemes
-    schemes = {
-      apikey: {
-        type: :apiKey,
-        name: :apikey,
-        in: :header
-      }
+  DEFAULT_READ_SCOPE_DESCRIPTIONS = {
+    'veteran/appeals.read': 'Allows a veteran to see all their own decision review or appeal data',
+    'representative/appeals.read': 'Allows a veteran representative to see all decision review or appeal data for a veteran',
+    'system/appeals.read': 'Allows a system to see all decision review or appeal data for a veteran'
+  }.freeze
+
+  DEFAULT_WRITE_SCOPE_DESCRIPTIONS = {
+    'veteran/appeals.write': 'Allows a veteran to submit any type of appeal data for themselves',
+    'representative/appeals.write': 'Allows a veteran representative to submit any type of appeal data for a veteran',
+    'system/appeals.write': 'Allows a system to submit any type of appeal data for a veteran'
+  }.freeze
+
+  OAUTH_SCOPE_DESCRIPTIONS = {
+    appeals_status: {
+      'veteran/AppealsStatus.read': 'Allows a veteran to see the status of their own VA decision reviews and appeals',
+      'representative/AppealsStatus.read': "Allows a veteran representative to see the status of a veteran's decision reviews and appeals",
+      'system/AppealsStatus.read': "Allows a system to see the status of a veteran's decision reviews and appeals"
+    },
+    contestable_issues: {
+      'veteran/ContestableIssues.read': 'Allows a veteran to see their own contestable issues',
+      'representative/ContestableIssues.read': "Allows a veteran representative to see a veteran's contestable issues",
+      'system/ContestableIssues.read': "Allows a system to see a veteran's contestable issues"
+    },
+    higher_level_reviews: {
+      'veteran/HigherLevelReviews.read': 'Allows a veteran to see their own Higher-Level Reviews',
+      'representative/HigherLevelReviews.read': "Allows a veteran representative to see a veteran's Higher-Level Reviews",
+      'system/HigherLevelReviews.read': "Allows a system to see a veteran's Higher-Level Reviews",
+      'veteran/HigherLevelReviews.write': 'Allows a veteran to submit Higher-Level Reviews for themselves',
+      'representative/HigherLevelReviews.write': 'Allows a veteran representative to submit Higher-Level Reviews for a veteran',
+      'system/HigherLevelReviews.write': 'Allows a system to submit Higher-Level Reviews for a veteran'
+    },
+    legacy_appeals: {
+      'veteran/LegacyAppeals.read': 'Allows a veteran to see their own legacy appeals',
+      'representative/LegacyAppeals.read': "Allows a veteran representative to see a veteran's legacy appeals",
+      'system/LegacyAppeals.read': "Allows a system to see a veteran's legacy appeals"
+    },
+    notice_of_disagreements: {
+      'veteran/NoticeOfDisagreements.read': 'Allows a veteran to see their Board Appeals',
+      'representative/NoticeOfDisagreements.read': "Allows a veteran representative to see a veteran's Board Appeals",
+      'system/NoticeOfDisagreements.read': "Allows a system to see a veteran's Board Appeals",
+      'veteran/NoticeOfDisagreements.write': 'Allows a veteran to submit Board Appeals for themselves',
+      'representative/NoticeOfDisagreements.write': 'Allows a veteran representative to submit Board Appeals for a veteran',
+      'system/NoticeOfDisagreements.write': 'Allows a system to submit Board Appeals for a veteran'
+    },
+    supplemental_claims: {
+      'veteran/SupplementalClaims.read': 'Allows a veteran to see their Supplemental Claims',
+      'representative/SupplementalClaims.read': "Allows a veteran representative to see a veteran's Supplemental Claims",
+      'system/SupplementalClaims.read': "Allows a system to see a veteran's Supplemental Claims",
+      'veteran/SupplementalClaims.write': 'Allows a veteran to submit Supplemental Claims for themselves',
+      'representative/SupplementalClaims.write': 'Allows a veteran representative to submit Supplemental Claims for a veteran',
+      'system/SupplementalClaims.write': 'Allows a system to submit Supplemental Claims for a veteran'
     }
+  }.freeze
 
-    return schemes if DocHelpers.decision_reviews?
+  def security_schemes
+    if DocHelpers.decision_reviews?
+      {
+        apikey: {
+          type: :apiKey,
+          name: :apikey,
+          in: :header
+        }
+      }
+    else
+      api_specific_scopes = OAUTH_SCOPE_DESCRIPTIONS[DocHelpers.api_name.to_sym]
+      scope_descriptions = api_specific_scopes.merge(DEFAULT_READ_SCOPE_DESCRIPTIONS)
 
-    schemes.merge(
+      if api_specific_scopes.keys.any? { |name| name.end_with?('.write') }
+        scope_descriptions.merge!(DEFAULT_WRITE_SCOPE_DESCRIPTIONS)
+      end
+
       {
         bearer_token: {
           type: :http,
@@ -81,10 +140,7 @@ class AppealsApi::RswagConfig
             authorizationCode: {
               authorizationUrl: 'https://api.va.gov/oauth2/authorization',
               tokenUrl: 'https://api.va.gov/oauth2/token',
-              scopes: {
-                'claim.read': 'Retrieve claim data',
-                'claim.write': 'Submit claim data'
-              }
+              scopes: scope_descriptions
             }
           }
         },
@@ -95,15 +151,12 @@ class AppealsApi::RswagConfig
             authorizationCode: {
               authorizationUrl: 'https://sandbox-api.va.gov/oauth2/authorization',
               tokenUrl: 'https://sandbox-api.va.gov/oauth2/token',
-              scopes: {
-                'claim.read': 'Retrieve claim data',
-                'claim.write': 'Submit claim data'
-              }
+              scopes: scope_descriptions
             }
           }
         }
       }
-    )
+    end
   end
 
   # rubocop:disable Metrics/AbcSize
@@ -144,11 +197,11 @@ class AppealsApi::RswagConfig
       a << shared_schemas.slice(*%W[address phone timezone #{nbs_key}])
     when 'contestable_issues'
       a << contestable_issues_schema('#/components/schemas')
-      a << generic_schemas('#/components/schemas').slice(*%i[errorModel X-VA-SSN X-VA-File-Number])
+      a << generic_schemas('#/components/schemas').slice(*%i[errorModel X-VA-SSN X-VA-File-Number X-VA-ICN])
       a << shared_schemas.slice(*%W[#{nbs_key}])
     when 'legacy_appeals'
       a << legacy_appeals_schema('#/components/schemas')
-      a << generic_schemas('#/components/schemas').slice(*%i[errorModel X-VA-SSN X-VA-File-Number])
+      a << generic_schemas('#/components/schemas').slice(*%i[errorModel X-VA-SSN X-VA-File-Number X-VA-ICN])
       a << shared_schemas.slice(*%W[#{nbs_key}])
     when 'appeals_status'
       a << appeals_status_response_schemas
@@ -201,8 +254,11 @@ class AppealsApi::RswagConfig
         'pattern': '^[0-9]{9}$'
       },
       "X-VA-ICN": {
+        "description": "Veteran's Integration Control Number, a unique identifier established via the Master Person Index (MPI)",
         "type": 'string',
-        "description": "Veteran's Integration Control Number, a unique identifier established via the Master Person Index (MPI)"
+        "minLength": 17,
+        "maxLength": 17,
+        "pattern": '^[0-9]{10}V[0-9]{6}$'
       },
       'X-VA-First-Name': {
         'allOf': [
@@ -692,10 +748,25 @@ class AppealsApi::RswagConfig
   end
 
   def sc_create_schemas
+    # TODO: Return full schema after we've enabled potentialPactAct functionality
     if DocHelpers.decision_reviews?
-      parse_create_schema 'v2', '200995.json'
+      sc_schema = parse_create_schema 'v2', '200995.json'
+      return sc_schema if wip_doc_enabled?(:sc_v2_potential_pact_act)
+
+      # Removes 'potentialPactAct' from schema for production docs
+      sc_schema.tap do |s|
+        s.dig(*%w[scCreate properties data properties attributes properties])&.delete('potentialPactAct')
+      end
     else
       sc_schema = parse_create_schema('v2', '200995_with_shared_refs.json', return_raw: true)
+
+      # Removes 'potentialPactAct' from schema for production docs
+      unless wip_doc_enabled?(:sc_v2_potential_pact_act)
+        sc_schema.tap do |s|
+          s.dig(*%w[properties data properties attributes properties])&.delete('potentialPactAct')
+        end
+      end
+
       {
         scCreate: { type: 'object' }.merge!(sc_schema.slice(*%w[description properties required]))
       }

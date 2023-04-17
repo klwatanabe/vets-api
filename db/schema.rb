@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2023_01_12_221719) do
+ActiveRecord::Schema.define(version: 2023_04_12_000222) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "btree_gin"
@@ -134,6 +134,7 @@ ActiveRecord::Schema.define(version: 2023_01_12_221719) do
     t.text "encrypted_kms_key"
     t.date "verified_decryptable_at"
     t.string "veteran_icn"
+    t.jsonb "metadata", default: {}
     t.index ["veteran_icn"], name: "index_appeals_api_higher_level_reviews_on_veteran_icn"
   end
 
@@ -152,6 +153,7 @@ ActiveRecord::Schema.define(version: 2023_01_12_221719) do
     t.text "encrypted_kms_key"
     t.date "verified_decryptable_at"
     t.string "veteran_icn"
+    t.jsonb "metadata", default: {}
     t.index ["veteran_icn"], name: "index_appeals_api_notice_of_disagreements_on_veteran_icn"
   end
 
@@ -183,6 +185,7 @@ ActiveRecord::Schema.define(version: 2023_01_12_221719) do
     t.boolean "evidence_submission_indicated"
     t.date "verified_decryptable_at"
     t.string "veteran_icn"
+    t.jsonb "metadata", default: {}
     t.index ["veteran_icn"], name: "index_appeals_api_supplemental_claims_on_veteran_icn"
   end
 
@@ -317,6 +320,20 @@ ActiveRecord::Schema.define(version: 2023_01_12_221719) do
     t.text "file_data_ciphertext"
     t.text "encrypted_kms_key"
     t.date "verified_decryptable_at"
+  end
+
+  create_table "client_configs", force: :cascade do |t|
+    t.string "client_id", null: false
+    t.string "authentication", null: false
+    t.boolean "anti_csrf", null: false
+    t.text "redirect_uri", null: false
+    t.interval "access_token_duration", null: false
+    t.string "access_token_audience", null: false
+    t.interval "refresh_token_duration", null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.text "logout_redirect_uri"
+    t.index ["client_id"], name: "index_client_configs_on_client_id", unique: true
   end
 
   create_table "covid_vaccine_expanded_registration_submissions", id: :serial, force: :cascade do |t|
@@ -676,20 +693,6 @@ ActiveRecord::Schema.define(version: 2023_01_12_221719) do
     t.index ["start_time"], name: "index_maintenance_windows_on_start_time"
   end
 
-  create_table "mhv_accounts", id: :serial, force: :cascade do |t|
-    t.string "user_uuid", null: false
-    t.string "account_state", null: false
-    t.datetime "registered_at"
-    t.datetime "upgraded_at"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.string "mhv_correlation_id"
-    t.uuid "user_account_id"
-    t.index ["mhv_correlation_id"], name: "index_mhv_accounts_on_mhv_correlation_id"
-    t.index ["user_account_id"], name: "index_mhv_accounts_on_user_account_id"
-    t.index ["user_uuid", "mhv_correlation_id"], name: "index_mhv_accounts_on_user_uuid_and_mhv_correlation_id", unique: true
-  end
-
   create_table "mhv_opt_in_flags", force: :cascade do |t|
     t.uuid "user_account_id"
     t.string "feature", null: false
@@ -947,6 +950,15 @@ ActiveRecord::Schema.define(version: 2023_01_12_221719) do
     t.index ["valid_pdf"], name: "index_va_forms_forms_on_valid_pdf"
   end
 
+  create_table "va_notify_in_progress_reminders_sent", force: :cascade do |t|
+    t.string "form_id", null: false
+    t.uuid "user_account_id", null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["user_account_id", "form_id"], name: "index_in_progress_reminders_sent_user_account_form_id", unique: true
+    t.index ["user_account_id"], name: "index_va_notify_in_progress_reminders_sent_on_user_account_id"
+  end
+
   create_table "vba_documents_git_items", force: :cascade do |t|
     t.string "url", null: false
     t.jsonb "git_item"
@@ -1036,19 +1048,6 @@ ActiveRecord::Schema.define(version: 2023_01_12_221719) do
     t.index ["guid"], name: "index_vic_submissions_on_guid", unique: true
   end
 
-  create_table "virtual_agent_user_access_records", force: :cascade do |t|
-    t.string "action_type", null: false
-    t.string "first_name"
-    t.string "last_name"
-    t.string "ssn", null: false
-    t.string "icn", null: false
-    t.datetime "created_at", precision: 6, null: false
-    t.datetime "updated_at", precision: 6, null: false
-    t.index ["action_type"], name: "index_virtual_agent_user_access_records_on_action_type"
-    t.index ["icn"], name: "index_virtual_agent_user_access_records_on_icn"
-    t.index ["ssn"], name: "index_virtual_agent_user_access_records_on_ssn"
-  end
-
   create_table "webhooks_notification_attempt_assocs", id: false, force: :cascade do |t|
     t.bigint "webhooks_notification_id", null: false
     t.bigint "webhooks_notification_attempt_id", null: false
@@ -1104,7 +1103,6 @@ ActiveRecord::Schema.define(version: 2023_01_12_221719) do
   add_foreign_key "health_quest_questionnaire_responses", "user_accounts"
   add_foreign_key "in_progress_forms", "user_accounts"
   add_foreign_key "inherited_proof_verified_user_accounts", "user_accounts"
-  add_foreign_key "mhv_accounts", "user_accounts"
   add_foreign_key "mhv_opt_in_flags", "user_accounts"
   add_foreign_key "oauth_sessions", "user_accounts"
   add_foreign_key "oauth_sessions", "user_verifications"
@@ -1112,5 +1110,6 @@ ActiveRecord::Schema.define(version: 2023_01_12_221719) do
   add_foreign_key "user_acceptable_verified_credentials", "user_accounts"
   add_foreign_key "user_credential_emails", "user_verifications"
   add_foreign_key "user_verifications", "user_accounts"
+  add_foreign_key "va_notify_in_progress_reminders_sent", "user_accounts"
   add_foreign_key "veteran_device_records", "devices"
 end

@@ -123,6 +123,64 @@ paths:
       summary: /v1/messaging/folders/{id}/messages
       parameters:
         - $ref: "#/components/parameters/InflectionHeader"
+  /v1/messaging/folders/{id}/threads:
+    get:
+      description: List threads in a secure messaging folder.
+      operationId: get_folder_threads
+      parameters:
+        - description: The id of the folder that threads are being retrieved from
+          in: path
+          name: folderId
+          required: true
+          schema:
+            type: string
+        - description: The size of the pagination you want
+          in: query
+          name: pageSize,
+          required: true
+          schema:
+            type: string
+        - description: The page number to get based on your page size
+          in: query
+          name: pageNumber,
+          required: true
+          schema:
+            type: string
+        - description: The field to sort the results by
+          in: query
+          name: sortField, 
+          required: true
+          schema:
+            type: string
+            enum: [SENDER_NAME, RECIPIENT_NAME, SENT_DATE, DRAFT_DATE]
+        - description: The order to sort the results by
+          in: query
+          name: sortOrder,
+          required: true
+          schema:
+            type: string
+            enum: [ASC, DESC]
+        - $ref: "#/components/parameters/InflectionHeader"
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: ./schemas/SecureMessageThreadList.yml
+          description: OK
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: ./schemas/Errors.yml
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: ./schemas/Errors.yml
+          description: Not authorized for access to secure messages
+      summary: /v1/messaging/folders/{id}/threads
   /v1/messaging/folders/{id}/search:
     post:
       description: |
@@ -688,14 +746,13 @@ paths:
     get:
       description: |
         Gets a list of message summaries that are related to the message of the passed id.
-        Does <strong>not</strong> include the message of the passed id itself.
-      operationId: get_message_history
+      operationId: get_messages_for_thread
       responses:
         "200":
           content:
             application/json:
               schema:
-                $ref: ./schemas/SecureMessageList.yml
+                $ref: ./schemas/SecureMessageListInThread.yml
           description: OK
         "401":
           content:

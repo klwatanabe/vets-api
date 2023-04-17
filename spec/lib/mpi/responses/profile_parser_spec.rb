@@ -8,10 +8,10 @@ describe MPI::Responses::ProfileParser do
   let(:parser) { MPI::Responses::ProfileParser.new(faraday_response) }
   let(:ack_detail_code) { 'AE' }
   let(:error_details) do
-    { error_details: { ack_detail_code: ack_detail_code,
-                       id_extension: id_extension,
-                       transaction_id: transaction_id,
-                       error_texts: error_texts } }
+    { error_details: { ack_detail_code:,
+                       id_extension:,
+                       transaction_id:,
+                       error_texts: } }
   end
   let(:headers) { { 'x-global-transaction-id' => transaction_id } }
   let(:transaction_id) { 'some-transaction-id' }
@@ -32,7 +32,7 @@ describe MPI::Responses::ProfileParser do
     end
 
     describe '#parse' do
-      let(:mvi_profile) do
+      let(:mpi_profile) do
         build(
           :mpi_profile_response,
           :address_austin,
@@ -45,22 +45,22 @@ describe MPI::Responses::ProfileParser do
           sec_id: nil,
           search_token: 'WSDOC1609131753362231779394902',
           id_theft_flag: false,
-          transaction_id: transaction_id
+          transaction_id:
         )
       end
 
       it 'returns a MviProfile with the parsed attributes' do
-        expect(parser.parse).to have_deep_attributes(mvi_profile)
+        expect(parser.parse).to have_deep_attributes(mpi_profile)
       end
 
       context 'when candidate has incomplete birth_date' do
         let(:body) { Ox.parse(File.read('spec/support/mpi/find_candidate_incomplete_dob_response.xml')) }
         let(:icn) { '1000123456V123456' }
-        let(:mvi_profile) do
+        let(:mpi_profile) do
           build(
             :mpi_profile_response,
             :address_austin,
-            icn: icn,
+            icn:,
             suffix: nil,
             birth_date: nil,
             birls_id: nil,
@@ -72,14 +72,14 @@ describe MPI::Responses::ProfileParser do
             sec_id: nil,
             search_token: 'WSDOC1609131753362231779394902',
             id_theft_flag: false,
-            transaction_id: transaction_id
+            transaction_id:
           )
         end
         let(:expected_log_message) { 'MPI::Response.parse_dob failed' }
-        let(:expected_log_values) { { dob: '198003', icn: icn } }
+        let(:expected_log_values) { { dob: '198003', icn: } }
 
         it 'sets the birth_date to nil' do
-          expect(parser.parse).to have_deep_attributes(mvi_profile)
+          expect(parser.parse).to have_deep_attributes(mpi_profile)
         end
 
         it 'logs the birth_date & icn' do
@@ -90,7 +90,7 @@ describe MPI::Responses::ProfileParser do
 
       context 'when candidate is missing name' do
         let(:body) { Ox.parse(File.read('spec/support/mpi/find_candidate_missing_name_response.xml')) }
-        let(:mvi_profile) do
+        let(:mpi_profile) do
           build(
             :mpi_profile_response,
             :address_austin,
@@ -106,18 +106,18 @@ describe MPI::Responses::ProfileParser do
             sec_id: nil,
             search_token: 'WSDOC1609131753362231779394902',
             id_theft_flag: false,
-            transaction_id: transaction_id
+            transaction_id:
           )
         end
 
         it 'sets the names to false' do
-          expect(parser.parse).to have_deep_attributes(mvi_profile)
+          expect(parser.parse).to have_deep_attributes(mpi_profile)
         end
       end
 
       context 'when candidate has multiple stanzas with name' do
         let(:body) { Ox.parse(File.read('spec/support/mpi/find_candidate_multiple_name_response.xml')) }
-        let(:mvi_profile) do
+        let(:mpi_profile) do
           build(
             :mpi_profile_response,
             :address_austin,
@@ -133,18 +133,18 @@ describe MPI::Responses::ProfileParser do
             sec_id: nil,
             search_token: 'WSDOC1609131753362231779394902',
             id_theft_flag: false,
-            transaction_id: transaction_id
+            transaction_id:
           )
         end
 
         it 'sets the names to the stanza with legal names' do
-          expect(parser.parse).to have_deep_attributes(mvi_profile)
+          expect(parser.parse).to have_deep_attributes(mpi_profile)
         end
       end
 
       context 'with a missing address, invalid edipi, and invalid participant id' do
         let(:body) { Ox.parse(File.read('spec/support/mpi/find_candidate_response_nil_address.xml')) }
-        let(:mvi_profile) do
+        let(:mpi_profile) do
           build(
             :mpi_profile_response,
             address: nil,
@@ -172,19 +172,19 @@ describe MPI::Responses::ProfileParser do
             ],
             search_token: 'WSDOC1609131753362231779394902',
             id_theft_flag: false,
-            transaction_id: transaction_id
+            transaction_id:
           )
         end
 
         it 'sets the address to nil' do
-          expect(parser.parse).to have_deep_attributes(mvi_profile)
+          expect(parser.parse).to have_deep_attributes(mpi_profile)
         end
       end
 
       context 'with no middle name, missing and alternate correlation ids, multiple other_ids' do
         let(:icn_with_aaid) { '1008714701V416111^NI^200M^USVHA' }
         let(:body) { Ox.parse(File.read('spec/support/mpi/find_candidate_missing_attrs_response.xml')) }
-        let(:mvi_profile) do
+        let(:mpi_profile) do
           build(
             :mpi_profile_response,
             :missing_attrs,
@@ -200,7 +200,7 @@ describe MPI::Responses::ProfileParser do
             edipis: [],
             mhv_ids: ['1100792239'],
             active_mhv_ids: ['1100792239'],
-            icn_with_aaid: icn_with_aaid,
+            icn_with_aaid:,
             full_mvi_ids: [
               '1008714701V416111^NI^200M^USVHA^P',
               '796122306^PI^200BRLS^USVBA^A',
@@ -210,12 +210,12 @@ describe MPI::Responses::ProfileParser do
             ],
             search_token: 'WSDOC1908201553145951848240311',
             id_theft_flag: false,
-            transaction_id: transaction_id
+            transaction_id:
           )
         end
 
         it 'filters with only first name and retrieve correct MHV id' do
-          expect(parser.parse).to have_deep_attributes(mvi_profile)
+          expect(parser.parse).to have_deep_attributes(mpi_profile)
         end
       end
     end
@@ -225,7 +225,7 @@ describe MPI::Responses::ProfileParser do
     let(:body) { Ox.parse(File.read('spec/support/mpi/find_candidate_with_relationship_response.xml')) }
 
     describe '#parse' do
-      let(:mvi_profile) do
+      let(:mpi_profile) do
         build(
           :mpi_profile_response,
           :with_relationship,
@@ -261,7 +261,7 @@ describe MPI::Responses::ProfileParser do
           person_types: %w[DEP VET],
           relationships: [mpi_profile_relationship_component],
           id_theft_flag: false,
-          transaction_id: transaction_id
+          transaction_id:
         )
       end
 
@@ -312,19 +312,19 @@ describe MPI::Responses::ProfileParser do
       end
 
       it 'returns a MviProfile with the parsed attributes' do
-        expect(parser.parse).to have_deep_attributes(mvi_profile)
+        expect(parser.parse).to have_deep_attributes(mpi_profile)
       end
     end
   end
 
   context 'with no subject element' do
     let(:body) { Ox.parse(File.read('spec/support/mpi/find_candidate_no_subject_response.xml')) }
-    let(:mvi_profile) { build(:mpi_profile_response, :missing_attrs) }
-    let(:expected_mvi_profile) { MPI::Models::MviProfile.new({ transaction_id: transaction_id }) }
+    let(:mpi_profile) { build(:mpi_profile_response, :missing_attrs) }
+    let(:expected_mpi_profile) { MPI::Models::MviProfile.new({ transaction_id: }) }
 
     describe '#parse' do
       it 'return empty mvi profile if the response includes no suject element' do
-        expect(parser.parse).to have_deep_attributes(expected_mvi_profile)
+        expect(parser.parse).to have_deep_attributes(expected_mpi_profile)
       end
     end
   end
@@ -396,13 +396,13 @@ describe MPI::Responses::ProfileParser do
   context 'with multiple MHV IDs' do
     let(:icn_with_aaid) { '12345678901234567^NI^200M^USVHA' }
     let(:body) { Ox.parse(File.read('spec/support/mpi/find_candidate_multiple_mhv_response.xml')) }
-    let(:mvi_profile) do
+    let(:mpi_profile) do
       build(
         :mpi_profile_response,
         :multiple_mhvids,
         mhv_ien: nil,
         mhv_iens: [],
-        icn_with_aaid: icn_with_aaid,
+        icn_with_aaid:,
         cerner_id: nil,
         cerner_facility_ids: [],
         full_mvi_ids: [
@@ -417,18 +417,18 @@ describe MPI::Responses::ProfileParser do
         search_token: 'WSDOC1611060614456041732180196',
         person_types: ['PAT'],
         id_theft_flag: false,
-        transaction_id: transaction_id
+        transaction_id:
       )
     end
 
     it 'returns an array of mhv ids' do
-      expect(parser.parse).to have_deep_attributes(mvi_profile)
+      expect(parser.parse).to have_deep_attributes(mpi_profile)
     end
   end
 
   context 'with a vet360 id' do
     let(:body) { Ox.parse(File.read('spec/support/mpi/find_candidate_response.xml')) }
-    let(:mvi_profile) do
+    let(:mpi_profile) do
       build(
         :mpi_profile_response,
         :address_austin,
@@ -441,12 +441,12 @@ describe MPI::Responses::ProfileParser do
         mhv_iens: [],
         search_token: 'WSDOC1609131753362231779394902',
         id_theft_flag: false,
-        transaction_id: transaction_id
+        transaction_id:
       )
     end
 
     it 'correctly parses a Vet360 ID' do
-      expect(parser.parse).to have_deep_attributes(mvi_profile)
+      expect(parser.parse).to have_deep_attributes(mpi_profile)
     end
   end
 
@@ -458,7 +458,7 @@ describe MPI::Responses::ProfileParser do
     it 'logs warning about inactive IDs' do
       msg1 = 'Inactive MHV correlation IDs present'
       msg2 = 'Returning inactive MHV correlation ID as first identifier'
-      expect(Raven).to receive(:extra_context).with(ids: %w[12345678901 12345678902]).twice
+      expect(Raven).to receive(:extra_context).with({ ids: %w[12345678901 12345678902] }).twice
       expect(Raven).to receive(:capture_message).with(msg1, level: 'info')
       expect(Raven).to receive(:capture_message).with(msg2, level: 'warning')
       parser.parse

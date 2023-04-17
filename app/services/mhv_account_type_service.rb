@@ -64,7 +64,7 @@ class MHVAccountTypeService
   def fetch_eligible_data_classes
     if cached_eligible_data_class
       json = Oj.load(cached_eligible_data_class)
-      Common::Collection.new(::EligibleDataClass, json.symbolize_keys).members.map(&:name)
+      Common::Collection.new(::EligibleDataClass, **json.symbolize_keys).members.map(&:name)
     else
       bb_client = BB::Client.new(session: { user_id: @user.mhv_correlation_id })
       bb_client.authenticate
@@ -85,7 +85,7 @@ class MHVAccountTypeService
     extra_context.merge!(
       uuid: user.uuid,
       mhv_correlation_id: user.mhv_correlation_id,
-      eligible_data_classes: eligible_data_classes,
+      eligible_data_classes:,
       authn_context: user.authn_context,
       va_patient: user.va_patient?,
       mhv_acct_type: user.identity.mhv_account_type

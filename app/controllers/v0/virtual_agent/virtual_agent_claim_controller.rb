@@ -8,7 +8,7 @@ module V0
     class VirtualAgentClaimController < ApplicationController
       include IgnoreNotFound
       rescue_from 'EVSS::ErrorMiddleware::EVSSError', with: :service_exception_handler
-      if Settings.vsp_environment.present? && Settings.vsp_environment.downcase != 'development'
+      unless Settings.vsp_environment == 'localhost' || Settings.vsp_environment == 'development'
         before_action { authorize :evss, :access? }
       end
       def index
@@ -70,11 +70,11 @@ module V0
         evss_id = claim.list_data['id']
         updated_date = get_updated_date(claim)
 
-        { claim_status: claim_status,
+        { claim_status:,
           claim_type: status_type,
-          filing_date: filing_date,
-          evss_id: evss_id,
-          updated_date: updated_date }
+          filing_date:,
+          evss_id:,
+          updated_date: }
       end
 
       def three_most_recent_open_comp_claims(claims)

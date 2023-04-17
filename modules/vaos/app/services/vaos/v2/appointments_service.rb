@@ -8,6 +8,8 @@ module VAOS
   module V2
     class AppointmentsService < VAOS::SessionService
       DIRECT_SCHEDULE_ERROR_KEY = 'DirectScheduleError'
+      VAOS_SERVICE_DATA_KEY = 'VAOSServiceTypesAndCategory'
+      VAOS_TELEHEALTH_DATA_KEY = 'VAOSTelehealthData'
 
       def get_appointments(start_date, end_date, statuses = nil, pagination_params = {})
         params = date_params(start_date, end_date)
@@ -17,6 +19,10 @@ module VAOS
 
         with_monitoring do
           response = perform(:get, appointments_base_url, params, headers)
+          response.body[:data].each do |appt|
+            find_and_log_service_type_and_category(appt)
+            log_telehealth_data(appt[:telehealth]&.[](:atlas)) unless appt[:telehealth]&.[](:atlas).nil?
+          end
           {
             data: deserialized_appointments(response.body[:data]),
             meta: pagination(pagination_params).merge(partial_errors(response))
@@ -37,6 +43,8 @@ module VAOS
         params.compact_blank!
         with_monitoring do
           response = perform(:post, appointments_base_url, params, headers)
+          find_and_log_service_type_and_category(response.body)
+          log_telehealth_data(response.body[:telehealth]&.[](:atlas)) unless response.body[:telehealth]&.[](:atlas).nil?
           OpenStruct.new(response.body)
         rescue Common::Exceptions::BackendServiceException => e
           log_direct_schedule_submission_errors(e) if params[:status] == 'booked'
@@ -46,7 +54,7 @@ module VAOS
 
       def update_appointment(appt_id, status)
         url_path = "/vaos/v1/patients/#{user.icn}/appointments/#{appt_id}"
-        params = VAOS::V2::UpdateAppointmentForm.new(status: status).params
+        params = VAOS::V2::UpdateAppointmentForm.new(status:).params
         with_monitoring do
           response = perform(:put, url_path, params, headers)
           OpenStruct.new(response.body)
@@ -65,6 +73,50 @@ module VAOS
           status: e.status_code,
           message: e.message
         }
+      end
+
+      def log_telehealth_data(atlas_data)
+        atlas_entry = { VAOS_TELEHEALTH_DATA_KEY => atlas_details(atlas_data) }
+        Rails.logger.info('VAOS telehealth atlas details', atlas_entry.to_json)
+      end
+
+      def atlas_details(atlas_data)
+        {
+          siteCode: atlas_data&.[](:site_code),
+          address: atlas_data&.[](:address)
+        }
+      end
+
+      def find_and_log_service_type_and_category(appt)
+        service_category_found = process_service_types_or_category(appt[:service_category])
+        service_types_array_found = process_service_types_or_category(appt[:service_types])
+        service_type_found = appt[:service_type]
+        log_service_type_and_category(type_and_category_data(service_type_found, service_types_array_found,
+                                                             service_category_found))
+      end
+
+      def process_service_types_or_category(appt_service_data)
+        found_values = []
+        appt_service_data&.each do |type_or_category_el|
+          type_or_category_el&.[](:coding)&.each do |coding_el|
+            service_type_or_category_data = coding_el&.[](:code)
+            found_values << service_type_or_category_data
+          end
+        end
+        found_values
+      end
+
+      def type_and_category_data(type, types_array, category)
+        {
+          vaos_service_type: type,
+          vaos_service_types_array: types_array,
+          vaos_service_category: category
+        }
+      end
+
+      def log_service_type_and_category(service_data)
+        service_log_entry = { VAOS_SERVICE_DATA_KEY => service_data }
+        Rails.logger.info('VAOS appointment service category and type', service_log_entry.to_json)
       end
 
       def deserialized_appointments(appointment_list)
@@ -87,7 +139,7 @@ module VAOS
       def partial_errors(response)
         if response.status == 200 && response.body[:failures]&.any?
           log_message_to_sentry(
-            'VAOS::AppointmentService#get_appointments has response errors.',
+            'VAOS::V2::AppointmentService#get_appointments has response errors.',
             :info,
             failures: response.body[:failures].to_json
           )
@@ -111,7 +163,7 @@ module VAOS
       end
 
       def status_params(statuses)
-        { statuses: statuses }
+        { statuses: }
       end
 
       def page_params(pagination_params)

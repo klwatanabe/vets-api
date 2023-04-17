@@ -13,7 +13,7 @@ module Mobile
 
         resource = params[:filter].present? ? resource.find_by(filter_params) : resource
         resource = resource.sort(params[:sort])
-        resource = resource.paginate(pagination_params)
+        resource = resource.paginate(**pagination_params)
 
         render json: resource.data,
                serializer: CollectionSerializer,
@@ -104,7 +104,7 @@ module Mobile
 
       def signature
         result = client.get_signature[:data]
-        Rails.logger.info('Mobile Get Message Signature Result', result: result)
+        Rails.logger.info('Mobile Get Message Signature Result', result:)
         result = { signature_name: nil, include_signature: false, signature_title: nil } if result.nil?
         render json: Mobile::V0::MessageSignatureSerializer.new(@current_user.uuid, result).to_json
       end

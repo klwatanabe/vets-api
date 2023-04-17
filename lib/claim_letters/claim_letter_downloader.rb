@@ -5,6 +5,15 @@ require 'claim_letters/claim_letter_test_data'
 module ClaimStatusTool
   class ClaimLetterDownloader
     FILENAME = 'ClaimLetter'
+    # 184: Notification Letter (e.g. VA 20-8993, VA 21-0290, PCGL)
+    # 339: Rating Decision Letter
+    # 27: Board Of Appeals Decision Letter
+    DOC_TYPE_ALLOWLIST =
+      if Flipper.enabled?(:cst_include_ddl_boa_letters, @current_user)
+        %w[184 27].freeze
+      else
+        %w[184].freeze
+      end
 
     def initialize(user)
       @user = user
@@ -46,12 +55,6 @@ module ClaimStatusTool
 
     private
 
-    # 184: Notification Letter (e.g. VA 20-8993, VA 21-0290, PCGL)
-    # 339: Rating Decision Letter
-    def doc_type_allowlist
-      %w[184].freeze
-    end
-
     def file_number
       # In staging, some users don't have a participant_id
       return @user.ssn if @user.participant_id.blank?
@@ -61,7 +64,7 @@ module ClaimStatusTool
     end
 
     def filter_letters(document)
-      return nil unless doc_type_allowlist.include?(document[:doc_type])
+      return nil unless DOC_TYPE_ALLOWLIST.include?(document[:doc_type])
 
       document.marshal_dump
     end

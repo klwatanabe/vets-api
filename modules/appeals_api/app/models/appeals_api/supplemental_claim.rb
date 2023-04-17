@@ -13,6 +13,8 @@ module AppealsApi
     attr_readonly :auth_headers
     attr_readonly :form_data
 
+    before_create :assign_metadata
+
     def self.past?(date)
       date < Time.zone.today
     end
@@ -55,10 +57,20 @@ module AppealsApi
       ).new(self)
     end
 
+    def assign_metadata
+      return unless api_version&.downcase == 'v2'
+
+      self.metadata = if Flipper.enabled?(:decision_review_sc_pact_act_boolean)
+                        { form_data: { evidence_type:, potential_pact_act: }, pact: { potential_pact_act: } }
+                      else
+                        { form_data: { evidence_type: } }
+                      end
+    end
+
     def veteran
       @veteran ||= Appellant.new(
         type: :veteran,
-        auth_headers: auth_headers,
+        auth_headers:,
         form_data: data_attributes&.dig('veteran')
       )
     end
@@ -66,7 +78,7 @@ module AppealsApi
     def claimant
       @claimant ||= Appellant.new(
         type: :claimant,
-        auth_headers: auth_headers,
+        auth_headers:,
         form_data: data_attributes&.dig('claimant')
       )
     end
@@ -123,6 +135,10 @@ module AppealsApi
       data_attributes['claimantTypeOtherValue']&.strip
     end
 
+    def potential_pact_act
+      data_attributes&.dig('potentialPactAct') ? true : false
+    end
+
     def alternate_signer_first_name
       auth_headers['X-Alternate-Signer-First-Name']&.strip
     end
@@ -169,7 +185,8 @@ module AppealsApi
     end
 
     def soc_opt_in
-      data_attributes['socOptIn']
+      # This is no longer optional as of v3 of the PDF
+      pdf_version&.downcase == 'v3' || data_attributes&.dig('socOptIn')
     end
 
     def new_evidence
@@ -192,6 +209,10 @@ module AppealsApi
       "#{veteran.last_name.truncate(35)} - #{veteran.ssn.last(4)}"
     end
 
+    def evidence_type
+      evidence_submission&.dig('evidenceType')
+    end
+
     # rubocop:disable Metrics/MethodLength
     def update_status(status:, code: nil, detail: nil, raise_on_error: false)
       current_status = self.status
@@ -200,9 +221,9 @@ module AppealsApi
 
       send(
         raise_on_error ? :update! : :update,
-        status: status,
-        code: code,
-        detail: detail
+        status:,
+        code:,
+        detail:
       )
 
       if status != current_status || code != current_code || detail != current_detail
@@ -213,8 +234,8 @@ module AppealsApi
             to: status.to_s,
             status_update_time: Time.zone.now.iso8601,
             statusable_id: id,
-            code: code,
-            detail: detail
+            code:,
+            detail:
           }.stringify_keys
         )
 
@@ -224,7 +245,7 @@ module AppealsApi
           AppealsApi::AppealReceivedJob.perform_async(
             {
               receipt_event: 'sc_received',
-              email_identifier: email_identifier,
+              email_identifier:,
               first_name: veteran.first_name,
               date_submitted: appellant_local_time.iso8601,
               guid: id,
@@ -238,7 +259,7 @@ module AppealsApi
     # rubocop:enable Metrics/MethodLength
 
     def update_status!(status:, code: nil, detail: nil)
-      update_status(status: status, code: code, detail: detail, raise_on_error: true)
+      update_status(status:, code:, detail:, raise_on_error: true)
     end
 
     def lob
@@ -251,7 +272,7 @@ module AppealsApi
         'veteranReadinessAndEmployment' => 'VRE',
         'loanGuaranty' => 'CMP',
         'education' => 'EDU',
-        'nationalCemeteryAdministration' => 'CMP'
+        'nationalCemeteryAdministration' => 'NCA'
       }[benefit_type]
     end
 
@@ -288,7 +309,7 @@ module AppealsApi
     end
 
     def evidence_submission
-      data_attributes['evidenceSubmission']
+      data_attributes&.dig('evidenceSubmission')
     end
 
     # Used in shared model validations

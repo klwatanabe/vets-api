@@ -123,12 +123,8 @@ RSpec.describe Facilities::PSSGDownload, type: :job do
 
   context 'when encountering an error' do
     before do
-      Settings.sentry.dsn = 'asdf'
+      allow(Settings.sentry).to receive(:dsn).and_return('asdf')
       create :vha_648A4
-    end
-
-    after do
-      Settings.sentry.dsn = nil
     end
 
     it 'logs pssg download error to sentry' do
@@ -138,7 +134,9 @@ RSpec.describe Facilities::PSSGDownload, type: :job do
       ).to receive(:extract_polygon).with(any_args).and_raise(RGeo::Error::InvalidGeometry)
 
       expect(Raven).to receive(:capture_exception).with(RGeo::Error::InvalidGeometry, level: 'error')
-      expect(Raven).to receive(:extra_context).with('Band name' => drive_time_data_648A4[0]['attributes']['Name'])
+      expect(Raven).to receive(:extra_context).with(
+        { 'Band name' => drive_time_data_648A4[0]['attributes']['Name'] }
+      )
 
       subject.perform
     end

@@ -92,7 +92,7 @@ describe V2::Chip::Service do
 
       it 'returns unauthorized' do
         expect(subject.build(check_in: valid_check_in, params: { appointment_ien: '123-456-abc' })
-          .refresh_appointments.body).to eq({ permissions: 'read.none', status: 'success', uuid: uuid }.to_json)
+          .refresh_appointments.body).to eq({ permissions: 'read.none', status: 'success', uuid: }.to_json)
       end
     end
   end
@@ -119,7 +119,7 @@ describe V2::Chip::Service do
       end
 
       it 'returns correct response' do
-        expect(subject.build(check_in: valid_check_in, params: params)
+        expect(subject.build(check_in: valid_check_in, params:)
                       .pre_check_in).to eq(hsh)
       end
     end
@@ -132,7 +132,7 @@ describe V2::Chip::Service do
       end
 
       it 'returns unauthorized message' do
-        expect(subject.build(check_in: valid_check_in, params: params)
+        expect(subject.build(check_in: valid_check_in, params:)
                       .pre_check_in).to eq(hsh)
       end
     end
@@ -270,7 +270,7 @@ describe V2::Chip::Service do
       end
 
       it 'returns demographics confirmation response' do
-        expect(subject.build(check_in: valid_check_in, params: params)
+        expect(subject.build(check_in: valid_check_in, params:)
                     .confirm_demographics).to eq(hsh)
       end
     end
@@ -283,7 +283,7 @@ describe V2::Chip::Service do
       end
 
       it 'returns unauthorized message' do
-        expect(subject.build(check_in: valid_check_in, params: params)
+        expect(subject.build(check_in: valid_check_in, params:)
                       .confirm_demographics).to eq(error_response)
       end
     end
@@ -312,7 +312,7 @@ describe V2::Chip::Service do
       end
 
       it 'returns refresh precheckin response' do
-        expect(subject.build(check_in: valid_check_in, params: params)
+        expect(subject.build(check_in: valid_check_in, params:)
                       .refresh_precheckin).to eq(hsh)
       end
     end
@@ -332,8 +332,62 @@ describe V2::Chip::Service do
       end
 
       it 'returns unauthorized message' do
-        expect(subject.build(check_in: valid_check_in, params: params)
+        expect(subject.build(check_in: valid_check_in, params:)
                       .refresh_precheckin).to eq(error_response)
+      end
+    end
+  end
+
+  describe '#initiate_check_in' do
+    context 'when token is already present' do
+      let(:lorota_uuid) { 'ce70fc80-0590-441a-8f7f-f0117f769425' }
+      let(:params) do
+        {
+          id: lorota_uuid
+        }
+      end
+      let(:resp) do
+        {
+          data: {
+            attributes: {
+              uuid: :lorota_uuid
+            },
+            id: :lorota_uuid
+          },
+          uuid: :lorota_uuid
+        }
+      end
+
+      let(:faraday_response) { Faraday::Response.new(body: resp, status: 200) }
+      let(:hsh) { { data: faraday_response.body, status: faraday_response.status } }
+
+      before do
+        allow_any_instance_of(::V2::Chip::Service).to receive(:token).and_return('jwt-token-123-abc')
+        allow_any_instance_of(::V2::Chip::Client).to receive(:initiate_check_in).and_return(faraday_response)
+      end
+
+      it 'returns initiate_check_in response' do
+        expect(subject.build(check_in: valid_check_in, params:)
+                      .initiate_check_in).to eq(hsh)
+      end
+    end
+
+    context 'when token is not present' do
+      let(:error_response) { { data: { error: true, message: 'Unauthorized' }, status: 401 } }
+      let(:lorota_uuid) { 'd602d9eb-9a31-484f-9637-13ab0b507e0d' }
+      let(:params) do
+        {
+          id: lorota_uuid
+        }
+      end
+
+      before do
+        allow_any_instance_of(::V2::Chip::Service).to receive(:token).and_return(nil)
+      end
+
+      it 'returns unauthorized message' do
+        expect(subject.build(check_in: valid_check_in, params:)
+                      .initiate_check_in).to eq(error_response)
       end
     end
   end
@@ -356,7 +410,7 @@ describe V2::Chip::Service do
       end
 
       it 'returns delete response' do
-        expect(subject.build(check_in: valid_check_in, params: params)
+        expect(subject.build(check_in: valid_check_in, params:)
                       .delete).to eq(hsh)
       end
     end
@@ -375,7 +429,7 @@ describe V2::Chip::Service do
       end
 
       it 'returns unauthorized message' do
-        expect(subject.build(check_in: valid_check_in, params: params)
+        expect(subject.build(check_in: valid_check_in, params:)
                       .delete).to eq(error_response)
       end
     end
@@ -406,7 +460,7 @@ describe V2::Chip::Service do
         end
 
         it 'returns demographics confirmation hash with all demographics data' do
-          expect(subject.build(check_in: valid_check_in, params: params)
+          expect(subject.build(check_in: valid_check_in, params:)
                         .demographic_confirmations).to eq(demographics_confirmation_hash)
         end
       end
@@ -428,7 +482,7 @@ describe V2::Chip::Service do
         end
 
         it 'returns demographics confirmation with only demographics_up_to_date data' do
-          expect(subject.build(check_in: valid_check_in, params: params)
+          expect(subject.build(check_in: valid_check_in, params:)
                         .demographic_confirmations).to eq(demographics_confirmation_hash)
         end
       end
@@ -450,7 +504,7 @@ describe V2::Chip::Service do
         end
 
         it 'returns demographics confirmation with only next_of_kin_up_to_date data' do
-          expect(subject.build(check_in: valid_check_in, params: params)
+          expect(subject.build(check_in: valid_check_in, params:)
                         .demographic_confirmations).to eq(demographics_confirmation_hash)
         end
       end
@@ -472,7 +526,7 @@ describe V2::Chip::Service do
         end
 
         it 'returns demographics confirmation with only emergency_contact_up_to_date data' do
-          expect(subject.build(check_in: valid_check_in, params: params)
+          expect(subject.build(check_in: valid_check_in, params:)
                         .demographic_confirmations).to eq(demographics_confirmation_hash)
         end
       end

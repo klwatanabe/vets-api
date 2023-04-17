@@ -7,7 +7,6 @@ require 'sidekiq/error_tag'
 require 'sidekiq/semantic_logging'
 require 'sidekiq/set_request_id'
 require 'sidekiq/set_request_attributes'
-require 'sidekiq/downtime_checker_middleware'
 require 'datadog/statsd' # gem 'dogstatsd-ruby'
 
 Rails.application.reloader.to_prepare do
@@ -28,16 +27,18 @@ Rails.application.reloader.to_prepare do
     end
 
     config.server_middleware do |chain|
-      chain.add Sidekiq::DowntimeCheckerMiddleware
       chain.add Sidekiq::SemanticLogging
       chain.add SidekiqStatsInstrumentation::ServerMiddleware
       chain.add Sidekiq::RetryMonitoring
       chain.add Sidekiq::ErrorTag
 
-      if Settings.vsp_environment == 'development' && Settings.dogstatsd.enabled == true
+      if Settings.dogstatsd.enabled == true
         require 'sidekiq/middleware/server/statsd'
         chain.add Sidekiq::Middleware::Server::Statsd
         config.dogstatsd = -> { Datadog::Statsd.new('localhost', 8125, namespace: 'sidekiq') }
+
+        # history is captured every 30 seconds by default
+        config.retain_history(30)
       end
     end
 

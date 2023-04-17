@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'fakeredis/rspec'
+require 'i18n'
 require 'support/spec_builders'
 require 'support/matchers'
 require 'support/spool_helpers'
@@ -60,6 +61,7 @@ unless ENV['NOCOVERAGE']
     add_group 'FacilitiesApi', 'modules/facilities_api/'
     add_group 'FormsApi', 'modules/forms_api/'
     add_group 'HealthQuest', 'modules/health_quest/'
+    add_group 'IncomeLimits', 'modules/income_limits/'
     add_group 'MebApi', 'modules/meb_api/'
     add_group 'Mobile', 'modules/mobile/'
     add_group 'MyHealth', 'modules/my_health/'
@@ -110,9 +112,6 @@ end
 #
 # See http://rubydoc.info/gems/rspec-core/RSpec/Core/Configuration
 RSpec.configure do |config|
-  # fix for test rspec test randomization when using spring
-  # https://github.com/rails/spring/issues/113#issuecomment-135896880
-  config.seed = srand % 0xFFFF unless ARGV.any? { |arg| arg =~ /seed/ }
   config.order = :random
   Kernel.srand config.seed
 

@@ -5,8 +5,8 @@ require 'rails_helper'
 RSpec.describe Login::AfterLoginActions do
   describe '#perform' do
     context 'creating credential email' do
-      let(:user) { create(:user, email: email, idme_uuid: idme_uuid) }
-      let!(:user_verification) { create(:idme_user_verification, idme_uuid: idme_uuid) }
+      let(:user) { create(:user, email:, idme_uuid:) }
+      let!(:user_verification) { create(:idme_user_verification, idme_uuid:) }
       let(:idme_uuid) { 'some-idme-uuid' }
       let(:email) { 'some-email' }
 
@@ -18,8 +18,8 @@ RSpec.describe Login::AfterLoginActions do
     end
 
     context 'creating user acceptable verified credential' do
-      let(:user) { create(:user, idme_uuid: idme_uuid) }
-      let!(:user_verification) { create(:idme_user_verification, idme_uuid: idme_uuid) }
+      let(:user) { create(:user, idme_uuid:) }
+      let!(:user_verification) { create(:idme_user_verification, idme_uuid:) }
       let(:idme_uuid) { 'some-idme-uuid' }
       let(:expected_avc_at) { '2021-1-1' }
 
@@ -146,6 +146,64 @@ RSpec.describe Login::AfterLoginActions do
           expect { described_class.new(user).perform }.not_to \
             change(AccountLoginStat, :count)
         end
+      end
+    end
+
+    context 'UserIdentity & MPI ID validations' do
+      let(:mpi_profile) { build(:mpi_profile) }
+      let(:loa3_user) { build(:user, :loa3, mpi_profile:) }
+      let(:expected_error_data) do
+        { identity_value: expected_identity_value, mpi_value: expected_mpi_value, icn: loa3_user.icn }
+      end
+      let(:expected_error_message) do
+        "[SessionsController version:v1] User Identity & MPI #{validation_id} values conflict"
+      end
+
+      before do
+        allow(Rails.logger).to receive(:warn)
+      end
+
+      shared_examples 'identity-mpi id validation' do
+        it 'logs a warning when Identity & MPI values conflict' do
+          expect(Rails.logger).to receive(:warn).at_least(:once).with(expected_error_message, expected_error_data)
+          described_class.new(loa3_user).perform
+        end
+      end
+
+      context 'ssn validation' do
+        let(:mpi_profile) { build(:mpi_profile, { ssn: Faker::Number.number(digits: 9) }) }
+        let(:expected_identity_value) { loa3_user.identity.ssn }
+        let(:expected_mpi_value) { loa3_user.ssn_mpi }
+        let(:validation_id) { 'SSN' }
+        let(:expected_error_data) { { icn: loa3_user.icn } }
+
+        it_behaves_like 'identity-mpi id validation'
+      end
+
+      context 'edipi validation' do
+        let(:mpi_profile) { build(:mpi_profile, { edipi: Faker::Number.number(digits: 10) }) }
+        let(:expected_identity_value) { loa3_user.identity.edipi }
+        let(:expected_mpi_value) { loa3_user.edipi_mpi }
+        let(:validation_id) { 'EDIPI' }
+
+        it_behaves_like 'identity-mpi id validation'
+      end
+
+      context 'icn validation' do
+        let(:mpi_profile) { build(:mpi_profile, { icn: '1234567V01112538' }) }
+        let(:expected_identity_value) { loa3_user.identity.icn }
+        let(:expected_mpi_value) { loa3_user.mpi_icn }
+        let(:validation_id) { 'ICN' }
+
+        it_behaves_like 'identity-mpi id validation'
+      end
+
+      context 'MHV correlation id validation' do
+        let(:expected_identity_value) { loa3_user.identity.mhv_correlation_id }
+        let(:expected_mpi_value) { loa3_user.mpi_mhv_correlation_id }
+        let(:validation_id) { 'MHV Correlation ID' }
+
+        it_behaves_like 'identity-mpi id validation'
       end
     end
   end

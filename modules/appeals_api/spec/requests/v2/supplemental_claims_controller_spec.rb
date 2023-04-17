@@ -55,13 +55,21 @@ describe AppealsApi::V2::DecisionReviews::SupplementalClaimsController, type: :r
 
     context 'when no ICN is provided' do
       it 'returns a 422 error' do
-        max_headers.delete('X-VA-ICN')
-
-        get(path, headers: @max_headers)
+        get(path, headers: max_headers.except('X-VA-ICN'))
 
         expect(response.status).to eq(422)
         expect(parsed['errors']).to be_an Array
         expect(parsed['errors'][0]['detail']).to include('X-VA-ICN is required')
+      end
+    end
+
+    context 'when provided ICN is in an invalid format' do
+      it 'returns a 422 error' do
+        get(path, headers: { 'X-VA-ICN' => '1393231' })
+
+        expect(response.status).to eq(422)
+        expect(parsed['errors']).to be_an Array
+        expect(parsed['errors'][0]['detail']).to include('X-VA-ICN has an invalid format')
       end
     end
   end
@@ -71,13 +79,13 @@ describe AppealsApi::V2::DecisionReviews::SupplementalClaimsController, type: :r
 
     context 'with minimum required headers' do
       it 'creates an SC and persists the data' do
-        post(path, params: data, headers: headers)
+        post(path, params: data, headers:)
 
         sc_guid = JSON.parse(response.body)['data']['id']
         sc = AppealsApi::SupplementalClaim.find(sc_guid)
 
         expect(sc.source).to eq('va.gov')
-        expect(sc.veteran_icn).to be_nil
+        expect(sc.veteran_icn).to eq('1013062086V794840')
         expect(parsed['data']['type']).to eq('supplementalClaim')
         expect(parsed['data']['attributes']['status']).to eq('pending')
         expect(parsed.dig('data', 'attributes', 'formData')).to be_a Hash
@@ -104,6 +112,32 @@ describe AppealsApi::V2::DecisionReviews::SupplementalClaimsController, type: :r
       end
     end
 
+    context 'when icn header is present but does not meet length requirements' do
+      let(:icn) { '1393231' }
+
+      it 'returns a 422 error with details' do
+        post(path, params: extra_data, headers: headers.merge({ 'X-VA-ICN' => icn }))
+
+        expect(response).to have_http_status(:unprocessable_entity)
+        error = JSON.parse(response.body)['errors'][0]
+        expect(error['title']).to eql('Invalid length')
+        expect(error['detail']).to include("'#{icn}' did not fit within the defined length limits")
+      end
+    end
+
+    context 'when icn header is present but does not meet pattern requirements' do
+      let(:icn) { '49392810394830103' }
+
+      it 'returns a 422 error with details' do
+        post(path, params: extra_data, headers: headers.merge({ 'X-VA-ICN' => icn }))
+
+        expect(response).to have_http_status(:unprocessable_entity)
+        error = JSON.parse(response.body)['errors'][0]
+        expect(error['title']).to eql('Invalid pattern')
+        expect(error['detail']).to include("'#{icn}' did not match the defined pattern")
+      end
+    end
+
     context 'when ssn header is missing' do
       it 'responds with status :unprocessable_entity' do
         post(path, params: data, headers: headers.except('X-VA-SSN'))
@@ -122,7 +156,7 @@ describe AppealsApi::V2::DecisionReviews::SupplementalClaimsController, type: :r
                          'phoneNumberExt' => '1234567890' } }
         )
 
-        post(path, params: mod_data.to_json, headers: headers)
+        post(path, params: mod_data.to_json, headers:)
         expect(response.status).to eq(422)
         expect(response.body).to include('Invalid pattern')
         expect(response.body).to include('/data/attributes/veteran/phone/phoneNumber')
@@ -136,7 +170,7 @@ describe AppealsApi::V2::DecisionReviews::SupplementalClaimsController, type: :r
           'Powder chocolate bar shortbread jelly beans brownie. Jujubes gummies sweet tart dragée halvah fruitcake. '\
           'Cake tart I love apple pie candy canes tiramisu. Lemon drops muffin marzipan apple pie.'
 
-        post(path, params: mod_data.to_json, headers: headers)
+        post(path, params: mod_data.to_json, headers:)
         expect(response.status).to eq(422)
         expect(response.body).to include('Invalid length')
         expect(response.body).to include('attributes/issue')
@@ -161,7 +195,7 @@ describe AppealsApi::V2::DecisionReviews::SupplementalClaimsController, type: :r
       it 'when given a string for the birth date ' do
         headers.merge!({ 'X-VA-Birth-Date' => 'apricot' })
 
-        post(path, params: data.to_json, headers: headers)
+        post(path, params: data.to_json, headers:)
         expect(response.status).to eq(422)
         expect(parsed['errors']).to be_an Array
       end
@@ -172,7 +206,7 @@ describe AppealsApi::V2::DecisionReviews::SupplementalClaimsController, type: :r
         sc_data = JSON.parse(data)
         sc_data['included'][0]['attributes'].merge!('decisionDate' => 'banana')
 
-        post(path, params: sc_data.to_json, headers: headers)
+        post(path, params: sc_data.to_json, headers:)
         expect(response.status).to eq(422)
         expect(parsed['errors']).to be_an Array
         expect(parsed['errors'][0]['title']).to include('Invalid format')
@@ -183,7 +217,7 @@ describe AppealsApi::V2::DecisionReviews::SupplementalClaimsController, type: :r
         sc_data = JSON.parse(data)
         sc_data['included'][0]['attributes'].merge!('decisionDate' => '3000-01-02')
 
-        post(path, params: sc_data.to_json, headers: headers)
+        post(path, params: sc_data.to_json, headers:)
         expect(response.status).to eq(422)
         expect(parsed['errors']).to be_an Array
         expect(parsed['errors'][0]['source']['pointer']).to eq '/data/included[0]/attributes/decisionDate'
@@ -198,7 +232,7 @@ describe AppealsApi::V2::DecisionReviews::SupplementalClaimsController, type: :r
           mod_data = JSON.parse(extra_data)
           mod_data['data']['attributes']['form5103Acknowledged'] = false
 
-          post(path, params: mod_data.to_json, headers: headers)
+          post(path, params: mod_data.to_json, headers:)
           expect(response.status).to eq(422)
           expect(parsed['errors']).to be_an Array
           expect(response.body).to include('/data/attributes/form5103Acknowledged')
@@ -209,7 +243,7 @@ describe AppealsApi::V2::DecisionReviews::SupplementalClaimsController, type: :r
           mod_data = JSON.parse(extra_data)
           mod_data['data']['attributes'].delete('form5103Acknowledged')
 
-          post(path, params: mod_data.to_json, headers: headers)
+          post(path, params: mod_data.to_json, headers:)
           expect(response.status).to eq(422)
           expect(parsed['errors']).to be_an Array
           expect(response.body).to include('Missing required fields')
@@ -219,7 +253,7 @@ describe AppealsApi::V2::DecisionReviews::SupplementalClaimsController, type: :r
 
       context 'when benefitType is not compensation' do
         it 'does not fail when form5103Acknowledged is missing' do
-          post(path, params: minimum_data, headers: headers)
+          post(path, params: minimum_data, headers:)
           expect(response.status).to eq(200)
         end
       end
@@ -227,7 +261,7 @@ describe AppealsApi::V2::DecisionReviews::SupplementalClaimsController, type: :r
 
     context 'evidenceType' do
       it 'with upload' do
-        post(path, params: data, headers: headers)
+        post(path, params: data, headers:)
 
         sc_guid = JSON.parse(response.body)['data']['id']
         sc = AppealsApi::SupplementalClaim.find(sc_guid)
@@ -238,7 +272,7 @@ describe AppealsApi::V2::DecisionReviews::SupplementalClaimsController, type: :r
       it 'with no evidence' do
         mod_data = JSON.parse(data)
         mod_data['data']['attributes']['evidenceSubmission']['evidenceType'] = %w[none]
-        post(path, params: mod_data.to_json, headers: headers)
+        post(path, params: mod_data.to_json, headers:)
 
         sc_guid = JSON.parse(response.body)['data']['id']
         sc = AppealsApi::SupplementalClaim.find(sc_guid)
@@ -249,7 +283,7 @@ describe AppealsApi::V2::DecisionReviews::SupplementalClaimsController, type: :r
       it 'evidenceType with both none and retrieval' do
         mod_data = JSON.parse(data)
         mod_data['data']['attributes']['evidenceSubmission']['evidenceType'] = %w[none retrieval]
-        post(path, params: mod_data.to_json, headers: headers)
+        post(path, params: mod_data.to_json, headers:)
 
         expect(response.status).to eq(422)
         expect(parsed['errors']).not_to be_empty
@@ -260,7 +294,7 @@ describe AppealsApi::V2::DecisionReviews::SupplementalClaimsController, type: :r
         mod_data = JSON.parse(data)
         mod_data['data']['attributes']['evidenceSubmission']['evidenceType'] = %w[retrieval]
 
-        post(path, params: mod_data.to_json, headers: headers)
+        post(path, params: mod_data.to_json, headers:)
 
         puts parsed['errors'][0]['title']
         puts parsed['errors'][0]['meta']['missing_fields'][0]
@@ -283,6 +317,18 @@ describe AppealsApi::V2::DecisionReviews::SupplementalClaimsController, type: :r
 
         expect(sc.evidence_submission_indicated).to be_falsey
       end
+
+      it 'with both retrieval and upload evidence' do
+        headers_with_nvc = JSON.parse(fixture_to_s('valid_200995_headers_extra.json', version: 'v2'))
+        mod_data = JSON.parse(fixture_to_s('valid_200995_extra.json', version: 'v2'))
+        mod_data['data']['attributes']['evidenceSubmission']['evidenceType'] = %w[retrieval upload]
+        post(path, params: mod_data.to_json, headers: headers_with_nvc)
+
+        sc_guid = JSON.parse(response.body)['data']['id']
+        sc = AppealsApi::SupplementalClaim.find(sc_guid)
+
+        expect(sc.evidence_submission_indicated).to be_truthy
+      end
     end
 
     context 'when request.body is a Puma::NullIO' do
@@ -296,7 +342,7 @@ describe AppealsApi::V2::DecisionReviews::SupplementalClaimsController, type: :r
         allow_any_instance_of(ActionDispatch::Request).to(
           receive(:body).and_return(fake_puma_null_io_object)
         )
-        post(path, params: data, headers: headers)
+        post(path, params: data, headers:)
         expect(response.status).to eq 422
         expect(JSON.parse(response.body)['errors']).to be_an Array
       end
@@ -312,7 +358,7 @@ describe AppealsApi::V2::DecisionReviews::SupplementalClaimsController, type: :r
         let(:json) { '"Hello!"' }
 
         it 'responds with a properly formed error object' do
-          post(path, params: data, headers: headers)
+          post(path, params: data, headers:)
           body = JSON.parse(response.body)
           expect(response.status).to eq 422
           expect(body['errors']).to be_an Array
@@ -324,7 +370,7 @@ describe AppealsApi::V2::DecisionReviews::SupplementalClaimsController, type: :r
         let(:json) { '66' }
 
         it 'responds with a properly formed error object' do
-          post(path, params: data, headers: headers)
+          post(path, params: data, headers:)
           body = JSON.parse(response.body)
           expect(response.status).to eq 422
           expect(body['errors']).to be_an Array
@@ -349,7 +395,7 @@ describe AppealsApi::V2::DecisionReviews::SupplementalClaimsController, type: :r
         allow(client).to receive(:send_email)
 
         Sidekiq::Testing.inline! do
-          post(path, params: data, headers: headers)
+          post(path, params: data, headers:)
         end
 
         sc = AppealsApi::SupplementalClaim.find_by(id: parsed['data']['id'])
@@ -362,7 +408,7 @@ describe AppealsApi::V2::DecisionReviews::SupplementalClaimsController, type: :r
 
       it_behaves_like(
         'an endpoint with OpenID auth',
-        AppealsApi::SupplementalClaims::V0::SupplementalClaimsController::OAUTH_SCOPES[:POST]
+        scopes: AppealsApi::SupplementalClaims::V0::SupplementalClaimsController::OAUTH_SCOPES[:POST]
       ) do
         def make_request(auth_header)
           post(oauth_path, params: data, headers: headers.merge(auth_header))
@@ -371,7 +417,7 @@ describe AppealsApi::V2::DecisionReviews::SupplementalClaimsController, type: :r
 
       it 'behaves the same as the equivalent decision reviews route' do
         Timecop.freeze(Time.current) do
-          post(path, params: data, headers: headers)
+          post(path, params: data, headers:)
           orig_status = response.status
           orig_body = JSON.parse(response.body)
           orig_body['data']['id'] = 'ignored'
@@ -434,7 +480,7 @@ describe AppealsApi::V2::DecisionReviews::SupplementalClaimsController, type: :r
         let(:json) { '"Toodles!"' }
 
         it 'responds with a properly formed error object' do
-          post(path, params: data, headers: headers)
+          post(path, params: data, headers:)
           body = JSON.parse(response.body)
           expect(response.status).to eq 422
           expect(body['errors']).to be_an Array
@@ -446,7 +492,7 @@ describe AppealsApi::V2::DecisionReviews::SupplementalClaimsController, type: :r
         let(:json) { '66' }
 
         it 'responds with a properly formed error object' do
-          post(path, params: data, headers: headers)
+          post(path, params: data, headers:)
           body = JSON.parse(response.body)
           expect(response.status).to eq 422
           expect(body['errors']).to be_an Array
@@ -455,12 +501,38 @@ describe AppealsApi::V2::DecisionReviews::SupplementalClaimsController, type: :r
       end
     end
 
+    context 'when icn header is present but does not meet length requirements' do
+      let(:icn) { '1393231' }
+
+      it 'returns a 422 error with details' do
+        post(path, params: extra_data, headers: headers.merge({ 'X-VA-ICN' => icn }))
+
+        expect(response).to have_http_status(:unprocessable_entity)
+        error = JSON.parse(response.body)['errors'][0]
+        expect(error['title']).to eql('Invalid length')
+        expect(error['detail']).to include("'#{icn}' did not fit within the defined length limits")
+      end
+    end
+
+    context 'when icn header is present but does not meet pattern requirements' do
+      let(:icn) { '49392810394830103' }
+
+      it 'returns a 422 error with details' do
+        post(path, params: extra_data, headers: headers.merge({ 'X-VA-ICN' => icn }))
+
+        expect(response).to have_http_status(:unprocessable_entity)
+        error = JSON.parse(response.body)['errors'][0]
+        expect(error['title']).to eql('Invalid pattern')
+        expect(error['detail']).to include("'#{icn}' did not match the defined pattern")
+      end
+    end
+
     context 'with oauth' do
       let(:oauth_path) { new_base_path 'forms/200995/validate' }
 
       it_behaves_like(
         'an endpoint with OpenID auth',
-        AppealsApi::SupplementalClaims::V0::SupplementalClaimsController::OAUTH_SCOPES[:POST]
+        scopes: AppealsApi::SupplementalClaims::V0::SupplementalClaimsController::OAUTH_SCOPES[:POST]
       ) do
         def make_request(auth_header)
           post(oauth_path, params: data, headers: headers.merge(auth_header))
@@ -468,7 +540,7 @@ describe AppealsApi::V2::DecisionReviews::SupplementalClaimsController, type: :r
       end
 
       it 'behaves the same as the equivalent decision reviews route' do
-        post(path, params: data, headers: headers)
+        post(path, params: data, headers:)
         orig_status = response.status
         orig_body = JSON.parse(response.body)
 
@@ -492,6 +564,26 @@ describe AppealsApi::V2::DecisionReviews::SupplementalClaimsController, type: :r
     it 'renders the json schema' do
       get path
       expect(response.status).to eq(200)
+    end
+
+    it 'excludes the potentialPactAct field when feature disabled' do
+      Flipper.disable(:decision_review_sc_pact_act_boolean)
+
+      get path
+
+      schema_path = %w[definitions scCreate properties data properties attributes properties potentialPactAct]
+      potential_pact_act = JSON.parse(response.body).dig(*schema_path)
+      expect(potential_pact_act).to be_nil
+    end
+
+    it 'includes the potentialPactAct field when feature enabled' do
+      Flipper.enable(:decision_review_sc_pact_act_boolean)
+
+      get path
+
+      schema_path = %w[definitions scCreate properties data properties attributes properties potentialPactAct]
+      potential_pact_act = JSON.parse(response.body).dig(*schema_path)
+      expect(potential_pact_act).to eq({ 'type' => 'boolean' })
     end
   end
 
@@ -532,7 +624,7 @@ describe AppealsApi::V2::DecisionReviews::SupplementalClaimsController, type: :r
 
       it_behaves_like(
         'an endpoint with OpenID auth',
-        AppealsApi::SupplementalClaims::V0::SupplementalClaimsController::OAUTH_SCOPES[:GET]
+        scopes: AppealsApi::SupplementalClaims::V0::SupplementalClaimsController::OAUTH_SCOPES[:GET]
       ) do
         def make_request(auth_header)
           get(oauth_path, headers: auth_header)

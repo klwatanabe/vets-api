@@ -9,6 +9,7 @@
   "educationObjective": "bachelors",
   "educationalCounseling": true,
   "spouseInfo": {
+    "marriageDate": "1990-01-01",
     "divorcePending": true,
     "remarried": true,
     "remarriageDate": "2016-12-15"
@@ -98,6 +99,7 @@
   "veteranDateOfDeath": "1985-01-08",
   "educationStartDate": "1985-01-09",
   "relationship": "spouse",
+  "relationshipAndChildType": "spouse",
   "benefitsRelinquishedDate": "1985-01-10",
   "toursOfDuty": [{
     "dateRange": {

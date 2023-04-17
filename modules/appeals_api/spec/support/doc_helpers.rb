@@ -38,17 +38,18 @@ module DocHelpers
     if DocHelpers.decision_reviews?
       block.call
     else
-      with_openid_auth(scopes, valid: valid) do |auth_header|
+      with_openid_auth(scopes, valid:) do |auth_header|
         block.call(auth_header)
       end
     end
   end
 
   def self.security_config(oauth_scopes = [])
-    config = [{ apikey: [] }]
-    return config if DocHelpers.decision_reviews?
-
-    config + [{ productionOauth: oauth_scopes }, { sandboxOauth: oauth_scopes }, { bearer_token: [] }]
+    if DocHelpers.decision_reviews?
+      [{ apikey: [] }]
+    else
+      [{ productionOauth: oauth_scopes }, { sandboxOauth: oauth_scopes }, { bearer_token: [] }]
+    end
   end
 
   # @param [Hash] opts
@@ -60,7 +61,7 @@ module DocHelpers
   # @option opts [Boolean] :token_valid Whether the OAuth token (if any) should be recognized as valid
   shared_examples 'rswag example' do |opts|
     before do |example|
-      with_rswag_auth(opts[:scopes], valid: opts.fetch(:token_valid, true)) do
+      with_rswag_auth(opts.fetch(:scopes, []), valid: opts.fetch(:token_valid, true)) do
         submit_request(example.metadata)
       end
     end
@@ -75,6 +76,18 @@ module DocHelpers
           else
             JSON.parse(response.body, symbolize_names: true)
           end
+
+      # Removes 'potentialPactAct' from example for production docs
+      unless wip_doc_enabled?(:sc_v2_potential_pact_act)
+        case r
+        when String
+          r = r.gsub(/"potentialPactAct":{"type":"boolean"},/, '')
+        when Hash
+          r.tap do |s|
+            s.dig(*%i[properties data properties attributes properties])&.delete(:potentialPactAct)
+          end
+        end
+      end
 
       example.metadata[:response][:content] = if opts[:extract_desc]
                                                 {

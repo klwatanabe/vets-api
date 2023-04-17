@@ -1,6 +1,6 @@
 hostname: 127.0.0.1:3000 # possible fallback for unsafe request.host
 
-vsp_environment:
+vsp_environment: localhost
 
 virtual_hosts: ["127.0.0.1", "localhost"] # Safe host names
 
@@ -11,7 +11,7 @@ web_origin_regex: \Ahttps?:\/\/www\.va\.gov\z
 logingov:
   client_id: https://sqa.eauth.va.gov/isam/sps/saml20sp/saml20
   redirect_uri: http://localhost:3000/v0/sign_in/callback
-  logout_redirect_uri: http://localhost:3001
+  logout_redirect_uri: http://localhost:3000/v0/sign_in/logingov_logout_proxy
   client_cert_path: spec/fixtures/sign_in/oauth.crt
   client_key_path: spec/fixtures/sign_in/oauth.key
   oauth_url: https://idp.int.identitysandbox.gov
@@ -56,11 +56,10 @@ sign_in:
   cookies_secure: false
   info_cookie_domain: localhost
   auto_uplevel: true
-  client_redirect_uris:
-    mobile: 'vamobile://login-success'
-    web: 'http://localhost:3001/auth/login/callback'
-    web_logout: 'http://localhost:3001'
-    mobile_test: 'http://localhost:4001/auth/sis/login-success'
+  mock_auth_url: http://localhost:3000/mock_auth_frontend
+  mock_redirect_uri: http://localhost:3000/v0/sign_in/callback
+  mock_credential_dir: '../vets-api-mockdata'
+  mockdata_sync_api_key: ~
 
 lockbox:
   master_key: "0d78eaf0e90d4e7b8910c9112e16e66d8b00ec4054a89aa426e32712a13371e9"
@@ -195,6 +194,7 @@ central_mail:
 bip:
   claims:
     url: "https://claims-uat.dev8.bip.va.gov"
+    mock: false
 
 # Settings for VAProfile
 vet360:
@@ -285,16 +285,24 @@ modules_appeals_api:
       api_key: ''
   # The token generation values below are only used for development rake tasks.
   token_generation:
-    # URI to the well-known configuration endpoint for appeals auth:
-    config_uri: ''
     ccg:
-      # Get a client ID by submitting your public jwk here - make sure to check the box for the API under
+      config_uri: 'https://dev-api.va.gov/oauth2/appeals/system/v1/.well-known/openid-configuration'
+      # Get a client ID by submitting your public jwk here - make sure to check the boxes for the APIs under
       # "Client Credentials Grant APIs": https://developer.va.gov/onboarding/request-sandbox-access
       client_id: ''
       # Absolute path to the private key file matching the jwk:
       private_key_path: ''
+    auth:
+      config_uri: 'https://dev-api.va.gov/oauth2/appeals/v1/.well-known/openid-configuration'
+      # Get a client ID/secret by submitting this form - make sure to check the boxes for the APIs under
+      # "Authorization Code Flow APIs": https://developer.va.gov/onboarding/request-sandbox-access
+      client_id: ''
+      client_secret: ''
+      redirect_uri: ''
+      user_email: ''
+      user_password: ''
   slack:
-    api_token: ''
+    api_key: ''
     appeals_channel_id: ''
   documentation:
     path_enabled_flag: false
@@ -302,6 +310,7 @@ modules_appeals_api:
       # List of flags to indicate parts of documentation that are still WIP and not ready for production.
       # See the rswag:appeals_api:dev rake task, spec_helper, and DocHelpers#wip_doc_enabled? for usage info to opt-in.
       # NOTE: Do not remove this key even if it's empty.
+      - sc_v2_potential_pact_act
   legacy_appeals_enabled: true
   reports:
     daily_decision_review:
@@ -344,6 +353,19 @@ vre_readiness:
 
 coe:
   prefill: true
+
+adapted_housing:
+  prefill: true
+
+# Settings for Expiry Scanner
+expiry_scanner:
+  slack:
+    channel_id: ~
+  directories: ~
+
+argocd:
+  slack:
+    api_key: ~
 
 # Settings for EVSS
 evss:
@@ -547,6 +569,8 @@ webhooks:
 
 # Settings for VBA Document upload service module
 vba_documents:
+  v2_upload_endpoint_enabled: false
+  v2_enabled: false
   documentation:
     path_enabled_flag: false
   report_enabled: false
@@ -566,8 +590,9 @@ vba_documents:
       - vagov-arn
   slack:
     enabled: false
-    default_alert_url: https://example.com
-    default_alert_email: example@slack.com
+    api_key: ''
+    channel_id: ''
+    default_alert_email: ''
     in_flight_notification_hung_time_in_days: 14
     renotification_in_minutes: 240
     update_stalled_notification_in_minutes: 180
@@ -833,12 +858,13 @@ flipper:
   mute_logs: false
   admin_user_emails:
     - aditya.sharma@thoughtworks.com # Virtual Agent
-    - adrian.rollett@agile6.com # Adrian Rollett (Agile6), Engineer/Product Manager Health Care Experience/Check-In
+    - adrian.rollett@va.gov
     - alexander.schmidt.garcia@gmail.com # Alexander Garcia (Clarity), Identity, Frontend Engineer
     - afia.caruso@oddball.io # Afia Caruso (Oddball), Identity, Frontend Engineer
     - alastair@adhocteam.us
     - alex.wilson@oddball.io # Alex Wilson - Oddball
     - andrew.herzberg@adhocteam.us
+    - anthony@themostudio.com
     - bill.ryan@adhocteam.us
     - bradley.gross@b3groupinc.com
     - brian.seek@civicactions.com # Brian Seek (Civic Actions), FE Engineer Health Care Experience/Check-In
@@ -864,6 +890,7 @@ flipper:
     - eugene.lynch+va@coforma.io # Eugene Lynch (Coforma), Benefits Team 1, FE and BE Engineer
     - filip.fafara@gmail.com # Thoughtworks, ex VANotify, supports DHP, CDSP, Virtual Agent
     - fahmed@governmentcio.com
+    - garrett.rabian@coforma.io # Garrett Rabian - Engineer - VA Forms Team
     - ggupta@kindsys.us # Gaurav Gupta (Kindsys), BE Engineer Health Care Experience/Check-In
     - gescobar@governmentcio.com
     - grodriguez@governmentcio.com
@@ -880,6 +907,7 @@ flipper:
     - jlinn@governmentcio.com
     - joe.hall@thoughtworks.com # Virtual Agent
     - joeyn414@gmail.com # Joe Niquette (Oddball), Identity, Sr Security Engineer
+    - jonathan.nelson@adhocteam.us
     - john.bramley@adhocteam.us # John Bramley (AdHoc), Identity, Backend Engineer
     - julie.adair@agile6.com # Julie Adair (Agile6), Product Manager Health Care Experience/Check-In
     - jwolf@governmentcio.com # Jason Wolf Product Manager for GCIO
@@ -887,6 +915,7 @@ flipper:
     - kabrown@thoughtworks.com
     - kadams@governmentcio.com
     - kathleen.crawford@gcio.com
+    - kcoulter@pluribusdigital.com
     - kenneth.gary@va.gov
     - kenneth.santiago2010@gmail.com
     - kevin.musiorski@gcio.com # Kevin Musiorski (GCIO), Engineer
@@ -903,6 +932,7 @@ flipper:
     - lance.sanchez@gcio.com
     - lucian.snare@adhocteam.us # Lucian Snare - Ad Hoc LLC
     - mattgardner@navapbc.com
+    - marci.mcguire@gmail.com
     - mark.dewey@va.gov
     - metrowebz@gmail.com
     - micah@adhocteam.us
@@ -912,9 +942,11 @@ flipper:
     - michael.chelen@va.gov
     - michael.pelz-sherman@gcio.com
     - michelle.middaugh@adhocteam.us
+    - mmiller@pluribusdigital.com
     - n.ratana@gmail.com
     - nathaniel.buck@gmail.com # AFS - My Education Benefits
     - narin@adhocteam.us
+    - nick.sprinkle@oddball.io # Nick Sprinkle - Engineer - VA Forms Team
     - oleksii.morgun@va.gov # MHV Secure Messaging Team
     - patrick.bateman@va.gov
     - patrick@adhocteam.us
@@ -923,6 +955,8 @@ flipper:
     - rebecca.green@thoughtworks.com
     - regarr@gmail.com # Robin Garrison - AdHoc
     - riley.anderson@oddball.io
+    - robyn.singleton@adhocteam.us
+    - robyn.singleton@va.gov
     - ryan.leahy@adhocteam.us # Ryan Leahy - Adhoc
     - ryan.thurlwell@va.gov
     - sallymaki@navapbc.com
@@ -936,6 +970,7 @@ flipper:
     - tony.williams@va.gov
     - travis.hilton@oddball.io
     - trevor.bosaw@oddball.io # Trevor Bosaw (Oddball), Identity, Backend Engineer
+    - tricia.baker@va.gov # Tricia Baker - Product Manager - VA Forms Team
     - tze@adhocteam.us
     - yangyang@navapbc.com
     - yoom@navapbc.com
@@ -967,7 +1002,6 @@ flipper:
     - wesley.rowe@agile6.com
     - jill.adams@agile6.com
     - allison@cityfriends.tech
-    - cnunez@kindsys.us
     - helene.mccarron@thoughtworks.com # Virtual Agent
     - ryan.shaw@adhocteam.us
     - brandyn.sullins@govcio.com # Brandyn Sullins - Front End Engineer - GCIO
@@ -991,6 +1025,12 @@ flipper:
     - Jarred.Simon@va.gov # Jarred Simon GCIO VFEP FE Dev
     - NOAH.STERN@va.gov # Noah Sterngo GCIO VFEP BE Dev
     - GREGG.PUHALA@va.gov # Gregg Puhala GCIO VFEP BE Dev
+    - derrick.ellerbie@agile6.com # Derrick Ellerbie - Engineer - Agile 6
+    - daniel.sasser@va.gov # Daniel Sasser - Engineer - Agile 6 - Sitewide Crew, Public Websites
+    - daniel.sasser@agile6.com # Daniel Sasser - Engineer - Agile 6 - Sitewide Crew, Public Websites
+    - florence.mccafferty@agile6.com # Florence McCafferty - Agile 6 - Authenticated Experience
+    - berni.xiong@agile6.com # Berni Xiong - Agile 6 - Authenticated Experience
+    - liz.lantz@adhocteam.us # Liz Lantz - Ad Hoc - Authenticated Experience
 
 bgs:
   application: ~
@@ -1071,15 +1111,20 @@ lighthouse:
   api_key: fake_key
   benefits_claims:
     host: https://sandbox-api.va.gov
-    path: services/claims/v2/veterans
     access_token:
       aud_claim_url: https://deptva-eval.okta.com/oauth2/ausdg7guis2TYDlFe2p7/v1/token
-      api_scopes:
-        - claim.read
-        - claim.write
       client_id: ~
       rsa_key: ~
     use_mocks: false
+  letters_generator:
+    url: https://sandbox-api.va.gov
+    path: /services/va-letter-generator/v1/
+    use_mocks: false
+    access_token:
+      path: oauth2/va-letter-generator/system/v1/token
+      client_id: ~
+      rsa_key: ~
+      aud_claim_url: https://deptva-eval.okta.com/oauth2/ausftw7zk6eHr7gMN2p7/v1/token
   benefits_reference_data:
     url: https://sandbox-api.va.gov
     path: services/benefits-reference-data
@@ -1087,7 +1132,7 @@ lighthouse:
   direct_deposit:
     host: https://sandbox-api.va.gov
     access_token:
-      aud_claim_url: https://deptva-eval.okta.com/oauth2/1234567890/v1/token
+      aud_claim_url: https://deptva-eval.okta.com/oauth2/ausi0e21hbv5iElEh2p7/v1/token
       client_id: ~
       rsa_key: ~
     use_mocks: false
@@ -1110,6 +1155,13 @@ lighthouse:
   facilities:
     url: https://sandbox-api.va.gov
     api_key: fake_key
+  veteran_verification:
+    host: https://staging-api.va.gov
+    access_token:
+      aud_claim_url: https://deptva-eval.okta.com/oauth2/ausi3u00gw66b9Ojk2p7/v1/token
+      client_id: ~
+      rsa_key: ~
+    use_mocks: false
 
 mail_automation:
   url: https://viccs-api-test.ibm-intelligent-automation.com
@@ -1134,6 +1186,10 @@ vbms:
 
 vet_verification:
   key_path: modules/veteran_verification/spec/fixtures/verification_test.pem
+  mock_emis: false
+  mock_emis_host: false
+  mock_bgs: false
+  mock_bgs_url: false
 
 github_stats:
   username: github-stats-rake
@@ -1177,6 +1233,8 @@ vanotify:
         form527ez_confirmation_email: form527ez_confirmation_email_template_id
         preneeds_burial_form_email: preneeds_burial_form_email_template_id
         contact_info_change: fake_template_id
+        form1990_confirmation_email: form1990_confirmation_email_template_id
+        form1990e_confirmation_email: form1990e_confirmation_email_template_id
         form526_confirmation_email: fake_template_id
         form526_submission_failed_email: fake_template_id
         form5490_confirmation_email: form5490_confirmation_email_template_id
@@ -1211,8 +1269,8 @@ va_forms:
   # A notification for when a forms url has changed
   slack:
     enabled: false
-    notification_url: ''
-    users: '<>'
+    api_key: ''
+    channel_id: ''
 
 # Settings for connecting to genISIS, this is the storage system for the COVID Research initiative
 genisis:
@@ -1411,6 +1469,9 @@ test_user_dashboard:
     client_id:
     client_secret:
 
+websockets:
+  websocket_settings: false
+
 lighthouse_health_immunization:
   client_id: '0oad0xggirKLf2ger2p7'
   audience_claim_url: 'https://deptva-eval.okta.com/oauth2/aus8nm1q0f7VQ0a482p7/v1/token'
@@ -1451,7 +1512,7 @@ lgy:
   mock_coe: true
 
 form526_backup:
-  enabled: false
+  enabled: true
   # Can be single or multi, to send 1 payload or many, to central mail
   submission_method: 'single'
   api_key: ~
@@ -1479,4 +1540,4 @@ coverband:
 
 
 dogstatsd:
-  enabled: true
+  enabled: false

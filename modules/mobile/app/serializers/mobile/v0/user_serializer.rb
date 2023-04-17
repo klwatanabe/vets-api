@@ -1,12 +1,12 @@
 # frozen_string_literal: true
 
-require 'fast_jsonapi'
+require 'jsonapi/serializer'
 require 'va_profile/demographics/service'
 
 module Mobile
   module V0
     class UserSerializer
-      include FastJsonapi::ObjectSerializer
+      include JSONAPI::Serializer
 
       ADDRESS_KEYS = %i[
         id
@@ -46,7 +46,7 @@ module Mobile
         directDepositBenefits: %i[evss ppiu],
         disabilityRating: :evss,
         lettersAndDocuments: :evss,
-        militaryServiceHistory: :emis,
+        militaryServiceHistory: :vet360,
         paymentHistory: :bgs,
         userProfileUpdate: :vet360,
         secureMessaging: :mhv_messaging,
@@ -79,8 +79,8 @@ module Mobile
         province = profile.dig(:residential_address, :province)
         if address_type.in?(['DOMESTIC', 'OVERSEAS MILITARY']) && province.present?
           Rails.logger.info('Mobile User Address - Province in domestic or military address',
-                            province: province,
-                            address_type: address_type)
+                            province:,
+                            address_type:)
         end
       end
 
@@ -120,8 +120,9 @@ module Mobile
 
       def direct_deposit_update_access?
         user.authorize(:ppiu, :access_update?)
-      rescue EVSS::PPIU::ServiceException => e
-        Rails.logger.error('Error fetching user data from EVSS', user_uuid: user.uuid, details: e.messages)
+      rescue => e
+        message = e.respond_to?(:messages) ? e.messages : e.message
+        Rails.logger.error('Error fetching user data from EVSS', user_uuid: user.uuid, details: message)
         false
       end
 
@@ -140,7 +141,7 @@ module Mobile
       def facility(facility_id, facility_name)
         cerner_facility_ids = user.cerner_facility_ids || []
         {
-          facility_id: facility_id,
+          facility_id:,
           is_cerner: cerner_facility_ids.include?(facility_id),
           facility_name: facility_name.nil? ? '' : facility_name
         }

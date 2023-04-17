@@ -356,7 +356,7 @@ describe VAProfile::ContactInformation::Service, skip_vet360: true do
 
       context 'with an old_email record' do
         before do
-          OldEmail.create(email: 'email@email.com', transaction_id: transaction_id)
+          OldEmail.create(email: 'email@email.com', transaction_id:)
         end
 
         it 'calls send_email_change_notification' do
@@ -364,12 +364,12 @@ describe VAProfile::ContactInformation::Service, skip_vet360: true do
             expect(VANotifyEmailJob).to receive(:perform_async).with(
               'email@email.com',
               described_class::CONTACT_INFO_CHANGE_TEMPLATE,
-              'contact_info' => 'Email address'
+              { 'contact_info' => 'Email address' }
             )
             expect(VANotifyEmailJob).to receive(:perform_async).with(
               'person43@example.com',
               described_class::CONTACT_INFO_CHANGE_TEMPLATE,
-              'contact_info' => 'Email address'
+              { 'contact_info' => 'Email address' }
             )
 
             subject.get_email_transaction_status(transaction_id)
@@ -476,7 +476,7 @@ describe VAProfile::ContactInformation::Service, skip_vet360: true do
     let(:transaction) { double }
     let(:transaction_status) do
       OpenStruct.new(
-        transaction: transaction
+        transaction:
       )
     end
     let(:transaction_id) { '123' }
@@ -489,7 +489,7 @@ describe VAProfile::ContactInformation::Service, skip_vet360: true do
 
       context 'transaction notification already exists' do
         before do
-          TransactionNotification.create(transaction_id: transaction_id)
+          TransactionNotification.create(transaction_id:)
         end
 
         it 'doesnt send an email' do
@@ -516,7 +516,7 @@ describe VAProfile::ContactInformation::Service, skip_vet360: true do
               expect(VANotifyEmailJob).to receive(:perform_async).with(
                 user.va_profile_email,
                 described_class::CONTACT_INFO_CHANGE_TEMPLATE,
-                'contact_info' => 'Email address'
+                { 'contact_info' => 'Email address' }
               )
 
               subject.send(:send_contact_change_notification, transaction_status, :email)

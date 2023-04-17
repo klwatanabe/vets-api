@@ -55,6 +55,13 @@ RSpec.describe 'Health Care Application Integration', type: %i[request serialize
         }
       end
 
+      it 'logs user loa' do
+        allow(Raven).to receive(:extra_context)
+        expect(Raven).to receive(:extra_context).with(user_loa: nil)
+
+        get(enrollment_status_v0_health_care_applications_path, params: user_attributes)
+      end
+
       it 'returns the enrollment status data' do
         expect(HealthCareApplication).to receive(:user_icn).and_return('123')
         expect(HealthCareApplication).to receive(:enrollment_status).with(
@@ -164,11 +171,7 @@ RSpec.describe 'Health Care Application Integration', type: %i[request serialize
 
     context 'with invalid params' do
       before do
-        Settings.sentry.dsn = 'asdf'
-      end
-
-      after do
-        Settings.sentry.dsn = nil
+        allow(Settings.sentry).to receive(:dsn).and_return('asdf')
       end
 
       let(:params) do
@@ -258,7 +261,7 @@ RSpec.describe 'Health Care Application Integration', type: %i[request serialize
       end
 
       context 'while authenticated', skip_mvi: true do
-        let(:current_user) { build(:user, :mhv, edipi: nil, icn: nil, sec_id: nil) }
+        let(:current_user) { build(:user, :mhv) }
 
         before do
           sign_in_as(current_user)
@@ -340,11 +343,7 @@ RSpec.describe 'Health Care Application Integration', type: %i[request serialize
           let(:error) { Common::Client::Errors::HTTPError.new('error message') }
 
           before do
-            Settings.sentry.dsn = 'asdf'
-          end
-
-          after do
-            Settings.sentry.dsn = nil
+            allow(Settings.sentry).to receive(:dsn).and_return('asdf')
           end
 
           it 'renders error message' do

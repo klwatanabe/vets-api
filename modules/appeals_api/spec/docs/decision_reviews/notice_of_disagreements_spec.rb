@@ -9,13 +9,16 @@ require AppealsApi::Engine.root.join('spec', 'spec_helper.rb')
 # rubocop:disable RSpec/VariableName, RSpec/ScatteredSetup, RSpec/RepeatedExample, Layout/LineLength
 describe 'Notice of Disagreements', swagger_doc: DocHelpers.output_json_path, type: :request do
   include DocHelpers
-  let(:apikey) { 'apikey' }
-  let(:Authorization) { 'Bearer TEST_TOKEN' }
+  if DocHelpers.decision_reviews?
+    let(:apikey) { 'apikey' }
+  else
+    let(:Authorization) { 'Bearer TEST_TOKEN' }
+  end
 
   p = DocHelpers.decision_reviews? ? '/notice_of_disagreements' : '/forms/10182'
   path p do
     post 'Creates a new Notice of Disagreement' do
-      scopes = %w[claim.write]
+      scopes = AppealsApi::NoticeOfDisagreements::V0::NoticeOfDisagreementsController::OAUTH_SCOPES[:POST]
       tags 'Notice of Disagreements'
       operationId 'createNod'
       description 'Submits an appeal of type Notice of Disagreement.' \
@@ -43,7 +46,12 @@ describe 'Notice of Disagreements', swagger_doc: DocHelpers.output_json_path, ty
       parameter file_number_header_params
       let(:'X-VA-File-Number') { '987654321' }
 
-      parameter AppealsApi::SwaggerSharedComponents.header_params[:veteran_icn_header]
+      parameter AppealsApi::SwaggerSharedComponents.header_params[:veteran_icn_header].merge(
+        {
+          required: !DocHelpers.decision_reviews?
+        }
+      )
+      let(:'X-VA-ICN') { '1234567890V123456' } unless DocHelpers.decision_reviews?
 
       parameter AppealsApi::SwaggerSharedComponents.header_params[:veteran_first_name_header]
       let(:'X-VA-First-Name') { 'first' }
@@ -111,7 +119,7 @@ describe 'Notice of Disagreements', swagger_doc: DocHelpers.output_json_path, ty
         it_behaves_like 'rswag example', desc: 'all fields used',
                                          response_wrapper: :normalize_appeal_response,
                                          extract_desc: true,
-                                         scopes: scopes
+                                         scopes:
       end
 
       response '422', 'Violates JSON schema' do
@@ -123,7 +131,7 @@ describe 'Notice of Disagreements', swagger_doc: DocHelpers.output_json_path, ty
           request_body
         end
 
-        it_behaves_like 'rswag example', desc: 'returns a 422 response'
+        it_behaves_like 'rswag example', desc: 'returns a 422 response', scopes:
       end
 
       it_behaves_like 'rswag 500 response'
@@ -133,7 +141,7 @@ describe 'Notice of Disagreements', swagger_doc: DocHelpers.output_json_path, ty
   p = DocHelpers.decision_reviews? ? '/notice_of_disagreements/{uuid}' : '/forms/10182/{uuid}'
   path p do
     get 'Shows a specific Notice of Disagreement. (a.k.a. the Show endpoint)' do
-      scopes = %w[claim.read]
+      scopes = AppealsApi::NoticeOfDisagreements::V0::NoticeOfDisagreementsController::OAUTH_SCOPES[:GET]
       tags 'Notice of Disagreements'
       operationId 'showNod'
       description 'Returns all of the data associated with a specific Notice of Disagreement.'
@@ -154,7 +162,7 @@ describe 'Notice of Disagreements', swagger_doc: DocHelpers.output_json_path, ty
 
         it_behaves_like 'rswag example', desc: 'returns a 200 response',
                                          response_wrapper: :normalize_appeal_response,
-                                         scopes: scopes
+                                         scopes:
       end
 
       response '404', 'Notice of Disagreement not found' do
@@ -162,7 +170,7 @@ describe 'Notice of Disagreements', swagger_doc: DocHelpers.output_json_path, ty
 
         let(:uuid) { 'invalid' }
 
-        it_behaves_like 'rswag example', desc: 'returns a 404 response', scopes: scopes
+        it_behaves_like 'rswag example', desc: 'returns a 404 response', scopes:
       end
 
       it_behaves_like 'rswag 500 response'
@@ -188,7 +196,7 @@ describe 'Notice of Disagreements', swagger_doc: DocHelpers.output_json_path, ty
   else
     path '/schemas/{schema_type}' do
       get 'Gets the Notice of Disagreement JSON Schema.' do
-        scopes = %w[claim.read]
+        scopes = AppealsApi::NoticeOfDisagreements::V0::NoticeOfDisagreementsController::OAUTH_SCOPES[:GET]
         tags 'Notice of Disagreements'
         operationId 'nodSchema'
         description 'Returns the [JSON Schema](https://json-schema.org/) for the `POST /forms/10182` endpoint.'
@@ -203,24 +211,24 @@ describe 'Notice of Disagreements', swagger_doc: DocHelpers.output_json_path, ty
           'timezone': { value: 'timezone' }
         }
 
-        parameter name: :schema_type,
+        parameter(name: :schema_type,
                   in: :path,
                   type: :string,
                   description: "Schema type. Can be: `#{examples.keys.join('`, `')}`",
                   required: true,
-                  examples: examples
+                  examples:)
 
         examples.each do |_, v|
           response '200', 'The JSON schema for the given `schema_type` parameter' do
             let(:schema_type) { v[:value] }
-            it_behaves_like 'rswag example', desc: v[:value], extract_desc: true, scopes: scopes
+            it_behaves_like 'rswag example', desc: v[:value], extract_desc: true, scopes:
           end
         end
 
         response '404', '`schema_type` not found' do
           schema '$ref' => '#/components/schemas/errorModel'
           let(:schema_type) { 'invalid_schema_type' }
-          it_behaves_like 'rswag example', desc: 'schema type not found', scopes: scopes
+          it_behaves_like 'rswag example', desc: 'schema type not found', scopes:
         end
 
         it_behaves_like 'rswag 500 response'
@@ -231,7 +239,7 @@ describe 'Notice of Disagreements', swagger_doc: DocHelpers.output_json_path, ty
   p = DocHelpers.decision_reviews? ? '/notice_of_disagreements/validate' : '/forms/10182/validate'
   path p do
     post 'Validates a POST request body against the JSON schema.' do
-      scopes = %w[claim.write]
+      scopes = AppealsApi::NoticeOfDisagreements::V0::NoticeOfDisagreementsController::OAUTH_SCOPES[:POST]
       desc_path = DocHelpers.decision_reviews? ? '/notice_of_disagreements' : '/forms/10182'
 
       tags 'Notice of Disagreements'
@@ -255,7 +263,12 @@ describe 'Notice of Disagreements', swagger_doc: DocHelpers.output_json_path, ty
       parameter AppealsApi::SwaggerSharedComponents.header_params[:veteran_file_number_header]
       let(:'X-VA-File-Number') { '987654321' }
 
-      parameter AppealsApi::SwaggerSharedComponents.header_params[:veteran_icn_header]
+      parameter AppealsApi::SwaggerSharedComponents.header_params[:veteran_icn_header].merge(
+        {
+          required: !DocHelpers.decision_reviews?
+        }
+      )
+      let(:'X-VA-ICN') { '1234567890V123456' } unless DocHelpers.decision_reviews?
 
       parameter AppealsApi::SwaggerSharedComponents.header_params[:veteran_first_name_header]
       let(:'X-VA-First-Name') { 'first' }
@@ -280,7 +293,7 @@ describe 'Notice of Disagreements', swagger_doc: DocHelpers.output_json_path, ty
 
         schema JSON.parse(File.read(AppealsApi::Engine.root.join('spec', 'support', 'schemas', 'nod_validate.json')))
 
-        it_behaves_like 'rswag example', desc: 'minimum fields used', extract_desc: true, scopes: scopes
+        it_behaves_like 'rswag example', desc: 'minimum fields used', extract_desc: true, scopes:
       end
 
       response '200', 'Info about a single Notice of Disagreement' do
@@ -290,7 +303,7 @@ describe 'Notice of Disagreements', swagger_doc: DocHelpers.output_json_path, ty
 
         schema JSON.parse(File.read(AppealsApi::Engine.root.join('spec', 'support', 'schemas', 'nod_validate.json')))
 
-        it_behaves_like 'rswag example', desc: 'all fields used', extract_desc: true, scopes: scopes
+        it_behaves_like 'rswag example', desc: 'all fields used', extract_desc: true, scopes:
       end
 
       response '422', 'Error' do
@@ -302,7 +315,7 @@ describe 'Notice of Disagreements', swagger_doc: DocHelpers.output_json_path, ty
           request_body
         end
 
-        it_behaves_like 'rswag example', desc: 'Violates JSON schema', extract_desc: true, scopes: scopes
+        it_behaves_like 'rswag example', desc: 'Violates JSON schema', extract_desc: true, scopes:
       end
 
       response '422', 'Error' do
@@ -312,7 +325,7 @@ describe 'Notice of Disagreements', swagger_doc: DocHelpers.output_json_path, ty
           nil
         end
 
-        it_behaves_like 'rswag example', desc: 'Not JSON object', extract_desc: true, scopes: scopes
+        it_behaves_like 'rswag example', desc: 'Not JSON object', extract_desc: true, scopes:
       end
 
       it_behaves_like 'rswag 500 response'
@@ -322,7 +335,7 @@ describe 'Notice of Disagreements', swagger_doc: DocHelpers.output_json_path, ty
   p = DocHelpers.decision_reviews? ? '/notice_of_disagreements/evidence_submissions' : '/evidence_submissions'
   path p do
     post 'Get a location for subsequent evidence submission document upload PUT request' do
-      scopes = %w[claim.write]
+      scopes = AppealsApi::NoticeOfDisagreements::V0::NoticeOfDisagreementsController::OAUTH_SCOPES[:POST]
       tags 'Notice of Disagreements'
       operationId 'postNoticeOfDisagreementEvidenceSubmission'
       description <<~DESC
@@ -354,26 +367,26 @@ describe 'Notice of Disagreements', swagger_doc: DocHelpers.output_json_path, ty
 
         it_behaves_like 'rswag example', desc: 'returns a 202 response',
                                          response_wrapper: :normalize_evidence_submission_response,
-                                         scopes: scopes
+                                         scopes:
       end
 
       response '400', 'Bad Request' do
         let(:nod_uuid) { nil }
         schema '$ref' => '#/components/schemas/errorModel'
-        it_behaves_like 'rswag example', desc: 'returns a 400 response', skip_match: true, scopes: scopes
+        it_behaves_like 'rswag example', desc: 'returns a 400 response', skip_match: true, scopes:
       end
 
       response '404', 'Associated Notice of Disagreement not found' do
         let(:nod_uuid) { '101010101010101010101010' }
         schema '$ref' => '#/components/schemas/errorModel'
-        it_behaves_like 'rswag example', desc: 'returns a 404 response', scopes: scopes
+        it_behaves_like 'rswag example', desc: 'returns a 404 response', scopes:
       end
 
       response '422', 'Validation errors' do
         let(:nod_uuid) { FactoryBot.create(:notice_of_disagreement_v2, :board_review_direct_review).id }
         let(:'X-VA-File-Number') { '987654321' }
         schema '$ref' => '#/components/schemas/errorModel'
-        it_behaves_like 'rswag example', desc: 'returns a 422 response', scopes: scopes
+        it_behaves_like 'rswag example', desc: 'returns a 422 response', scopes:
       end
 
       it_behaves_like 'rswag 500 response'
@@ -382,7 +395,7 @@ describe 'Notice of Disagreements', swagger_doc: DocHelpers.output_json_path, ty
 
   path '/nod_upload_path' do
     put 'Accepts Notice of Disagreement Evidence Submission document upload.' do
-      scopes = %w[claim.write]
+      scopes = AppealsApi::NoticeOfDisagreements::V0::NoticeOfDisagreementsController::OAUTH_SCOPES[:POST]
       tags 'Notice of Disagreements'
       operationId 'putNoticeOfDisagreementEvidenceSubmission'
       description File.read(DocHelpers.output_directory_file_path('put_description.md'))
@@ -431,7 +444,7 @@ describe 'Notice of Disagreements', swagger_doc: DocHelpers.output_json_path, ty
   p = DocHelpers.decision_reviews? ? '/notice_of_disagreements/evidence_submissions/{uuid}' : '/evidence_submissions/{uuid}'
   path p do
     get 'Returns all of the data associated with a specific Notice of Disagreement Evidence Submission.' do
-      scopes = %w[claim.read]
+      scopes = AppealsApi::NoticeOfDisagreements::V0::NoticeOfDisagreementsController::OAUTH_SCOPES[:GET]
       tags 'Notice of Disagreements'
       operationId 'getNoticeOfDisagreementEvidenceSubmission'
       description 'Returns all of the data associated with a specific Notice of Disagreement Evidence Submission.'
@@ -452,13 +465,13 @@ describe 'Notice of Disagreements', swagger_doc: DocHelpers.output_json_path, ty
 
         it_behaves_like 'rswag example', desc: 'returns a 200 response',
                                          response_wrapper: :normalize_evidence_submission_response,
-                                         scopes: scopes
+                                         scopes:
       end
 
       response '404', 'Notice of Disagreement Evidence Submission not found' do
         schema '$ref' => '#/components/schemas/errorModel'
         let(:uuid) { 'invalid' }
-        it_behaves_like 'rswag example', desc: 'returns a 404 response', scopes: scopes
+        it_behaves_like 'rswag example', desc: 'returns a 404 response', scopes:
       end
 
       it_behaves_like 'rswag 500 response'

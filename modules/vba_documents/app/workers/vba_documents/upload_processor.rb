@@ -26,7 +26,7 @@ module VBADocuments
       @cause = caller_data.nil? ? { caller: 'unknown' } : caller_data['caller']
       response = nil
       VBADocuments::UploadSubmission.with_advisory_lock(guid) do
-        @upload = VBADocuments::UploadSubmission.where(status: 'uploaded').find_by(guid: guid)
+        @upload = VBADocuments::UploadSubmission.where(status: 'uploaded').find_by(guid:)
         if @upload
           tracking_hash = { 'job' => 'VBADocuments::UploadProcessor' }.merge(@upload.as_json)
           Rails.logger.info('VBADocuments: Start Processing.', tracking_hash)
@@ -68,9 +68,11 @@ module VBADocuments
         # Validations
         validate_parts(@upload, parts)
         validate_metadata(parts[META_PART_NAME], submission_version: @upload.metadata['version'].to_i)
-        validate_documents(parts)
-
         metadata = perfect_metadata(@upload, parts, timestamp)
+
+        pdf_validator_options = metadata['skipDimensionCheck'] ? { check_page_dimensions: false } : {}
+        validate_documents(parts, pdf_validator_options)
+
         response = submit(metadata, parts)
 
         process_response(response)

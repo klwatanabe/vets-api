@@ -3,7 +3,7 @@
 module CheckIn
   module V2
     class AppointmentDataSerializer
-      include FastJsonapi::ObjectSerializer
+      include JSONAPI::Serializer
 
       set_id(&:id)
       set_type :appointment_data
@@ -54,8 +54,8 @@ module CheckIn
           emergencyContactConfirmedAt: raw_confirmation[:emergencyContactConfirmedAt]
         }
         {
-          demographics: demographics,
-          appointments: appointments,
+          demographics:,
+          appointments:,
           patientDemographicsStatus: demographics_confirmation
         }
       end

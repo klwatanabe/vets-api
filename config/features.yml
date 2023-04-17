@@ -12,6 +12,12 @@
 # Sorted using http://yaml-sorter.herokuapp.com/
 
 features:
+  binding_flow_modal_dsl:
+    actor_type: user
+    description: Enables grandfathering modal to begin binding from dslogon to login.gov
+  binding_flow_modal_mhv:
+    actor_type: user
+    description: Enables grandfathering modal to begin binding from mhv to login.gov
   caregiver_sigi_enabled:
     actor_type: user
     description: Whether Self-Identifying Gender Identity is enabled for caregiver.
@@ -19,11 +25,6 @@ features:
   caregiver_use_facilities_API:
     actor_type: user
     description: Allow list of caregiver facilites to be fetched by way of the Facilities API.
-    enable_in_development: false
-  career_counseling_confirmation_email:
-    actor_type: user
-    description: Enables Career Counseling claim email confirmation upon submission
-    enable_in_development: true
   hca_american_indian_enabled:
     actor_type: user
     description: Enables American Indian SIGI question page.
@@ -31,19 +32,20 @@ features:
   hca_browser_monitoring_enabled:
     actor_type: user
     description: Enables browser monitoring for the health care application.
-    enable_in_development: false
-  hca_short_form_enabled:
+  hca_vaprofile_military_info:
     actor_type: user
-    description: Enables Short Form for users with or self discloser of high disability.
-    enable_in_development: true
+    description: Enables prefilling 1010ez using VA profile military data
+    enable_in_development: false
   hca_enrollment_status_override_enabled:
     actor_type: user
     description: Enables override of enrollment status for a user, to allow multiple submissions with same user.
-    enable_in_development: false
+  hca_household_v2_enabled:
+    actor_type: user
+    description: Enables the optimized household section flow.
+    enable_in_development: true
   hca_use_facilities_API:
     actor_type: user
     description: Allow list of medical care facilites to be fetched by way of the Facilities API.
-    enable_in_development: false
   cerner_allow_partial_facilities:
     actor_type: user
     description: This will allow cerner facilities to be set to partially cerner or all cerner.
@@ -77,6 +79,10 @@ features:
   check_in_experience_enabled:
     actor_type: user
     description: Enables the health care check-in experiences
+    enable_in_development: true
+  check_in_experience_pre_check_in_handoff_enabled:
+    actor_type: user
+    description: Enables handing off of pre check-in to check-in on the day of appointment
     enable_in_development: true
   check_in_experience_pre_check_in_enabled:
     actor_type: user
@@ -114,18 +120,6 @@ features:
     actor_type: user
     description: Enables browser monitoring for check-in applications.
     enable_in_development: false
-  check_in_experience_updated_appt_presentation:
-    actor_type: user
-    description: Enables updated appointment details presentation.
-    enable_in_development: true
-  ch31_vbms_form_confirmation_email:
-    actor_type: user
-    description: Enables Ch31 form email submission confirmation after central mail
-    enable_in_development: true
-  ch31_central_mail_form_confirmation_email:
-    actor_type: user
-    description: Enables Ch31 form email submission confirmation after vbms
-    enable_in_development: true
   claim_letters_access:
     actor_type: user
     description: Enables users to access the claim letters page
@@ -133,6 +127,10 @@ features:
   cst_use_lighthouse:
     actor_type: user
     description: When enabled, claims status tool uses the Lighthouse API instead of EVSS
+    enable_in_development: true
+  cst_include_ddl_boa_letters:
+    actor_type: user
+    description: When enabled, the Download Decision Letters feature includes Board of Appeals decision letters
     enable_in_development: true
   coe_access:
     actor_type: user
@@ -210,9 +208,6 @@ features:
   decision_review_sc_email:
     actor_type: user
     description: Send email notification for successful SC submission
-  decision_review_hlr_status_update_throttling:
-    actor_type: user
-    description: Throttles requests to CMP when updating HLR statuses
   decision_review_hlr_pii_expunge_enabled:
     actor_type: user
     description: Enables the higher level review PII expunge job
@@ -226,9 +221,9 @@ features:
     description: Enables the supplemental claim PII expunge job
     enable_in_development: true
   decision_review_hlr_status_updater_enabled:
-      actor_type: user
-      description: Enables the Higher Level Review status update batch job
-      enable_in_development: true
+    actor_type: user
+    description: Enables the Higher Level Review status update batch job
+    enable_in_development: true
   decision_review_nod_status_updater_enabled:
     actor_type: user
     description: Enables the Notice of Disagreement status update batch job
@@ -245,12 +240,25 @@ features:
     actor_type: user
     description: Enables the weekly decision review text error report
     enable_in_development: true
+  decision_review_daily_error_report_enabled:
+    actor_type: user
+    description: Enables the daily error report email
+    enable_in_development: true
   decision_review_daily_stuck_records_report_enabled:
     actor_type: user
     description: Enables the daily decision review stuck records Slack report
   decision_review_monthly_stats_report_enabled:
     actor_type: user
     description: Enables the monthly decision review stats report email
+  decision_review_higher_level_review_pdf_v3:
+    actor_type: user
+    description: Defaults to v3 of the Higher-Level Review PDF form instead of v2
+  decision_review_supplemental_claim_pdf_v3:
+    actor_type: user
+    description: Defaults to v3 of the Supplemental Claim PDF form instead of v2
+  decision_review_sc_pact_act_boolean:
+    actor_type: user
+    description: Adds a 'potentialPactAct' field to the Supplemental Claims V2 API schema
   dependency_verification:
     actor_type: user
     description: Feature gates the dependency verification modal for updating the diaries service.
@@ -358,14 +366,21 @@ features:
     actor_type: user
     description: Form 10182 Notice of Disagreement - Request a board appeal
     enable_in_development: true
+  form1990_confirmation_email:
+    actor_type: user
+    description: Enables form 1990 email submission confirmation (VaNotify)
+    enable_in_development: true
+  form1990e_confirmation_email:
+    actor_type: user
+    description: Enables form 1990e email submission confirmation (VaNotify)
+    enable_in_development: true
   form5490_confirmation_email:
     actor_type: user
     description: Enables form 5490 email submission confirmation (VaNotify)
     enable_in_development: true
-  form674_confirmation_email:
+  form264555:
     actor_type: user
-    description: Form 674 - Email submission confirmation
-    enable_in_development: true
+    description: If enabled shows the digital form experience for form 26-4555
   fsr_confirmation_email:
     actor_type: user
     description: Enables notifications to be sent via email upon FSR submission
@@ -402,6 +417,9 @@ features:
     actor_type: user
     description: Enable new list loop pattern
     enable_in_development: true
+  show_mbs_preneed_change_va_4010007:
+    actor_type: user
+    description: Updates to text in form VA 40-10007
   medical_copays_six_mo_window:
     actor_type: user
     description: This will filter to only show medical copays within the last 6 months
@@ -414,9 +432,9 @@ features:
     actor_type: user
     description: This will use new API key name when available
     enable_in_development: true
-  mega_menu_mobile_v2:
+  mhv_landing_page_enabled:
     actor_type: user
-    description: Separates mobile mega menu from desktop mega menu
+    description: Enables the new MHV landing page on VA.gov
     enable_in_development: true
   mhv_secure_messaging_to_va_gov_release:
     actor_type: user
@@ -454,6 +472,9 @@ features:
     actor_type: user
     description: This determines the visibility of the OmniChannel link in the claim status tool
     enable_in_development: true
+  organic_conversion_experiment:
+    actor_type: user
+    description: Toggle to enable login.gov create account modal experiment
   pdf_warning_banner:
     description: "When enabled, will allow display of PDF cert warnings in find-a-form"
     actor_type: user
@@ -471,9 +492,15 @@ features:
       phone was changed.  For an address change, the notification email will specify whether the residential or correspondence
       address was changed.
     enable_in_development: true
+  profile_lighthouse_direct_deposit:
+    actor_type: user
+    description: When enabled, will request direct deposit data from lighthouse API.
   profile_user_claims:
     actor_type: user
     description: When enabled, /v0/user will return user profile claims for accessing service endpoints.
+  profile_show_mhv_notification_settings:
+    actor_type: user
+    description: Display MHV notification settings - RX refill shipment, appointment, secure messaging, and medical images/reports
   profile_show_military_academy_attendance:
     actor_type: user
     description: When enabled, profile service history will include military academy attendance.
@@ -482,34 +509,30 @@ features:
     actor_type: user
     description: Hides disability comp and pen section of the Profile - Direct Deposit page during a service outage
     enable_in_development: false
-  profile_schema_forms:
-    actor_type: user
-    description: Enables SchemaForm-based contact info edit forms on the VA.gov Veteran profile page
-    enable_in_development: true
-  profile_show_address_change_modal:
-    actor_type: user
-    description: Shows a modal that allows addresses to be duplicated from home to mailing and vice versa
-    enable_in_development: true
   profile_show_payments_notification_setting:
     actor_type: user
     description: Show/Hide the payments section of notifications in profile
   profile_show_pronouns_and_sexual_orientation:
     actor_type: user
     description: Show/hide Pronouns and Sexual Orientation fields on profile page
-  profile_use_security_process_list:
-    actor_type: user
-    descriptions: For Account Security page, use a new process list component for account setup information
+  profile_use_experimental:
+    description: "Use experimental features for Pofile application - Do not remove"
     enable_in_development: true
+    actor_type: user
+  profile_use_field_editing_page:
+    description: "Use a single page route in Profile for editing or adding a field value"
+    enable_in_development: true
+    actor_type: user
+  profile_use_info_card:
+    description: "Use an accessible component for Profile application information card sections"
+    enable_in_development: true
+    actor_type: user
   profile_use_vaos_v2_api:
     description: "Use the new VAOS v2 API endpoints"
     enable_in_development: true
     actor_type: user
   profile_use_vafsc:
     description: "Use VA Forms System Core for forms instead of schema based forms"
-    actor_type: user
-    enable_in_development: true
-  profile_block_for_fiduciary_deceased_or_incompetent:
-    description: "Blocks profile access when a user has 1 of 3 user criteria, fiduciary, deceased, or incompetent flag"
     actor_type: user
     enable_in_development: true
   pw_ehr_cta_drupal_source_of_truth:
@@ -559,9 +582,6 @@ features:
     actor_type: user
     description: Toggles the availability of sharable links to deep link to content
     enable_in_development: true
-  shift_vets_banner:
-    actor_type: user
-    description: Shift veteran banner position on the home page
   show526_wizard:
     actor_type: user
     description: This determines when the wizard should show up on the form 526 intro page
@@ -666,16 +686,9 @@ features:
     actor_type: user
     description: Enable showing Supplemental Claim form 0995
     enable_in_development: true
-  va_global_downtime_notification:
-    actor_type: user
-    description: Enables global downtime notification- do not use in production
   va_home_preview_modal:
     actor_type: user
     description: Allows user testing for Homepage redesign soft launch modal
-  va_online_filter36_vats:
-    actor_type: user
-    description: Update the filtering logic from 24 months to 36 months for a given clinic in the direct appointment schedule flow
-    enable_in_development: true
   va_online_scheduling:
     actor_type: user
     description: Allows veterans to view their VA and Community Care appointments
@@ -691,10 +704,6 @@ features:
   va_online_scheduling_direct:
     actor_type: user
     description: Allows veterans to directly schedule VA appointments
-    enable_in_development: true
-  va_online_scheduling_facility_selection_v2_2:
-    actor_type: user
-    description: Set up toggle in anticipation of the next iteration of facility selection, version 2.2.
     enable_in_development: true
   va_online_scheduling_requests:
     actor_type: user
@@ -720,14 +729,6 @@ features:
     actor_type: user
     description: Toggle for new mobile facility service v2 endpoints
     enable_in_development: true
-  va_online_scheduling_variant_testing:
-    actor_type: user
-    enable_in_development: true
-    description: Toggle for VAOS variant testing.
-  va_online_scheduling_poc_health_apt:
-    actor_type: user
-    enable_in_development: true
-    description: Toggle for health apartment proof of concept
   va_online_scheduling_clinic_location:
     actor_type: user
     enable_in_development: true
@@ -771,9 +772,9 @@ features:
   va_view_dependents_access:
     actor_type: user
     description: Allows us to gate the View/ Modify dependents content in a progressive rollout
-  vba_documents_nca_lob:
+  vba_documents_skip_dimension_check:
     actor_type: user
-    description: Allows the use of the NCA (National Cemetery Administration) line of business
+    description: Allows Benefits Intake to accept any size of PDF, skipping the check for page dimensions
   yellow_ribbon_mvp_enhancement:
     actor_type: user
     description: Enhances Yellow Ribbon MVP.
@@ -816,18 +817,41 @@ features:
     actor_type: user
     description: Enables the UI integration with the meb dgi
     enable_in_development: true
+  show_meb_dgi42_features:
+    actor_type: user
+    description: Enables UI updates for meb dgi 42
+    enable_in_development: true
+  show_meb_ch33_self_form:
+    actor_type: user
+    description: Enables the redirect of Ch33 form.
+    enable_in_development: true
+  show_meb_enhancements:
+    actor_type: user
+    description: Provides a flag wrapper for minor code changes to be gated from Prod.
   move_form_back_button:
     actor_type: user
     description: Test moving form back button to the top of the page
   mobile_lighthouse_letters:
     actor_type: user
     description: For mobile app, use Lighthouse instead of EVSS for our letters endpoints upstream service
-  myva_cerner_from_drupal:
-    actor_type: user
-    description: Enables cerner updates from drupal
   form526_backup_submission_temp_killswitch:
     actor_type: user
     description: Provide a temporary killswitch to disable form526 backup submission if something were to go awry
   form526_backup_submission_force_offramp:
     actor_type: user
     description: If enabled add the "forceOfframp" flag to backup 526 submission metadata
+  bgs_via_faraday:
+    actor_type: user
+    description: If enabled uses the faraday connection to BGS as opposed to bgs-ext
+  bgs_via_faraday_file_number:
+    actor_type: user
+    description: If enabled uses the faraday connection to BGS to locate file_number
+  virtual_agent_show_floating_chatbot:
+    actor_type: user
+    description: Enables a floating chatbot on the chatbot page - managed by virtual agent team
+  disability_compensation_lighthouse_rated_disabilities_provider:
+    actor_type: user
+    description: If enabled uses the lighthouse rated disabilities endpoint
+  btsss_login_widget:
+    actor_type: user
+    description: If enabled shows the BTSSS login widget on the /get-reimbursed-for-travel-pay/ page

@@ -82,6 +82,16 @@ paths:
         '200':
           content:
             application/json:
+              examples:
+                Docket 1:
+                  value:
+                    $ref: ./examples/appeals/appeal_docket_1.yml
+                Docket 2:
+                  value:
+                    $ref: ./examples/appeals/appeal_docket_2.yml
+                Null Docket:
+                  value:
+                    $ref: ./examples/appeals/appeal_docket_null.yml
               schema:
                 $ref: ./schemas/Appeal.yml
           description: OK
@@ -131,68 +141,6 @@ paths:
       security:
         - Bearer: []
       summary: /v0/appeal/{id}
-  /v0/appointment_requests/{appointment_request_id}/messages:
-    get:
-      description: Accepts an appointment request id and returns a list of that appointment request's messages.
-      operationId: getAppointmentRequestMessages
-      parameters:
-        - description: The appointment request ID
-          in: path
-          name: appointmentRequestId
-          schema:
-            type: string
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/AppointmentRequestMessages.yml
-        '401':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Authentication is possible but has failed or not yet been provided.
-        '404':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: The requested resource could not be found.
-        '408':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: The response from this API timed out.
-        '422':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Failure in processing entity
-        '500':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An internal API error occured.
-        '503':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An upstream service is unavailable, or its circuit breaker
-            may have been tripped.
-        '504':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: A response from an upstream service timed out.
-      security:
-        - Bearer: []
-      summary: v0/appointment_requests/{appointment_request_id}/messages
   /v0/appointments:
     get:
       description: Given a date range returns a list of upcoming VA, Community Care,
@@ -1279,6 +1227,150 @@ paths:
       security:
         - Bearer: []
       summary: /v0/claim/{id}/request-decision
+  /v0/claims/decision-letters:
+    get:
+      description: Returns the list of claim decision letters for given user
+      operationId: decision-letters
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: ./schemas/DecisionLetters.yml
+          description: OK
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: ./schemas/Errors.yml
+          description: Authentication is possible but has failed or not yet been provided.
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: ./schemas/Errors.yml
+          description: Client was forbidden from upstream resource.
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: ./schemas/Errors.yml
+          description: The requested resource could not be found.
+        '408':
+          content:
+            application/json:
+              schema:
+                $ref: ./schemas/Errors.yml
+          description: The response from this API timed out.
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: ./schemas/Errors.yml
+          description: Failure in processing entity
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: ./schemas/Errors.yml
+          description: An internal API error occured.
+        '502':
+          content:
+            application/json:
+              schema:
+                $ref: ./schemas/Errors.yml
+          description: An upstream service the API depends on returned an error.
+        '503':
+          content:
+            application/json:
+              schema:
+                $ref: ./schemas/Errors.yml
+          description: An upstream service is unavailable, or its circuit breaker
+            may have been tripped.
+        '504':
+          content:
+            application/json:
+              schema:
+                $ref: ./schemas/Errors.yml
+          description: A response from an upstream service timed out.
+      security:
+        - Bearer: [ ]
+      summary: /v0/claims/decision-letters
+  /v0/claims/decision-letters/{document_id}/download:
+    get:
+      description: Downloads a decision letter
+      operationId: decision-letter-download
+      parameters:
+        - description: id of the document being downloaded
+          in: path
+          name: document_id
+          required: true
+      responses:
+        '200':
+          content:
+            application/pdf:
+              schema:
+                format: binary
+                type: string
+          description: OK
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: ./schemas/Errors.yml
+          description: Authentication is possible but has failed or not yet been provided.
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: ./schemas/Errors.yml
+          description: Client was forbidden from upstream resource.
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: ./schemas/Errors.yml
+          description: The requested resource could not be found.
+        '408':
+          content:
+            application/json:
+              schema:
+                $ref: ./schemas/Errors.yml
+          description: The response from this API timed out.
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: ./schemas/Errors.yml
+          description: Failure in processing entity
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: ./schemas/Errors.yml
+          description: An internal API error occured.
+        '502':
+          content:
+            application/json:
+              schema:
+                $ref: ./schemas/Errors.yml
+          description: An upstream service the API depends on returned an error.
+        '503':
+          content:
+            application/json:
+              schema:
+                $ref: ./schemas/Errors.yml
+          description: An upstream service is unavailable, or its circuit breaker
+            may have been tripped.
+        '504':
+          content:
+            application/json:
+              schema:
+                $ref: ./schemas/Errors.yml
+          description: A response from an upstream service timed out.
+      security:
+        - Bearer: [ ]
+      summary: /v0/claims/decision-letters/{document_id}/download
   /v0/claims-and-appeals-overview:
     get:
       description: Returns info on all user's claims and appeals for mobile overview
@@ -1339,7 +1431,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: ./schemas/ClaimsAndAppealsOverview.yml
+                oneOf:
+                  - $ref: ./schemas/ClaimsAndAppealsOverviewClaimsError.yml
+                  - $ref: ./schemas/ClaimsAndAppealsOverviewAppealsError.yml
           description: One of the two upstream services failed
         '401':
           content:
@@ -1393,6 +1487,7 @@ paths:
       security:
         - Bearer: []
       summary: /v0/claims-and-appeals-overview
+
   /v0/community-care-providers:
     get:
       description: Returns a list of community care providers who provide the requested medical specialty within
@@ -3428,6 +3523,7 @@ paths:
                   meta:
                     properties:
                       availableServices:
+                        description: All services available through the mobile API. See authorizedServices for a list of services available to the user.
                         example:
                           - appeals
                           - appointments
@@ -3512,6 +3608,7 @@ paths:
                   meta:
                     properties:
                       availableServices:
+                        description: All services available through the mobile API. See authorizedServices for a list of services available to the user.
                         example:
                           - appeals
                           - appointments
@@ -4211,15 +4308,8 @@ paths:
       summary: /v0/user/gender_identity
   /v0/user/gender_identity/edit:
     get:
-      description: Retrieves a list of valid gender identity keys
+      description: Retrieves a list of valid gender identity keys. Note that this endpoint does not use the camel case key inflection header like most other mobile endpoints to keep the keys upcase.
       operationId: user.editGenderIdentity
-      parameters:
-        - in: header
-          name: X-Key-Inflection
-          schema:
-            description: Allows the API to return camelCase keys rather than snake_case.
-            example: camel
-            type: string
       responses:
         '200':
           content:

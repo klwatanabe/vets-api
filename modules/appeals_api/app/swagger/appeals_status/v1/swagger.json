@@ -26,18 +26,17 @@
         "description": "Returns a list of all known appeal records for the given veteran. Includes details of each appeal's current status, priority, and history of updates.",
         "security": [
           {
-            "apikey": [
-
-            ]
-          },
-          {
             "productionOauth": [
-              "claim.read"
+              "veteran/AppealsStatus.read",
+              "representative/AppealsStatus.read",
+              "system/AppealsStatus.read"
             ]
           },
           {
             "sandboxOauth": [
-              "claim.read"
+              "veteran/AppealsStatus.read",
+              "representative/AppealsStatus.read",
+              "system/AppealsStatus.read"
             ]
           },
           {
@@ -133,11 +132,6 @@
   },
   "components": {
     "securitySchemes": {
-      "apikey": {
-        "type": "apiKey",
-        "name": "apikey",
-        "in": "header"
-      },
       "bearer_token": {
         "type": "http",
         "scheme": "bearer",
@@ -151,8 +145,12 @@
             "authorizationUrl": "https://api.va.gov/oauth2/authorization",
             "tokenUrl": "https://api.va.gov/oauth2/token",
             "scopes": {
-              "claim.read": "Retrieve claim data",
-              "claim.write": "Submit claim data"
+              "veteran/AppealsStatus.read": "Allows a veteran to see the status of their own VA decision reviews and appeals",
+              "representative/AppealsStatus.read": "Allows a veteran representative to see the status of a veteran's decision reviews and appeals",
+              "system/AppealsStatus.read": "Allows a system to see the status of a veteran's decision reviews and appeals",
+              "veteran/appeals.read": "Allows a veteran to see all their own decision review or appeal data",
+              "representative/appeals.read": "Allows a veteran representative to see all decision review or appeal data for a veteran",
+              "system/appeals.read": "Allows a system to see all decision review or appeal data for a veteran"
             }
           }
         }
@@ -165,8 +163,12 @@
             "authorizationUrl": "https://sandbox-api.va.gov/oauth2/authorization",
             "tokenUrl": "https://sandbox-api.va.gov/oauth2/token",
             "scopes": {
-              "claim.read": "Retrieve claim data",
-              "claim.write": "Submit claim data"
+              "veteran/AppealsStatus.read": "Allows a veteran to see the status of their own VA decision reviews and appeals",
+              "representative/AppealsStatus.read": "Allows a veteran representative to see the status of a veteran's decision reviews and appeals",
+              "system/AppealsStatus.read": "Allows a system to see the status of a veteran's decision reviews and appeals",
+              "veteran/appeals.read": "Allows a veteran to see all their own decision review or appeal data",
+              "representative/appeals.read": "Allows a veteran representative to see all decision review or appeal data for a veteran",
+              "system/appeals.read": "Allows a system to see all decision review or appeal data for a veteran"
             }
           }
         }

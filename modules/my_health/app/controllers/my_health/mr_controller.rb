@@ -7,6 +7,8 @@ module MyHealth
     include ActionController::Serialization
     # include MyHealth::MHVControllerConcerns
 
+    skip_before_action :authenticate
+
     protected
 
     def client

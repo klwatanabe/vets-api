@@ -5,9 +5,9 @@ require 'rails_helper'
 RSpec.describe SignIn::CodeValidator do
   describe '#perform' do
     subject do
-      SignIn::CodeValidator.new(code: code,
-                                code_verifier: code_verifier,
-                                grant_type: grant_type).perform
+      SignIn::CodeValidator.new(code:,
+                                code_verifier:,
+                                grant_type:).perform
     end
 
     let(:code) { 'some-code' }
@@ -28,8 +28,8 @@ RSpec.describe SignIn::CodeValidator do
       let!(:code_container) do
         create(:code_container,
                code: code_container_code,
-               code_challenge: code_challenge,
-               user_verification_id: user_verification_id)
+               code_challenge:,
+               user_verification_id:)
       end
       let(:code_container_code) { code }
       let(:code_challenge) { 'some-code-challenge' }
@@ -79,25 +79,25 @@ RSpec.describe SignIn::CodeValidator do
             let(:user_verification) { create(:user_verification) }
             let(:user_verification_id) { user_verification.id }
             let(:expected_email) { code_container.credential_email }
-            let(:expected_client_id) { code_container.client_id }
+            let(:expected_client_config) { SignIn::ClientConfig.find_by(client_id: code_container.client_id) }
             let(:expected_validated_credential) do
-              SignIn::ValidatedCredential.new(user_verification: user_verification,
+              SignIn::ValidatedCredential.new(user_verification:,
                                               credential_email: expected_email,
                                               client_id: expected_client_id)
             end
 
             it 'returns a validated credential object with expected attributes' do
               expect(subject).to have_attributes(credential_email: expected_email,
-                                                 client_id: expected_client_id,
-                                                 user_verification: user_verification)
+                                                 client_config: expected_client_config,
+                                                 user_verification:)
             end
 
             it 'returns a validated credential object with expected credential email' do
               expect(subject.credential_email).to eq(expected_email)
             end
 
-            it 'returns a validated credential object with expected client_id' do
-              expect(subject.client_id).to eq(expected_client_id)
+            it 'returns a validated credential object with expected client_config' do
+              expect(subject.client_config).to eq(expected_client_config)
             end
           end
         end

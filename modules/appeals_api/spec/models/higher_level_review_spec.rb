@@ -43,7 +43,7 @@ describe AppealsApi::HigherLevelReview, type: :model do
     end
 
     context 'not all name fields used' do
-      let(:higher_level_review) { described_class.new(form_data: form_data, auth_headers: auth_headers) }
+      let(:higher_level_review) { described_class.new(form_data:, auth_headers:) }
 
       context 'only last name' do
         let(:auth_headers) { default_auth_headers.except('X-VA-Middle-Initial').merge('X-VA-First-Name' => ' ') }
@@ -188,7 +188,7 @@ describe AppealsApi::HigherLevelReview, type: :model do
       let(:example_instance) { higher_level_review }
       let(:instance_without_email) do
         described_class.create!(
-          auth_headers: auth_headers,
+          auth_headers:,
           api_version: 'V2',
           form_data: form_data.deep_merge(
             { 'data' => { 'attributes' => { 'veteran' => { 'email' => nil } } } }
@@ -201,7 +201,7 @@ describe AppealsApi::HigherLevelReview, type: :model do
   context 'validations' do
     # V1 has been deprecated, so no need to check validations of records we've effectively archived
     let(:appeal) do # appeal is used here since the shared example expects it
-      described_class.new(form_data: form_data, auth_headers: auth_headers, api_version: 'V2')
+      described_class.new(form_data:, auth_headers:, api_version: 'V2')
     end
     let(:auth_headers) { fixture_as_json 'valid_200996_headers_extra.json', version: 'v2' }
     let(:form_data) { fixture_as_json 'valid_200996_extra.json', version: 'v2' }
@@ -289,6 +289,42 @@ describe AppealsApi::HigherLevelReview, type: :model do
           created_at = higher_level_review_v2.created_at
 
           expect(appellant_local_time).to eq created_at.in_time_zone('America/Chicago')
+        end
+      end
+    end
+
+    describe '#soc_opt_in' do
+      let(:hlr_opted_in) { create(:higher_level_review_v2) }
+      let(:not_opted_in_form_data) do
+        form_data['data']['attributes']['socOptIn'] = false
+        form_data
+      end
+      let(:hlr_not_opted_in) { create(:higher_level_review_v2, form_data: not_opted_in_form_data) }
+
+      describe 'when pdf version is unset' do
+        it 'uses the value from the record' do
+          expect(hlr_opted_in.soc_opt_in).to eq(true)
+          expect(hlr_not_opted_in.soc_opt_in).to eq(false)
+        end
+      end
+
+      describe 'when pdf_version is v2' do
+        let(:hlr_opted_in) { create(:higher_level_review_v2, pdf_version: 'v2') }
+        let(:hlr_not_opted_in) { create(:higher_level_review_v2, form_data: not_opted_in_form_data, pdf_version: 'v2') }
+
+        it 'uses the value from the record' do
+          expect(hlr_opted_in.soc_opt_in).to be true
+          expect(hlr_not_opted_in.soc_opt_in).to be false
+        end
+      end
+
+      describe 'when pdf_version is v3' do
+        let(:hlr_opted_in) { create(:higher_level_review_v2, pdf_version: 'v3') }
+        let(:hlr_not_opted_in) { create(:higher_level_review_v2, form_data: not_opted_in_form_data, pdf_version: 'v3') }
+
+        it 'is always true' do
+          expect(hlr_opted_in.soc_opt_in).to be true
+          expect(hlr_not_opted_in.soc_opt_in).to be true
         end
       end
     end

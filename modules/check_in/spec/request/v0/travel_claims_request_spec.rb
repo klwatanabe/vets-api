@@ -33,7 +33,7 @@ RSpec.describe 'V0::TravelClaims', type: :request do
 
     context 'when session is not authorized' do
       let(:body) { { 'permissions' => 'read.none', 'status' => 'success', 'uuid' => id } }
-      let(:unauth_response) { Faraday::Response.new(body: body, status: 401) }
+      let(:unauth_response) { Faraday::Response.new(body:, status: 401) }
 
       it 'returns unauthorized response' do
         post '/check_in/v0/travel_claims', params: post_params
@@ -58,7 +58,7 @@ RSpec.describe 'V0::TravelClaims', type: :request do
 
       before do
         VCR.use_cassette 'check_in/lorota/token/token_200' do
-          post '/check_in/v2/sessions', session_params
+          post '/check_in/v2/sessions', **session_params
         end
 
         VCR.use_cassette('check_in/lorota/data/data_200', match_requests_on: [:host]) do

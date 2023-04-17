@@ -31,7 +31,7 @@ module SignIn
     end
 
     def validate_account_and_session
-      raise Errors::SessionNotFoundError, message: 'Invalid Session Handle' unless session
+      raise Errors::SessionNotFoundError.new message: 'Invalid Session Handle' unless session
     end
 
     def user_attributes
@@ -39,17 +39,17 @@ module SignIn
         mhv_icn: session.user_account.icn,
         idme_uuid: user_verification.idme_uuid,
         logingov_uuid: user_verification.logingov_uuid,
-        loa: loa,
+        loa:,
         email: session.credential_email,
-        authn_context: authn_context,
-        multifactor: multifactor,
-        sign_in: sign_in
+        authn_context:,
+        multifactor:,
+        sign_in:
       }
     end
 
     def loa
-      current_loa = user_is_verified? ? LOA::THREE : LOA::ONE
-      { current: current_loa, highest: LOA::THREE }
+      current_loa = user_is_verified? ? Constants::Auth::LOA_THREE : Constants::Auth::LOA_ONE
+      { current: current_loa, highest: Constants::Auth::LOA_THREE }
     end
 
     def sign_in
@@ -61,13 +61,13 @@ module SignIn
     def authn_context
       case user_verification.credential_type
       when Constants::Auth::IDME
-        user_is_verified? ? LOA::IDME_LOA3 : LOA::IDME_LOA1_VETS
+        user_is_verified? ? Constants::Auth::IDME_LOA3 : Constants::Auth::IDME_LOA1
       when Constants::Auth::DSLOGON
-        user_is_verified? ? LOA::IDME_DSLOGON_LOA3 : LOA::IDME_DSLOGON_LOA1
+        user_is_verified? ? Constants::Auth::IDME_DSLOGON_LOA3 : Constants::Auth::IDME_DSLOGON_LOA1
       when Constants::Auth::MHV
-        user_is_verified? ? LOA::IDME_MHV_LOA3 : LOA::IDME_MHV_LOA1
+        user_is_verified? ? Constants::Auth::IDME_MHV_LOA3 : Constants::Auth::IDME_MHV_LOA1
       when Constants::Auth::LOGINGOV
-        user_is_verified? ? IAL::LOGIN_GOV_IAL2 : IAL::LOGIN_GOV_IAL1
+        user_is_verified? ? Constants::Auth::LOGIN_GOV_IAL2 : Constants::Auth::LOGIN_GOV_IAL1
       end
     end
 

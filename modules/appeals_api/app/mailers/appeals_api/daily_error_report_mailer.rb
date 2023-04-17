@@ -8,7 +8,7 @@ module AppealsApi
       @report = DecisionReviewReport.new
       @friendly_env = (Settings.vsp_environment || Rails.env).titleize
 
-      return if @report.no_faulty_records? && @report.no_stuck_records?
+      return if @report.no_faulty_records?
 
       template = File.read(path)
       body = ERB.new(template).result(binding)
@@ -17,7 +17,7 @@ module AppealsApi
         to: recipients,
         subject: "Daily Error Decision Review API report (#{@friendly_env})",
         content_type: 'text/html',
-        body: body
+        body:
       )
     end
 

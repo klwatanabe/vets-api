@@ -5,12 +5,12 @@ require 'rails_helper'
 RSpec.describe SignIn::StatePayloadJwtEncoder do
   describe '#perform' do
     subject do
-      SignIn::StatePayloadJwtEncoder.new(code_challenge: code_challenge,
-                                         code_challenge_method: code_challenge_method,
-                                         client_state: client_state,
-                                         type: type,
-                                         acr: acr,
-                                         client_id: client_id).perform
+      SignIn::StatePayloadJwtEncoder.new(code_challenge:,
+                                         code_challenge_method:,
+                                         client_state:,
+                                         type:,
+                                         acr:,
+                                         client_config:).perform
     end
 
     let(:code_challenge) { 'some-code-challenge' }
@@ -18,7 +18,7 @@ RSpec.describe SignIn::StatePayloadJwtEncoder do
     let(:client_state) { 'some-client-state' }
     let(:acr) { 'some-acr' }
     let(:type) { 'some-type' }
-    let(:client_id) { 'some-client-id' }
+    let(:client_config) { create(:client_config) }
     let(:client_state_minimum_length) { SignIn::Constants::Auth::CLIENT_STATE_MINIMUM_LENGTH }
 
     context 'when code_challenge_method does not equal accepted method' do
@@ -50,7 +50,8 @@ RSpec.describe SignIn::StatePayloadJwtEncoder do
           Base64.urlsafe_encode64(Base64.urlsafe_decode64(code_challenge.to_s), padding: false)
         end
         let(:code) { 'some-state-code-value' }
-        let(:client_id) { SignIn::Constants::Auth::MOBILE_CLIENT }
+        let(:client_id) { client_config.client_id }
+        let(:client_config) { create(:client_config) }
         let(:acr) { SignIn::Constants::Auth::ACR_VALUES.first }
         let(:type) { SignIn::Constants::Auth::CSP_TYPES.first }
         let(:client_state) { SecureRandom.alphanumeric(client_state_minimum_length + 1) }
@@ -73,22 +74,6 @@ RSpec.describe SignIn::StatePayloadJwtEncoder do
           it 'saves a StateCode in redis' do
             expect { subject }.to change { SignIn::StateCode.find(code) }.from(nil)
           end
-        end
-
-        context 'and given client_id is not within accepted client ids list' do
-          let(:client_id) { 'some-arbitrary-client-id' }
-          let(:expected_error) { SignIn::Errors::StatePayloadError }
-          let(:expected_error_message) { 'Attributes are not valid' }
-
-          it 'raises a code challenge state map error' do
-            expect { subject }.to raise_exception(expected_error, expected_error_message)
-          end
-        end
-
-        context 'and given client_id is within accepted client ids list' do
-          let(:client_id) { SignIn::Constants::Auth::MOBILE_CLIENT }
-
-          it_behaves_like 'properly encoded state payload jwt'
         end
 
         context 'and given acr is not within accepted acr values list' do

@@ -412,12 +412,12 @@ module ClaimsApi
         special_issues = disability['specialIssues']
         next if special_issues.blank?
 
-        if invalid_hepatitis_c_special_issue?(special_issues: special_issues, disability: disability)
+        if invalid_hepatitis_c_special_issue?(special_issues:, disability:)
           message = "'disability.specialIssues' :: Claim must include a disability with the name 'hepatitis'"
           raise ::Common::Exceptions::InvalidFieldValue.new(message, special_issues)
         end
 
-        if invalid_pow_special_issue?(special_issues: special_issues)
+        if invalid_pow_special_issue?(special_issues:)
           message = "'disability.specialIssues' :: Claim must include valid 'serviceInformation.confinements' value"
           raise ::Common::Exceptions::InvalidFieldValue.new(message, special_issues)
         end
@@ -444,6 +444,7 @@ module ClaimsApi
       validate_treatment_start_dates!
       validate_treatment_end_dates!
       validate_treated_disability_names!
+      validate_treatment_center_names!
     end
 
     def validate_treatment_start_dates!
@@ -495,6 +496,21 @@ module ClaimsApi
           'treatments.treatedDisabilityNames',
           treatment['treatedDisabilityNames']
         )
+      end
+    end
+
+    def validate_treatment_center_names!
+      treatments = form_attributes['treatments']
+      invalid_characters = %r{[^a-zA-Z0-9\\\-'.,/() ]}
+
+      treatments.map do |treatment|
+        name = treatment['center']['name']
+        name = name.truncate(100, omission: '') if name.length > 100
+        name = name.gsub(invalid_characters, '') if name.match?(invalid_characters)
+        name = name.strip
+        treatment['center']['name'] = name
+
+        treatment
       end
     end
   end

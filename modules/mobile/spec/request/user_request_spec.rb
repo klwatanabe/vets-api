@@ -235,11 +235,12 @@ RSpec.describe 'user', type: :request do
           end
         end
 
-        it 'does not include edipi services (claims, direct deposit, letters, military history)' do
+        it 'does not include edipi services (claims, direct deposit, letters)' do
           expect(attributes['authorizedServices']).to eq(
             %w[
               appeals
               appointments
+              militaryServiceHistory
               paymentHistory
               userProfileUpdate
             ]
@@ -259,11 +260,12 @@ RSpec.describe 'user', type: :request do
           end
         end
 
-        it 'does not include edipi services (claims, direct deposit, military history) except for letters' do
+        it 'does not include edipi services (claims, direct deposit) except for letters' do
           expect(attributes['authorizedServices']).to eq(
             %w[
               appeals
               appointments
+              militaryServiceHistory
               paymentHistory
               userProfileUpdate
               lettersAndDocuments
@@ -457,7 +459,7 @@ RSpec.describe 'user', type: :request do
             'errors' => [
               {
                 'title' => 'Record not found',
-                'detail' => 'The record identified by {:id=>"1"} could not be found',
+                'detail' => 'The record identified by 1 could not be found',
                 'code' => '404',
                 'status' => '404'
               }
@@ -617,7 +619,7 @@ RSpec.describe 'user', type: :request do
           )
         )
         expect(Rails.logger).to receive(:error).with(
-          'Error fetching user data from EVSS', user_uuid: user.uuid, details: details
+          'Error fetching user data from EVSS', user_uuid: user.uuid, details:
         )
 
         VCR.use_cassette('payment_information/payment_information') do

@@ -12,7 +12,14 @@ module SignIn
     attribute :user_verification_id, Integer
     attribute :credential_email, String
 
-    validates(:client_id, inclusion: { in: Constants::Auth::CLIENT_IDS })
     validates(:code_challenge, :code, :user_verification_id, presence: true)
+
+    validate :confirm_client_id
+
+    private
+
+    def confirm_client_id
+      errors.add(:base, 'Client id must map to a configuration') unless ClientConfig.valid_client_id?(client_id:)
+    end
   end
 end

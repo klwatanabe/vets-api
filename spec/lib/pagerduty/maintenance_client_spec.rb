@@ -15,11 +15,7 @@ describe PagerDuty::MaintenanceClient do
   end
 
   before do
-    Settings.maintenance.services = { evss: 'ABCDEF', mhv: 'BCDEFG' }
-  end
-
-  after do
-    Settings.maintenance.services = nil
+    allow(Settings.maintenance).to receive(:services).and_return({ evss: 'ABCDEF', mhv: 'BCDEFG' })
   end
 
   context 'with single page of results' do
@@ -31,7 +27,7 @@ describe PagerDuty::MaintenanceClient do
         .to_return(
           status: 200,
           headers: { 'Content-Type' => 'application/json; charset=utf-8' },
-          body: body
+          body:
         )
       windows = subject.get_all
       expect(windows).to be_a(Array)
@@ -45,7 +41,7 @@ describe PagerDuty::MaintenanceClient do
         .to_return(
           status: 200,
           headers: { 'Content-Type' => 'application/json; charset=utf-8' },
-          body: body
+          body:
         )
       windows = subject.get_all
       expect(windows.first[:description]).to eq('')
@@ -78,7 +74,7 @@ describe PagerDuty::MaintenanceClient do
   end
 
   context 'with no configured services' do
-    before { Settings.maintenance.services = nil }
+    before { allow(Settings.maintenance).to receive(:services).and_return(nil) }
 
     it 'returns empty results' do
       windows = subject.get_all
@@ -95,7 +91,7 @@ describe PagerDuty::MaintenanceClient do
         .to_return(
           status: 200,
           headers: { 'Content-Type' => 'application/json; charset=utf-8' },
-          body: body
+          body:
         )
       windows = subject.get_all('service_ids' => %w[ABCDEF])
       expect(windows).to be_a(Array)

@@ -7,6 +7,7 @@ require 'appeals_api/form_schemas'
 module AppealsApi::V2
   module DecisionReviews
     class ContestableIssuesController < AppealsApi::ApplicationController
+      FORM_NUMBER = 'CONTESTABLE_ISSUES_HEADERS'
       HEADERS = JSON.parse(
         File.read(
           AppealsApi::Engine.root.join('config/schemas/v2/contestable_issues_headers.json')
@@ -16,8 +17,6 @@ module AppealsApi::V2
       skip_before_action :authenticate
       before_action :validate_json_schema, only: %i[index]
       before_action :validate_params, only: %i[index]
-
-      EXPECTED_HEADERS = %w[X-VA-SSN X-VA-Receipt-Date X-VA-File-Number].freeze
 
       VALID_DECISION_REVIEW_TYPES = %w[higher_level_reviews notice_of_disagreements supplemental_claims].freeze
 
@@ -47,9 +46,9 @@ module AppealsApi::V2
       attr_reader :caseflow_response, :backend_service_exception
 
       def get_contestable_issues_from_caseflow(filter: true)
-        caseflow_response = Caseflow::Service.new.get_contestable_issues headers: request_headers,
-                                                                         benefit_type: benefit_type,
-                                                                         decision_review_type: decision_review_type
+        caseflow_response = Caseflow::Service.new.get_contestable_issues(headers: caseflow_request_headers,
+                                                                         benefit_type:,
+                                                                         decision_review_type:)
 
         @caseflow_response = filtered_caseflow_response(decision_review_type, caseflow_response, filter)
       rescue Common::Exceptions::BackendServiceException => @backend_service_exception # rubocop:disable Naming/RescuedExceptionsVariableName
@@ -126,9 +125,7 @@ module AppealsApi::V2
           render_unprocessable_entity(
             "decision_review_type must be one of: #{VALID_DECISION_REVIEW_TYPES.join(', ')}"
           )
-        end
-
-        if invalid_benefit_type?
+        elsif invalid_benefit_type?
           render_unprocessable_entity(
             "benefit_type must be one of: #{caseflow_benefit_type_mapping.keys.join(', ')}"
           )
@@ -160,7 +157,11 @@ module AppealsApi::V2
       end
 
       def request_headers
-        EXPECTED_HEADERS.index_with { |key| request.headers[key] }.compact
+        self.class::HEADERS.index_with { |key| request.headers[key] }.compact
+      end
+
+      def caseflow_request_headers
+        request_headers.except('X-VA-ICN')
       end
 
       def validate_json_schema
@@ -172,7 +173,7 @@ module AppealsApi::V2
         AppealsApi::FormSchemas.new(
           SCHEMA_ERROR_TYPE,
           schema_version: 'v2'
-        ).validate!('CONTESTABLE_ISSUES_HEADERS', request_headers)
+        ).validate!(self.class::FORM_NUMBER, request_headers)
       end
 
       def caseflow_benefit_type_mapping

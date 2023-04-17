@@ -8,11 +8,11 @@ RSpec.describe Form526Submission do
       user_uuid: user.uuid,
       saved_claim_id: saved_claim.id,
       auth_headers_json: auth_headers.to_json,
-      form_json: form_json
+      form_json:
     )
   end
 
-  let(:user) { create(:disabilities_compensation_user) }
+  let(:user) { create(:user, :loa3, first_name: 'Beyonce', last_name: 'Knowles') }
   let(:auth_headers) do
     EVSS::DisabilityCompensationAuthHeaders.new(user).add_headers(EVSS::AuthHeaders.new(user).to_h)
   end
@@ -226,7 +226,7 @@ RSpec.describe Form526Submission do
         user_uuid: user.uuid,
         saved_claim_id: saved_claim.id,
         auth_headers_json: headers.to_json,
-        form_json: form_json,
+        form_json:,
         birls_ids_tried: birls_ids_tried.to_json
       )
     end
@@ -310,7 +310,7 @@ RSpec.describe Form526Submission do
         user_uuid: user.uuid,
         saved_claim_id: saved_claim.id,
         auth_headers_json: headers.to_json,
-        form_json: form_json,
+        form_json:,
         birls_ids_tried: birls_ids_tried.to_json
       )
     end
@@ -335,7 +335,7 @@ RSpec.describe Form526Submission do
         Form526Submission.new(
           user_uuid: user.uuid,
           saved_claim_id: saved_claim.id,
-          form_json: form_json,
+          form_json:,
           birls_ids_tried: birls_ids_tried.to_json
         )
       end
@@ -362,7 +362,7 @@ RSpec.describe Form526Submission do
         user_uuid: user.uuid,
         saved_claim_id: saved_claim.id,
         auth_headers_json: headers.to_json,
-        form_json: form_json,
+        form_json:,
         birls_ids_tried: birls_ids_tried.to_json
       )
     end
@@ -404,7 +404,7 @@ RSpec.describe Form526Submission do
         user_uuid: user.uuid,
         saved_claim_id: saved_claim.id,
         auth_headers_json: headers.to_json,
-        form_json: form_json,
+        form_json:,
         birls_ids_tried: birls_ids_tried.to_json
       )
     end
@@ -868,71 +868,6 @@ RSpec.describe Form526Submission do
         expect do
           subject.workflow_complete_handler(nil, 'submission_id' => subject.id)
         end.to change(Form526SubmissionFailedEmailJob.jobs, :size).by(1)
-      end
-    end
-  end
-
-  describe '#single_disability_eligible_for_mas?' do
-    subject { form_526_submission.single_disability_eligible_for_mas? }
-
-    context 'when form has a single hypertension issue' do
-      let(:hypertension_form_json) do
-        File.read('spec/support/disability_compensation_form/submissions/only_526_hypertension.json')
-      end
-      let(:form_526_submission) do
-        Form526Submission.create(
-          user_uuid: user.uuid,
-          saved_claim_id: saved_claim.id,
-          auth_headers_json: auth_headers.to_json,
-          form_json: hypertension_form_json
-        )
-      end
-
-      context 'when Flipper flag is enabled' do
-        before { Flipper.enable(:rrd_hypertension_mas_notification) }
-        after { Flipper.disable(:rrd_hypertension_mas_notification) }
-
-        it 'returns true' do
-          expect(subject).to be_truthy
-        end
-      end
-
-      context 'when Flipper flag is disabled' do
-        before { Flipper.disable(:rrd_hypertension_mas_notification) }
-        after { Flipper.enable(:rrd_hypertension_mas_notification) }
-
-        it 'returns false' do
-          expect(subject).to be_falsey
-        end
-      end
-    end
-  end
-
-  describe '#single_issue_hypertension_cfi?' do
-    subject { form_526_submission.single_issue_hypertension_cfi? }
-
-    let(:form_526_submission) do
-      Form526Submission.create(
-        user_uuid: user.uuid,
-        saved_claim_id: saved_claim.id,
-        auth_headers_json: auth_headers.to_json,
-        form_json: File.read("spec/support/disability_compensation_form/submissions/#{form_json_filename}")
-      )
-    end
-
-    context 'when the form contains a single hypertension issue for increase' do
-      let(:form_json_filename) { 'only_526_hypertension.json' }
-
-      it 'returns true' do
-        expect(subject).to be_truthy
-      end
-    end
-
-    context 'when the form does not contain a single hypertension issue for increase' do
-      let(:form_json_filename) { 'only_526_asthma.json' }
-
-      it 'returns false' do
-        expect(subject).to be_falsey
       end
     end
   end

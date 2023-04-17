@@ -65,7 +65,7 @@ class Form1095B < ApplicationRecord
     text_data = {
       birth_date_field: data[:last_4_ssn] ? '' : data[:birth_date],
       state_or_province: data[:state] || data[:province],
-      country_and_zip: country_and_zip,
+      country_and_zip:,
       middle_init: middle_initial,
       corrected: data[:is_corrected] ? 'X' : '--'
     }
@@ -170,6 +170,6 @@ class Form1095B < ApplicationRecord
   def proper_form_data_schema
     JSON::Validator.validate!(form_data_schema, form_data)
   rescue JSON::Schema::ValidationError => e
-    errors.add(:form_data, e)
+    errors.add(:form_data, **e)
   end
 end

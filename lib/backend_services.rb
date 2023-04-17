@@ -16,6 +16,7 @@ class BackendServices
   HCA = 'hca'
   EDUCATION_BENEFITS = 'edu-benefits'
   EVSS_CLAIMS = 'evss-claims'
+  LIGHTHOUSE = 'lighthouse'
   FORM526 = 'form526'
   ADD_PERSON_PROXY = 'add-person'
   APPEALS_STATUS = 'appeals-status'

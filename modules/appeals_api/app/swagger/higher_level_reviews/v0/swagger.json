@@ -26,18 +26,17 @@
         "operationId": "createHlr",
         "security": [
           {
-            "apikey": [
-
-            ]
-          },
-          {
             "productionOauth": [
-              "claim.write"
+              "veteran/HigherLevelReviews.write",
+              "representative/HigherLevelReviews.write",
+              "system/HigherLevelReviews.write"
             ]
           },
           {
             "sandboxOauth": [
-              "claim.write"
+              "veteran/HigherLevelReviews.write",
+              "representative/HigherLevelReviews.write",
+              "system/HigherLevelReviews.write"
             ]
           },
           {
@@ -60,7 +59,7 @@
           {
             "in": "header",
             "name": "X-VA-ICN",
-            "required": false,
+            "required": true,
             "description": "Veteran's ICN",
             "example": "1013062086V794840",
             "schema": {
@@ -719,18 +718,17 @@
         "operationId": "showHlr",
         "security": [
           {
-            "apikey": [
-
-            ]
-          },
-          {
             "productionOauth": [
-              "claim.read"
+              "veteran/HigherLevelReviews.read",
+              "representative/HigherLevelReviews.read",
+              "system/HigherLevelReviews.read"
             ]
           },
           {
             "sandboxOauth": [
-              "claim.read"
+              "veteran/HigherLevelReviews.read",
+              "representative/HigherLevelReviews.read",
+              "system/HigherLevelReviews.read"
             ]
           },
           {
@@ -826,18 +824,17 @@
         "description": "Returns the [JSON Schema](https://json-schema.org) related to the `POST /forms/200996` endpoint",
         "security": [
           {
-            "apikey": [
-
-            ]
-          },
-          {
             "productionOauth": [
-              "claim.read"
+              "veteran/HigherLevelReviews.read",
+              "representative/HigherLevelReviews.read",
+              "system/HigherLevelReviews.read"
             ]
           },
           {
             "sandboxOauth": [
-              "claim.read"
+              "veteran/HigherLevelReviews.read",
+              "representative/HigherLevelReviews.read",
+              "system/HigherLevelReviews.read"
             ]
           },
           {
@@ -2120,18 +2117,17 @@
         "description": "Like the POST /higher_level_reviews, but only does the validations <b>—does not submit anything.</b>",
         "security": [
           {
-            "apikey": [
-
-            ]
-          },
-          {
             "productionOauth": [
-              "claim.write"
+              "veteran/HigherLevelReviews.write",
+              "representative/HigherLevelReviews.write",
+              "system/HigherLevelReviews.write"
             ]
           },
           {
             "sandboxOauth": [
-              "claim.write"
+              "veteran/HigherLevelReviews.write",
+              "representative/HigherLevelReviews.write",
+              "system/HigherLevelReviews.write"
             ]
           },
           {
@@ -2154,7 +2150,7 @@
           {
             "in": "header",
             "name": "X-VA-ICN",
-            "required": false,
+            "required": true,
             "description": "Veteran's ICN",
             "example": "1013062086V794840",
             "schema": {
@@ -2623,11 +2619,6 @@
   },
   "components": {
     "securitySchemes": {
-      "apikey": {
-        "type": "apiKey",
-        "name": "apikey",
-        "in": "header"
-      },
       "bearer_token": {
         "type": "http",
         "scheme": "bearer",
@@ -2641,8 +2632,18 @@
             "authorizationUrl": "https://api.va.gov/oauth2/authorization",
             "tokenUrl": "https://api.va.gov/oauth2/token",
             "scopes": {
-              "claim.read": "Retrieve claim data",
-              "claim.write": "Submit claim data"
+              "veteran/HigherLevelReviews.read": "Allows a veteran to see their own Higher-Level Reviews",
+              "representative/HigherLevelReviews.read": "Allows a veteran representative to see a veteran's Higher-Level Reviews",
+              "system/HigherLevelReviews.read": "Allows a system to see a veteran's Higher-Level Reviews",
+              "veteran/HigherLevelReviews.write": "Allows a veteran to submit Higher-Level Reviews for themselves",
+              "representative/HigherLevelReviews.write": "Allows a veteran representative to submit Higher-Level Reviews for a veteran",
+              "system/HigherLevelReviews.write": "Allows a system to submit Higher-Level Reviews for a veteran",
+              "veteran/appeals.read": "Allows a veteran to see all their own decision review or appeal data",
+              "representative/appeals.read": "Allows a veteran representative to see all decision review or appeal data for a veteran",
+              "system/appeals.read": "Allows a system to see all decision review or appeal data for a veteran",
+              "veteran/appeals.write": "Allows a veteran to submit any type of appeal data for themselves",
+              "representative/appeals.write": "Allows a veteran representative to submit any type of appeal data for a veteran",
+              "system/appeals.write": "Allows a system to submit any type of appeal data for a veteran"
             }
           }
         }
@@ -2655,8 +2656,18 @@
             "authorizationUrl": "https://sandbox-api.va.gov/oauth2/authorization",
             "tokenUrl": "https://sandbox-api.va.gov/oauth2/token",
             "scopes": {
-              "claim.read": "Retrieve claim data",
-              "claim.write": "Submit claim data"
+              "veteran/HigherLevelReviews.read": "Allows a veteran to see their own Higher-Level Reviews",
+              "representative/HigherLevelReviews.read": "Allows a veteran representative to see a veteran's Higher-Level Reviews",
+              "system/HigherLevelReviews.read": "Allows a system to see a veteran's Higher-Level Reviews",
+              "veteran/HigherLevelReviews.write": "Allows a veteran to submit Higher-Level Reviews for themselves",
+              "representative/HigherLevelReviews.write": "Allows a veteran representative to submit Higher-Level Reviews for a veteran",
+              "system/HigherLevelReviews.write": "Allows a system to submit Higher-Level Reviews for a veteran",
+              "veteran/appeals.read": "Allows a veteran to see all their own decision review or appeal data",
+              "representative/appeals.read": "Allows a veteran representative to see all decision review or appeal data for a veteran",
+              "system/appeals.read": "Allows a system to see all decision review or appeal data for a veteran",
+              "veteran/appeals.write": "Allows a veteran to submit any type of appeal data for themselves",
+              "representative/appeals.write": "Allows a veteran representative to submit any type of appeal data for a veteran",
+              "system/appeals.write": "Allows a system to submit any type of appeal data for a veteran"
             }
           }
         }
@@ -3954,8 +3965,11 @@
         ]
       },
       "X-VA-ICN": {
+        "description": "Veteran's Integration Control Number, a unique identifier established via the Master Person Index (MPI)",
         "type": "string",
-        "description": "Veteran's Integration Control Number, a unique identifier established via the Master Person Index (MPI)"
+        "minLength": 17,
+        "maxLength": 17,
+        "pattern": "^[0-9]{10}V[0-9]{6}$"
       },
       "X-VA-Insurance-Policy-Number": {
         "allOf": [

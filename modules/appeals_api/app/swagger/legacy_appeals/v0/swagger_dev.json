@@ -25,18 +25,17 @@
         "operationId": "getLegacyAppeals",
         "security": [
           {
-            "apikey": [
-
-            ]
-          },
-          {
             "productionOauth": [
-              "claim.read"
+              "veteran/LegacyAppeals.read",
+              "representative/LegacyAppeals.read",
+              "system/LegacyAppeals.read"
             ]
           },
           {
             "sandboxOauth": [
-              "claim.read"
+              "veteran/LegacyAppeals.read",
+              "representative/LegacyAppeals.read",
+              "system/LegacyAppeals.read"
             ]
           },
           {
@@ -64,6 +63,16 @@
             "description": "Either X-VA-SSN or X-VA-File-Number is required. Example X-VA-File-Number: 123456789",
             "schema": {
               "$ref": "#/components/schemas/X-VA-File-Number"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-VA-ICN",
+            "required": true,
+            "description": "Veteran's ICN",
+            "example": "1013062086V794840",
+            "schema": {
+              "$ref": "#/components/schemas/X-VA-ICN"
             }
           }
         ],
@@ -124,6 +133,15 @@
                     "value": {
                       "errors": [
                         {
+                          "title": "Validation error",
+                          "detail": "Validation error",
+                          "code": "100",
+                          "source": {
+                            "pointer": "/"
+                          },
+                          "status": "422"
+                        },
+                        {
                           "title": "Invalid length",
                           "detail": "'' did not fit within the defined length limits",
                           "code": "142",
@@ -147,11 +165,67 @@
                           "meta": {
                             "regex": "^[0-9]{9}$"
                           }
+                        },
+                        {
+                          "title": "Invalid pattern",
+                          "detail": "'' did not match the defined pattern",
+                          "code": "143",
+                          "source": {
+                            "pointer": "/X-VA-File-Number"
+                          },
+                          "status": "422",
+                          "meta": {
+                            "regex": "[^ \\f\\n\\r\\t\\v\\u00a0\\u1680\\u2000-\\u200a\\u2028\\u2029\\u202f\\u205f\\u3000\\ufeff]"
+                          }
+                        },
+                        {
+                          "title": "Invalid length",
+                          "detail": "'' did not fit within the defined length limits",
+                          "code": "142",
+                          "source": {
+                            "pointer": "/X-VA-File-Number"
+                          },
+                          "status": "422",
+                          "meta": {
+                            "max_length": 9,
+                            "min_length": 1
+                          }
                         }
                       ]
                     }
                   },
-                  "when ssn formatted incorrectly": {
+                  "when X-VA-ICN is missing": {
+                    "value": {
+                      "errors": [
+                        {
+                          "title": "Invalid length",
+                          "detail": "'' did not fit within the defined length limits",
+                          "code": "142",
+                          "source": {
+                            "pointer": "/X-VA-ICN"
+                          },
+                          "status": "422",
+                          "meta": {
+                            "max_length": 17,
+                            "min_length": 17
+                          }
+                        },
+                        {
+                          "title": "Invalid pattern",
+                          "detail": "'' did not match the defined pattern",
+                          "code": "143",
+                          "source": {
+                            "pointer": "/X-VA-ICN"
+                          },
+                          "status": "422",
+                          "meta": {
+                            "regex": "^[0-9]{10}V[0-9]{6}$"
+                          }
+                        }
+                      ]
+                    }
+                  },
+                  "when SSN formatted incorrectly": {
                     "value": {
                       "errors": [
                         {
@@ -177,6 +251,37 @@
                           "status": "422",
                           "meta": {
                             "regex": "^[0-9]{9}$"
+                          }
+                        }
+                      ]
+                    }
+                  },
+                  "when ICN formatted incorrectly": {
+                    "value": {
+                      "errors": [
+                        {
+                          "title": "Invalid length",
+                          "detail": "'12345' did not fit within the defined length limits",
+                          "code": "142",
+                          "source": {
+                            "pointer": "/X-VA-ICN"
+                          },
+                          "status": "422",
+                          "meta": {
+                            "max_length": 17,
+                            "min_length": 17
+                          }
+                        },
+                        {
+                          "title": "Invalid pattern",
+                          "detail": "'12345' did not match the defined pattern",
+                          "code": "143",
+                          "source": {
+                            "pointer": "/X-VA-ICN"
+                          },
+                          "status": "422",
+                          "meta": {
+                            "regex": "^[0-9]{10}V[0-9]{6}$"
                           }
                         }
                       ]
@@ -250,11 +355,6 @@
   },
   "components": {
     "securitySchemes": {
-      "apikey": {
-        "type": "apiKey",
-        "name": "apikey",
-        "in": "header"
-      },
       "bearer_token": {
         "type": "http",
         "scheme": "bearer",
@@ -268,8 +368,12 @@
             "authorizationUrl": "https://api.va.gov/oauth2/authorization",
             "tokenUrl": "https://api.va.gov/oauth2/token",
             "scopes": {
-              "claim.read": "Retrieve claim data",
-              "claim.write": "Submit claim data"
+              "veteran/LegacyAppeals.read": "Allows a veteran to see their own legacy appeals",
+              "representative/LegacyAppeals.read": "Allows a veteran representative to see a veteran's legacy appeals",
+              "system/LegacyAppeals.read": "Allows a system to see a veteran's legacy appeals",
+              "veteran/appeals.read": "Allows a veteran to see all their own decision review or appeal data",
+              "representative/appeals.read": "Allows a veteran representative to see all decision review or appeal data for a veteran",
+              "system/appeals.read": "Allows a system to see all decision review or appeal data for a veteran"
             }
           }
         }
@@ -282,8 +386,12 @@
             "authorizationUrl": "https://sandbox-api.va.gov/oauth2/authorization",
             "tokenUrl": "https://sandbox-api.va.gov/oauth2/token",
             "scopes": {
-              "claim.read": "Retrieve claim data",
-              "claim.write": "Submit claim data"
+              "veteran/LegacyAppeals.read": "Allows a veteran to see their own legacy appeals",
+              "representative/LegacyAppeals.read": "Allows a veteran representative to see a veteran's legacy appeals",
+              "system/LegacyAppeals.read": "Allows a system to see a veteran's legacy appeals",
+              "veteran/appeals.read": "Allows a veteran to see all their own decision review or appeal data",
+              "representative/appeals.read": "Allows a veteran representative to see all decision review or appeal data for a veteran",
+              "system/appeals.read": "Allows a system to see all decision review or appeal data for a veteran"
             }
           }
         }
@@ -429,6 +537,13 @@
             "$ref": "#/components/schemas/non_blank_string"
           }
         ]
+      },
+      "X-VA-ICN": {
+        "description": "Veteran's Integration Control Number, a unique identifier established via the Master Person Index (MPI)",
+        "type": "string",
+        "minLength": 17,
+        "maxLength": 17,
+        "pattern": "^[0-9]{10}V[0-9]{6}$"
       },
       "X-VA-SSN": {
         "description": "social security number",

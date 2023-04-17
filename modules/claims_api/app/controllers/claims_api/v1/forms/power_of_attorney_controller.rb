@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'bgs/power_of_attorney_verifier'
+require 'bgs_service/local_bgs'
 
 module ClaimsApi
   module V1
@@ -29,23 +30,23 @@ module ClaimsApi
           ClaimsApi::Logger.log('poa', poa_id: poa_code, detail: 'POA code validated')
           validate_poa_code_for_current_user!(poa_code) if header_request? && !token.client_credentials_token?
           ClaimsApi::Logger.log('poa', poa_id: poa_code, detail: 'Is valid POA')
-          ClaimsApi::Logger.log('poa', poa_id: poa_code, detail: 'Starting file number check')
+          ClaimsApi::Logger.log('poa', poa_id: poa_code, detail: 'Starting file_number check')
           check_file_number_exists!
           ClaimsApi::Logger.log('poa', poa_id: poa_code, detail: 'File number check completed.')
 
-          power_of_attorney = ClaimsApi::PowerOfAttorney.find_using_identifier_and_source(header_md5: header_md5,
-                                                                                          source_name: source_name)
+          power_of_attorney = ClaimsApi::PowerOfAttorney.find_using_identifier_and_source(header_md5:,
+                                                                                          source_name:)
           ClaimsApi::Logger.log('poa', poa_id: power_of_attorney&.id, detail: 'Located PoA in vets-api')
           unless power_of_attorney&.status&.in?(%w[submitted pending])
             attributes = {
               status: ClaimsApi::PowerOfAttorney::PENDING,
-              auth_headers: auth_headers,
+              auth_headers:,
               form_data: form_attributes,
               current_poa: current_poa_code,
-              header_md5: header_md5,
+              header_md5:,
               cid: token.payload['cid']
             }
-            attributes.merge!({ source_data: source_data }) unless token.client_credentials_token?
+            attributes.merge!({ source_data: }) unless token.client_credentials_token?
             ClaimsApi::Logger.log('poa', poa_id: power_of_attorney&.id, detail: 'Attributes merged')
 
             power_of_attorney = ClaimsApi::PowerOfAttorney.create(attributes)
@@ -138,7 +139,7 @@ module ClaimsApi
         # @return [JSON] Success if valid, error messages if invalid.
         def validate
           ClaimsApi::Logger.log('poa', detail: '2122/validate - Request Started')
-          add_deprecation_headers_to_response(response: response, link: ClaimsApi::EndpointDeprecation::V1_DEV_DOCS)
+          add_deprecation_headers_to_response(response:, link: ClaimsApi::EndpointDeprecation::V1_DEV_DOCS)
           validate_json_schema
 
           poa_code = form_attributes.dig('serviceOrganization', 'poaCode')
@@ -234,13 +235,27 @@ module ClaimsApi
           end
         end
 
+        def select_service(ssn)
+          # rubocop:disable Rails/DynamicFindBy
+          if Flipper.enabled? :bgs_via_faraday_file_number
+            ClaimsApi::Logger.log('poa', detail: 'local BGS service used to locate file_number')
+            ClaimsApi::LocalBGS.new(
+              external_uid: target_veteran.participant_id,
+              external_key: target_veteran.participant_id
+            ).find_by_ssn(ssn)
+          else
+            ClaimsApi::Logger.log('poa', detail: 'bgs-ext used to locate file_number')
+            bgs_service.people.find_by_ssn(ssn)
+          end
+          # rubocop:enable Rails/DynamicFindBy
+        end
+
         def check_file_number_exists!
           ssn = target_veteran.ssn
 
           begin
-            ClaimsApi::Logger.log('poa', detail: 'Starting bgs-ext service build')
-            response = local_bgs_service.people.find_by_ssn(ssn) # rubocop:disable Rails/DynamicFindBy
-            ClaimsApi::Logger.log('poa', detail: 'bgs-ext ssn located')
+            response = select_service(ssn)
+            ClaimsApi::Logger.log('poa', detail: 'file_number located')
             unless response && response[:file_nbr].present?
               error_message = "Unable to locate Veteran's File Number in Master Person Index (MPI)." \
                               'Please submit an issue at ask.va.gov ' \

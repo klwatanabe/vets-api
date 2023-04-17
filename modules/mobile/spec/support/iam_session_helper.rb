@@ -16,6 +16,12 @@ module IAMSessionHelper
     headers
   end
 
+  def iam_headers_no_camel(additional_headers = nil)
+    headers = { 'Authorization' => "Bearer #{access_token}" }
+    headers.merge!(additional_headers) if additional_headers
+    headers
+  end
+
   def stub_iam_certs
     allow(IAMSSOeOAuth::Configuration.instance).to receive(:ssl_cert)
       .and_return(instance_double('OpenSSL::X509::Certificate'))
@@ -26,7 +32,7 @@ module IAMSessionHelper
   def iam_sign_in(iam_user = FactoryBot.build(:iam_user), access_token = nil)
     token = access_token || DEFAULT_ACCESS_TOKEN
     IAMUser.create(iam_user)
-    IAMSession.create(token: token, uuid: iam_user.identity.uuid)
+    IAMSession.create(token:, uuid: iam_user.identity.uuid)
   end
 end
 

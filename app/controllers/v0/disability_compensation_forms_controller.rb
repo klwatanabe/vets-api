@@ -6,6 +6,7 @@ require 'evss/disability_compensation_form/form4142'
 require 'evss/disability_compensation_form/service'
 require 'evss/reference_data/service'
 require 'evss/reference_data/response_strategy'
+require 'disability_compensation/factories/api_provider_factory'
 
 module V0
   class DisabilityCompensationFormsController < ApplicationController
@@ -13,6 +14,9 @@ module V0
     before_action :validate_name_part, only: [:suggested_conditions]
 
     def rated_disabilities
+      service = ApiProviderFactory.rated_disabilities_service_provider(
+        @current_user
+      )
       response = service.get_rated_disabilities
       render json: response,
              serializer: RatedDisabilitiesSerializer
@@ -97,10 +101,6 @@ module V0
 
     def validate_name_part
       raise Common::Exceptions::ParameterMissing, 'name_part' if params[:name_part].blank?
-    end
-
-    def service
-      EVSS::DisabilityCompensationForm::Service.new(auth_headers)
     end
 
     def auth_headers

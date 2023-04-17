@@ -65,7 +65,7 @@ describe 'form526 rake tasks', type: :request do
       sign_in_as(user)
       put '/v0/in_progress_forms/21-526EZ', params: in_progress_form.to_json, headers: headers_with_camel
       run_rake_task
-      get '/v0/in_progress_forms/21-526EZ', headers: headers
+      get('/v0/in_progress_forms/21-526EZ', headers:)
       response_json = JSON.parse(response.body)
       expect(response_json['formData']).to eq(in_progress_form526_original['formData'])
     end
@@ -120,8 +120,8 @@ describe 'form526 rake tasks', type: :request do
 
   describe 'rake form526:mpi' do
     let(:submission) { create :form526_submission }
-    let(:mvi_profile) { build :mvi_profile }
-    let(:profile_response) { create(:find_profile_response, profile: mvi_profile) }
+    let(:profile) { build :mpi_profile }
+    let(:profile_response) { create(:find_profile_response, profile:) }
     let(:run_rake_task) do
       Rake::Task['form526:mpi'].reenable
       Rake.application.invoke_task "form526:mpi[#{submission.id}]"

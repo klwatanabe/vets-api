@@ -48,7 +48,7 @@ FactoryBot.define do
 
     factory :auto_established_claim_with_supporting_documents do
       after(:create) do |auto_established_claim|
-        create_list(:supporting_document, 1, auto_established_claim: auto_established_claim)
+        create_list(:supporting_document, 1, auto_established_claim:)
       end
     end
   end
@@ -173,9 +173,9 @@ FactoryBot.define do
     claim_complete_dt { Faker::Time.backward(days: 3, period: :morning) }
     claim_status_type { 'Compensation' }
     bnft_claim_lc_status {
-      [(association :bnft_claim_lc_status_one).to_h, (association :bnft_claim_lc_status_two).to_h,
-       (association :bnft_claim_lc_status_three).to_h,
-       (association :bnft_claim_lc_status_four).to_h, (association :bnft_claim_lc_status_five).to_h]
+      [(association :bnft_claim_lc_status_five).to_h, (association :bnft_claim_lc_status_four).to_h,
+       (association :bnft_claim_lc_status_three).to_h, (association :bnft_claim_lc_status_two).to_h,
+       (association :bnft_claim_lc_status_one).to_h]
     }
   end
   factory :bnft_claim_lc_status_one, class: OpenStruct do

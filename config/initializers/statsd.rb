@@ -65,32 +65,6 @@ Rails.application.reloader.to_prepare do
     end
   end
 
-  # Sign in Service
-  StatsD.increment(SignIn::Constants::Statsd::STATSD_SIS_TOKEN_SUCCESS, 0)
-  StatsD.increment(SignIn::Constants::Statsd::STATSD_SIS_TOKEN_FAILURE, 0)
-  StatsD.increment(SignIn::Constants::Statsd::STATSD_SIS_REFRESH_SUCCESS, 0)
-  StatsD.increment(SignIn::Constants::Statsd::STATSD_SIS_REFRESH_FAILURE, 0)
-  StatsD.increment(SignIn::Constants::Statsd::STATSD_SIS_REVOKE_SUCCESS, 0)
-  StatsD.increment(SignIn::Constants::Statsd::STATSD_SIS_REVOKE_FAILURE, 0)
-  StatsD.increment(SignIn::Constants::Statsd::STATSD_SIS_REVOKE_ALL_SESSIONS_SUCCESS, 0)
-  StatsD.increment(SignIn::Constants::Statsd::STATSD_SIS_REVOKE_ALL_SESSIONS_FAILURE, 0)
-  StatsD.increment(SignIn::Constants::Statsd::STATSD_SIS_LOGOUT_FAILURE, 0)
-  StatsD.increment(SignIn::Constants::Statsd::STATSD_SIS_LOGOUT_SUCCESS, 0)
-  StatsD.increment(SignIn::Constants::Statsd::STATSD_SIS_AUTHORIZE_FAILURE, 0)
-  StatsD.increment(SignIn::Constants::Statsd::STATSD_SIS_CALLBACK_FAILURE, 0)
-  SignIn::Constants::Auth::CLIENT_IDS.each do |client_id|
-    SignIn::Constants::Auth::CSP_TYPES.each do |type|
-      SignIn::Constants::Auth::ACR_VALUES.each do |acr|
-        StatsD.increment(SignIn::Constants::Statsd::STATSD_SIS_AUTHORIZE_SUCCESS, 0,
-                         tags: ["type:#{type}", "client_id:#{client_id}", "acr:#{acr}"])
-        [IAL::ONE, IAL::TWO].each do |ial|
-          StatsD.increment(SignIn::Constants::Statsd::STATSD_SIS_CALLBACK_SUCCESS, 0,
-                           tags: ["type:#{type}", "client_id:#{client_id}", "ial:#{ial}", "acr:#{acr}"])
-        end
-      end
-    end
-  end
-
   # init GiBillStatus stats to 0
   StatsD.increment(V0::Post911GIBillStatusesController::STATSD_GI_BILL_TOTAL_KEY, 0)
   StatsD.increment(V0::Post911GIBillStatusesController::STATSD_GI_BILL_FAIL_KEY, 0, tags: ['error:unknown'])
@@ -235,8 +209,8 @@ Rails.application.reloader.to_prepare do
   ActiveSupport::Notifications.subscribe('process_action.action_controller') do |_, _, _, _, payload|
     tags = ["controller:#{payload.dig(:params, :controller)}", "action:#{payload.dig(:params, :action)}",
             "status:#{payload[:status]}"]
-    StatsD.measure('api.request.db_runtime', payload[:db_runtime].to_i, tags: tags)
-    StatsD.measure('api.request.view_runtime', payload[:view_runtime].to_i, tags: tags)
+    StatsD.measure('api.request.db_runtime', payload[:db_runtime].to_i, tags:)
+    StatsD.measure('api.request.view_runtime', payload[:view_runtime].to_i, tags:)
   end
 
   # init gibft
@@ -292,7 +266,7 @@ Rails.application.reloader.to_prepare do
         tags << "facilities.ppms.results:#{count || 0}"
       end
 
-      StatsD.measure(measurement, duration, tags: tags)
+      StatsD.measure(measurement, duration, tags:)
     end
   end
 
@@ -378,4 +352,12 @@ Rails.application.reloader.to_prepare do
 
   StatsD.increment("#{VEText::Service::STATSD_KEY_PREFIX}.app_lookup.success", 0)
   StatsD.increment("#{VEText::Service::STATSD_KEY_PREFIX}.app_lookup.failure", 0)
+
+  # init user_avc_updater_logger
+  Login::UserAcceptableVerifiedCredentialUpdaterLogger::ADDED_TYPES.each do |added_type|
+    Login::UserAcceptableVerifiedCredentialUpdaterLogger::FROM_TYPES.each do |from_type|
+      StatsD.increment("api.user_avc_updater.#{from_type}.#{added_type}.added", 0)
+    end
+    StatsD.increment("api.user_avc_updater.mhv_dslogon.#{added_type}.added", 0)
+  end
 end

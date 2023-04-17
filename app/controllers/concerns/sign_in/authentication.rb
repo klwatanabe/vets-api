@@ -6,7 +6,7 @@ module SignIn
   module Authentication
     extend ActiveSupport::Concern
 
-    BEARER_PATTERN = /^Bearer /.freeze
+    BEARER_PATTERN = /^Bearer /
 
     included do
       before_action :authenticate
@@ -51,7 +51,7 @@ module SignIn
 
     def authenticate_access_token(with_validation: true)
       access_token_jwt = bearer_token || cookie_access_token
-      AccessTokenJwtDecoder.new(access_token_jwt: access_token_jwt).perform(with_validation: with_validation)
+      AccessTokenJwtDecoder.new(access_token_jwt:).perform(with_validation:)
     end
 
     def load_user_object

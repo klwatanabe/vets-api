@@ -23,7 +23,7 @@ RSpec.describe 'Education Benefits Claims Integration', type: %i[request seriali
       end
 
       let(:path) do
-        form_type_v0_education_benefits_claims_path(form_type: form_type)
+        form_type_v0_education_benefits_claims_path(form_type:)
       end
 
       it 'creates a 1995 form' do
@@ -83,9 +83,7 @@ RSpec.describe 'Education Benefits Claims Integration', type: %i[request seriali
         }
       end
 
-      before { Settings.sentry.dsn = 'asdf' }
-
-      after { Settings.sentry.dsn = nil }
+      before { allow(Settings.sentry).to receive(:dsn).and_return('asdf') }
 
       it 'renders json of the errors' do
         subject

@@ -131,7 +131,7 @@ class HealthCareApplication < ApplicationRecord
         :application_date, :enrollment_date,
         :preferred_facility, :effective_date,
         :primary_eligibility
-      ).merge(parsed_status: parsed_status)
+      ).merge(parsed_status:)
     else
       { parsed_status: if ee_data[:enrollment_status].present?
                          HCA::EnrollmentEligibility::Constants::LOGIN_REQUIRED
@@ -207,6 +207,8 @@ class HealthCareApplication < ApplicationRecord
     auth_headers = EVSS::DisabilityCompensationAuthHeaders.new(user).add_headers(EVSS::AuthHeaders.new(user).to_h)
     rating_info_service = EVSS::CommonService.new(auth_headers)
     response = rating_info_service.get_rating_info
+
+    return if response.user_percent_of_disability.nil?
 
     Raven.extra_context(disability_rating: response.user_percent_of_disability)
 

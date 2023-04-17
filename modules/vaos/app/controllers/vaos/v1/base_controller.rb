@@ -12,7 +12,7 @@ module VAOS
     #       class OrganizationsController < BaseController
     #         def index...
     #
-    class BaseController < VAOS::V0::BaseController
+    class BaseController < VAOS::BaseController
       before_action :authorize
 
       private
@@ -28,8 +28,8 @@ module VAOS
         resource_type = controller_name.singularize.capitalize
         id = params[:id]
         operation_outcome = VAOS::V1::OperationOutcome.new(
-          resource_type: resource_type,
-          id: id,
+          resource_type:,
+          id:,
           issue: va_exception
         )
 

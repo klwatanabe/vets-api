@@ -31,24 +31,24 @@ module Mobile
       (@now.beginning_of_year - 1.year).to_datetime
     end
 
-    # when requesting future appointments, the mobile client requests (DateTime.local + 1.year).end_of_day
+    # when requesting future appointments, the mobile client requests (DateTime.local + 390.days).end_of_day
     def earliest_allowable_cache_end_date
-      (@now.end_of_day + 1.year).to_datetime
+      (@now.end_of_day + 390.days).to_datetime
     end
 
     private
 
     def fetch_from_external_service(user, start_date, end_date)
       appointments_proxy(user).get_appointments(
-        start_date: start_date,
-        end_date: end_date,
+        start_date:,
+        end_date:,
         include_pending: true
       )
     end
 
     # must break the cache if user is requesting dates beyond default range to ensure the integrity of the cache.
     # at this time, it's not possible for the user to fetch beyond this range because the interface doesn't allow it,
-    # so the cache will effectively always be from beginning of last year until one year from today
+    # so the cache will effectively always be from beginning of last year until 390 days from today
     def fetch_cache?(start_date, end_date, fetch_cache)
       fetch_cache && dates_within_cache_range?(start_date, end_date)
     end
@@ -61,8 +61,8 @@ module Mobile
         dates = {
           requested_start_date: start_date,
           requested_end_date: end_date,
-          latest_allowable_cache_start_date: latest_allowable_cache_start_date,
-          earliest_allowable_cache_end_date: earliest_allowable_cache_end_date
+          latest_allowable_cache_start_date:,
+          earliest_allowable_cache_end_date:
         }
         Rails.logger.error('Appointments fetch request outside of allowable cache range', dates)
       end

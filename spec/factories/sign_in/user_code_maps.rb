@@ -7,13 +7,13 @@ FactoryBot.define do
     login_code { SecureRandom.uuid }
     type { SignIn::Constants::Auth::CSP_TYPES.first }
     client_state { SecureRandom.hex }
-    client_id { SignIn::Constants::Auth::MOBILE_CLIENT }
+    client_config { create(:client_config) }
 
     initialize_with do
-      new(login_code: login_code,
-          client_state: client_state,
-          client_id: client_id,
-          type: type)
+      new(login_code:,
+          client_state:,
+          client_config:,
+          type:)
     end
   end
 end

@@ -51,8 +51,8 @@ module SignIn
     end
 
     def create_credential_email
-      Login::UserCredentialEmailUpdater.new(credential_email: credential_email,
-                                            user_verification: user_verification).perform
+      Login::UserCredentialEmailUpdater.new(credential_email:,
+                                            user_verification:).perform
     end
 
     def create_user_acceptable_verified_credential
@@ -64,34 +64,34 @@ module SignIn
                         client_id: state_payload.client_id,
                         code_challenge: state_payload.code_challenge,
                         user_verification_id: user_verification.id,
-                        credential_email: credential_email).save!
+                        credential_email:).save!
     end
 
     def user_verifier_object
-      @user_verifier_object ||= OpenStruct.new({ idme_uuid: idme_uuid,
-                                                 logingov_uuid: logingov_uuid,
-                                                 sign_in: sign_in,
-                                                 edipi: edipi,
-                                                 mhv_correlation_id: mhv_correlation_id,
+      @user_verifier_object ||= OpenStruct.new({ idme_uuid:,
+                                                 logingov_uuid:,
+                                                 sign_in:,
+                                                 edipi:,
+                                                 mhv_correlation_id:,
                                                  icn: verified_icn })
     end
 
     def user_identity_for_user_creation
-      @user_identity_for_user_creation ||= UserIdentity.new({ idme_uuid: idme_uuid,
-                                                              logingov_uuid: logingov_uuid,
+      @user_identity_for_user_creation ||= UserIdentity.new({ idme_uuid:,
+                                                              logingov_uuid:,
                                                               icn: verified_icn,
-                                                              loa: loa,
-                                                              sign_in: sign_in,
+                                                              loa:,
+                                                              sign_in:,
                                                               email: credential_email,
-                                                              multifactor: multifactor,
-                                                              authn_context: authn_context })
+                                                              multifactor:,
+                                                              authn_context: })
     end
 
     def user_code_map
-      @user_code_map ||= UserCodeMap.new(login_code: login_code,
+      @user_code_map ||= UserCodeMap.new(login_code:,
                                          type: state_payload.type,
                                          client_state: state_payload.client_state,
-                                         client_id: state_payload.client_id)
+                                         client_config:)
     end
 
     def user_verification
@@ -111,11 +111,15 @@ module SignIn
     end
 
     def ial_to_loa(ial)
-      ial == IAL::TWO ? LOA::THREE : LOA::ONE
+      ial == Constants::Auth::IAL_TWO ? Constants::Auth::LOA_THREE : Constants::Auth::LOA_ONE
     end
 
     def user_uuid
       @user_uuid ||= user_verification.backing_credential_identifier
+    end
+
+    def client_config
+      @client_config ||= SignIn::ClientConfig.find_by!(client_id: state_payload.client_id)
     end
 
     def login_code

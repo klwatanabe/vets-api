@@ -18,7 +18,7 @@ class SimpleCovHelper
       refuse_coverage_drop unless skip_check_coverage
       merge_timeout(3600)
     end
-    new(base_dir: base_dir).merge_results
+    new(base_dir:).merge_results
   end
 
   attr_reader :base_dir
@@ -68,6 +68,7 @@ class SimpleCovHelper
     add_group 'FacilitiesApi', 'modules/facilities_api/'
     add_group 'FormsApi', 'modules/forms_api/'
     add_group 'HealthQuest', 'modules/health_quest'
+    add_group 'IncomeLimits', 'modules/income_limits/'
     add_group 'MebApi', 'modules/meb_api/'
     add_group 'MyHealth', 'modules/my_health/'
     add_group 'OpenidAuth', 'modules/openid_auth/'

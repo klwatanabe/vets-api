@@ -27,51 +27,51 @@ module SignIn
       when Constants::Auth::MHV
         translate_mhv_values
       else
-        raise Errors::InvalidTypeError, message: 'Invalid Type value'
+        raise Errors::InvalidTypeError.new message: 'Invalid Type value'
       end
     end
 
     def translate_idme_values
       case acr
       when 'loa1'
-        LOA::IDME_LOA1_VETS
+        Constants::Auth::IDME_LOA1
       when 'loa3'
-        LOA::IDME_LOA3
+        Constants::Auth::IDME_LOA3
       when 'min'
-        uplevel ? LOA::IDME_LOA3 : LOA::IDME_LOA1_VETS
+        uplevel ? Constants::Auth::IDME_LOA3 : Constants::Auth::IDME_LOA1
       else
-        raise Errors::InvalidAcrError, message: 'Invalid ACR for idme'
+        raise Errors::InvalidAcrError.new message: 'Invalid ACR for idme'
       end
     end
 
     def translate_dslogon_values
       case acr
       when 'loa1', 'loa3', 'min'
-        LOA::IDME_DSLOGON_LOA1
+        Constants::Auth::IDME_DSLOGON_LOA1
       else
-        raise Errors::InvalidAcrError, message: 'Invalid ACR for dslogon'
+        raise Errors::InvalidAcrError.new message: 'Invalid ACR for dslogon'
       end
     end
 
     def translate_mhv_values
       case acr
       when 'loa1', 'loa3', 'min'
-        LOA::IDME_MHV_LOA1
+        Constants::Auth::IDME_MHV_LOA1
       else
-        raise Errors::InvalidAcrError, message: 'Invalid ACR for mhv'
+        raise Errors::InvalidAcrError.new message: 'Invalid ACR for mhv'
       end
     end
 
     def translate_logingov_values
       case acr
       when 'ial1'
-        IAL::LOGIN_GOV_IAL1
+        Constants::Auth::LOGIN_GOV_IAL1
       when 'ial2'
-        IAL::LOGIN_GOV_IAL2
+        Constants::Auth::LOGIN_GOV_IAL2
       when 'min'
-        uplevel ? IAL::LOGIN_GOV_IAL2 : IAL::LOGIN_GOV_IAL1
+        uplevel ? Constants::Auth::LOGIN_GOV_IAL2 : Constants::Auth::LOGIN_GOV_IAL1
       else
-        raise Errors::InvalidAcrError, message: 'Invalid ACR for logingov'
+        raise Errors::InvalidAcrError.new message: 'Invalid ACR for logingov'
       end
     end
   end

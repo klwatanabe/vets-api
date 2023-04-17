@@ -12,6 +12,12 @@ RSpec.describe 'Disability Claims ', type: :request do
       'X-VA-Gender': 'M' }
   end
   let(:scopes) { %w[claim.write] }
+  let(:multi_profile) do
+    MPI::Responses::FindProfileResponse.new(
+      status: 'OK',
+      profile: FactoryBot.build(:mpi_profile, participant_id: nil, participant_ids: %w[123456789 987654321])
+    )
+  end
 
   before do
     stub_poa_verification
@@ -37,6 +43,13 @@ RSpec.describe 'Disability Claims ', type: :request do
     end
     let(:path) { '/services/claims/v1/forms/526' }
     let(:schema) { File.read(Rails.root.join('modules', 'claims_api', 'config', 'schemas', '526.json')) }
+    let(:parsed_codes) do
+      {
+        birls_id: '111985523',
+        participant_id: '32397028'
+      }
+    end
+    let(:add_response) { build(:add_person_response, parsed_codes:) }
 
     describe "'treatments' validations" do
       describe "'treatment.startDate' validations" do
@@ -224,7 +237,7 @@ RSpec.describe 'Disability Claims ', type: :request do
           [
             {
               center: {
-                name: 'Some Treatment Center, with commas and  double spaces',
+                name: 'Some Treatment Center, with: commas and  double spaces',
                 country: 'United States of America'
               },
               treatedDisabilityNames: treated_disability_names,
@@ -233,7 +246,7 @@ RSpec.describe 'Disability Claims ', type: :request do
           ]
         end
 
-        context "when 'treatments[].center.country' is an empty string'" do
+        context "when 'treatments[].center.country' is an empty string" do
           let(:treated_disability_names) { ['PTSD (post traumatic stress disorder)'] }
 
           it 'returns a bad request' do
@@ -296,7 +309,9 @@ RSpec.describe 'Disability Claims ', type: :request do
                   json_data = JSON.parse data
                   params = json_data
                   params['data']['attributes']['treatments'] = treatments
+
                   post path, params: params.to_json, headers: headers.merge(auth_header)
+
                   expect(response.status).to eq(200)
                 end
               end
@@ -1071,11 +1086,16 @@ RSpec.describe 'Disability Claims ', type: :request do
             participant_id: '32397028'
           }
         end
-        let(:mvi_profile) { build(:mvi_profile) }
-        let(:mvi_profile_response) { build(:find_profile_response, profile: mvi_profile) }
-        let(:add_response) { build(:add_person_response, parsed_codes: parsed_codes) }
+        let(:profile_with_edipi) do
+          MPI::Responses::FindProfileResponse.new(
+            status: 'OK',
+            profile: FactoryBot.build(:mpi_profile, edipi: '2536798')
+          )
+        end
+        let(:profile) { build(:mpi_profile) }
+        let(:mpi_profile_response) { build(:find_profile_response, profile:) }
 
-        it 'adds person to MPI' do
+        it 'returns a 422 without an edipi' do
           with_okta_user(scopes) do |auth_header|
             VCR.use_cassette('evss/claims/claims') do
               VCR.use_cassette('evss/reference_data/countries') do
@@ -1084,9 +1104,29 @@ RSpec.describe 'Disability Claims ', type: :request do
                     expect_any_instance_of(MPIData).to receive(:add_person_proxy).once.and_call_original
                     expect_any_instance_of(MPI::Service).to receive(:add_person_proxy).and_return(add_response)
                     allow_any_instance_of(MPI::Service).to receive(:find_profile_by_identifier)
-                      .and_return(mvi_profile_response)
+                      .and_return(mpi_profile_response)
                     allow_any_instance_of(MPI::Service).to receive(:find_profile_by_attributes_with_orch_search)
-                      .and_return(mvi_profile_response)
+                      .and_return(mpi_profile_response)
+
+                    post path, params: data, headers: auth_header
+
+                    expect(response.status).to eq(422)
+                  end
+                end
+              end
+            end
+          end
+        end
+
+        it 'adds person to MPI and checks for edipi' do
+          with_okta_user(scopes) do |auth_header|
+            VCR.use_cassette('evss/claims/claims') do
+              VCR.use_cassette('evss/reference_data/countries') do
+                VCR.use_cassette('mpi/add_person/add_person_success') do
+                  VCR.use_cassette('mpi/find_candidate/orch_search_with_attributes') do
+                    allow_any_instance_of(ClaimsApi::Veteran).to receive(:mpi_record?).and_return(true)
+                    allow_any_instance_of(MPIData).to receive(:mvi_response)
+                      .and_return(profile_with_edipi)
 
                     post path, params: data, headers: auth_header
                     expect(response.status).to eq(200)
@@ -1097,12 +1137,39 @@ RSpec.describe 'Disability Claims ', type: :request do
           end
         end
       end
+
+      context 'when consumer is Veteran, but is missing a participant id' do
+        let(:profile) { build(:mpi_profile) }
+        let(:mpi_profile_response) { build(:find_profile_response, profile:) }
+
+        it 'raises a 422, with message' do
+          with_okta_user(scopes) do |auth_header|
+            VCR.use_cassette('evss/claims/claims') do
+              VCR.use_cassette('evss/reference_data/countries') do
+                mpi_profile_response.profile.participant_ids = []
+                mpi_profile_response.profile.participant_id = ''
+                allow_any_instance_of(MPIData).to receive(:add_person_proxy)
+                  .and_return(mpi_profile_response)
+
+                post path, params: data, headers: auth_header
+
+                json_response = JSON.parse(response.body)
+                expect(response.status).to eq(422)
+                expect(json_response['errors'][0]['detail']).to eq(
+                  'Veteran missing Participant ID. ' \
+                  'Please submit an issue at ask.va.gov or call 1-800-MyVA411 (800-698-2411) for assistance.'
+                )
+              end
+            end
+          end
+        end
+      end
     end
 
     context 'when Veteran has participant_id' do
       context 'when Veteran is missing a birls_id' do
         before do
-          stub_mpi(build(:mvi_profile, birls_id: nil))
+          stub_mpi(build(:mpi_profile, birls_id: nil))
         end
 
         it 'returns an unprocessible entity status' do
@@ -1110,6 +1177,35 @@ RSpec.describe 'Disability Claims ', type: :request do
             VCR.use_cassette('evss/reference_data/countries') do
               post path, params: data, headers: headers.merge(auth_header)
               expect(response.status).to eq(422)
+            end
+          end
+        end
+      end
+    end
+
+    context 'when Veteran has multiple participant_ids' do
+      before do
+        stub_mpi(build(:mpi_profile, birls_id: nil))
+      end
+
+      it 'returns an unprocessible entity status' do
+        with_okta_user(scopes) do |auth_header|
+          VCR.use_cassette('evss/reference_data/countries') do
+            VCR.use_cassette('evss/claims/claims') do
+              allow_any_instance_of(ClaimsApi::Veteran)
+                .to receive(:mpi_record?).and_return(true)
+              allow_any_instance_of(MPIData)
+                .to receive(:mvi_response).and_return(multi_profile)
+              allow_any_instance_of(MPIData)
+                .to receive(:add_person_proxy).and_return(add_response)
+
+              post path, params: data, headers: headers.merge(auth_header)
+              data = JSON.parse(response.body)
+              expect(response.status).to eq(422)
+              expect(data['errors'][0]['detail']).to eq(
+                'Veteran has multiple active Participant IDs in Master Person Index (MPI). ' \
+                'Please submit an issue at ask.va.gov or call 1-800-MyVA411 (800-698-2411) for assistance.'
+              )
             end
           end
         end
