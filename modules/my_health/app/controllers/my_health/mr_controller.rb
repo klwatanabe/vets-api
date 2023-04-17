@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-# require '??/client'
+require 'medical_records/client'
 
 module MyHealth
   class MRController < ApplicationController
