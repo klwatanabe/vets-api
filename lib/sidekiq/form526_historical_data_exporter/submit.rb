@@ -11,3 +11,5 @@ module Sidekiq
         Exporter.new(b_size).print_to_stdout
       end
     end
+  end
+end

@@ -25,3 +25,6 @@ module Sidekiq
       def process!
         # # do useful data stuff here, for now just pass
       end
+    end
+  end
+end
