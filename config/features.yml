@@ -310,9 +310,6 @@ features:
     actor_type: user
     description: enable covid search/display
     enable_in_development: true
-  facility_locator_ppms_forced_unique_id:
-    actor_type: user
-    description: Use an hexdigest for the ID on PPMS Place of Service Calls
   facility_locator_ppms_legacy_urgent_care_to_pos_locator:
     actor_type: user
     description: force the legacy urgent care path to use the new POS locator
@@ -540,6 +537,10 @@ features:
   rrd_asthma_compensation:
     actor_type: user
     description: Fast tracks 526 disability compensation asthma claims by submitting additional health data
+    enable_in_development: true
+  my_va_experimental:
+    actor_type: user
+    description: Use for experimental features for My VA application
     enable_in_development: true
   my_va_redirect:
     actor_type: user
@@ -786,10 +787,10 @@ features:
     description: Enables payment and debt section
   show_dashboard_notifications:
     actor_type: user
-    description: Enables on-site notifications
+    description: Enables on-site notifications 
   show_myva_dashboard_2_0:
     actor_type: user
-    description: Enables myva 2.0
+    description: Enables My VA 2.0
   check_va_inbox_enabled:
     actor_type: user
     description: Enables check inbox link
@@ -850,3 +851,6 @@ features:
   btsss_login_widget:
     actor_type: user
     description: If enabled shows the BTSSS login widget on the /get-reimbursed-for-travel-pay/ page
+  disability_compensation_lighthouse_intent_to_file_provider:
+    actor_type: user
+    description: If enabled uses the lighthouse intent to file endpoint
