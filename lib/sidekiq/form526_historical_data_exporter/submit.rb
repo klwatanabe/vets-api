@@ -8,7 +8,7 @@ module Sidekiq
       include Sidekiq::Worker
 
       def perform(b_size)
-        Exporter.new(b_size).print_to_stdout
+        Exporter.new(b_size).print_to_stdout!
       end
     end
   end
