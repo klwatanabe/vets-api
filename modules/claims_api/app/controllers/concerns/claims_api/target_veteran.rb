@@ -53,9 +53,11 @@ module ClaimsApi
       def user_is_representative?
         return if @is_valid_ccg_flow
 
+        first_name = @current_user.first_name
+        last_name =  @current_user.last_name
         ::Veteran::Service::Representative.find_by(
-          first_name: @current_user.first_name,
-          last_name: @current_user.last_name
+          first_name: first_name,
+          last_name: last_name
         ).present?
       end
     end
