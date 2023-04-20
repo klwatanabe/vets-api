@@ -266,69 +266,6 @@ RSpec.describe 'FacilitiesApi::V1::Va', type: :request, team: :facilities, vcr: 
                         false
       end
     end
-
-    context 'params[:type] = health' do
-      context 'params[:services] = [\'Covid19Vaccine\']', vcr: vcr_options.merge(
-        cassette_name: 'facilities/mobile/covid'
-      ) do
-        let(:params) do
-          {
-            lat: 42.060906,
-            long: -71.051868,
-            type: 'health',
-            services: ['Covid19Vaccine']
-          }
-        end
-
-        before do
-          Flipper.enable('facilities_locator_mobile_covid_online_scheduling', flipper)
-          get '/facilities_api/v1/va', params:
-        end
-
-        context 'facilities_locator_mobile_covid_online_scheduling enabled' do
-          let(:flipper) { true }
-
-          it { expect(response).to be_successful }
-
-          it 'is expected not to populate tmpCovidOnlineScheduling' do
-            parsed_body['data']
-
-            expect(parsed_body['data'][0]['attributes']['tmpCovidOnlineScheduling']).to be_truthy
-
-            attributes_covid = parsed_body['data'].collect { |x| x['attributes']['tmpCovidOnlineScheduling'] }
-
-            expect(attributes_covid).to eql([
-                                              true,
-                                              false,
-                                              true,
-                                              false,
-                                              false,
-                                              false,
-                                              false,
-                                              true,
-                                              false,
-                                              false
-                                            ])
-          end
-        end
-
-        context 'facilities_locator_mobile_covid_online_scheduling disabled' do
-          let(:flipper) { false }
-
-          it { expect(response).to be_successful }
-
-          it 'is expected not to populate tmpCovidOnlineScheduling' do
-            parsed_body['data']
-
-            expect(parsed_body['data']).to all(
-              a_hash_including(
-                attributes: a_hash_including(tmpCovidOnlineScheduling: nil)
-              )
-            )
-          end
-        end
-      end
-    end
   end
 
   describe 'GET #show' do
