@@ -56,9 +56,8 @@ sign_in:
   cookies_secure: false
   info_cookie_domain: localhost
   auto_uplevel: true
-  mock_auth_url: http://localhost:3000/mock_auth_frontend
+  mock_auth_url: http://localhost:3000/mocked_authentication/profiles
   mock_redirect_uri: http://localhost:3000/v0/sign_in/callback
-  mock_credential_dir: '../vets-api-mockdata'
   mockdata_sync_api_key: ~
 
 lockbox:
@@ -176,6 +175,10 @@ edu:
       - david.rowley@accenturefederal.com
       - nick.barthelemy@accenturefederal.com
     staging_emails:
+  staging_spool_contents:
+    emails:
+      - noah.stern@va.gov
+      - gregg.puhala@dbitpro.com
 dependents:
   prefill: true
 
@@ -599,7 +602,6 @@ vba_documents:
     in_flight_notification_hung_time_in_days: 14
     renotification_in_minutes: 240
     update_stalled_notification_in_minutes: 180
-    daily_notification_hour: 7
   webhooks:
     registration_next_run_in_minutes: 15
     registration_max_retries: 3
@@ -816,6 +818,7 @@ maintenance:
     evss: PZKWB6Y
     global: PLPSIB0
     idme: PVWB4R8
+    logingov: P2SHMM9
     mvi: PCIPVGJ
     mhv: PP2ZZ2V
     search: PRG8HJI
@@ -835,6 +838,7 @@ maintenance:
 betamocks:
   enabled: true
   recording: false
+  cache_dir: ~
   services_config: config/betamocks/services_config.yml
 
 # Settings for search
@@ -1161,11 +1165,14 @@ lighthouse:
     api_key: fake_key
   veteran_verification:
     host: https://staging-api.va.gov
-    access_token:
-      aud_claim_url: https://deptva-eval.okta.com/oauth2/ausi3u00gw66b9Ojk2p7/v1/token
-      client_id: ~
-      rsa_key: ~
+    aud_claim_url: https://deptva-eval.okta.com/oauth2/ausi3u00gw66b9Ojk2p7/v1/token
     use_mocks: false
+    form526:
+      host: https://staging-api.va.gov
+      access_token:
+        client_id: ~
+        rsa_key: ~
+      use_mocks: false
 
 mail_automation:
   url: https://viccs-api-test.ibm-intelligent-automation.com
@@ -1262,6 +1269,7 @@ vanotify:
         vha_fsr_confirmation_email: fake_template_id
     check_in:
       api_key: fake_secret
+      sms_sender_id: fake_secret
       template_id:
         claim_submission_success_text: fake_template_id
         claim_submission_duplicate_text: fake_template_id

@@ -29,10 +29,6 @@ features:
   caregiver_use_facilities_API:
     actor_type: user
     description: Allow list of caregiver facilites to be fetched by way of the Facilities API.
-  hca_american_indian_enabled:
-    actor_type: user
-    description: Enables American Indian SIGI question page.
-    enable_in_development: true
   hca_browser_monitoring_enabled:
     actor_type: user
     description: Enables browser monitoring for the health care application.
@@ -424,6 +420,10 @@ features:
     actor_type: user
     description: This will use new API key name when available
     enable_in_development: true
+  medical_copay_notifications:
+    actor_type: user
+    description: Enables notifications to be sent for new copay statements
+    enable_in_development: true
   mhv_landing_page_enabled:
     actor_type: user
     description: Enables the new MHV landing page on VA.gov
@@ -455,6 +455,10 @@ features:
     actor_type: user
     description: enables us to easily turn off pre-caching appointments if our requests are overwhelming the upstream service
     enable_in_development: true
+  mobile_filter_doc_27_decision_letters_out:
+    actor_type: user
+    description: filters out doc type 27 decision letters out of list of decision letters for mobile
+    enable_in_development: false
   multiple_address_10_10ez:
     actor_type: cookie_id
     description: >
@@ -848,9 +852,6 @@ features:
   disability_compensation_lighthouse_rated_disabilities_provider:
     actor_type: user
     description: If enabled uses the lighthouse rated disabilities endpoint
-  btsss_login_widget:
-    actor_type: user
-    description: If enabled shows the BTSSS login widget on the /get-reimbursed-for-travel-pay/ page
   disability_compensation_lighthouse_intent_to_file_provider:
     actor_type: user
     description: If enabled uses the lighthouse intent to file endpoint

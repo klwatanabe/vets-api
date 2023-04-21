@@ -227,6 +227,10 @@ paths:
                 VA Appointment Request:
                   value:
                     $ref: ./examples/appointments/va_appointment_request.yml
+                Partial Appointments:
+                  description: For cases when 1 or more errors are returned from upstream, an error message with source `VA Service` is added within the meta
+                  value:
+                    $ref: ./examples/appointments/partial_appointments.yml
               schema:
                 $ref: ./schemas/Appointments.yml
           description: OK
@@ -1956,6 +1960,12 @@ paths:
               schema:
                 $ref: ./schemas/Errors.yml
           description: The response from this API timed out.
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: ./schemas/Errors.yml
+          description: Record is locked by upstream server.
         '422':
           content:
             application/json:
@@ -2013,6 +2023,18 @@ paths:
               schema:
                 $ref: ./schemas/Errors.yml
           description: Not Found
+        '408':
+          content:
+            application/json:
+              schema:
+                $ref: ./schemas/Errors.yml
+          description: The response from this API timed out.
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: ./schemas/Errors.yml
+          description: Record is locked by upstream server.
       security:
         - Bearer: [ ]
       summary: /v0/health/rx/prescriptions/refill
@@ -2047,6 +2069,12 @@ paths:
               schema:
                 $ref: ./schemas/Errors.yml
           description: The response from this API timed out.
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: ./schemas/Errors.yml
+          description: Record is locked by upstream server.
         '500':
           content:
             application/json:

@@ -669,11 +669,11 @@ RSpec.describe 'the API documentation', type: %i[apivore request], order: :defin
         end
       end
 
-      context 'medical copays send_new_statements_notifications' do
+      context 'medical copays send_statement_notifications' do
         it 'validates the route' do
           expect(subject).to validate(
             :post,
-            '/v0/medical_copays/send_new_statements_notifications',
+            '/v0/medical_copays/send_statement_notifications',
             200,
             headers
           )
@@ -754,6 +754,21 @@ RSpec.describe 'the API documentation', type: %i[apivore request], order: :defin
         json = JSON.parse(json_string)
         json.delete('email')
         json.to_json
+      end
+      let(:user) { build(:ch33_dd_user) }
+      let(:headers) do
+        { '_headers' => { 'Cookie' => sign_in(user, nil, true) } }
+      end
+
+      it 'supports getting the disability rating' do
+        VCR.use_cassette('bgs/service/find_rating_data', VCR::MATCH_EVERYTHING) do
+          expect(subject).to validate(
+            :get,
+            '/v0/health_care_applications/rating_info',
+            200,
+            headers
+          )
+        end
       end
 
       it 'supports getting the hca enrollment status' do
@@ -2719,9 +2734,18 @@ RSpec.describe 'the API documentation', type: %i[apivore request], order: :defin
       end
 
       context 'ch33 bank accounts methods' do
-        let(:mhv_user) { FactoryBot.build(:ch33_dd_user) }
+        let(:mhv_user) { FactoryBot.build(:user, :loa3, icn:, ssn:, first_name:, middle_name:, last_name:, suffix:) }
+        let(:first_name) { 'abraham.lincoln@vets.gov' }
+        let(:icn) { '82836359962678900' }
+        let(:ssn) { '796104437' }
+        let(:middle_name) { nil }
+        let(:last_name) { nil }
+        let(:suffix) { nil }
 
-        before { allow_any_instance_of(User).to receive(:common_name).and_return('abraham.lincoln@vets.gov') }
+        before do
+          allow(BGS.configuration).to receive(:env).and_return('prepbepbenefits')
+          allow(BGS.configuration).to receive(:client_ip).and_return('10.247.35.119')
+        end
 
         it 'supports the update ch33 bank account api 400 response' do
           res = {
@@ -2736,9 +2760,10 @@ RSpec.describe 'the API documentation', type: %i[apivore request], order: :defin
           }
 
           expect_any_instance_of(BGS::Service).to receive(:update_ch33_dd_eft).with(
-            '122239982',
-            '444',
-            true
+            routing_number: '122239982',
+            account_number: '444',
+            checking_account: true,
+            ssn: mhv_user.ssn
           ).and_return(
             OpenStruct.new(
               body: res
