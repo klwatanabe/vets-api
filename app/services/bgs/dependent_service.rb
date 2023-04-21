@@ -33,17 +33,14 @@ module BGS
     end
 
     def submit_686c_form(claim)
-      bgs_person = service.people.find_person_by_ptcpnt_id(participant_id)
+      bgs_person = service.people.find_person_by_ptcpnt_id(participant_id) ||
+                   service.people.find_by_ssn(ssn) # rubocop:disable Rails/DynamicFindBy
 
-      bgs_person = service.people.find_by_ssn(ssn) if bgs_person.nil? # rubocop:disable Rails/DynamicFindBy
-
-      form_hash_686c = get_form_hash_686c(file_number: bgs_person[:file_nbr].to_s)
-
-      BGS::SubmitForm686cJob.perform_async(uuid, claim.id, form_hash_686c) if claim.submittable_686?
+      BGS::SubmitForm686cJob.perform_async(uuid, claim.id, bgs_person[:file_nbr].to_s) if claim.submittable_686?
 
       VBMS::SubmitDependentsPdfJob.perform_async(
         claim.id,
-        form_hash_686c,
+        get_form_hash_686c(file_number: bgs_person[:file_nbr].to_s),
         claim.submittable_686?,
         claim.submittable_674?
       )

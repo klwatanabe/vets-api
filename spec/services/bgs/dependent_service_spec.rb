@@ -18,6 +18,7 @@ RSpec.describe BGS::DependentService do
       }
     }
   end
+  let(:file_number) { '796043735' }
 
   before { allow(claim).to receive(:id).and_return('1234') }
 
@@ -40,7 +41,7 @@ RSpec.describe BGS::DependentService do
       it 'fires jobs correctly' do
         VCR.use_cassette('bgs/dependent_service/submit_686c_form') do
           service = BGS::DependentService.new(user)
-          expect(BGS::SubmitForm686cJob).to receive(:perform_async).with(user.uuid, claim.id, vet_info)
+          expect(BGS::SubmitForm686cJob).to receive(:perform_async).with(user.uuid, claim.id, file_number)
           expect(VBMS::SubmitDependentsPdfJob).to receive(:perform_async).with(claim.id, vet_info, true, true)
           service.submit_686c_form(claim)
         end
