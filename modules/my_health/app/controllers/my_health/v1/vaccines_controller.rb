@@ -4,8 +4,19 @@ module MyHealth
   module V1
     class VaccinesController < MRController
       def index
-        resource = client.get_vaccine(17)
-        # raise Common::Exceptions::InternalServerError if resource.blank?
+        p "In VaccinesController index!"
+      end
+
+      def show
+        vaccine_id = params[:id].try(:to_i)
+        client = FHIR::Client.new("http://hapi.fhir.org/baseR4/").tap do |client|
+          client.use_r4
+          client.default_json
+          client.set_no_auth
+          client.use_minimal_preference
+        end
+        resource = client.read(FHIR::Immunization, vaccine_id).resource
+        raise Common::Exceptions::InternalServerError if resource.blank?
         render json: resource.to_json
       end
 

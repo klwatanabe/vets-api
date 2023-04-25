@@ -1,26 +1,26 @@
 # frozen_string_literal: true
 
-require 'medical_records/client'
+# require 'medical_records/client'
 
 module MyHealth
   class MRController < ApplicationController
-    include ActionController::Serialization
+    # include ActionController::Serialization
     # include MyHealth::MHVControllerConcerns
 
     skip_before_action :authenticate
 
-    protected
+    # protected
 
-    def client
-      @client ||= MedicalRecords::Client.new()
-    end
+    # def client
+    #   # @client ||= SM::Client.new(session: { user_id: 1 })
+    # end
 
     # def authorize
-    #   raise_access_denied unless current_user.authorize(:mhv_messaging, :access?)
+    #   # raise_access_denied unless current_user.authorize(:mhv_messaging, :access?)
     # end
 
     # def raise_access_denied
-    #   raise Common::Exceptions::Forbidden, detail: 'You do not have access to messaging'
+    #   # raise Common::Exceptions::Forbidden, detail: 'You do not have access to messaging'
     # end
 
     # def use_cache?
