@@ -2,7 +2,7 @@
 
 module MyHealth
   module V1
-    class VaccinesController < MRController
+    class VaccinesController < MrController
       def index
         p "In VaccinesController index!"
       end

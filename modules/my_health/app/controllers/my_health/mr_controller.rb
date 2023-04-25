@@ -3,7 +3,7 @@
 # require 'medical_records/client'
 
 module MyHealth
-  class MRController < ApplicationController
+  class MrController < ApplicationController
     # include ActionController::Serialization
     # include MyHealth::MHVControllerConcerns
 
