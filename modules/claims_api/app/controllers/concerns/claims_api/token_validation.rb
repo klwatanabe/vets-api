@@ -21,7 +21,7 @@ module ClaimsApi
       def verify_access_token!
         @validated_token = validate_token!['data']
         attributes = @validated_token['attributes']
-        @is_valid_ccg_flow ||= attributes['type'] == 'system'
+        @is_valid_ccg_flow ||= attributes['cid'] == attributes['sub']
         return if @is_valid_ccg_flow
 
         @current_user = user_from_validated_token(@validated_token)
