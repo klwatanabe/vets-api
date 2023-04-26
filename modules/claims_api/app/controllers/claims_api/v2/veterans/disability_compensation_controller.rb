@@ -13,7 +13,7 @@ module ClaimsApi
         FORM_NUMBER = '526'
 
         def submit
-          render json: { status: 200}
+          render json: { status: 200 }
         end
 
         def validate; end
