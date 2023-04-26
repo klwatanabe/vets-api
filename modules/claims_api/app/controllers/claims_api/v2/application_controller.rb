@@ -17,6 +17,10 @@ module ClaimsApi
       before_action :verify_access!
       skip_before_action :authenticate
 
+      def schema
+        render json: { data: [ClaimsApi::FormSchemas.new(schema_version: 'v2').schemas[self.class::FORM_NUMBER]] }
+      end
+
       protected
 
       def auth_headers
