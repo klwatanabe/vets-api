@@ -8,7 +8,9 @@ module ClaimsApi
   module V2
     module Veterans
       class Base < ClaimsApi::V2::ApplicationController
-        FORM_NUMBER = '526'
+        include ClaimsApi::JsonFormatValidation
+
+        before_action :validate_json_format, if: -> { request.post? }
 
         private
 
