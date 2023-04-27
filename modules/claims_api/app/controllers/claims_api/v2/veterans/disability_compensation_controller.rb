@@ -8,7 +8,7 @@ module ClaimsApi
   module V2
     module Veterans
       class DisabilityCompensationController < ClaimsApi::V2::Veterans::Base
-        include ClaimsApi::V2::Concerns::DisabilityCompensation::Validation
+        include ClaimsApi::V2::DisabilityCompensation::Validation
 
         FORM_NUMBER = '526'
 
