@@ -11,7 +11,7 @@ module ClaimsApi
         include ClaimsApi::V2::Concerns::DisabilityCompensation::Validation
 
         FORM_NUMBER = '526'
-        
+
         def submit
           validate_json_schema
 
