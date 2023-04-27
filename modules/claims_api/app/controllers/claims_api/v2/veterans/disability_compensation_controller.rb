@@ -7,13 +7,22 @@ require 'claims_api/v2/concerns/disabilitity_compensation/validation'
 module ClaimsApi
   module V2
     module Veterans
-      class DisabilityCompensationController < ClaimsApi::V2::ApplicationController
+      class DisabilityCompensationController < ClaimsApi::V2::Veterans::Base
         include ClaimsApi::V2::Concerns::DisabilityCompensation::Validation
 
         FORM_NUMBER = '526'
-
+        
         def submit
-          render json: { status: 200 }
+          validate_json_schema
+
+          auto_claim = ClaimsApi::AutoEstablishedClaim.create(
+            status: ClaimsApi::AutoEstablishedClaim::PENDING,
+            auth_headers:,
+            form_data: form_attributes,
+            cid: token.payload['cid'],
+            veteran_icn: target_veteran.mpi.icn
+          )
+          render json: auto_claim
         end
 
         def validate; end

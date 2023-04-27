@@ -13,8 +13,10 @@ module ClaimsApi
     class ApplicationController < ::OpenidApplicationController
       include ClaimsApi::Error::ErrorHandler
       include ClaimsApi::CcgTokenValidation
+      include ClaimsApi::JsonFormatValidation
 
       skip_before_action :authenticate, only: %i[schema]
+      before_action :validate_json_format, if: -> { request.post? }
 
       # fetch_audience: defines the audience used for oauth
       # Overrides the default value defined in OpenidApplicationController
