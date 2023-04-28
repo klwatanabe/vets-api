@@ -82,14 +82,14 @@ RSpec.describe Rack::Attack do
           allow_any_instance_of(V2::Chip::Service).to receive(:create_check_in).and_return(data)
 
           10.times do
-            post '/check_in/v2/patient_check_ins', post_params, headers
+            post '/check_in/v2/patient_check_ins', params: post_params, session: headers
 
             expect(last_response.status).to eq(200)
           end
         end
 
         it 'throttles with status 429' do
-          post '/check_in/v2/patient_check_ins', post_params, headers
+          post '/check_in/v2/patient_check_ins', params: post_params, session: headers
 
           expect(last_response.status).to eq(429)
         end
@@ -126,11 +126,11 @@ RSpec.describe Rack::Attack do
 
     before do
       limit.times do
-        get endpoint, nil, headers
+        get endpoint, params: nil, session: headers
         expect(last_response.status).not_to eq(429)
       end
 
-      get endpoint, nil, other_headers
+      get endpoint, params: nil, session: other_headers
     end
 
     context 'response status for repeated requests from the same IP' do
