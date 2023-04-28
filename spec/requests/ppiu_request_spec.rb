@@ -16,7 +16,7 @@ RSpec.describe 'PPIU' do
 
       it 'returns 403' do
         public_send(verb, '/v0/ppiu/payment_information')
-        expect(response.code).to eq('403')
+        expect(response).to have_http_status(:forbidden)
       end
     end
   end
