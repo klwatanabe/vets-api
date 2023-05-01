@@ -2,7 +2,7 @@
 
 require 'common/exceptions'
 require 'jsonapi/parser'
-require 'claims_api/v2/concerns/disabilitity_compensation/validation'
+require 'claims_api/v2/concerns/disability_compensation/validation'
 
 module ClaimsApi
   module V2
