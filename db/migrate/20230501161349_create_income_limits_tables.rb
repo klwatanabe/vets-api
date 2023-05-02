@@ -84,4 +84,5 @@ class CreateIncomeLimitsTables < ActiveRecord::Migration[6.1]
     t.datetime :updated
     t.string :createdby
     t.string :updatedby
+  end
 end
