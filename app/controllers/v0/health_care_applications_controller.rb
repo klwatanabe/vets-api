@@ -14,7 +14,7 @@ module V0
 
     def rating_info
       service = BGS::Service.new(icn: current_user.icn, common_name: current_user.common_name)
-      disability_rating = service.find_rating_data(ssn: current_user.ssn)[:disability_rating_record][:service_connected_combined_degree]
+      disability_rating = service.find_rating_data(ssn: current_user.ssn)[:disability_rating_record][:service_connected_combined_degree] # rubocop:disable Layout/LineLength
 
       render(
         json: {
