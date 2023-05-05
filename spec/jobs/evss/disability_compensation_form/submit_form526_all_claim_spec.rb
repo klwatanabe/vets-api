@@ -55,7 +55,9 @@ RSpec.describe EVSS::DisabilityCompensationForm::SubmitForm526AllClaim, type: :j
       end
 
       it 'submits successfully' do
-        subject.perform_async(submission.id)
+        VCR.use_cassette('mail_automation/mas_initiate_apcas_request_fake') do
+          subject.perform_async(submission.id)
+        end
         expect { described_class.drain }.not_to change(Sidekiq::Form526BackupSubmissionProcess::Submit.jobs, :size)
         expect(Form526JobStatus.last.status).to eq 'success'
       end

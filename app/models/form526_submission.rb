@@ -50,6 +50,7 @@ class Form526Submission < ApplicationRecord
   SUBMIT_FORM_526_JOB_CLASSES = %w[SubmitForm526AllClaim SubmitForm526].freeze
 
   def start
+    puts "here here here here start app model here here here"
     rrd_sidekiq_job = rrd_job_selector.sidekiq_job
     if rrd_sidekiq_job
       start_rrd_job(rrd_sidekiq_job, use_backup_job: true)

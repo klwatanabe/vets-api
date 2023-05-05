@@ -8,6 +8,7 @@ module Form526RapidReadyForDecisionConcern
   extend ActiveSupport::Concern
 
   STATSD_KEY_PREFIX = 'worker.rapid_ready_for_decision'
+  CC_ENDPOINT = 'http://localhost:18000/classifier'
 
   def send_rrd_alert_email(subject, message, error = nil, to = Settings.rrd.alerts.recipients)
     RrdAlertMailer.build(self, subject, message, error, to).deliver_now
@@ -80,9 +81,16 @@ module Form526RapidReadyForDecisionConcern
   end
 
   def prepare_for_evss!
+    foo
     return if pending_eps? || disabilities_not_service_connected?
 
     save_metadata(forward_to_mas_all_claims: true)
+  end
+
+  def foo
+    puts "foo foo foo foo foo!!!"
+    response = Faraday.post(CC_ENDPOINT)
+    puts response
   end
 
   def send_post_evss_notifications!
