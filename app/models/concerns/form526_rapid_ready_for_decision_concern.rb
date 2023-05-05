@@ -8,7 +8,8 @@ module Form526RapidReadyForDecisionConcern
   extend ActiveSupport::Concern
 
   STATSD_KEY_PREFIX = 'worker.rapid_ready_for_decision'
-  CC_ENDPOINT = 'http://localhost:18000/classifier'
+  CLASSIFICATION_ENDPOINT = 'http://localhost:18000/classifier'
+  CLASSIFICATION_ENDPOINT_TIMEOUT_SECONDS = 10
 
   def send_rrd_alert_email(subject, message, error = nil, to = Settings.rrd.alerts.recipients)
     RrdAlertMailer.build(self, subject, message, error, to).deliver_now
@@ -81,16 +82,27 @@ module Form526RapidReadyForDecisionConcern
   end
 
   def prepare_for_evss!
-    foo
+    # if there_is_a_diagnostic_code do
+    #   classify_by_diagnostic_code
+    # end
+    classify_by_diagnostic_code
+
     return if pending_eps? || disabilities_not_service_connected?
 
     save_metadata(forward_to_mas_all_claims: true)
   end
 
-  def foo
-    puts "foo foo foo foo foo!!!"
-    response = Faraday.post(CC_ENDPOINT)
+  def classify_by_diagnostic_code
+    conn = Faraday.new(
+      url: CLASSIFICATION_ENDPOINT,
+      headers: {'Content-Type' => 'application/json'},
+      request: { timeout: CLASSIFICATION_ENDPOINT_TIMEOUT_SECONDS }
+    )
+    puts "submitting request to VRO contention classification"
+    conn.post(CLASSIFICATION_ENDPOINT, '{"diagnostic_code": 99, "claim_id": 101}')
+    puts "response received"
     puts response
+    response
   end
 
   def send_post_evss_notifications!
