@@ -62,6 +62,16 @@ RSpec.describe EVSS::DisabilityCompensationForm::SubmitForm526AllClaim, type: :j
         expect(Form526JobStatus.last.status).to eq 'success'
       end
 
+      it 'submits successfully ' do
+        subject.perform_async(submission.id)
+        expect do
+          VCR.use_cassette('contention_classification/classifier_api_request2') do
+            described_class.drain
+          end
+        end.not_to change(Sidekiq::Form526BackupSubmissionProcess::Submit.jobs, :size)
+        expect(Form526JobStatus.last.status).to eq 'success'
+      end
+
       context 'with an MAS-related diagnostic code' do
         let(:submission) do
           create(:form526_submission,

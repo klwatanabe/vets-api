@@ -99,9 +99,9 @@ module Form526RapidReadyForDecisionConcern
       request: { timeout: CLASSIFICATION_ENDPOINT_TIMEOUT_SECONDS }
     )
     puts "submitting request to VRO contention classification"
-    conn.post(CLASSIFICATION_ENDPOINT, '{"diagnostic_code": 99, "claim_id": 101}')
+    response = conn.post(CLASSIFICATION_ENDPOINT, '{"form526_submission_id": 909, "diagnostic_code": 99, "claim_id": 101}')
     puts "response received"
-    puts response
+    puts response.body
     response
   end
 
