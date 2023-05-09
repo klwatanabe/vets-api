@@ -1039,7 +1039,8 @@ flipper:
     - florence.mccafferty@agile6.com # Florence McCafferty - Agile 6 - Authenticated Experience
     - berni.xiong@agile6.com # Berni Xiong - Agile 6 - Authenticated Experience
     - liz.lantz@adhocteam.us # Liz Lantz - Ad Hoc - Authenticated Experience
-
+    - john.woolschlager@va.gov # John Woolschlager - CivicActions - Check In Experience
+    
 bgs:
   application: ~
   client_station_id: ~
@@ -1253,6 +1254,7 @@ vanotify:
         form686c_reminder_email: fake_template_id
         form1010ez_reminder_email: fake_template_id
         in_progress_reminder_email_generic: fake_template_id
+        in_progress_1880_reminder_email: in_progress_1880_reminder_email_template_id
         covid_vaccine_registration: fake_template_id
         covid_vaccine_expanded_registration: fake_template_id
         direct_deposit_edu: edu_template_id
