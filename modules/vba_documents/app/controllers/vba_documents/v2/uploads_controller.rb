@@ -1,12 +1,6 @@
 # frozen_string_literal: true
 
 require 'zip'
-
-require_dependency 'vba_documents/application_controller'
-require_dependency 'vba_documents/upload_error'
-require_dependency 'vba_documents/payload_manager'
-require_dependency 'vba_documents/upload_validator'
-require_dependency 'vba_documents/multipart_parser'
 require 'common/exceptions'
 require './lib/webhooks/utilities'
 

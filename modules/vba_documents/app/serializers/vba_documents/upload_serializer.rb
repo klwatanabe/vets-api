@@ -1,8 +1,5 @@
 # frozen_string_literal: true
 
-require_dependency 'common/exceptions'
-require_dependency 'vba_documents/pdf_inspector'
-
 module VBADocuments
   class UploadSerializer < ActiveModel::Serializer
     MAX_DETAIL_DISPLAY_LENGTH = 200
