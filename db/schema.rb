@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2023_04_12_000222) do
+ActiveRecord::Schema.define(version: 2023_05_01_161349) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "btree_gin"
@@ -620,6 +620,28 @@ ActiveRecord::Schema.define(version: 2023_04_12_000222) do
     t.index ["edipi"], name: "index_gibs_not_found_users_on_edipi"
   end
 
+  create_table "gmt_thresholds", force: :cascade do |t|
+    t.integer "effectiveyear", null: false
+    t.string "statename", null: false
+    t.string "countyname", null: false
+    t.integer "fips", null: false
+    t.integer "trhd1", null: false
+    t.integer "trhd2", null: false
+    t.integer "trhd3", null: false
+    t.integer "trhd4", null: false
+    t.integer "trhd5", null: false
+    t.integer "trhd6", null: false
+    t.integer "trhd7", null: false
+    t.integer "trhd8", null: false
+    t.integer "msa", null: false
+    t.string "msaname"
+    t.integer "version", null: false
+    t.datetime "created", null: false
+    t.datetime "updated"
+    t.string "createdby"
+    t.string "updatedby"
+  end
+
   create_table "health_care_applications", id: :serial, force: :cascade do |t|
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
@@ -691,6 +713,20 @@ ActiveRecord::Schema.define(version: 2023_04_12_000222) do
     t.index ["end_time"], name: "index_maintenance_windows_on_end_time"
     t.index ["pagerduty_id"], name: "index_maintenance_windows_on_pagerduty_id"
     t.index ["start_time"], name: "index_maintenance_windows_on_start_time"
+  end
+
+  create_table "mhv_accounts", id: :serial, force: :cascade do |t|
+    t.string "user_uuid", null: false
+    t.string "account_state", null: false
+    t.datetime "registered_at"
+    t.datetime "upgraded_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.string "mhv_correlation_id"
+    t.uuid "user_account_id"
+    t.index ["mhv_correlation_id"], name: "index_mhv_accounts_on_mhv_correlation_id"
+    t.index ["user_account_id"], name: "index_mhv_accounts_on_user_account_id"
+    t.index ["user_uuid", "mhv_correlation_id"], name: "index_mhv_accounts_on_user_uuid_and_mhv_correlation_id", unique: true
   end
 
   create_table "mhv_opt_in_flags", force: :cascade do |t|
@@ -816,6 +852,75 @@ ActiveRecord::Schema.define(version: 2023_04_12_000222) do
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
     t.index ["rpo", "filename"], name: "index_spool_file_events_uniqueness", unique: true
+  end
+
+  create_table "std_counties", force: :cascade do |t|
+    t.string "name", null: false
+    t.integer "countynumber", null: false
+    t.string "description", null: false
+    t.integer "state_id", null: false
+    t.integer "version", null: false
+    t.datetime "created", null: false
+    t.datetime "updated"
+    t.string "createdby"
+    t.string "updatedby"
+  end
+
+  create_table "std_incomethresholds", force: :cascade do |t|
+    t.integer "income_threshold_year", null: false
+    t.integer "exempt_amount", null: false
+    t.integer "medical_expense_deductible", null: false
+    t.integer "child_income_exclusion", null: false
+    t.integer "dependent", null: false
+    t.integer "add_dependent_threshold", null: false
+    t.integer "property_threshold", null: false
+    t.integer "pension_threshold"
+    t.integer "pension_1_dependent"
+    t.integer "add_dependent_pension"
+    t.integer "ninety_day_hospital_copay"
+    t.integer "add_90_day_hospital_copay"
+    t.integer "outpatient_basic_care_copay"
+    t.integer "outpatient_specialty_copay"
+    t.datetime "threshold_effective_date"
+    t.integer "aid_and_attendance_threshold"
+    t.integer "outpatient_preventive_copay"
+    t.integer "medication_copay"
+    t.integer "medication_copay_annual_cap"
+    t.integer "ltc_inpatient_copay"
+    t.integer "ltc_outpatient_copay"
+    t.integer "ltc_domiciliary_copay"
+    t.integer "inpatient_per_diem"
+    t.string "description"
+    t.integer "version", null: false
+    t.datetime "created", null: false
+    t.datetime "updated"
+    t.string "createdby"
+    t.string "updatedby"
+  end
+
+  create_table "std_states", force: :cascade do |t|
+    t.string "name", null: false
+    t.string "postalname", null: false
+    t.integer "fipscode", null: false
+    t.integer "country_id", null: false
+    t.integer "version", null: false
+    t.datetime "created", null: false
+    t.datetime "updated"
+    t.string "createdby"
+    t.string "updatedby"
+  end
+
+  create_table "std_zipcodes", force: :cascade do |t|
+    t.integer "zipcode", null: false
+    t.integer "zipclassification_id"
+    t.integer "preferredzipplace_id"
+    t.integer "state_id", null: false
+    t.integer "countynumber", null: false
+    t.integer "version", null: false
+    t.datetime "created", null: false
+    t.datetime "updated"
+    t.string "createdby"
+    t.string "updatedby"
   end
 
   create_table "terms_and_conditions", id: :serial, force: :cascade do |t|
@@ -1046,6 +1151,19 @@ ActiveRecord::Schema.define(version: 2023_04_12_000222) do
     t.uuid "guid", null: false
     t.json "response"
     t.index ["guid"], name: "index_vic_submissions_on_guid", unique: true
+  end
+
+  create_table "virtual_agent_user_access_records", force: :cascade do |t|
+    t.string "action_type", null: false
+    t.string "first_name"
+    t.string "last_name"
+    t.string "ssn", null: false
+    t.string "icn", null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["action_type"], name: "index_virtual_agent_user_access_records_on_action_type"
+    t.index ["icn"], name: "index_virtual_agent_user_access_records_on_icn"
+    t.index ["ssn"], name: "index_virtual_agent_user_access_records_on_ssn"
   end
 
   create_table "webhooks_notification_attempt_assocs", id: false, force: :cascade do |t|
