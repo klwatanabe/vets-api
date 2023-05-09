@@ -621,9 +621,9 @@ ActiveRecord::Schema.define(version: 2023_05_01_161349) do
   end
 
   create_table "gmt_thresholds", force: :cascade do |t|
-    t.integer "effectiveyear", null: false
-    t.string "statename", null: false
-    t.string "countyname", null: false
+    t.integer "effective_year", null: false
+    t.string "state_name", null: false
+    t.string "county_name", null: false
     t.integer "fips", null: false
     t.integer "trhd1", null: false
     t.integer "trhd2", null: false
@@ -634,12 +634,12 @@ ActiveRecord::Schema.define(version: 2023_05_01_161349) do
     t.integer "trhd7", null: false
     t.integer "trhd8", null: false
     t.integer "msa", null: false
-    t.string "msaname"
+    t.string "msa_name"
     t.integer "version", null: false
     t.datetime "created", null: false
     t.datetime "updated"
-    t.string "createdby"
-    t.string "updatedby"
+    t.string "created_by"
+    t.string "updated_by"
   end
 
   create_table "health_care_applications", id: :serial, force: :cascade do |t|
@@ -856,14 +856,14 @@ ActiveRecord::Schema.define(version: 2023_05_01_161349) do
 
   create_table "std_counties", force: :cascade do |t|
     t.string "name", null: false
-    t.integer "countynumber", null: false
+    t.integer "county_number", null: false
     t.string "description", null: false
     t.integer "state_id", null: false
     t.integer "version", null: false
     t.datetime "created", null: false
     t.datetime "updated"
-    t.string "createdby"
-    t.string "updatedby"
+    t.string "created_by"
+    t.string "updated_by"
   end
 
   create_table "std_incomethresholds", force: :cascade do |t|
@@ -878,7 +878,7 @@ ActiveRecord::Schema.define(version: 2023_05_01_161349) do
     t.integer "pension_1_dependent"
     t.integer "add_dependent_pension"
     t.integer "ninety_day_hospital_copay"
-    t.integer "add_90_day_hospital_copay"
+    t.integer "add_ninety_day_hospital_copay"
     t.integer "outpatient_basic_care_copay"
     t.integer "outpatient_specialty_copay"
     t.datetime "threshold_effective_date"
@@ -894,33 +894,33 @@ ActiveRecord::Schema.define(version: 2023_05_01_161349) do
     t.integer "version", null: false
     t.datetime "created", null: false
     t.datetime "updated"
-    t.string "createdby"
-    t.string "updatedby"
+    t.string "created_by"
+    t.string "updated_by"
   end
 
   create_table "std_states", force: :cascade do |t|
     t.string "name", null: false
-    t.string "postalname", null: false
-    t.integer "fipscode", null: false
+    t.string "postal_name", null: false
+    t.integer "fips_code", null: false
     t.integer "country_id", null: false
     t.integer "version", null: false
     t.datetime "created", null: false
     t.datetime "updated"
-    t.string "createdby"
-    t.string "updatedby"
+    t.string "created_by"
+    t.string "updated_by"
   end
 
   create_table "std_zipcodes", force: :cascade do |t|
-    t.integer "zipcode", null: false
-    t.integer "zipclassification_id"
-    t.integer "preferredzipplace_id"
+    t.integer "zip_code", null: false
+    t.integer "zip_classification_id"
+    t.integer "preferred_zip_place_id"
     t.integer "state_id", null: false
-    t.integer "countynumber", null: false
+    t.integer "county_number", null: false
     t.integer "version", null: false
     t.datetime "created", null: false
     t.datetime "updated"
-    t.string "createdby"
-    t.string "updatedby"
+    t.string "created_by"
+    t.string "updated_by"
   end
 
   create_table "terms_and_conditions", id: :serial, force: :cascade do |t|
