@@ -17,7 +17,7 @@ Rails.application.reloader.to_prepare do
       cache = Rails.cache
 
       # Flipper settings will be stored in postgres and cached in memory for 1 minute in production/staging
-      cached_adapter = Flipper::Adapters::ActiveSupportCacheStore.new(activerecord_adapter, cache, expires_in: 1.minute)
+      cached_adapter = Flipper::Adapters::ActiveSupportCacheStore.new(activerecord_adapter, cache, expires_in: 2.minutes)
       instrumented = Flipper::Adapters::Instrumented.new(cached_adapter, instrumenter: ActiveSupport::Notifications)
 
       Flipper.new(instrumented, instrumenter: ActiveSupport::Notifications)
