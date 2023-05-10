@@ -4,10 +4,19 @@ require 'aws-sdk-s3'
 require 'csv'
 class GmtThresholdCsvImporter
   include Sidekiq::Worker
+  
+  S3_INCOME_LIMITS_OPTIONS = {
+    access_key_id: Settings.income_limits.s3.aws_access_key_id,
+    secret_access_key: Settings.income_limits.s3.aws_secret_access_key,
+    region: Settings.income_limits.s3.region
+  }.freeze
+
+
   def perform(bucket, key)
-    s3 = Aws::S3::Resource.new(region: 'us-gov-west-1')
-    obj = s3.bucket(bucket).object(key)
+    s3 = Aws::S3::Resource.new(S3_INCOME_LIMITS_OPTIONS)
+    obj = s3.bucket(Settings.income_limits.s3.bucket)
     data = obj.get.body.read
+    
     CSV.parse(data, headers: true) do |row|
       GmtThreshold.create!(
         id: row['ID'].to_i,
@@ -24,33 +33,13 @@ class GmtThresholdCsvImporter
         trhd7: row['TRHD7'].to_i,
         trhd8: row['TRHD8'].to_i,
         msa: row['MSA'].to_i,
-        msaname: row['MSANAME'],
+        msa_name: row['MSANAME'],
         version: row['VERSION'].to_i,
         created: row['CREATED'],
         updated: row['UPDATED'],
-        createdby: row['CREATEDBY'],
-        updatedby: row['UPDATEDBY']
+        created_by: row['CREATEDBY'],
+        updated_by: row['UPDATEDBY']
       )
     end
   end
 end
-
-
-
-
-
-
-
-
-
-
-
-Jot something down
-
-
-
-
-
-
-
-
