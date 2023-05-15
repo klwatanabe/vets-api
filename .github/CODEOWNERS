@@ -132,3 +132,5 @@ modules/appeals_api @department-of-veterans-affairs/backend-review-group @depart
 
 # Disability Benefits Experience support
 lib/disability_compensation @department-of-veterans-affairs/backend-review-group @department-of-veterans-affairs/bdex
+
+modules/claims_api @department-of-veterans-affairs/backend-review-group @department-of-veterans-affairs/lighthouse-dash
