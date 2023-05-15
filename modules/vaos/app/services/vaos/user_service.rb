@@ -50,6 +50,7 @@ module VAOS
     end
 
     def lock_session_creation(account_uuid)
+      Rails.logger.info("lock_session_creation #{account_uuid}")
       redis_session_lock.set(account_uuid, 1)
       redis_session_lock.expire(account_uuid, REDIS_CONFIG[:va_mobile_session_refresh_lock][:each_ttl])
     end
