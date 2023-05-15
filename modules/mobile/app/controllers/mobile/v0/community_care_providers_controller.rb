@@ -18,6 +18,7 @@ module Mobile
       }.with_indifferent_access.freeze
 
       def index
+        # doesn't seem useful
         Rails.logger.info('CC providers call start', user_uuid: @current_user.uuid)
         community_care_providers = ppms_api.facility_service_locator(locator_params)
         page_records, page_meta_data = paginate(community_care_providers)
@@ -53,6 +54,9 @@ module Mobile
       end
 
       def facility_coordinates
+        # doesn't appear to be happening. perhaps this is no longer relevant
+        # looks like the front end doesn't send the facility id.
+        # if that's hard-coded on the FE then maybe we don't need this code
         Rails.logger.info('CC providers call get facilities', facility_id: params[:facilityId])
         facility = Mobile::FacilitiesHelper.get_facilities(Array(params[:facilityId])).first
         raise Common::Exceptions::RecordNotFound, params[:facilityId] unless facility

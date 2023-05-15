@@ -6,6 +6,7 @@ module Mobile
       SORT_METHODS = %w[home current alphabetical appointments].freeze
 
       def index
+        # i don't think this is currently in use
         Rails.logger.info('Facilities info call start', { sort_method: params[:sort], user_uuid: @current_user.uuid })
 
         raise_invalid_sort_method_error unless SORT_METHODS.include?(params[:sort])
@@ -58,6 +59,7 @@ module Mobile
       end
 
       def log_nil_cache
+        # doesn't appear to be in use, but this is a useless 
         Rails.logger.info('mobile facilities info appointments cache nil', user_uuid: @current_user.uuid)
       end
 

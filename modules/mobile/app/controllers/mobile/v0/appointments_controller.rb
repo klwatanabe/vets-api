@@ -26,6 +26,7 @@ module Mobile
       end
 
       def create
+        # not seeing this. probably because this endpoint isn't in use
         Rails.logger.info('mobile appointments create', user_uuid: @current_user.uuid,
                                                         params: params.except(:description,
                                                                               :comment,
@@ -89,6 +90,10 @@ module Mobile
       # If we ever want to distinguish be VA and CC errors, it will require coordination with the front-end team
       def partial_errors(failures)
         if failures.present?
+          # this could be valuable if we ever want to further refine this process to distinguish
+          # between the various types of upstream errors. but that isn't valuable right now.
+          # in the meantime, it might be valuable to have a separate DD widget to track multi_status responses
+          # for this and claims_and_appeals
           Rails.logger.info('Appointments has partial errors: ', failures)
 
           {
