@@ -125,7 +125,8 @@ describe VAOS::V2::AppointmentsService do
   describe '#get_appointments' do
     context 'when requesting a list of appointments given a date range' do
       it 'returns a 200 status with list of appointments' do
-        VCR.use_cassette('vaos/v2/appointments/get_appointments_200_with_facilities_200', match_requests_on: %i[method path query], allow_playback_repeats: true, tag: :force_utf8) do
+        VCR.use_cassette('vaos/v2/appointments/get_appointments_200_with_facilities_200',
+                         match_requests_on: %i[method path query], allow_playback_repeats: true, tag: :force_utf8) do
           response = subject.get_appointments(start_date2, end_date2)
           expect(response[:data].size).to eq(16)
         end
@@ -133,7 +134,7 @@ describe VAOS::V2::AppointmentsService do
 
       it 'logs the service categories of the returned appointments' do
         VCR.use_cassette('vaos/v2/appointments/get_appointments_200_with_facilities_200_and_log_data',
-        allow_playback_repeats: true, match_requests_on: %i[method path query], tag: :force_utf8) do
+                         allow_playback_repeats: true, match_requests_on: %i[method path query], tag: :force_utf8) do
           allow(Rails.logger).to receive(:info).at_least(:once)
 
           telehealth_log_body = '{"VAOSServiceTypesAndCategory":{"vaos_appointment_kind":"telehealth",' \
@@ -159,7 +160,7 @@ describe VAOS::V2::AppointmentsService do
     context 'when requesting a list of appointments given a date range and single status' do
       it 'returns a 200 status with list of appointments' do
         VCR.use_cassette('vaos/v2/appointments/get_appointments_single_status_200',
-        allow_playback_repeats: true, match_requests_on: %i[method path query], tag: :force_utf8) do
+                         allow_playback_repeats: true, match_requests_on: %i[method path query], tag: :force_utf8) do
           response = subject.get_appointments(start_date2, end_date2, 'proposed')
           expect(response[:data].size).to eq(4)
           expect(response[:data][0][:status]).to eq('proposed')
@@ -170,7 +171,7 @@ describe VAOS::V2::AppointmentsService do
     context 'when requesting a list of appointments given a date range and multiple statuses' do
       it 'returns a 200 status with list of appointments' do
         VCR.use_cassette('vaos/v2/appointments/get_appointments_multi_status_200',
-        allow_playback_repeats: true, match_requests_on: %i[method path query], tag: :force_utf8) do
+                         allow_playback_repeats: true, match_requests_on: %i[method path query], tag: :force_utf8) do
           response = subject.get_appointments(start_date2, end_date2, 'proposed,booked')
           expect(response[:data].size).to eq(2)
           expect(response[:data][0][:status]).to eq('proposed')
