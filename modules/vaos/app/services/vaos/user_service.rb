@@ -19,10 +19,10 @@ module VAOS
     end
 
     def update_session_token(account_uuid)
-      Rails.logger.info('VAOS update_session_token request', account_uuid:)
+      Rails.logger.info("VAOS update_session_token #{account_uuid}")
       cached = cached_by_account_uuid(account_uuid)
       if cached
-        Rails.logger.info('VAOS update_session_token cached', account_uuid:)
+        Rails.logger.infor"VAOS update_session_token cached #{account_uuid}")
         url = '/users/v2/session/jwts'
         response = perform(:get, url, nil, refresh_headers(account_uuid))
         new_token = response.body[:jws]
@@ -52,6 +52,7 @@ module VAOS
     end
 
     def lock_session_creation(account_uuid)
+      Rails.logger.info("lock_session_creation #{account_uuid}")
       redis_session_lock.set(account_uuid, 1)
       redis_session_lock.expire(account_uuid, REDIS_CONFIG[:va_mobile_session_refresh_lock][:each_ttl])
     end

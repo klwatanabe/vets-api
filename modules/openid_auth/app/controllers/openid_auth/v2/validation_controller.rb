@@ -98,6 +98,7 @@ module OpenidAuth
       end
 
       def setup_structure
+        Rails.logger.info("ValidationController setup_structure #{token}")
         payload_object = OpenStruct.new(token.payload.merge(act: {}, launch: {}))
         payload_object.act[:icn] = nil
         payload_object.act[:npi] = nil
