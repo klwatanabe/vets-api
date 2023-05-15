@@ -19,8 +19,10 @@ module VAOS
     end
 
     def update_session_token(account_uuid)
+      Rails.logger.info('VAOS update_session_token request', account_uuid:)
       cached = cached_by_account_uuid(account_uuid)
       if cached
+        Rails.logger.info('VAOS update_session_token cached', account_uuid:)
         url = '/users/v2/session/jwts'
         response = perform(:get, url, nil, refresh_headers(account_uuid))
         new_token = response.body[:jws]
