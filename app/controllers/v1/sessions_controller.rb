@@ -244,9 +244,6 @@ module V1
                        tags: ["type:#{tracker&.payload_attr(:type)}",
                               "context:#{tracker&.payload_attr(:authn_context)}",
                               VERSION_TAG])
-
-
-  SSOe: SAML Request => {"id"=>"_dc3eee22-5f8e-4773-be5a-246aa55f123d", "authn"=>["http://idmanagement.gov/ns/assurance/ial/2", "http://idmanagement.gov/ns/assurance/aal/2", "https://eauth.va.gov/csp/LOGINGOV"], "type"=>"logingov_signup_verified", "transaction_id"=>"46f4d979-3069-4810-8d73-de9fbb3cbe2d"}
     end
 
     def saml_response_stats(saml_response)
