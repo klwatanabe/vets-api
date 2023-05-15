@@ -16,14 +16,15 @@ module VAOS
         appointments
 
         appointments[:data].each do |appt|
+          # binding.pry
           find_and_merge_provider_name(appt) if appt[:kind] == 'cc' && appt[:status] == 'proposed'
-          if !appt[:start].nil?
-            appt[:start] = convert_utc_to_local_time(appt[:start], get_facility_timezone(appt[:location_id]))
-          elsif !appt.dig(:requested_periods, 0, :start).nil?
-            appt[:requested_periods].each do |period|
-              period[:start] = convert_utc_to_local_time(period[:start], get_facility_timezone(appt[:location_id]))
-            end
-          end
+          # if !appt[:start].nil?
+          #   appt[:start] = convert_utc_to_local_time(appt[:start], get_facility_timezone(appt[:location_id]))
+          # elsif !appt.dig(:requested_periods, 0, :start).nil?
+          #   appt[:requested_periods].each do |period|
+          #     period[:start] = convert_utc_to_local_time(period[:start], get_facility_timezone(appt[:location_id]))
+          #   end
+          # end
         end
 
         # clear provider cache after processing appointments
@@ -47,14 +48,15 @@ module VAOS
       def show
         appointment
 
-        appointment[:start] = if appointment[:status] == 'proposed'
-                                convert_utc_to_local_time(appointment.dig(:requested_periods, 0, :start),
-                                                          get_facility_timezone(appointment[:location_id]))
-                              else
-                                # rubocop:disable Layout/LineLength
-                                convert_utc_to_local_time(appointment[:start], get_facility_timezone(appointment[:location_id]))
-                                # rubocop:enable Layout/LineLength
-                              end
+        # appointment[:start] = if appointment[:status] == 'proposed'
+        #                         convert_utc_to_local_time(appointment.dig(:requested_periods, 0, :start),
+        #                                                   get_facility_timezone(appointment[:location_id]))
+        #                       else
+        #
+        # rubocop:disable Layout/LineLength
+        #                         convert_utc_to_local_time(appointment[:start], get_facility_timezone(appointment[:location_id]))
+        # rubocop:enable Layout/LineLength
+        #                                 #                       end
 
         find_and_merge_provider_name(appointment) if appointment[:kind] == 'cc' && appointment[:status] == 'proposed'
         clear_provider_cache
@@ -293,11 +295,11 @@ module VAOS
       # @param [String] tz - the timezone id, won't convert if nil
       # @return [DateTime] date in local time, will return in UTC if tz is nil
       #
-      def convert_utc_to_local_time(date, tz)
-        raise Common::Exceptions::ParameterMissing, 'date' if date.nil?
+      # def convert_utc_to_local_time(date, tz)
+      #   raise Common::Exceptions::ParameterMissing, 'date' if date.nil?
 
-        date.to_time.utc.in_time_zone(tz).to_datetime
-      end
+      #   date.to_time.utc.in_time_zone(tz).to_datetime
+      # end
 
       FACILITY_ERROR_MSG = 'Error fetching facility details'
 

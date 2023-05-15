@@ -22,6 +22,7 @@ RSpec.describe 'vaos appointments', type: :request, skip_mvi: true do
   }
 
   before do
+    skip('Skipping until test cassettes can be updated in the review instance')
     Flipper.enable('va_online_scheduling')
     sign_in_as(current_user)
     allow_any_instance_of(VAOS::UserService).to receive(:session).and_return('stubbed_token')

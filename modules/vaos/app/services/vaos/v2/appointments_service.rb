@@ -11,6 +11,7 @@ module VAOS
       VAOS_SERVICE_DATA_KEY = 'VAOSServiceTypesAndCategory'
       VAOS_TELEHEALTH_DATA_KEY = 'VAOSTelehealthData'
 
+      # rubocop:disable Metrics/MethodLength
       def get_appointments(start_date, end_date, statuses = nil, pagination_params = {})
         params = date_params(start_date, end_date)
                  .merge(page_params(pagination_params))
@@ -18,10 +19,18 @@ module VAOS
                  .compact
 
         with_monitoring do
+          # binding.pry
           response = perform(:get, appointments_base_url, params, headers)
           response.body[:data].each do |appt|
             find_service_type_and_category(appt)
             log_telehealth_data(appt[:telehealth]&.[](:atlas)) unless appt[:telehealth]&.[](:atlas).nil?
+            if !appt[:start].nil?
+              appt[:start] = convert_utc_to_local_time(appt[:start], get_facility_timezone(appt[:location_id]))
+            elsif !appt.dig(:requested_periods, 0, :start).nil?
+              appt[:requested_periods].each do |period|
+                period[:start] = convert_utc_to_local_time(period[:start], get_facility_timezone(appt[:location_id]))
+              end
+            end
           end
           {
             data: deserialized_appointments(response.body[:data]),
@@ -29,11 +38,20 @@ module VAOS
           }
         end
       end
+      # rubocop:enable Metrics/MethodLength
 
       def get_appointment(appointment_id)
         params = {}
         with_monitoring do
           response = perform(:get, get_appointment_base_url(appointment_id), params, headers)
+          response[:start] = if response[:status] == 'proposed'
+                               convert_utc_to_local_time(response.dig(:requested_periods, 0, :start),
+                                                         get_facility_timezone(response[:location_id]))
+                             else
+                               # rubocop:disable Layout/LineLength
+                               convert_utc_to_local_time(response[:start], get_facility_timezone(response[:location_id]))
+                               # rubocop:enable Layout/LineLength
+                             end
           OpenStruct.new(response.body[:data])
         end
       end
@@ -62,6 +80,47 @@ module VAOS
       end
 
       private
+
+      def mobile_facility_service
+        @mobile_facility_service ||=
+          VAOS::V2::MobileFacilityService.new(user)
+      end
+
+      # Returns a local [DateTime] object converted from UTC using the facility's timezone offset.
+      # We'd like to perform this change only on the appointment responses to offer a consistently
+      # formatted local time to our consumers while not changing how we pass DateTimes to upstream services.
+      #
+      # @param [DateTime] date - the date to be modified, required
+      # @param [String] tz - the timezone id, won't convert if nil
+      # @return [DateTime] date in local time, will return in UTC if tz is nil
+      #
+      def convert_utc_to_local_time(date, tz)
+        raise Common::Exceptions::ParameterMissing, 'date' if date.nil?
+
+        date.to_time.utc.in_time_zone(tz).to_datetime
+      end
+
+      FACILITY_ERROR_MSG = 'Error fetching facility details'
+
+      # Returns the facility timezone id (eg. 'America/New_York') associated with facility id (location_id)
+      def get_facility_timezone(facility_location_id)
+        facility_info = get_facility(facility_location_id)
+        if facility_info == FACILITY_ERROR_MSG
+          nil # returns nil if unable to fetch facility info, which will be handled by the timezone conversion
+        else
+          facility_info[:timezone]&.[](:time_zone_id)
+        end
+      end
+
+      def get_facility(location_id)
+        mobile_facility_service.get_facility_with_cache(location_id)
+      rescue Common::Exceptions::BackendServiceException
+        Rails.logger.error(
+          "Error fetching facility details for location_id #{location_id}",
+          location_id:
+        )
+        FACILITY_ERROR_MSG
+      end
 
       def log_direct_schedule_submission_errors(e)
         error_entry = { DIRECT_SCHEDULE_ERROR_KEY => ds_error_details(e) }
