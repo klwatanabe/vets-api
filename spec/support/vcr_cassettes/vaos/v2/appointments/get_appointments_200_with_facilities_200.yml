@@ -135,6 +135,10 @@ http_interactions:
           "type" : "va_facilities",
           "name" : "Cheyenne VA Medical Center",
           "classification" : "VA Medical Center (VAMC)",
+          "timezone": {
+              "zoneId": "America/New_York",
+              "abbreviation": "EDT"
+          },
           "lat" : 39.744507,
           "long" : -104.830956,
           "website" : "https://www.denver.va.gov/locations/directions.asp",
@@ -223,6 +227,10 @@ http_interactions:
             "type" : "va_health_facility",
             "name" : "Dayton VA Medical Center",
             "classification" : "VA Medical Center (VAMC)",
+            "timezone": {
+              "zoneId": "America/New_York",
+              "abbreviation": "EDT"
+            },
             "website" : "https://www.dayton.va.gov/locations/directions.asp",
             "phone" : {
               "main" : "937-268-6511"

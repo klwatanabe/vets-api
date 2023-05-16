@@ -11,20 +11,11 @@ module VAOS
       # in order to prevent duplicate service call lookups during index/show/create
       @@provider_cache = {} # rubocop:disable Style/ClassVars
 
-      # rubocop:disable Metrics/MethodLength
       def index
         appointments
 
         appointments[:data].each do |appt|
-          # binding.pry
           find_and_merge_provider_name(appt) if appt[:kind] == 'cc' && appt[:status] == 'proposed'
-          # if !appt[:start].nil?
-          #   appt[:start] = convert_utc_to_local_time(appt[:start], get_facility_timezone(appt[:location_id]))
-          # elsif !appt.dig(:requested_periods, 0, :start).nil?
-          #   appt[:requested_periods].each do |period|
-          #     period[:start] = convert_utc_to_local_time(period[:start], get_facility_timezone(appt[:location_id]))
-          #   end
-          # end
         end
 
         # clear provider cache after processing appointments
@@ -48,16 +39,6 @@ module VAOS
       def show
         appointment
 
-        # appointment[:start] = if appointment[:status] == 'proposed'
-        #                         convert_utc_to_local_time(appointment.dig(:requested_periods, 0, :start),
-        #                                                   get_facility_timezone(appointment[:location_id]))
-        #                       else
-        #
-        # rubocop:disable Layout/LineLength
-        #                         convert_utc_to_local_time(appointment[:start], get_facility_timezone(appointment[:location_id]))
-        # rubocop:enable Layout/LineLength
-        #                                 #                       end
-
         find_and_merge_provider_name(appointment) if appointment[:kind] == 'cc' && appointment[:status] == 'proposed'
         clear_provider_cache
 
@@ -68,11 +49,7 @@ module VAOS
           appointment[:friendly_name] = clinic&.[](:friendly_name) if clinic&.[](:friendly_name)
         end
 
-        # rubocop:disable Style/IfUnlessModifier
-        unless appointment[:location_id].nil?
-          appointment[:location] = get_facility(appointment[:location_id])
-        end
-        # rubocop:enable Style/IfUnlessModifier
+        appointment[:location] = get_facility(appointment[:location_id]) unless appointment[:location_id].nil?
 
         serializer = VAOS::V2::VAOSSerializer.new
         serialized = serializer.serialize(appointment, 'appointments')
@@ -287,20 +264,6 @@ module VAOS
         utc_date.change(offset: timezone_offset).to_datetime
       end
 
-      # Returns a local [DateTime] object converted from UTC using the facility's timezone offset.
-      # We'd like to perform this change only on the appointment responses to offer a consistently
-      # formatted local time to our consumers while not changing how we pass DateTimes to upstream services.
-      #
-      # @param [DateTime] date - the date to be modified, required
-      # @param [String] tz - the timezone id, won't convert if nil
-      # @return [DateTime] date in local time, will return in UTC if tz is nil
-      #
-      # def convert_utc_to_local_time(date, tz)
-      #   raise Common::Exceptions::ParameterMissing, 'date' if date.nil?
-
-      #   date.to_time.utc.in_time_zone(tz).to_datetime
-      # end
-
       FACILITY_ERROR_MSG = 'Error fetching facility details'
 
       # Returns the facility timezone id (eg. 'America/New_York') associated with facility id (location_id)
@@ -309,7 +272,7 @@ module VAOS
         if facility_info == FACILITY_ERROR_MSG
           nil # returns nil if unable to fetch facility info, which will be handled by the timezone conversion
         else
-          facility_info[:timezone]&.[](:time_zone_id)
+          facility_info[:timezone]&.[](:zone_id)
         end
       end
 
@@ -386,6 +349,7 @@ module VAOS
         params.permit(:start, :end, :_include)
       end
 
+      # rubocop:disable Metrics/MethodLength
       def create_params
         @create_params ||= begin
           # Gets around a bug that turns param values of [] into [""]. This changes them back to [].

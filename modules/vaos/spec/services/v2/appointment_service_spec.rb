@@ -18,12 +18,11 @@ describe VAOS::V2::AppointmentsService do
   mock_facility = {
     test: 'test',
     timezone: {
-      time_zone_id: 'America/New_York'
+      zone_id: 'America/New_York'
     }
   }
 
   before do
-    skip('Skipping until test cassettes can be updated in the review instance')
     allow_any_instance_of(VAOS::UserService).to receive(:session).and_return('stubbed_token')
   end
 
@@ -224,14 +223,15 @@ describe VAOS::V2::AppointmentsService do
   describe '#get_appointment' do
     context 'with an appointment' do
       context 'with Jacqueline Morgan' do
-        # it 'returns a proposed appointment' do
-        #   VCR.use_cassette('vaos/v2/appointments/get_appointment_200_JUDY_BOOKED', record: :new_episodes) do
-        #     response = subject.get_appointment('71079')
-        #     expect(response[:id]).to eq('70060')
-        #     expect(response[:kind]).to eq('clinic')
-        #     expect(response[:status]).to eq('proposed')
-        #   end
-        # end
+        it 'returns a proposed appointment' do
+          VCR.use_cassette('vaos/v2/appointments/get_appointment_200_with_facility_200',
+                           match_requests_on: %i[method path query]) do
+            response = subject.get_appointment('70060')
+            expect(response[:id]).to eq('70060')
+            expect(response[:kind]).to eq('clinic')
+            expect(response[:status]).to eq('proposed')
+          end
+        end
       end
     end
 
