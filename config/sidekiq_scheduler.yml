@@ -247,7 +247,7 @@ StdStateImport:
   class: IncomeLimits::StdCountyImport
   description: "Import income limit data CSVs from S3"
 
-StdZipCodeImport:
+StdZipcodeImport:
   cron: "0 0 1 * * America/New_York"
   class: IncomeLimits::StdCountyImport
   description: "Import income limit data CSVs from S3"

@@ -2,20 +2,14 @@
 
 module IncomeLimits
   class StdIncomeThresholdImport
-    include SideKiq::Worker
-
-    S3_INCOME_LIMITS_OPTIONS = {
-      access_key_id: Settings.income_limits.s3.aws_access_key_id,
-      secret_access_key: Settings.income_limits.s3.aws_secret_access_key,
-      region: Settings.income_limits.s3.region
-    }.freeze
-
-
-    def perform(bucket, key)
-      s3 = Aws::S3::Resource.new(S3_INCOME_LIMITS_OPTIONS)
-      obj = s3.bucket(Settings.income_limits.s3.bucket)
+    include Sidekiq::Worker
+    def perform
+      csv_url = 'https://sitewide-public-websites-income-limits-data.s3-us-gov-west-1.amazonaws.com/std_incomethreshold.csv'
+      data = URI.open(csv_url).read
 
       CSV.parse(data, headers: true) do |row|
+        created = DateTime.strptime(row['CREATED'], '%m/%d/%Y %l:%M:%S.%N %p').to_s
+        updated = DateTime.strptime(row['UPDATED'], '%m/%d/%Y %l:%M:%S.%N %p').to_s if row['UPDATED']
         StdIncomeThreshold.create!(
           id: row['ID'].to_i,
           income_threshold_year: row['INCOME_THRESHOLD_YEAR'].to_i,
@@ -43,8 +37,8 @@ module IncomeLimits
           inpatient_per_diem: row['INPATIENT_PER_DIEM']&.to_i,
           description: row['DESCRIPTION'],
           version: row['VERSION'].to_i,
-          created: row['CREATED'],
-          updated: row['UPDATED'],
+          created: created,
+          updated: updated,
           created_by: row['CREATED_BY'],
           updated_by: row['UPDATED_BY']
         )

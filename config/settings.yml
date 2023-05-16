@@ -615,15 +615,6 @@ vba_documents:
     registration_next_run_in_minutes: 15
     registration_max_retries: 3
 
-# Settings for Income Limits Module
-income_limits:
-  s3:
-    enabled: false
-    aws_access_key_id: "aws_access_key_id"
-    aws_secret_access_key: "aws_secret_access_key"
-    region: "region"
-    bucket: "sitewide-public-websites-income-limits-data"
-
 #Settings for Claims Api Module
 claims_api:
   report_enabled: false
