@@ -11,6 +11,7 @@ RSpec.describe 'vaos v2 appointments', type: :request do
     iam_sign_in(build(:iam_user))
     allow_any_instance_of(IAMUser).to receive(:icn).and_return('1012846043V576341')
     allow_any_instance_of(VAOS::UserService).to receive(:session).and_return('stubbed_token')
+
   end
 
   before(:all) do
@@ -26,11 +27,31 @@ RSpec.describe 'vaos v2 appointments', type: :request do
     allow_any_instance_of(Mobile::V2::Appointments::Proxy).to receive(:get_clinic).and_return(mock_clinic)
   end
 
+  let(:chayenne_facility) do
+    { id: '983',
+      name: 'Cheyenne VA Medical Center',
+      timezone: {
+        zoneId: 'America/Denver',
+        abbreviation: "MDT"
+      },
+      physical_address: { type: 'physical',
+                          line: ['2360 East Pershing Boulevard'],
+                          city: 'Cheyenne',
+                          state: 'WY',
+                          postal_code: '82001-5356' },
+      lat: 41.148026,
+      long: -104.786255,
+      phone: { main: '307-778-7550' },
+      url: nil,
+      code: nil }
+  end
+
   let(:mock_facility) do
     mock_facility = { id: '983',
                       name: 'Cheyenne VA Medical Center',
-                      time_zone: {
-                        time_zone_id: 'America/Denver'
+                      timezone: {
+                        zoneId: 'America/Denver',
+                        abbreviation: "MDT"
                       },
                       physical_address: { type: 'physical',
                                           line: ['2360 East Pershing Boulevard'],
@@ -43,6 +64,10 @@ RSpec.describe 'vaos v2 appointments', type: :request do
                       url: nil,
                       code: nil }
 
+    allow(Rails.cache).to receive(:fetch).with("vaos_facility_983", { :expires_in => 12.hours }).and_return(mock_facility)
+    allow(Rails.cache).to receive(:fetch).with("vaos_facility_442", { :expires_in => 12.hours }).and_return(mock_facility.merge(id: "442"))
+    allow(Rails.cache).to receive(:fetch).with("vaos_facility_438", { :expires_in => 12.hours }).and_return(mock_facility.merge(id: "438"))
+    allow(Rails.cache).to receive(:fetch).with("vaos_facility_984", { :expires_in => 12.hours }).and_return(mock_facility.merge(id: "984"))
     allow_any_instance_of(Mobile::V2::Appointments::Proxy).to receive(:get_facility).and_return(mock_facility)
   end
 
@@ -70,20 +95,21 @@ RSpec.describe 'vaos v2 appointments', type: :request do
             get '/mobile/v0/appointments', headers: iam_headers, params:
           end
         end
+        binding.pry
         location = response.parsed_body.dig('data', 0, 'attributes', 'location')
         expect(response.body).to match_json_schema('VAOS_v2_appointments')
         expect(location).to eq({ 'id' => '983',
                                  'name' => 'Cheyenne VA Medical Center',
                                  'address' =>
-                                 { 'street' => '2360 East Pershing Boulevard',
-                                   'city' => 'Cheyenne',
-                                   'state' => 'WY',
-                                   'zipCode' => '82001-5356' },
+                                   { 'street' => '2360 East Pershing Boulevard',
+                                     'city' => 'Cheyenne',
+                                     'state' => 'WY',
+                                     'zipCode' => '82001-5356' },
                                  'lat' => 39.744507,
                                  'long' => -104.830956,
                                  'phone' =>
-                                 { 'areaCode' => '307', 'number' => '778-7550',
-                                   'extension' => nil },
+                                   { 'areaCode' => '307', 'number' => '778-7550',
+                                     'extension' => nil },
                                  'url' => nil,
                                  'code' => nil })
       end
@@ -91,6 +117,7 @@ RSpec.describe 'vaos v2 appointments', type: :request do
 
     context 'backfill facility service returns in error' do
       before { mock_clinic }
+      before { mock_facility }
 
       it 'location is nil' do
         VCR.use_cassette('appointments/VAOS_v2/get_facility_500', match_requests_on: %i[method uri]) do
@@ -164,10 +191,10 @@ RSpec.describe 'vaos v2 appointments', type: :request do
         expect(response).to have_http_status(:multi_status)
         expect(response.parsed_body['data'].count).to eq(1)
         expect(response.parsed_body['meta']).to include(
-          {
-            'errors' => [{ 'source' => 'VA Service' }]
-          }
-        )
+                                                  {
+                                                    'errors' => [{ 'source' => 'VA Service' }]
+                                                  }
+                                                )
       end
     end
 

@@ -25,6 +25,7 @@ module Mobile
             appointment_adapter = VAOSV2Appointment.new(appointment_hash)
             appointment_adapter.build_appointment_model
           rescue => e
+            binding.pry
             Rails.logger.error(
               'Error adapting VAOS v2 appointment into Mobile V0 appointment',
               appointment: appointment_hash, error: e.message, backtrace: e.backtrace

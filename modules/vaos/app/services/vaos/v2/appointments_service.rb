@@ -97,7 +97,7 @@ module VAOS
       def convert_utc_to_local_time(date, tz)
         raise Common::Exceptions::ParameterMissing, 'date' if date.nil?
 
-        date.to_time.utc.in_time_zone(tz).to_datetime
+        date.to_time.utc.in_time_zone(tz).to_datetime.to_s
       end
 
       FACILITY_ERROR_MSG = 'Error fetching facility details'

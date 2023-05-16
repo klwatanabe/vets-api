@@ -1,0 +1,57 @@
+---
+http_interactions:
+- request:
+    method: get
+    uri: https://veteran.apps.va.gov/vaos/v1/patients/1012846043V576341/appointments?end=2023-01-26T23:59:59Z&pageSize=0&start=2021-01-01T00:00:00Z&statuses=proposed,cancelled,booked,fulfilled,arrived
+    body:
+      encoding: US-ASCII
+      string: ''
+    headers:
+      Accept:
+      - application/json
+      Content-Type:
+      - application/json
+      User-Agent:
+      - Vets.gov Agent
+      Referer:
+      - https://review-instance.va.gov
+      X-Vamf-Jwt:
+      - stubbed_token
+      X-Request-Id:
+      - ''
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+  response:
+    status:
+      code: 401
+      message: Unauthorized
+    headers:
+      Date:
+      - Tue, 16 May 2023 18:45:37 GMT
+      Content-Type:
+      - application/json
+      Content-Length:
+      - '110'
+      Connection:
+      - keep-alive
+      Access-Control-Allow-Origin:
+      - "*"
+      Access-Control-Allow-Headers:
+      - x-vamf-jwt
+      Access-Control-Allow-Methods:
+      - GET,OPTIONS
+      Access-Control-Max-Age:
+      - '3600'
+      X-Envoy-Upstream-Service-Time:
+      - '3'
+      Set-Cookie:
+      - TS016f4012=01c8917e48df840519347982b30881de0031574ac0cb8e83e68389734ff2aa09a01a2de7657210686599207dc87e41e646131097f3;
+        Max-Age=900; Path=/
+      - vamfjwtv3=eyJ6aXAiOiJERUYiLCJjdHkiOiJKV1QiLCJlbmMiOiJBMjU2Q0JDLUhTNTEyIiwiYWxnIjoiUlNBLU9BRVAtMjU2In0.dPLFKzkINb1BvXh8Xq-dkcfo1wqov1n8nNGg5TmyimTA_46amWhBazR2vyCCg-2F0Hwx9an2wAxpsh6WpjWn5Cns9sGhGFG3KhNpL_IJFr_9r1YUEXYhUyHmNIx5pWLLAwCCCVUkbCSppHwSwlEne4zh28u9lJ3JM8daaoXDXGJDLcB5Au6IO1qthqgeiZ7ZNGcK4TXeB2j9_QnTS4KHpz-6jg4bpknnSYoii5a15d9mTJ5xCtIe72hB2r8T7Ph-YuM6vuC-MeL7C9NG2VZYBxDLk8n1mpaQLHH7Q1IjbnnjEB6R2QSrd4umc81N50qHetAY6jq_qL-Mwbnbb6Zh8A.6g9oIcKKWc00U9xQVUzPAA.EayKZuV9jhUTh1d1-fEqcIZ5utmTx3Cx2kqfXEMMhv-8OeP-xYRzKe9AMpTvRMMHuq0CVqIMcJwNOwjHFYd3IU2-cEoC6R8faNdEqZCYwCf_B_LhY_d9nHW5l8k1EuNrcVDW08VjflFix1g6PckFXHs5Fi2KGM6fsHJ_pOVXeGz9c_OaywlX2vhGnQKCFXSMGYNgJ-CsDkDFr9hLBmN-cjFF8foGcwGmZGl_hz9Pi0Ao05CRfy7hwguwAHMw4ybfToEWP8BGyA2uwJPQCw3-l4v4aDgcMk1NAs9Ycp7oUrrq9tMToEoIeiW-zdyD2muD-184u45k3kWg64VriKZBrAwFGZmXBwKnYbiKsKXlIGyuL9OwCGgEMsMIBm93xDjs9VQSQC7xg9Mw8A8Er_rgke-CVPP1UBBiQKNpOtAqCJdDXYvp5qWsQb8JOzUb4xMoGEB7K4nDoFG_93xJt9iUAcBmoa3XFRGHBeogUVH21hrZIx182NDjTT_Zwa5rkBzdwWYVA4YZtz9YbVMAu61F8Bzre99LxBsHSAab0coItME4Pve6KbhUZYIKIFKT62C4XI5t4ETzo7Q5r2dM0Wnf-nMPQ1cQ4maprOIR1XJ8YpYSeT5CiX1JFRTTnmHiJhDa.DNPkkfj-X8ArkVa6N3xMdiDI6ounxOWJox2gT3VYWkk;
+        path=/; SameSite=Lax; HttpOnly
+      - vamftimeoutv1=1684263637; SameSite=Lax; path=/
+    body:
+      encoding: UTF-8
+      string: '{"code":401,"message":"Unauthenticated access is not permitted.","traceId":"6a4f66dd22b36edd7239a528a232096a"}'
+  recorded_at: Sat, 01 Jan 2022 19:25:00 GMT
+recorded_with: VCR 6.1.0
