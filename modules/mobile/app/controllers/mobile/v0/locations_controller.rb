@@ -4,6 +4,7 @@ module Mobile
   module V0
     class LocationsController < ApplicationController
       def show
+        # all useless
         Rails.logger.info('Mobile Location', param_id: params[:id])
 
         lh_location = service.get_location(params[:id])
