@@ -36,7 +36,7 @@ module Mobile
       def bgs_service_response
         person = BGS::People::Request.new.find_person_by_participant_id(user: current_user)
         if person.response.blank?
-          # this does reveal that some users have blank icns. but this is meaningless unless we're trying to use this info
+          # this does reveal that some users have blank icns, which is suprising to me, but this is meaningless unless we're trying to use this info
           Rails.logger.info('Mobile Payment History Person not found for user icn: ',
                             current_user.icn)
         end
@@ -58,6 +58,7 @@ module Mobile
           most_recent_year = available_years.first
 
           unless most_recent_year.is_a? Numeric
+            # don't see any instances of this. i think we can remove it. the this were to happen, we'd get a fairly clear error message
             Rails.logger.error('Mobile Payment Error Non Numeric Year', { year_in_error: most_recent_year,
                                                                           available_years: })
           end

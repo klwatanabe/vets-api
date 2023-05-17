@@ -107,7 +107,6 @@ RSpec.describe 'claims document upload', type: :request do
     it 'accepts locked PDFs with the correct password' do
       params = { file: locked_file, trackedItemId: tracked_item_id, documentType: document_type, password: 'test' }
       post '/mobile/v0/claim/600117255/documents', params:, headers: iam_headers
-binding.pry
       expect(response.status).to eq(202)
       expect(response.parsed_body.dig('data', 'jobId')).to eq(EVSS::DocumentUpload.jobs.first['jid'])
     end
@@ -133,8 +132,6 @@ binding.pry
     it 'rejects a file that is not really a PDF' do
       params = { file: tempfile, trackedItemId: tracked_item_id, documentType: document_type }
       post '/mobile/v0/claim/600117255/documents', params:, headers: iam_headers
-
-binding.pry
 
       expect(response.status).to eq(422)
       expect(

@@ -11,6 +11,8 @@ module Mobile
         begin
           resource = client.get_history_rxs
 
+          # this was recently commended out because it was suspected of causing performance issues due to the nested logging
+
           # Temporary logging for prescription bug investigation
           # resource.attributes.each do |p|
           #   Rails.logger.info('MHV Prescription Response',
@@ -19,6 +21,8 @@ module Mobile
           #                     prescription: p)
           # end
         rescue => e
+          # pretty sure we can get rid of this now. it was only being used to diagnose unexpected errors. but it's currently logging expected errors,
+          # like "optimistic locking errors"
           Rails.logger.error(
             'Mobile Prescription Upstream Index Error',
             resource:, error: e, message: e.message, backtrace: e.backtrace
@@ -32,6 +36,8 @@ module Mobile
 
         serialized_prescription = Mobile::V0::PrescriptionsSerializer.new(page_resource, page_meta_data)
 
+        # this was recently commended out because it was suspected of causing performance issues due to the nested logging
+
         # Temporary logging for prescription bug investigation
         # serialized_prescription.to_hash[:data].each do |p|
         #   Rails.logger.info('Mobile Prescription Response', user: @current_user.uuid, id: p[:id], prescription: p)
@@ -43,11 +49,17 @@ module Mobile
       def refill
         resource = client.post_refill_rxs(ids)
 
+        # this was recently commended out because it was suspected of causing performance issues
+
         # Temporary logging for prescription bug investigation
         # Rails.logger.info('MHV Prescription Refill Response', user: @current_user.uuid, ids:, response: resource)
 
         render json: Mobile::V0::PrescriptionsRefillsSerializer.new(@current_user.uuid, resource.body)
       rescue => e
+        # this is happening but it mostly seems to be catching this error:
+        # "JTA transaction unexpectedly rolled back (maybe due to a timeout"
+        # which i assume is a normal and expected error
+        # unless we're actively looking at these errors to find something specific, we should remove it
         Rails.logger.error(
           'Mobile Prescription Refill Error',
           resource:, error: e, message: e.message, backtrace: e.backtrace
@@ -58,12 +70,15 @@ module Mobile
       def tracking
         resource = client.get_tracking_history_rx(params[:id])
 
+        # this was recently commended out because it was suspected of causing performance issues
+
         # Temporary logging for prescription bug investigation
         # Rails.logger.info('MHV Prescription Tracking Response', user: @current_user.uuid, id: params[:id],
         #                                                         response: resource)
 
         render json: Mobile::V0::PrescriptionTrackingSerializer.new(resource.data)
       rescue => e
+        # this could be helpful but it's mostly just logging expected timeouts
         Rails.logger.error(
           'Mobile Prescription Tracking Error',
           resource:, error: e, message: e.message, backtrace: e.backtrace

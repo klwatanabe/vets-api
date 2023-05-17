@@ -40,7 +40,6 @@ module Mobile
         message_params[:id] = message_params.delete(:draft_id) if message_params[:draft_id].present?
         create_message_params = { message: message_params.to_h }.merge(upload_params)
         # this reveals the category. is this valuable? jayson just added it, so i assume we must want to know more
-        # logging does not seem to offer any insight into the response body without this
         Rails.logger.info('Mobile SM Category Tracking', category: create_message_params.dig(:message, :category))
 
         client_response = if message.uploads.present?
