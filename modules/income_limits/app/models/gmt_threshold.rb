@@ -1,7 +1,8 @@
+# frozen_string_literal: true
 
 module IncomeLimits
   class GmtThreshold < ApplicationRecord
-    self.table_name = "gmt_thresholds"
+    self.table_name = 'gmt_thresholds'
     validates :id, presence: true, uniqueness: true
     validates :effective_year, presence: true
     validates :state_name, presence: true

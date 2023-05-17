@@ -1,6 +1,8 @@
+# frozen_string_literal: true
+
 module IncomeLimits
   class StdIncomeThreshold < ApplicationRecord
-    self.table_name = "std_incomethresholds"
+    self.table_name = 'std_incomethresholds'
     validates :id, presence: true, uniqueness: true
     validates :income_threshold_year, presence: true
     validates :exempt_amount, presence: true

@@ -1,6 +1,8 @@
+# frozen_string_literal: true
+
 module IncomeLimits
   class StdState < ApplicationRecord
-    self.table_name = "std_states"
+    self.table_name = 'std_states'
 
     validates :id, presence: true, uniqueness: true
     validates :name, presence: true

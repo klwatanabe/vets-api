@@ -37,8 +37,8 @@ module IncomeLimits
           inpatient_per_diem: row['INPATIENT_PER_DIEM']&.to_i,
           description: row['DESCRIPTION'],
           version: row['VERSION'].to_i,
-          created: created,
-          updated: updated,
+          created:,
+          updated:,
           created_by: row['CREATED_BY'],
           updated_by: row['UPDATED_BY']
         )

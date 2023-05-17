@@ -5,11 +5,11 @@ require 'csv'
 module IncomeLimits
   class GmtThresholdsImport
     include Sidekiq::Worker
-  
+
     def perform
       csv_url = 'https://sitewide-public-websites-income-limits-data.s3-us-gov-west-1.amazonaws.com/std_gmtthresholds.csv'
       data = URI.open(csv_url).read
-      
+
       CSV.parse(data, headers: true) do |row|
         created = DateTime.strptime(row['CREATED'], '%m/%d/%Y %l:%M:%S.%N %p').to_s
         updated = DateTime.strptime(row['UPDATED'], '%m/%d/%Y %l:%M:%S.%N %p').to_s if row['UPDATED']
@@ -30,8 +30,8 @@ module IncomeLimits
           msa: row['MSA'].to_i,
           msa_name: row['MSANAME'],
           version: row['VERSION'].to_i,
-          created: created,
-          updated: updated,
+          created:,
+          updated:,
           created_by: row['CREATEDBY'],
           updated_by: row['UPDATEDBY']
         )

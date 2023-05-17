@@ -18,8 +18,8 @@ module IncomeLimits
           state_id: row['STATE_ID'].to_i,
           county_number: row['COUNTYNUMBER'].to_i,
           version: row['VERSION'].to_i,
-          created: created,
-          updated: updated,
+          created:,
+          updated:,
           created_by: row['CREATEDBY'],
           updated_by: row['UPDATEDBY']
         )
