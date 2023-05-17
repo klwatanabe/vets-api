@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
-require 'open-uri'
+# rubocop:disable Metrics/MethodLength
+
+require 'net/http'
 require 'csv'
 
 module IncomeLimits
@@ -9,25 +11,37 @@ module IncomeLimits
 
     def perform
       csv_url = 'https://sitewide-public-websites-income-limits-data.s3-us-gov-west-1.amazonaws.com/std_county.csv'
-      data = URI.open(csv_url).read
-      CSV.parse(data, headers: true) do |row|
-        created = DateTime.strptime(row['CREATED'], '%m/%d/%Y %l:%M:%S.%N %p').to_s
-        updated = DateTime.strptime(row['UPDATED'], '%m/%d/%Y %l:%M:%S.%N %p').to_s if row['UPDATED']
-        std_county = StdCounty.find_or_initialize_by(id: row['ID'].to_i)
-        std_county.assign_attributes(
-          name: row['NAME'].to_s,
-          county_number: row['COUNTYNUMBER'].to_i,
-          description: row['DESCRIPTION'],
-          state_id: row['STATE_ID'].to_i,
-          version: row['VERSION'].to_i,
-          created:,
-          updated:,
-          created_by: row['CREATEDBY'].to_s,
-          updated_by: row['UPDATEDBY'].to_s
-        )
+      uri = URI(csv_url)
+      http = Net::HTTP.new(uri.host, uri.port)
+      http.use_ssl = true if uri.scheme == 'https'
+      request = Net::HTTP::Get.new(uri.request_uri)
+      response = http.request(request)
+      if response.code == '200'
+        data = response.body
+        CSV.parse(data, headers: true) do |row|
+          created = DateTime.strptime(row['CREATED'], '%m/%d/%Y %l:%M:%S.%N %p').to_s
+          updated = DateTime.strptime(row['UPDATED'], '%m/%d/%Y %l:%M:%S.%N %p').to_s if row['UPDATED']
+          std_county = StdCounty.find_or_initialize_by(id: row['ID'].to_i)
+          next if std_county
 
-        std_county.save!
+          std_county.assign_attributes(
+            name: row['NAME'].to_s,
+            county_number: row['COUNTYNUMBER'].to_i,
+            description: row['DESCRIPTION'],
+            state_id: row['STATE_ID'].to_i,
+            version: row['VERSION'].to_i,
+            created:,
+            updated:,
+            created_by: row['CREATEDBY'].to_s,
+            updated_by: row['UPDATEDBY'].to_s
+          )
+
+          std_county.save!
+        end
+      else
+        raise "Failed to fetch CSV data. Response code: #{response.code}"
       end
     end
   end
 end
+# rubocop:enable Metrics/MethodLength
