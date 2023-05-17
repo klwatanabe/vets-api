@@ -6,7 +6,7 @@ module Mobile
       SORT_METHODS = %w[home current alphabetical appointments].freeze
 
       def index
-        # i don't think this is currently in use
+        # i don't think this is currently in use, but i also don't think this is valuable. the sort method will be visible in the query params
         Rails.logger.info('Facilities info call start', { sort_method: params[:sort], user_uuid: @current_user.uuid })
 
         raise_invalid_sort_method_error unless SORT_METHODS.include?(params[:sort])
@@ -59,7 +59,9 @@ module Mobile
       end
 
       def log_nil_cache
-        # doesn't appear to be in use, but this is a useless 
+        # not being hit because endpoint is not in use. might actually be helpful for indicating that something is wrong.
+        # hard to be sure without knowing more about how this would be used. if this endpoint were somehow called
+        # before appointments are fetched (which is plausible because pre-caching is turned off) this would just be normal behavior
         Rails.logger.info('mobile facilities info appointments cache nil', user_uuid: @current_user.uuid)
       end
 

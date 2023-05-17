@@ -43,7 +43,7 @@ module Mobile
         lock_vets360_linking(uuid)
         jid = Mobile::V0::Vet360LinkingJob.perform_async(uuid)
         # this does come up in the logs occasionally but seems to come in batches, implying that it may be caused
-        # by server outages.
+        # primarily by server outages.
         Rails.logger.info('Mobile Vet360 account link job id', { job_id: jid })
       end
     end

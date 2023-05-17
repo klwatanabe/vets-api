@@ -36,6 +36,7 @@ module Mobile
       def bgs_service_response
         person = BGS::People::Request.new.find_person_by_participant_id(user: current_user)
         if person.response.blank?
+          # this does reveal that some users have blank icns. but this is meaningless unless we're trying to use this info
           Rails.logger.info('Mobile Payment History Person not found for user icn: ',
                             current_user.icn)
         end

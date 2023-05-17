@@ -43,7 +43,7 @@ module Mobile
         # No domestic or military addresses should have a province but some have been coming in as a string 'null'
         suggested_addresses.each do |sa|
           if sa['address_type'].in?(['DOMESTIC', 'OVERSEAS MILITARY']) && sa['province'].present?
-            # i don't see this in logs. Not sure why. Maybe it's not happening anymore, but that also seems odd
+            # i don't see this in logs. appears to be resolved. remove this
             Rails.logger.info('Mobile Suggested Address - Province in domestic or military address',
                               province: sa['province'])
           end

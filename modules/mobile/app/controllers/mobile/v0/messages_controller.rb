@@ -39,7 +39,8 @@ module Mobile
 
         message_params[:id] = message_params.delete(:draft_id) if message_params[:draft_id].present?
         create_message_params = { message: message_params.to_h }.merge(upload_params)
-        # remove
+        # this reveals the category. is this valuable? jayson just added it, so i assume we must want to know more
+        # logging does not seem to offer any insight into the response body without this
         Rails.logger.info('Mobile SM Category Tracking', category: create_message_params.dig(:message, :category))
 
         client_response = if message.uploads.present?
@@ -104,6 +105,7 @@ module Mobile
 
       def signature
         result = client.get_signature[:data]
+        # this generally logs the users name or the default empty result defined below. not sure why we care.
         Rails.logger.info('Mobile Get Message Signature Result', result:)
         result = { signature_name: nil, include_signature: false, signature_title: nil } if result.nil?
         render json: Mobile::V0::MessageSignatureSerializer.new(@current_user.uuid, result).to_json
