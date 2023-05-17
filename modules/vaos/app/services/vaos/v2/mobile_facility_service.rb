@@ -87,7 +87,6 @@ module VAOS
       # @return [OpenStruct] An OpenStruct object containing information about the facility
       #
       def get_facility_with_cache(facility_id)
-        binding.pry
         Rails.cache.fetch("vaos_facility_#{facility_id}", expires_in: 12.hours) do
           get_facility(facility_id)
         end

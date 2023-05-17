@@ -27,25 +27,6 @@ RSpec.describe 'vaos v2 appointments', type: :request do
     allow_any_instance_of(Mobile::V2::Appointments::Proxy).to receive(:get_clinic).and_return(mock_clinic)
   end
 
-  let(:chayenne_facility) do
-    { id: '983',
-      name: 'Cheyenne VA Medical Center',
-      timezone: {
-        zoneId: 'America/Denver',
-        abbreviation: "MDT"
-      },
-      physical_address: { type: 'physical',
-                          line: ['2360 East Pershing Boulevard'],
-                          city: 'Cheyenne',
-                          state: 'WY',
-                          postal_code: '82001-5356' },
-      lat: 41.148026,
-      long: -104.786255,
-      phone: { main: '307-778-7550' },
-      url: nil,
-      code: nil }
-  end
-
   let(:mock_facility) do
     known_ids = %w[983 984 442 508 983GC 983GB 688 516 984GA 983GD 984GD 438 620GB 984GB 442GB 442GC 442GD 983QA 984GC 983QE 983HK 999AA]
     mock_facility = { id: '983',
@@ -65,11 +46,11 @@ RSpec.describe 'vaos v2 appointments', type: :request do
                       url: nil,
                       code: nil }
 
+    allow_any_instance_of(Mobile::V2::Appointments::Proxy).to receive(:get_facility).and_return(mock_facility)
+
     known_ids.each do |facility_id|
       allow(Rails.cache).to receive(:fetch).with("vaos_facility_#{facility_id}", { :expires_in => 12.hours }).and_return(mock_facility.merge(id: facility_id))
     end
-
-    allow_any_instance_of(Mobile::V2::Appointments::Proxy).to receive(:get_facility).and_return(mock_facility)
   end
 
   after(:all) { VCR.configure { |c| c.cassette_library_dir = @original_cassette_dir } }
