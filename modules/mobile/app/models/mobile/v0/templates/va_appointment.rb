@@ -11,6 +11,7 @@ module Mobile
           when 'Video Conference'
             'VA_VIDEO_CONNECT_HOME'
           else
+            # not only is this not happening, but the message says "request" which is wrong. time to remove
             Rails.logger.error(
               'Unknown appointment request type',
               { appointment_request_id: @request[:appointment_request_id], appointment_type: 'VA',

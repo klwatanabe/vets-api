@@ -10,6 +10,7 @@ module Mobile
       ids = facility_ids.join(',')
 
       facility_ids.each do |facility_id|
+        # not helpful. delete this despite the fact that this code is not yet in use
         Rails.logger.info('metric.mobile.appointment.facility', facility_id:)
       end
       vaos_facilities = VAOS::V2::MobileFacilityService.new(user).get_facilities(ids:, children: include_children,
@@ -78,6 +79,7 @@ module Mobile
       phone_captures = phone.match(/^(\d{3})-(\d{3}-\d{4})(?:\sx(\d*))?$/)
 
       if phone_captures.nil?
+        # this code is not yet in use, so we should probably keep it for the day that we turn this on
         Rails.logger.warn(
           'mobile appointments failed to parse facility phone number',
           facility_id: facility.id,
@@ -105,6 +107,7 @@ module Mobile
     # Returns the distance between these two
     # points in either miles or kilometers
     def haversine_distance(geo_a, geo_b, miles: true)
+      # not yet in use. could be helpful when we turn this on
       Rails.logger.info('haversine_distance coords', geo_a, geo_b)
       # Get latitude and longitude
       lat1, lon1 = geo_a

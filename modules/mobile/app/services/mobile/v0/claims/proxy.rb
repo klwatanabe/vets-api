@@ -24,6 +24,8 @@ module Mobile
           data = claims_adapter.parse(full_list)
 
           errors.each do |error|
+            # this does happen with some regularity and with a variety of errors
+            # but given that evss is going away soon, this can probably go too
             Rails.logger.error("Mobile Claims and Appeals: error received from #{error[:service]} service",
                                error_details: error[:error_details])
           end
@@ -58,6 +60,7 @@ module Mobile
         def request_decision(id)
           claim = EVSSClaim.for_user(@user).find_by(evss_id: id)
           jid = evss_claim_service.request_decision(claim)
+          # this is happening, but idk why we're logging it
           Rails.logger.info('Mobile Request', {
                               claim_id: id,
                               job_id: jid
@@ -104,6 +107,7 @@ module Mobile
           raise Common::Exceptions::ValidationErrors, document_data unless document_data.valid?
 
           jid = evss_claim_service.upload_document(document_data)
+          # this is happening but idk why we're logging it
           Rails.logger.info('Mobile Request', { claim_id:, job_id: jid })
           jid
         end

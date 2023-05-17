@@ -14,6 +14,7 @@ module Mobile
       if fetch_cache?(search_start_date, search_end_date, fetch_cache)
         appointments = Mobile::V0::Appointment.get_cached(user)
         if appointments
+          # not helpful.
           Rails.logger.info('mobile appointments cache fetch', user_uuid: user.uuid)
           return [appointments, nil]
         end
@@ -23,6 +24,7 @@ module Mobile
 
       Mobile::V0::Appointment.set_cached(user, appointments) if cache_on_failures == true || failures.blank?
 
+      # not helpful
       Rails.logger.info('mobile appointments service fetch', user_uuid: user.uuid)
       [appointments, failures]
     end
@@ -65,6 +67,9 @@ module Mobile
           latest_allowable_cache_start_date:,
           earliest_allowable_cache_end_date:
         }
+        # i added this to debug a caching issue. i was seeing small numbers of this error at one time.
+        # they seemed clearly to be edge-case issues due to user timezone. i don't see it happening anymore
+        # remove
         Rails.logger.error('Appointments fetch request outside of allowable cache range', dates)
       end
       within_range

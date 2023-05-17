@@ -20,6 +20,7 @@ module Mobile
               va_appointments << Templates::VAAppointment.new(request).appointment
             end
           rescue => e
+            # no evidence of this happening. probably safe to just remove the rescue and let it fail at this point
             Rails.logger.error(
               'Error adapting appointment request',
               appointment_request: request, error: e.message, backtrace: e.backtrace

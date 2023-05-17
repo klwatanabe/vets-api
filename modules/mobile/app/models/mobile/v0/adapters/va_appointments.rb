@@ -128,6 +128,7 @@ module Mobile
             friendly_location_name: nil
           }
 
+          # this file appears to be no longer in use. i believe we forgot to sunset it. burn with fire
           Rails.logger.info('metric.mobile.appointment.type', type:)
 
           Mobile::V0::Appointment.new(adapted_hash)

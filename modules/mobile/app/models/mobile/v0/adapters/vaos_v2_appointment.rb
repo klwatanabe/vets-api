@@ -110,6 +110,10 @@ module Mobile
           }
 
           StatsD.increment('mobile.appointments.type', tags: ["type:#{appointment_type}"])
+          # i believe these two were to help us determine which values were possible. it copies the older version of this file.
+          # it's plausible there could still be values we don't know about, but we also aren't actually checking these logs
+          # so it's useless to us anyhow. what would potentially be more valuable would be outputting when they're not in the
+          # known list. we should definitely remove these
           Rails.logger.info('metric.mobile.appointment.type', type: appointment_type)
           Rails.logger.info('metric.mobile.appointment.upstream_status', status: appointment[:status])
 
@@ -345,6 +349,11 @@ module Mobile
           # and optional extension (until the end of the string) (?:\sx(\d*))?$
           phone_captures = phone&.match(/^\(?(\d{3})\)?.?(\d{3})-?(\d{4})(?:\sx(\d*))?$/)
 
+          # this is happening but unfortunately the phone details appear to be scrubbed by DD
+          # i think these failures are probably mostly the result of the phone number nil.
+          # we should update this code to only log if there is a phone number.
+          # unclear if it would still redact the info if there were a number, but my guess is that
+          # they may scrub anything that looks like a phone number
           if phone_captures.nil?
             Rails.logger.warn(
               'mobile appointments failed to parse VAOS V2 phone number',

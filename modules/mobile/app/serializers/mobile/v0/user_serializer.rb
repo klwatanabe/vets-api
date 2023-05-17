@@ -77,6 +77,8 @@ module Mobile
       def province_log(profile)
         address_type = profile.dig(:residential_address, :address_type)
         province = profile.dig(:residential_address, :province)
+        # this is happening, but i believe the bug this was intended to catch has been fixed. all instances appear to be for PR
+        # remove
         if address_type.in?(['DOMESTIC', 'OVERSEAS MILITARY']) && province.present?
           Rails.logger.info('Mobile User Address - Province in domestic or military address',
                             province:,
@@ -122,6 +124,9 @@ module Mobile
         user.authorize(:ppiu, :access_update?)
       rescue => e
         message = e.respond_to?(:messages) ? e.messages : e.message
+        # unclear what this is about. it does happen frequently but it's mostly backend exceptions and gateway timeouts
+        # unless we're actively monitoring it, i don't see the purpose in keeping this.
+        # also this should go away soon when we transition off of EVSS.
         Rails.logger.error('Error fetching user data from EVSS', user_uuid: user.uuid, details: message)
         false
       end

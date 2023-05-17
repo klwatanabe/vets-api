@@ -32,10 +32,12 @@ module Mobile
         immunizations = Mobile::V0::Immunization.get_cached(@current_user) if pagination_params[:use_cache]
 
         if immunizations
+          # not helpful
           Rails.logger.info('mobile immunizations cache fetch', user_uuid: @current_user.uuid)
         else
           immunizations = immunizations_adapter.parse(service.get_immunizations)
           Mobile::V0::Immunization.set_cached(@current_user, immunizations)
+          # not helpful.
           Rails.logger.info('mobile immunizations service fetch', user_uuid: @current_user.uuid)
         end
 

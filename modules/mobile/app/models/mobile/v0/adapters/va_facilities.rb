@@ -41,6 +41,7 @@ module Mobile
         end
 
         def log_missing_facility(appointment)
+          # i believe this class is no longer in use. i believe it was specific to pre-VAOS appointments
           Rails.logger.warn(
             'Could not find matching facility for mobile appointment',
             {

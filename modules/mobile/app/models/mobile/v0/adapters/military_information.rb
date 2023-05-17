@@ -20,6 +20,7 @@ module Mobile
 
         def format_service_period(service_period)
           if service_period[:branch_of_service].nil?
+            # no evidence of this happening. remove
             Rails.logger.warn(
               'mobile military information missing service period details', service_period:
             )

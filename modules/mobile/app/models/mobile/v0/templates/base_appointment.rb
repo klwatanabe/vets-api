@@ -110,6 +110,7 @@ module Mobile
           when 'DETCODE24'
             'CANCELLED - OTHER'
           else
+            # there are no logs of this happening. probably time to just remove it
             Rails.logger.error('Unknown appointment request cancellation code', :error,
                                { appointment_request_id: @request[:appointment_request_id], detail: first_detail })
             'CANCELLED - OTHER'

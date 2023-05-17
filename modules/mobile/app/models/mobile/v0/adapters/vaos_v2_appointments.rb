@@ -25,6 +25,7 @@ module Mobile
             appointment_adapter = VAOSV2Appointment.new(appointment_hash)
             appointment_adapter.build_appointment_model
           rescue => e
+            # no instances of this. could be time to drop the rescue and just allow failures
             Rails.logger.error(
               'Error adapting VAOS v2 appointment into Mobile V0 appointment',
               appointment: appointment_hash, error: e.message, backtrace: e.backtrace
