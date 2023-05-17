@@ -1,17 +1,20 @@
 # frozen_string_literal: true
 
+require 'open-uri'
+require 'csv'
+
 module IncomeLimits
   class StdStateImport
     include Sidekiq::Worker
+
     def perform
       csv_url = 'https://sitewide-public-websites-income-limits-data.s3-us-gov-west-1.amazonaws.com/std_state.csv'
       data = URI.open(csv_url).read
-
       CSV.parse(data, headers: true) do |row|
         created = DateTime.strptime(row['CREATED'], '%m/%d/%Y %l:%M:%S.%N %p').to_s
         updated = DateTime.strptime(row['UPDATED'], '%m/%d/%Y %l:%M:%S.%N %p').to_s if row['UPDATED']
-        StdState.create!(
-          id: row['ID'].to_i,
+        std_state = StdState.find_or_initialize_by(id: row['ID'].to_i)
+        std_state.assign_attributes(
           name: row['NAME'],
           postal_name: row['POSTALNAME'],
           fips_code: row['FIPSCODE'].to_i,
@@ -22,6 +25,8 @@ module IncomeLimits
           created_by: row['CREATEDBY'],
           updated_by: row['UPDATEDBY']
         )
+
+        std_state.save!
       end
     end
   end

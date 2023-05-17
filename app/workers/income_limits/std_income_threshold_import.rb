@@ -1,17 +1,20 @@
 # frozen_string_literal: true
 
+require 'open-uri'
+require 'csv'
+
 module IncomeLimits
   class StdIncomeThresholdImport
     include Sidekiq::Worker
+
     def perform
       csv_url = 'https://sitewide-public-websites-income-limits-data.s3-us-gov-west-1.amazonaws.com/std_incomethreshold.csv'
       data = URI.open(csv_url).read
-
       CSV.parse(data, headers: true) do |row|
         created = DateTime.strptime(row['CREATED'], '%m/%d/%Y %l:%M:%S.%N %p').to_s
         updated = DateTime.strptime(row['UPDATED'], '%m/%d/%Y %l:%M:%S.%N %p').to_s if row['UPDATED']
-        StdIncomeThreshold.create!(
-          id: row['ID'].to_i,
+        std_income_threshold = StdIncomeThreshold.find_or_initialize_by(id: row['ID'].to_i)
+        std_income_threshold.assign_attributes(
           income_threshold_year: row['INCOME_THRESHOLD_YEAR'].to_i,
           exempt_amount: row['EXEMPT_AMOUNT'].to_i,
           medical_expense_deductible: row['MEDICAL_EXPENSE_DEDUCTIBLE'].to_i,
@@ -42,6 +45,8 @@ module IncomeLimits
           created_by: row['CREATED_BY'],
           updated_by: row['UPDATED_BY']
         )
+
+        std_income_threshold.save!
       end
     end
   end

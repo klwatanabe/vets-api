@@ -2,10 +2,10 @@
 
 require 'aws-sdk-s3'
 require 'csv'
+
 module IncomeLimits
   class GmtThresholdsImport
     include Sidekiq::Worker
-
     def perform
       csv_url = 'https://sitewide-public-websites-income-limits-data.s3-us-gov-west-1.amazonaws.com/std_gmtthresholds.csv'
       data = URI.open(csv_url).read
@@ -13,8 +13,8 @@ module IncomeLimits
       CSV.parse(data, headers: true) do |row|
         created = DateTime.strptime(row['CREATED'], '%m/%d/%Y %l:%M:%S.%N %p').to_s
         updated = DateTime.strptime(row['UPDATED'], '%m/%d/%Y %l:%M:%S.%N %p').to_s if row['UPDATED']
-        GmtThreshold.create!(
-          id: row['ID'].to_i,
+        gmt_threshold = GmtThreshold.find_or_initialize_by(id: row['ID'].to_i)
+        gmt_threshold.assign_attributes(
           effective_year: row['EFFECTIVEYEAR'].to_i,
           state_name: row['STATENAME'],
           county_name: row['COUNTYNAME'],
@@ -35,6 +35,8 @@ module IncomeLimits
           created_by: row['CREATEDBY'],
           updated_by: row['UPDATEDBY']
         )
+
+        gmt_threshold.save!
       end
     end
   end
