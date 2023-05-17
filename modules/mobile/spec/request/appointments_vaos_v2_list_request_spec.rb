@@ -47,6 +47,7 @@ RSpec.describe 'vaos v2 appointments', type: :request do
   end
 
   let(:mock_facility) do
+    known_ids = %w[983 984 442 508 983GC 983GB 688 516 984GA 983GD 984GD 438 620GB 984GB 442GB 442GC 442GD 983QA 984GC 983QE 983HK 999AA]
     mock_facility = { id: '983',
                       name: 'Cheyenne VA Medical Center',
                       timezone: {
@@ -64,10 +65,10 @@ RSpec.describe 'vaos v2 appointments', type: :request do
                       url: nil,
                       code: nil }
 
-    allow(Rails.cache).to receive(:fetch).with("vaos_facility_983", { :expires_in => 12.hours }).and_return(mock_facility)
-    allow(Rails.cache).to receive(:fetch).with("vaos_facility_442", { :expires_in => 12.hours }).and_return(mock_facility.merge(id: "442"))
-    allow(Rails.cache).to receive(:fetch).with("vaos_facility_438", { :expires_in => 12.hours }).and_return(mock_facility.merge(id: "438"))
-    allow(Rails.cache).to receive(:fetch).with("vaos_facility_984", { :expires_in => 12.hours }).and_return(mock_facility.merge(id: "984"))
+    known_ids.each do |facility_id|
+      allow(Rails.cache).to receive(:fetch).with("vaos_facility_#{facility_id}", { :expires_in => 12.hours }).and_return(mock_facility.merge(id: facility_id))
+    end
+
     allow_any_instance_of(Mobile::V2::Appointments::Proxy).to receive(:get_facility).and_return(mock_facility)
   end
 
@@ -95,7 +96,6 @@ RSpec.describe 'vaos v2 appointments', type: :request do
             get '/mobile/v0/appointments', headers: iam_headers, params:
           end
         end
-        binding.pry
         location = response.parsed_body.dig('data', 0, 'attributes', 'location')
         expect(response.body).to match_json_schema('VAOS_v2_appointments')
         expect(location).to eq({ 'id' => '983',

@@ -6,6 +6,32 @@ require_relative '../support/iam_session_helper'
 RSpec.describe Mobile::V0::PreCacheAppointmentsJob, type: :job do
   let(:user) { create(:user, :loa3, icn: '1012846043V576341') }
 
+  let(:mock_facility) do
+    known_ids = %w[983 984 442 508 983GC 983GB 688 516 984GA 983GD 984GD 438 620GB 984GB 442GB 442GC 442GD 983QA 984GC 983QE 983HK 999AA]
+    mock_facility = { id: '983',
+                      name: 'Cheyenne VA Medical Center',
+                      timezone: {
+                        zoneId: 'America/Denver',
+                        abbreviation: "MDT"
+                      },
+                      physical_address: { type: 'physical',
+                                          line: ['2360 East Pershing Boulevard'],
+                                          city: 'Cheyenne',
+                                          state: 'WY',
+                                          postal_code: '82001-5356' },
+                      lat: 41.148026,
+                      long: -104.786255,
+                      phone: { main: '307-778-7550' },
+                      url: nil,
+                      code: nil }
+
+    known_ids.each do |facility_id|
+      allow(Rails.cache).to receive(:fetch).with("vaos_facility_#{facility_id}", { :expires_in => 12.hours }).and_return(mock_facility.merge(id: facility_id))
+    end
+
+    allow_any_instance_of(Mobile::V2::Appointments::Proxy).to receive(:get_facility).and_return(mock_facility)
+  end
+
   before do
     Sidekiq::Worker.clear_all
     allow_any_instance_of(VAOS::UserService).to receive(:session).and_return('stubbed_token')
