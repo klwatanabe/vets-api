@@ -21,7 +21,13 @@ module Mobile
                                  else
                                    [e.status_code, e.errors]
                                  end
+          # this happens a lot, but it seems to generally be this "file number missing" error
+          # that i believe we've investigated. it's a handled 422 error.
           Rails.logger.info('Mobile Disability Rating Error Details: ', details:)
+          # nearly all instances of this provide no information, either because the values are nil
+          # or because they methods aren't defined, so the interpolated if statements return nil
+          # the ones that do provide data all show that authentication failed. this could merit a bug.
+          # but it doesn't look like this logging is providing ongoing value.
           Rails.logger.info('Mobile Disability Rating Expanded Error: ',
                             "response value: #{e.response_values if defined? e.response_values}.
                             original status: #{e.original_status if defined? e.original_status}.
