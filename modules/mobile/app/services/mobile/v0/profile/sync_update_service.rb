@@ -132,7 +132,7 @@ module Mobile
 
           raise Common::Exceptions::RecordNotFound, transaction unless transaction
           raise IncompleteTransaction unless transaction.finished?
-
+          # we shouldn't need this
           Rails.logger.info(
             'mobile syncronous profile update complete',
             transaction_id: @transaction_id
@@ -150,6 +150,12 @@ module Mobile
         end
 
         def raise_timeout_error(elapsed, try)
+          # this is happening a lot and may indicate an issue
+          # nonetheless, the fact that we weren't monitoring this makes this logging fairly useless
+          # IMO we should add a ticket for investigating this. it seems very strange to have a sidekiq job that sleeps.
+          # idk the performance implications of using sleep. if it occupies a thread, then i'd say this is bad.
+          # these jobs run for up to ~53 seconds, so that's a long time to occupy the thread.
+          # add to ticket i already created for moving the call to this out of the auth method
           Rails.logger.error(
             'mobile syncronous profile update timeout',
             transaction_id: @transaction_id, try:, elapsed:
@@ -158,6 +164,7 @@ module Mobile
         end
 
         def log_incomplete(elapsed, next_try_seconds, try)
+          # happens as well. could be useful if we really used it
           Rails.logger.info(
             'mobile syncronous profile update not yet complete',
             transaction_id: @transaction_id, try:, seconds_until_retry: next_try_seconds, elapsed:

@@ -51,6 +51,7 @@ module Mobile
         def get_facility(location_id)
           vaos_mobile_facility_service.get_facility(location_id)
         rescue Common::Exceptions::BackendServiceException => e
+          # this happens a lot. it appears to be only a few facility ids. start a ticket to investigate
           Rails.logger.error(
             "Error fetching facility details for location_id #{location_id}",
             location_id:,
@@ -79,6 +80,7 @@ module Mobile
         def get_clinic(location_id, clinic_id)
           vaos_mobile_facility_service.get_clinic(station_id: location_id, clinic_id:)
         rescue Common::Exceptions::BackendServiceException => e
+          # this is also happening a fair amount. probably worth including in the same ticket
           Rails.logger.error(
             "Error fetching clinic #{clinic_id} for location #{location_id}",
             clinic_id:,

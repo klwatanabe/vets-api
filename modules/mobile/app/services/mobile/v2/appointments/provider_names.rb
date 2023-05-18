@@ -18,6 +18,7 @@ module Mobile
 
         def form_names_from_appointment_practitioners_list(practitioners_list)
           unless practitioners_list.class.in?([Array, NilClass])
+            # this isn't happening. we can probably delete this
             Rails.logger.error('Mobile appointments provider invalid input', practitioners_list)
             return nil
           end
@@ -61,6 +62,7 @@ module Mobile
         def fetch_provider(provider_id)
           mobile_ppms_service.get_provider(provider_id)
         rescue Common::Exceptions::BackendServiceException
+          # this has happened 12 times in the past month. could warrant an investigation
           Rails.logger.error('Mobile appointments provider not found', provider_id)
           nil
         end

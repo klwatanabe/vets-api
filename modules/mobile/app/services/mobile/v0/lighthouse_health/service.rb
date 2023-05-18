@@ -32,7 +32,9 @@ module Mobile
         #
         def get_location(id)
           response = perform(:get, "Location/#{id}", nil, headers)
-          # i don't see any evidence this is happening. not sure why.
+          # i don't see any evidence this is happening. not sure why. this code appears to be in active use
+          # i actually find the very confusing because the code that calls this is actively logging
+          # regardless, we probably don't need this
           Rails.logger.info('Mobile Lighthouse Service, Location response', response:)
           raise Common::Exceptions::BackendServiceException, 'LIGHTHOUSE_FACILITIES404' if response[:status] == 404
 

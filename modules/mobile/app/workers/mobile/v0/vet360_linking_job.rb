@@ -16,9 +16,11 @@ module Mobile
         raise MissingUserError, uuid unless user
 
         result = Mobile::V0::Profile::SyncUpdateService.new(user).await_vet360_account_link
+        # this doesn't really do anything
         Rails.logger.info('Mobile Vet360 account linking succeeded for user with uuid',
                           { user_uuid: uuid, transaction_id: result.transaction_id })
       rescue => e
+        # also doesn't really do anything
         Rails.logger.error('Mobile Vet360 account linking failed for user with uuid',
                            { user_uuid: uuid })
         raise e

@@ -11,7 +11,7 @@ module Mobile
 
       def perform(uuid)
         return unless Flipper.enabled?(:mobile_precache_appointments)
-
+        # remove this
         Rails.logger.info('mobile appointments pre-cache attempt', user_uuid: uuid)
 
         user = IAMUser.find(uuid) || User.find(uuid)
@@ -19,6 +19,7 @@ module Mobile
 
         _, failures = Mobile::AppointmentsCacheInterface.new.fetch_appointments(user:, fetch_cache: false,
                                                                                 cache_on_failures: false)
+# remove this too
         message = if failures.present?
                     'mobile appointments pre-cache fails with partial appointments present'
                   else

@@ -30,6 +30,7 @@ module Mobile
           clinics = systems_service.get_facility_clinics(location_id:, clinic_ids: clinic_id)
           clinics.first unless clinics.empty?
         rescue Common::Exceptions::BackendServiceException
+          # this should be included in the other related ticket
           Rails.logger.error(
             "Error fetching clinic #{clinic_id} for location #{location_id}",
             clinic_id:,
@@ -40,6 +41,7 @@ module Mobile
         def get_facility(location_id)
           mobile_facility_service.get_facility(location_id)
         rescue Common::Exceptions::BackendServiceException
+          # this should be included in the other related ticket
           Rails.logger.error(
             "Error fetching facility details for location_id #{location_id}",
             location_id:

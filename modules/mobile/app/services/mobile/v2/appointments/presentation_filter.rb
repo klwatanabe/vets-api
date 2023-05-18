@@ -57,6 +57,8 @@ module Mobile
           DateTime.parse(time)
           true
         rescue => e
+          # no evidence of this happening. we can probably get rid of this if it isn't already
+          # irrelevant due to recent changes in how vaos handles times
           Rails.logger.error("Invalid appointment time received: #{time}", e.message)
           false
         end
