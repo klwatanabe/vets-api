@@ -11,21 +11,21 @@ describe Lighthouse::DirectDeposit::ErrorParser do
     response = OpenStruct.new(body: { 'error' => 'Invalid token.' })
 
     e = Lighthouse::DirectDeposit::ErrorParser.parse(response)
-    match(e, 'cnp.payment.invalid.token')
+    expect(get_code(e)).to eq('cnp.payment.invalid.token')
   end
 
   it 'parses Person for ICN not found error' do
     response = OpenStruct.new(body: { 'detail' => 'No data found for ICN' })
 
     e = Lighthouse::DirectDeposit::ErrorParser.parse(response)
-    match(e, 'cnp.payment.icn.not.found')
+    expect(get_code(e)).to eq('cnp.payment.icn.not.found')
   end
 
   it 'parses Invalid ICN error' do
     response = OpenStruct.new(body: { 'detail' => 'getDirectDeposit.icn size' })
 
     e = Lighthouse::DirectDeposit::ErrorParser.parse(response)
-    match(e, 'cnp.payment.icn.invalid')
+    expect(get_code(e)).to eq('cnp.payment.icn.invalid')
   end
 
   it 'parses payment restriction indicators' do
@@ -41,31 +41,41 @@ describe Lighthouse::DirectDeposit::ErrorParser do
     )
 
     e = Lighthouse::DirectDeposit::ErrorParser.parse(response)
-    match(e, 'cnp.payment.restriction.indicators.present')
+    expect(get_code(e)).to eq('cnp.payment.restriction.indicators.present')
   end
 
-  it 'parses a 400 Potential fraud error' do
+  it 'parses routing number fraud error' do
     response = OpenStruct.new(
       body: {
-        'detail' => 'No changes were made. Routing number related to potential fraud.',
+        'detail' => 'No changes were made. Routing number related to potential fraud.'
       }
     )
 
     e = Lighthouse::DirectDeposit::ErrorParser.parse(response)
-    match(e, 'cnp.payment.routing.number.fraud')
+    expect(get_code(e)).to eq('cnp.payment.routing.number.fraud')
   end
 
-  it 'parses a 429 API rate limit exceeded' do
+  it 'parses account number fraud error' do
+    response = OpenStruct.new(
+      body: {
+        'detail' => 'No changes were made. Flashes on record.'
+      }
+    )
+
+    e = Lighthouse::DirectDeposit::ErrorParser.parse(response)
+    expect(get_code(e)).to eq('cnp.payment.accounting.number.fraud')
+  end
+
+  it 'parses API rate limit exceeded' do
     response = OpenStruct.new(body: { 'message' => 'API rate limit exceeded' })
 
     e = Lighthouse::DirectDeposit::ErrorParser.parse(response)
-    match(e, 'cnp.payment.api.rate.limit.exceeded')
+    expect(get_code(e)).to eq('cnp.payment.api.rate.limit.exceeded')
   end
 
   private
 
-  def match(error_response, expected_code)
-    code = error_response.errors.first[:code]
-    expect(code).to eq(expected_code)
+  def get_code(error_response)
+    error_response.errors.first[:code]
   end
 end
