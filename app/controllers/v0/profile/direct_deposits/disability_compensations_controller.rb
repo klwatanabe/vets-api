@@ -12,29 +12,27 @@ module V0
         before_action :validate_payment_account, only: :update
 
         def show
-          response = client.get_payment_information
-          if response.ok?
-            render status: response.status,
-                   json: response.body,
-                   serializer: DisabilityCompensationsSerializer
-          else
-            render status: response.status, json: response.body
-          end
+          response = client.get_payment_info
+          render_response(response)
         end
 
         def update
-          response = client.update_payment_information(payment_account_params)
-          if response.ok?
-            send_confirmation_email
-            render status: response.status,
-                   json: response.body,
-                   serializer: DisabilityCompensationsSerializer
-          else
-            render status: response.status, json: response.body
-          end
+          response = client.update_payment_info(payment_account)
+          send_confirmation_email
+          render_response(response)
         end
 
         private
+
+        def render_response(response)
+          if response.error?
+            render status: response.status, json: response.body
+          else
+            render status: response.status,
+                   json: response.body,
+                   serializer: DisabilityCompensationsSerializer
+          end
+        end
 
         def controller_enabled?
           routing_error unless Flipper.enabled?(:profile_lighthouse_direct_deposit, @current_user)

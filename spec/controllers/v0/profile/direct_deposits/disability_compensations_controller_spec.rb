@@ -14,7 +14,7 @@ RSpec.describe V0::Profile::DirectDeposits::DisabilityCompensationsController, t
   describe '#show' do
     context 'when successful' do
       it 'returns a status of 200' do
-        VCR.use_cassette('lighthouse/direct_deposit/show/200_response') do
+        VCR.use_cassette('lighthouse/direct_deposit/show/200_valid') do
           get(:show)
         end
 
@@ -22,7 +22,7 @@ RSpec.describe V0::Profile::DirectDeposits::DisabilityCompensationsController, t
       end
 
       it 'returns a payment account' do
-        VCR.use_cassette('lighthouse/direct_deposit/show/200_response') do
+        VCR.use_cassette('lighthouse/direct_deposit/show/200_valid') do
           get(:show)
         end
 
@@ -37,7 +37,7 @@ RSpec.describe V0::Profile::DirectDeposits::DisabilityCompensationsController, t
       end
 
       it 'returns control information' do
-        VCR.use_cassette('lighthouse/direct_deposit/show/200_response') do
+        VCR.use_cassette('lighthouse/direct_deposit/show/200_valid') do
           get(:show)
         end
 
@@ -58,7 +58,7 @@ RSpec.describe V0::Profile::DirectDeposits::DisabilityCompensationsController, t
       end
 
       it 'does not return errors' do
-        VCR.use_cassette('lighthouse/direct_deposit/show/200_response') do
+        VCR.use_cassette('lighthouse/direct_deposit/show/200_valid') do
           get(:show)
         end
 
@@ -67,79 +67,57 @@ RSpec.describe V0::Profile::DirectDeposits::DisabilityCompensationsController, t
       end
     end
 
-    context 'when bad request' do
-      # let(:user) { create(:user, :loa3, :accountable, icn: 'ABC') }
-
-      it 'returns a status of 400' do
-        VCR.use_cassette('lighthouse/direct_deposit/show/400_response') do
+    context 'when has restrictions' do
+      it 'control info has flags set to false' do
+        VCR.use_cassette('lighthouse/direct_deposit/show/200_has_restrictions') do
           get(:show)
         end
+
+        json = JSON.parse(response.body)['data']['attributes']
+        expect(json['control_information']['can_update_direct_deposit']).to be(false)
+        expect(json['control_information']['has_payment_address']).to be(false)
+      end
+    end
+
+    context 'when invalid scopes are provided' do
+      it 'returns a 400' do
+        VCR.use_cassette('lighthouse/direct_deposit/show/400_invalid_scopes') do
+          get(:show)
+        end
+
+        json = JSON.parse(response.body)
+        e = json['errors'].first
 
         expect(response).to have_http_status(:bad_request)
-      end
-
-      it 'does not return a payment account' do
-        VCR.use_cassette('lighthouse/direct_deposit/show/400_response') do
-          get(:show)
-        end
-
-        json = JSON.parse(response.body)
-        expect(json['payment_account']).to be_nil
-      end
-
-      it 'does not return control_information' do
-        VCR.use_cassette('lighthouse/direct_deposit/show/400_response') do
-          get(:show)
-        end
-
-        json = JSON.parse(response.body)
-        expect(json['control_information']).to be_nil
+        expect(e['code']).to eq('cnp.payment.invalid.scopes')
       end
     end
 
     context 'when not authorized' do
       it 'returns a status of 401' do
-        VCR.use_cassette('lighthouse/direct_deposit/show/401_response') do
-          get(:show)
-        end
-
-        expect(response).to have_http_status(:unauthorized)
-      end
-    end
-
-    context 'when user deceased' do
-      it 'returns a status of 403' do
-        VCR.use_cassette('lighthouse/direct_deposit/show/403_response') do
+        VCR.use_cassette('lighthouse/direct_deposit/show/401_invalid_token') do
           get(:show)
         end
 
         json = JSON.parse(response.body)
+        e = json['errors'].first
 
-        payment_account = json['data']['attributes']['payment_account']
-        expect(payment_account).not_to be_nil
-
-        control_info = json['data']['attributes']['control_information']
-        expect(control_info['is_not_deceased']).to be(false)
+        expect(response).to have_http_status(:unauthorized)
+        expect(e['code']).to eq('cnp.payment.invalid.token')
       end
     end
 
     context 'when ICN not found' do
       it 'returns a status of 404' do
-        VCR.use_cassette('lighthouse/direct_deposit/show/404_response') do
+        VCR.use_cassette('lighthouse/direct_deposit/show/404_icn_not_found') do
           get(:show)
         end
+
+        json = JSON.parse(response.body)
+        e = json['errors'].first
 
         expect(response).to have_http_status(:not_found)
-      end
-    end
-
-    context 'when bad gateway' do
-      it 'returns a status of 502' do
-        VCR.use_cassette('lighthouse/direct_deposit/show/502_response') do
-          get(:show)
-        end
-
-        expect(response).to have_http_status(:bad_gateway)
+        expect(e['code']).to eq('cnp.payment.icn.not.found')
       end
     end
 
@@ -150,7 +128,7 @@ RSpec.describe V0::Profile::DirectDeposits::DisabilityCompensationsController, t
       end
 
       it 'returns routing error' do
-        VCR.use_cassette('lighthouse/direct_deposit/show/200_response') do
+        VCR.use_cassette('lighthouse/direct_deposit/show/200_valid') do
           get(:show)
         end
 
@@ -168,7 +146,7 @@ RSpec.describe V0::Profile::DirectDeposits::DisabilityCompensationsController, t
           routing_number: '031000503'
         }
 
-        VCR.use_cassette('lighthouse/direct_deposit/update/200_response') do
+        VCR.use_cassette('lighthouse/direct_deposit/update/200_valid') do
           put(:update, params:)
         end
 
@@ -189,7 +167,7 @@ RSpec.describe V0::Profile::DirectDeposits::DisabilityCompensationsController, t
           routing_number: '031000503'
         }
 
-        VCR.use_cassette('lighthouse/direct_deposit/update/200_response') do
+        VCR.use_cassette('lighthouse/direct_deposit/update/200_valid') do
           put(:update, params:)
         end
 
@@ -206,7 +184,7 @@ RSpec.describe V0::Profile::DirectDeposits::DisabilityCompensationsController, t
       end
 
       it 'returns a validation error' do
-        VCR.use_cassette('lighthouse/direct_deposit/update/200_response') do
+        VCR.use_cassette('lighthouse/direct_deposit/update/200_valid') do
           put(:update, params:)
         end
 
@@ -227,7 +205,7 @@ RSpec.describe V0::Profile::DirectDeposits::DisabilityCompensationsController, t
       end
 
       it 'returns a validation error' do
-        VCR.use_cassette('lighthouse/direct_deposit/update/200_response') do
+        VCR.use_cassette('lighthouse/direct_deposit/update/200_valid') do
           put(:update, params:)
         end
 
@@ -248,7 +226,7 @@ RSpec.describe V0::Profile::DirectDeposits::DisabilityCompensationsController, t
       end
 
       it 'returns a validation error' do
-        VCR.use_cassette('lighthouse/direct_deposit/update/200_response') do
+        VCR.use_cassette('lighthouse/direct_deposit/update/200_valid') do
           put(:update, params:)
         end
 
@@ -260,7 +238,7 @@ RSpec.describe V0::Profile::DirectDeposits::DisabilityCompensationsController, t
       end
     end
 
-    context 'when unprocessable entity' do
+    context 'when fraud flag is present' do
       let(:params) do
         {
           account_type: 'CHECKING',
@@ -269,8 +247,8 @@ RSpec.describe V0::Profile::DirectDeposits::DisabilityCompensationsController, t
         }
       end
 
-      it 'returns a validation error' do
-        VCR.use_cassette('lighthouse/direct_deposit/update/400_response') do
+      it 'returns a routing number fraud error' do
+        VCR.use_cassette('lighthouse/direct_deposit/update/400_routing_number_fraud') do
           put(:update, params:)
         end
 
@@ -281,29 +259,23 @@ RSpec.describe V0::Profile::DirectDeposits::DisabilityCompensationsController, t
 
         expect(e).not_to be_nil
         expect(e['title']).to eq('Bad Request')
-        expect(e['detail']).to eq('Routing number related to potential fraud')
-        expect(e['code']).to eq('cnp.payment.routing.number.fraud.message')
-        expect(e['status']).to eq(400)
+        expect(e['code']).to eq('cnp.payment.routing.number.fraud')
         expect(e['source']).to eq('Lighthouse Direct Deposit')
       end
-    end
 
-    context 'when invalid scopes are provided' do
-      it 'returns a 400' do
-        error_message = 'One or more scopes are not configured for the authorization server resource.'
-
-        VCR.use_cassette('lighthouse/direct_deposit/show/400_invalid_scopes') do
-          get(:show)
+      it 'returns an account number fraud error' do
+        VCR.use_cassette('lighthouse/direct_deposit/update/400_account_number_fraud') do
+          put(:update, params:)
         end
+
+        expect(response).to have_http_status(:bad_request)
 
         json = JSON.parse(response.body)
         e = json['errors'].first
 
-        expect(response).to have_http_status(:bad_request)
-        expect(e['title']).to eq('invalid_scope')
-        expect(e['detail']).to eq(error_message)
-        expect(e['code']).to eq('LIGHTHOUSE_DIRECT_DEPOSIT400')
-        expect(e['status']).to eq(400)
+        expect(e).not_to be_nil
+        expect(e['title']).to eq('Bad Request')
+        expect(e['code']).to eq('cnp.payment.accounting.number.fraud')
         expect(e['source']).to eq('Lighthouse Direct Deposit')
       end
     end

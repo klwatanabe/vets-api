@@ -5,8 +5,7 @@ http_interactions:
     uri: https://sandbox-api.va.gov/services/direct-deposit-management/v1/direct-deposit?icn=1012666073V986297
     body:
       encoding: UTF-8
-      string: '"{\"account_type\"=>\"CHECKING\", \"account_number\"=>\"1234567890\",
-        \"routing_number\"=>\"031000503\"}"'
+      string: '{"paymentAccount":{"accountNumber":"1234567890","accountType":"CHECKING","financialInstitutionRoutingNumber":"031000503"}}'
     headers:
       Accept:
       - application/json
@@ -20,11 +19,11 @@ http_interactions:
       - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
   response:
     status:
-      code: 401
+      code: 400
       message: Unauthorized
     headers:
       Date:
-      - Tue, 04 Apr 2023 03:39:48 GMT
+      - Fri, 19 May 2023 19:13:30 GMT
       Content-Type:
       - application/json
       Connection:
@@ -35,23 +34,19 @@ http_interactions:
       - '60'
       Ratelimit-Remaining:
       - '59'
-      Ratelimit-Reset:
-      - '12'
       Ratelimit-Limit:
       - '60'
+      Ratelimit-Reset:
+      - '30'
       Www-Authenticate:
       - Bearer
       X-Kong-Response-Latency:
-      - '257'
+      - '80'
       Strict-Transport-Security:
       - max-age=16000000; includeSubDomains; preload;
       - max-age=31536000; includeSubDomains; preload
       Access-Control-Allow-Origin:
       - "*"
-      X-Kong-Upstream-Latency:
-      - '265'
-      X-Kong-Proxy-Latency:
-      - '0'
       Cache-Control:
       - ''
       X-Frame-Options:
@@ -60,7 +55,12 @@ http_interactions:
       - chunked
     body:
       encoding: UTF-8
-      string: "{ \n  \"status\": 401,\n  \"error\": \"Invalid token.\",\n  \"path\":
-        \"/direct-deposit-management/v1/direct-deposit\"\n}\n"
-  recorded_at: Tue, 04 Apr 2023 03:39:48 GMT
+      string: '{
+        "type": "https://api.va.gov/direct-deposit-management/errors/bad-request",
+        "title": "Bad Request",
+        "status": 400,
+        "detail": "No changes were made. Request was sent to Benefits Gateway Service (BGS), but BGS update failed. Unknown issue(s). Raw response from BGS: Failed to update Address/Bank Info. Flashes on record.",
+        "instance": "e48e3aeb-f312-11ec-88e8-f55e56a472a2"
+      }'
+  recorded_at: Fri, 19 May 2023 19:13:30 GMT
 recorded_with: VCR 6.1.0

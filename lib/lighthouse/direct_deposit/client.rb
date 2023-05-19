@@ -2,13 +2,15 @@
 
 require 'common/client/base'
 require 'lighthouse/direct_deposit/configuration'
-require 'lighthouse/direct_deposit/payment_information'
-require 'lighthouse/direct_deposit/error'
+require 'lighthouse/direct_deposit/payment_info_parser'
+require 'lighthouse/direct_deposit/error_parser'
+require 'lighthouse/service_exception'
 
 module DirectDeposit
   class Client < Common::Client::Base
-    include SentryLogging
     configuration DirectDeposit::Configuration
+
+    PATH = '/services/direct-deposit-management/v1/direct-deposit'
     STATSD_KEY_PREFIX = 'api.direct_deposit'
 
     def initialize(icn)
@@ -18,60 +20,48 @@ module DirectDeposit
       super()
     end
 
-    def get_payment_information
+    def get_payment_info
       response = config.get("?icn=#{@icn}")
-      parse_response(response)
+      handle_response(response)
+    rescue => e
+      handle_error(e, 'CLIENT_ID', PATH)
     end
 
-    def update_payment_information(params)
-      body = request_body(params)
-      save_sanitized_body(body)
+    def update_payment_info(params)
+      body = build_request_body(params)
 
       response = config.put("?icn=#{@icn}", body)
-      parse_response(response)
+      handle_response(response)
+    rescue => e
+      handle_error(e, 'CLIENT_ID', PATH)
     end
 
     private
 
-    def request_body(params)
-      params.delete('financial_institution_name') if params['financial_institution_name'].blank?
+    def handle_error(exception, _lighthouse_client_id, _url)
+      # Request ID here?
+      # Lighthouse::ServiceException.send_error_logs(
+      #   exception,
+      #   self.class.to_s.underscore,
+      #   lighthouse_client_id, url
+      # )
+
+      Lighthouse::DirectDeposit::ErrorParser.parse(exception.response)
+    end
+
+    def handle_response(response)
+      Lighthouse::DirectDeposit::PaymentInfoParser.parse(response)
+    end
+
+    def build_request_body(payment_account)
       {
         'paymentAccount' =>
         {
-          'accountNumber' => params[:account_number],
-          'accountType' => params[:account_type],
-          'financialInstitutionRoutingNumber' => params[:routing_number]
+          'accountNumber' => payment_account.account_number,
+          'accountType' => payment_account.account_type,
+          'financialInstitutionRoutingNumber' => payment_account.routing_number
         }
       }.to_json
-    end
-
-    def save_sanitized_body(body)
-      json = JSON.parse(body)
-      json['paymentAccount']['accountNumber'] = '****'
-
-      @sanitized_req_body = json
-    end
-
-    def valid_response?(response)
-      ok?(response) || control_info?(response)
-    end
-
-    def ok?(response)
-      response.status.between?(200, 299)
-    end
-
-    def control_info?(response)
-      response.body['controlInformation'].present?
-    end
-
-    def parse_response(response)
-      if valid_response?(response)
-        Lighthouse::DirectDeposit::PaymentInformation.build_from(response)
-      else
-        error = Lighthouse::DirectDeposit::Error.new(response)
-        log_message_to_sentry(error.title, :error, body: error.body)
-        error
-      end
     end
   end
 end
