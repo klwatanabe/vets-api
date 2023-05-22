@@ -15,7 +15,7 @@ module IncomeLimits
       http = Net::HTTP.new(uri.host, uri.port)
       http.use_ssl = true if uri.scheme == 'https'
       request = Net::HTTP::Get.new(uri.request_uri)
-      http.request(request)
+      response = http.request(request)
       response.body if response.code == '200'
     end
 
