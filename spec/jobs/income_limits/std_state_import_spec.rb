@@ -14,10 +14,12 @@ RSpec.describe IncomeLimits::StdStateImport, type: :worker do
     end
 
     before do
-      result = {'body' => csv_data, 'code' => '200'}
       allow_any_instance_of(
         IncomeLimits::StdStateImport
-      ).to receive(:fetch_csv_data).and_return(result)
+      ).to receive(:fetch_csv_data).and_return({
+                                                 'body' => csv_data,
+                                                 'code' => '200'
+                                               })
     end
 
     it 'creates a new StdState record' do
