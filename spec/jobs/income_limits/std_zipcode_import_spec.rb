@@ -5,7 +5,6 @@ require 'csv'
 
 RSpec.describe IncomeLimits::StdZipcodeImport, type: :worker do
   describe '#perform' do
-    let(:csv_url) { 'https://sitewide-public-websites-income-limits-data.s3-us-gov-west-1.amazonaws.com/std_zipcode.csv' }
     let(:csv_data) do
       <<-CSV
         ID,ZIPCODE,ZIPCLASSIFICATION_ID,PREFERREDZIPPLACE_ID,STATE_ID,COUNTYNUMBER,VERSION,CREATED,UPDATED,CREATEDBY,UPDATEDBY
@@ -14,7 +13,7 @@ RSpec.describe IncomeLimits::StdZipcodeImport, type: :worker do
     end
 
     before do
-      allow(URI).to receive(:open).with(csv_url).and_return(StringIO.new(csv_data))
+      allow(URI).to receive(:open).and_return(StringIO.new(csv_data))
     end
 
     context 'when a matching record already exists' do

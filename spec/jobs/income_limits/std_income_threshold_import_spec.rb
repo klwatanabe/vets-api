@@ -5,7 +5,6 @@ require 'csv'
 
 RSpec.describe IncomeLimits::StdIncomeThresholdImport, type: :worker do
   describe '#perform' do
-    let(:csv_url) { 'https://sitewide-public-websites-income-limits-data.s3-us-gov-west-1.amazonaws.com/std_incomethreshold.csv' }
     let(:csv_data) do
       <<-CSV
         ID,INCOME_THRESHOLD_YEAR,EXEMPT_AMOUNT,MEDICAL_EXPENSE_DEDUCTIBLE,CHILD_INCOME_EXCLUSION,DEPENDENT,ADD_DEPENDENT_THRESHOLD,PROPERTY_THRESHOLD,PENSION_THRESHOLD,PENSION_1_DEPENDENT,ADD_DEPENDENT_PENSION,NINETY_DAY_HOSPITAL_COPAY,ADD_90_DAY_HOSPITAL_COPAY,OUTPATIENT_BASIC_CARE_COPAY,OUTPATIENT_SPECIALTY_COPAY,THRESHOLD_EFFECTIVE_DATE,AID_AND_ATTENDANCE_THRESHOLD,OUTPATIENT_PREVENTIVE_COPAY,MEDICATION_COPAY,MEDICATIN_COPAY_ANNUAL_CAP,LTC_INPATIENT_COPAY,LTC_OUTPATIENT_COPAY,LTC_DOMICILIARY_COPAY,INPATIENT_PER_DIEM,DESCRIPTION,VERSION,CREATED,UPDATED,CREATED_BY,UPDATED_BY
@@ -14,7 +13,7 @@ RSpec.describe IncomeLimits::StdIncomeThresholdImport, type: :worker do
     end
 
     before do
-      allow(URI).to receive(:open).with(csv_url).and_return(StringIO.new(csv_data))
+      allow(URI).to receive(:open).and_return(StringIO.new(csv_data))
     end
 
     context 'when a matching record already exists' do
