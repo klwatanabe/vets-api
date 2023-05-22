@@ -16,7 +16,10 @@ RSpec.describe IncomeLimits::StdStateImport, type: :worker do
     before do
       allow_any_instance_of(
         IncomeLimits::StdStateImport
-      ).to receive(:perform).and_return(CSV.parse(csv_data, headers: true))
+      ).to receive(:fetch_csv_data).and_return({
+                                                 body: CSV.parse(csv_data, headers: true),
+                                                 code: 200
+                                               })
     end
 
     it 'creates a new StdState record' do

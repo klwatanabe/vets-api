@@ -9,13 +9,17 @@ module IncomeLimits
   class StdStateImport
     include Sidekiq::Worker
 
-    def perform
+    def fetch_csv_data
       csv_url = 'https://sitewide-public-websites-income-limits-data.s3-us-gov-west-1.amazonaws.com/std_state.csv'
       uri = URI(csv_url)
       http = Net::HTTP.new(uri.host, uri.port)
       http.use_ssl = true if uri.scheme == 'https'
       request = Net::HTTP::Get.new(uri.request_uri)
-      response = http.request(request)
+      http.request(request)
+    end
+
+    def perform
+      response = fetch_csv_data
       if response.code == '200'
         data = response.body
         CSV.parse(data, headers: true) do |row|
