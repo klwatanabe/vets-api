@@ -13,7 +13,9 @@ RSpec.describe IncomeLimits::StdZipcodeImport, type: :worker do
     end
 
     before do
-      allow(CSV).to receive(:parse).and_return(CSV.parse(csv_data, headers: true))
+      allow_any_instance_of(
+        IncomeLimits::StdZipcodeImport
+      ).to receive(:perform).and_return(CSV.parse(csv_data, headers: true))
     end
 
     context 'when a matching record already exists' do
