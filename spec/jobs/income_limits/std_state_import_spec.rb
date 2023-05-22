@@ -18,7 +18,7 @@ RSpec.describe IncomeLimits::StdStateImport, type: :worker do
 
     it 'populates states' do
       IncomeLimits::StdStateImport.new.perform
-      expect(StdState.find('Maine')).not_to be_nil
+      expect(std_state.find('Maine')).not_to be_nil
       expect(StdState.find('123')).not_to be_nil
     end
 
@@ -30,7 +30,7 @@ RSpec.describe IncomeLimits::StdStateImport, type: :worker do
 
     it 'sets the attributes correctly' do
       described_class.new.perform
-      state = StdState.last
+      state = std_state.last
       expect(state.name).to eq('Maine')
       expect(state.postal_name).to eq('Postal A')
       expect(state.fips_code).to eq(123)
