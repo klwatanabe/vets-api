@@ -17,7 +17,7 @@ RSpec.describe IncomeLimits::StdStateImport, type: :worker do
       allow_any_instance_of(
         IncomeLimits::StdStateImport
       ).to receive(:fetch_csv_data).and_return({
-                                                 body: CSV.parse(csv_data, headers: true),
+                                                 body: csv_data,
                                                  code: 200
                                                })
     end
