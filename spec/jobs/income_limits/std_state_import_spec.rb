@@ -8,17 +8,15 @@ RSpec.describe IncomeLimits::StdStateImport, type: :worker do
     let(:csv_data) do
       <<-CSV
         ID,NAME,POSTALNAME,FIPSCODE,COUNTRY_ID,VERSION,CREATED,UPDATED,CREATEDBY,UPDATEDBY
-        1,State A,Postal A,123,2,1,01/01/2023,01/02/2023,John,Doe
+        1,State A,Postal A,123,2,1,01/01/2023,01/02/2023,John,Sam
       CSV
     end
 
     before do
+      response = double('response', body: csv_data, code: '200')
       allow_any_instance_of(
         IncomeLimits::StdStateImport
-      ).to receive(:fetch_csv_data).and_return({
-                                                 :body => csv_data,
-                                                 :code => '200'
-                                               })
+      ).to receive(:fetch_csv_data).and_return(response)
     end
 
     it 'creates a new StdState record' do
@@ -38,7 +36,7 @@ RSpec.describe IncomeLimits::StdStateImport, type: :worker do
       expect(state.created).to eq(Date.new(2023, 1, 1))
       expect(state.updated).to eq(Date.new(2023, 1, 2))
       expect(state.created_by).to eq('John')
-      expect(state.updated_by).to eq('Doe')
+      expect(state.updated_by).to eq('Sam')
     end
   end
 end
