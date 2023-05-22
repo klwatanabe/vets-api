@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 
-# spec/workers/std_state_import_spec.rb
 require 'rails_helper'
 require 'csv'
 
@@ -17,8 +16,8 @@ RSpec.describe IncomeLimits::StdStateImport, type: :worker do
       allow_any_instance_of(
         IncomeLimits::StdStateImport
       ).to receive(:fetch_csv_data).and_return({
-                                                 'body' => csv_data,
-                                                 'code' => '200'
+                                                 :body => csv_data,
+                                                 :code => '200'
                                                })
     end
 
