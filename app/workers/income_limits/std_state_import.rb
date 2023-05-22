@@ -16,18 +16,17 @@ module IncomeLimits
       http.use_ssl = true if uri.scheme == 'https'
       request = Net::HTTP::Get.new(uri.request_uri)
       http.request(request)
+      response.body if response.code == '200'
     end
 
     def perform
-      response = fetch_csv_data
-      if response.code == '200'
-        data = response.body
+      data = fetch_csv_data
+      if (data)
         CSV.parse(data, headers: true) do |row|
           created = DateTime.strptime(row['CREATED'], '%m/%d/%Y %l:%M:%S.%N %p').to_s
           updated = DateTime.strptime(row['UPDATED'], '%m/%d/%Y %l:%M:%S.%N %p').to_s if row['UPDATED']
           std_state = StdState.find_or_initialize_by(id: row['ID'].to_i)
           next if std_state
-
           std_state.assign_attributes(
             name: row['NAME'],
             postal_name: row['POSTALNAME'],
@@ -42,7 +41,7 @@ module IncomeLimits
           std_state.save!
         end
       else
-        raise "Failed to fetch CSV data. Response code: #{response.code}"
+        raise "Failed to fetch CSV data"
       end
     end
   end

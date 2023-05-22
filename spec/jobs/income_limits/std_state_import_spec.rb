@@ -10,15 +10,14 @@ RSpec.describe IncomeLimits::StdStateImport, type: :worker do
     end
 
     before do
-      response = double('response', body: csv_data, code: '200')
       allow_any_instance_of(
         IncomeLimits::StdStateImport
-      ).to receive(:fetch_csv_data).and_return(response)
+      ).to receive(:fetch_csv_data).and_return(csv_data)
     end
 
     it 'populates states' do
       IncomeLimits::StdStateImport.new.perform
-      expect(std_state.find('Maine')).not_to be_nil
+      expect(StdState.find('Maine')).not_to be_nil
       expect(StdState.find('123')).not_to be_nil
     end
 
@@ -30,7 +29,7 @@ RSpec.describe IncomeLimits::StdStateImport, type: :worker do
 
     it 'sets the attributes correctly' do
       described_class.new.perform
-      state = std_state.last
+      state = StdState.last
       expect(state.name).to eq('Maine')
       expect(state.postal_name).to eq('Postal A')
       expect(state.fips_code).to eq(123)
