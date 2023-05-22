@@ -7,8 +7,8 @@ RSpec.describe IncomeLimits::StdStateImport, type: :worker do
   describe '#perform' do
     let(:csv_data) do
       <<-CSV
-        ID,NAME,POSTALNAME,FIPSCODE,COUNTRY_ID,VERSION,CREATED,UPDATED,CREATEDBY,UPDATEDBY
-        1,Maine,Sample County,123,2,1,7/21/2005 12:13:36.000000 PM,7/22/2005 12:13:36.000000 PM,John,Sam
+ID,NAME,POSTALNAME,FIPSCODE,COUNTRY_ID,VERSION,CREATED,UPDATED,CREATEDBY,UPDATEDBY
+1,Maine,Sample County,123,2,1,7/21/2005 12:13:36.000000 PM,7/22/2005 12:13:36.000000 PM,John,Sam
       CSV
     end
 
