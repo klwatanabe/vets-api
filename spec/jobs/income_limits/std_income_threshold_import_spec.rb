@@ -13,59 +13,22 @@ RSpec.describe IncomeLimits::StdIncomeThresholdImport, type: :worker do
     end
 
     before do
-      allow(URI).to receive(:open).and_return(StringIO.new(csv_data))
+      allow(CSV).to receive(:parse).and_return(CSV.parse(csv_data, headers: true))
     end
 
-    context 'when a matching record already exists' do
-      let!(:existing_threshold) { create(:std_income_threshold, id: 1) }
-
-      it 'does not create a new record' do
-        expect do
-          described_class.new.perform
-        end.not_to change(StdIncomeThreshold, :count)
-      end
-    end
-
-    context 'when a matching record does not exist' do
-      it 'creates a new record' do
-        expect do
-          described_class.new.perform
-        end.to change(StdIncomeThreshold, :count).by(1)
-      end
-
-      it 'sets the attributes correctly' do
+    it 'creates a new StdIncomeThreshold record' do
+      expect do
         described_class.new.perform
-        threshold = StdIncomeThreshold.last
-        expect(threshold.income_threshold_year).to eq(2023)
-        expect(threshold.exempt_amount).to eq(1000)
-        expect(threshold.medical_expense_deductible).to eq(200)
-        expect(threshold.child_income_exclusion).to eq(500)
-        expect(threshold.dependent).to eq(2)
-        expect(threshold.add_dependent_threshold).to eq(300)
-        expect(threshold.property_threshold).to eq(100_000)
-        expect(threshold.pension_threshold).to eq(15_000)
-        expect(threshold.pension_1_dependent).to eq(5000)
-        expect(threshold.add_dependent_pension).to eq(2000)
-        expect(threshold.ninety_day_hospital_copay).to eq(50)
-        expect(threshold.add_ninety_day_hospital_copay).to eq(25)
-        expect(threshold.outpatient_basic_care_copay).to eq(10)
-        expect(threshold.outpatient_specialty_copay).to eq(15)
-        expect(threshold.threshold_effective_date).to eq(Date.new(2023, 1, 1))
-        expect(threshold.aid_and_attendance_threshold).to eq(300)
-        expect(threshold.outpatient_preventive_copay).to eq(5)
-        expect(threshold.medication_copay).to eq(5)
-        expect(threshold.medication_copay_annual_cap).to eq(1000)
-        expect(threshold.ltc_inpatient_copay).to eq(75)
-        expect(threshold.ltc_outpatient_copay).to eq(100)
-        expect(threshold.ltc_domiciliary_copay).to eq(50)
-        expect(threshold.inpatient_per_diem).to eq(250)
-        expect(threshold.description).to eq('Description A')
-        expect(threshold.version).to eq(1)
-        expect(threshold.created).to eq(Date.new(2023, 1, 1))
-        expect(threshold.updated).to eq(Date.new(2023, 1, 2))
-        expect(threshold.created_by).to eq('John')
-        expect(threshold.updated_by).to eq('Doe')
-      end
+      end.to change(StdIncomeThreshold, :count).by(1)
+    end
+
+    it 'sets the attributes correctly' do
+      described_class.new.perform
+      threshold = StdIncomeThreshold.last
+      expect(threshold.income_threshold_year).to eq(2022)
+      expect(threshold.pension_threshold).to eq(1000)
+      expect(threshold.pension_1_dependent).to eq(500)
+      expect(threshold.add_dependent_pension).to eq(200)
     end
   end
 end

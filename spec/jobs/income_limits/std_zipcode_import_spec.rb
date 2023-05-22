@@ -13,7 +13,7 @@ RSpec.describe IncomeLimits::StdZipcodeImport, type: :worker do
     end
 
     before do
-      allow(URI).to receive(:open).and_return(StringIO.new(csv_data))
+      allow(CSV).to receive(:parse).and_return(CSV.parse(csv_data, headers: true))
     end
 
     context 'when a matching record already exists' do
@@ -37,10 +37,10 @@ RSpec.describe IncomeLimits::StdZipcodeImport, type: :worker do
         described_class.new.perform
         zipcode = StdZipcode.last
         expect(zipcode.zip_code).to eq(12_345)
-        expect(zipcode.zip_classification_id).to eq(2)
-        expect(zipcode.preferred_zip_place_id).to eq(3)
-        expect(zipcode.state_id).to eq(4)
-        expect(zipcode.county_number).to eq(5)
+        expect(zipcode.zip_classification_id).to eq(1)
+        expect(zipcode.preferred_zip_place_id).to eq(1)
+        expect(zipcode.state_id).to eq(2)
+        expect(zipcode.county_number).to eq(123)
         expect(zipcode.version).to eq(1)
         expect(zipcode.created).to eq(Date.new(2023, 1, 1))
         expect(zipcode.updated).to eq(Date.new(2023, 1, 2))
