@@ -7,7 +7,7 @@ module Lighthouse
 
       def initialize(status, errors)
         @status = status
-        @errors = errors
+        @errors = errors || []
       end
 
       def response
@@ -22,15 +22,15 @@ module Lighthouse
       end
 
       def code
-        errors.first[:code] if errors
+        errors.first[:code]
       end
 
       def title
-        errors.first[:title] if errors
+        errors.first[:title]
       end
 
       def detail
-        errors.first[:detail] if errors
+        errors.first[:detail]
       end
 
       def message

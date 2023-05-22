@@ -8,9 +8,9 @@ require 'lighthouse/service_exception'
 
 module DirectDeposit
   class Client < Common::Client::Base
+    using SentryLogging
     configuration DirectDeposit::Configuration
 
-    PATH = '/services/direct-deposit-management/v1/direct-deposit'
     STATSD_KEY_PREFIX = 'api.direct_deposit'
 
     def initialize(icn)
@@ -23,8 +23,8 @@ module DirectDeposit
     def get_payment_info
       response = config.get("?icn=#{@icn}")
       handle_response(response)
-    rescue => e
-      handle_error(e, 'CLIENT_ID', PATH)
+    rescue Faraday::ClientError, Faraday::ServerError => e
+      handle_error(e)
     end
 
     def update_payment_info(params)
@@ -32,25 +32,31 @@ module DirectDeposit
 
       response = config.put("?icn=#{@icn}", body)
       handle_response(response)
-    rescue => e
-      handle_error(e, 'CLIENT_ID', PATH)
+    rescue Faraday::ClientError, Faraday::ServerError => e
+      handle_error(e)
     end
 
     private
 
-    def handle_error(exception, _lighthouse_client_id, _url)
-      # Request ID here?
-      # Lighthouse::ServiceException.send_error_logs(
-      #   exception,
-      #   self.class.to_s.underscore,
-      #   lighthouse_client_id, url
-      # )
-
-      Lighthouse::DirectDeposit::ErrorParser.parse(exception.response)
-    end
-
     def handle_response(response)
       Lighthouse::DirectDeposit::PaymentInfoParser.parse(response)
+    end
+
+    def handle_error(exception)
+      error_response = Lighthouse::DirectDeposit::ErrorParser.parse(exception.response)
+
+      Raven.tags_context(external_service: config.service_name)
+      Raven.extra_context(
+        {
+          client_id: config.settings.client_id,
+          url: config.base_path,
+          message: error_response.message
+        }
+      )
+
+      Raven.capture_exception(exception, level: :error)
+
+      error_response
     end
 
     def build_request_body(payment_account)

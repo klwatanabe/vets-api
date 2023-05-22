@@ -4,7 +4,7 @@ class DisabilityCompensationsSerializer < ActiveModel::Serializer
   attributes :control_information, :payment_account
 
   def control_information
-    object[:control_information] if object.key?(:control_information)
+    object[:control_information]
   end
 
   def payment_account
@@ -12,10 +12,10 @@ class DisabilityCompensationsSerializer < ActiveModel::Serializer
 
     payment_account = object[:payment_account]
 
-    account_number = payment_account[:account_number]
+    account_number = payment_account&.dig(:account_number)
     payment_account[:account_number] = StringHelpers.mask_sensitive(account_number) if account_number
 
-    routing_number = payment_account[:routing_number]
+    routing_number = payment_account&.dig(:routing_number)
     payment_account[:routing_number] = StringHelpers.mask_sensitive(routing_number) if routing_number
 
     payment_account

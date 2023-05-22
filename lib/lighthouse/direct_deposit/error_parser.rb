@@ -23,7 +23,7 @@ module Lighthouse
       end
 
       def self.parse_title(body)
-        body[:title] || body[:error] || status_message_from(body[:status])
+        body[:title] || body[:error] || status_message_from(body[:status]) || 'Unknown error'
       end
 
       def self.parse_detail(body)
@@ -48,7 +48,7 @@ module Lighthouse
         return 'cnp.payment.accounting.number.fraud' if detail.include? 'Flashes on record'
         return 'cnp.payment.unspecified.error' if detail.include? 'GUIE50022'
 
-        'cnp.payment.generic.error.message'
+        'cnp.payment.generic.error'
       end
 
       def self.data_source
@@ -64,7 +64,7 @@ module Lighthouse
       end
 
       def self.error_codes?(body)
-        body[:error_codes]&.present?
+        body[:error_codes].present?
       end
 
       def self.status_message_from(code)

@@ -18,7 +18,7 @@ module V0
 
         def update
           response = client.update_payment_info(payment_account)
-          send_confirmation_email
+          send_confirmation_email unless response.error?
           render_response(response)
         end
 
