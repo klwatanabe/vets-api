@@ -4,7 +4,7 @@
 require 'rails_helper'
 require 'csv'
 
-RSpec.describe StdStateImport, type: :worker do
+RSpec.describe IncomeLimits::StdStateImport, type: :worker do
   describe '#perform' do
     let(:csv_data) do
       <<-CSV
