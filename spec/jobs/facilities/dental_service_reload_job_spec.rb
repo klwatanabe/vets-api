@@ -5,7 +5,7 @@ require 'rails_helper'
 
 RSpec.describe Facilities::DentalServiceReloadJob, type: :job do
   let(:dental_service_data) do
-    %(ID,NAME,POSTALNAME,FIPSCODE,COUNTRY_ID,VERSION,CREATED,UPDATED,CREATEDBY,UPDATEDBY\n1,Maine,Sample County,123,2,1,01/01/2023,01/02/2023,John,Sam)
+    %(unique_id,facility_type\n402HB,va_health_facility\n436,va_health_facility\n436GH,va_health_facility)
   end
 
   before do
