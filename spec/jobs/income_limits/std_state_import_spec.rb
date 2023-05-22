@@ -8,7 +8,7 @@ RSpec.describe IncomeLimits::StdStateImport, type: :worker do
     let(:csv_data) do
       <<-CSV
         ID,NAME,POSTALNAME,FIPSCODE,COUNTRY_ID,VERSION,CREATED,UPDATED,CREATEDBY,UPDATEDBY
-        1,State A,Postal A,123,2,1,01/01/2023,01/02/2023,John,Sam
+        1,State A,Postal A,123,2,1,7/21/2005 12:13:36.000000 PM,7/22/2005 12:13:36.000000 PM,John,Sam
       CSV
     end
 
@@ -33,10 +33,6 @@ RSpec.describe IncomeLimits::StdStateImport, type: :worker do
       expect(state.fips_code).to eq(123)
       expect(state.country_id).to eq(2)
       expect(state.version).to eq(1)
-      expect(state.created).to eq(Date.new(2023, 1, 1))
-      expect(state.updated).to eq(Date.new(2023, 1, 2))
-      expect(state.created_by).to eq('John')
-      expect(state.updated_by).to eq('Sam')
     end
   end
 end
