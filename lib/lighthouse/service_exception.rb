@@ -20,6 +20,10 @@ module Lighthouse
       '400': Common::Exceptions::BadRequest
     }.freeze
 
+    def self.exceptions
+      ERROR_MAP.values
+    end
+
     # sends error logs to sentry that contains the client id and url that the consumer was trying call
     # raises an error based off of what the response status was
     # formats the Lighthouse exception for the controller ExceptionHandling to report out to the consumer
@@ -73,7 +77,12 @@ module Lighthouse
     def self.error_object_details(error_body, error_status)
       status = error_status&.to_s
       title = error_body['title'] || error_class(status.to_sym).to_s
-      detail = error_body['detail'] || error_body['message'] || error_body['error'] || 'No details provided'
+      detail = error_body['detail'] ||
+               error_body['message'] ||
+               error_body['error'] ||
+               error_body['error_description'] ||
+               'No details provided'
+
       code = error_body['code'] || error_status&.to_s
 
       [status, title, detail, code]

@@ -23,8 +23,8 @@ module DirectDeposit
     def get_payment_info
       response = config.get("?icn=#{@icn}")
       handle_response(response)
-    rescue Faraday::ClientError, Faraday::ServerError => e
-      handle_error(e)
+    rescue => e # Faraday::ClientError, Faraday::ServerError
+      handle_error(e, config.settings.client_id, config.base_path)
     end
 
     def update_payment_info(params)
@@ -32,8 +32,8 @@ module DirectDeposit
 
       response = config.put("?icn=#{@icn}", body)
       handle_response(response)
-    rescue Faraday::ClientError, Faraday::ServerError => e
-      handle_error(e)
+    rescue => e # Faraday::ClientError, Faraday::ServerError
+      handle_error(e, config.settings.client_id, config.base_path)
     end
 
     private
@@ -42,21 +42,13 @@ module DirectDeposit
       Lighthouse::DirectDeposit::PaymentInfoParser.parse(response)
     end
 
-    def handle_error(exception)
-      error_response = Lighthouse::DirectDeposit::ErrorParser.parse(exception.response)
-
-      Raven.tags_context(external_service: config.service_name)
-      Raven.extra_context(
-        {
-          client_id: config.settings.client_id,
-          url: config.base_path,
-          message: error_response.message
-        }
+    def handle_error(error, lighthouse_client_id, base_path)
+      Lighthouse::ServiceException.send_error(
+        error,
+        self.class.to_s.underscore,
+        lighthouse_client_id,
+        base_path
       )
-
-      Raven.capture_exception(exception, level: :error)
-
-      error_response
     end
 
     def build_request_body(payment_account)

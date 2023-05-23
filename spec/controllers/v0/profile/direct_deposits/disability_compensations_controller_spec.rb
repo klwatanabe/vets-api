@@ -184,15 +184,18 @@ RSpec.describe V0::Profile::DirectDeposits::DisabilityCompensationsController, t
       end
 
       it 'returns a validation error' do
-        VCR.use_cassette('lighthouse/direct_deposit/update/200_valid') do
+        VCR.use_cassette('lighthouse/direct_deposit/update/400_invalid_account_type') do
           put(:update, params:)
         end
 
-        expect(response).to have_http_status(:unprocessable_entity)
+        expect(response).to have_http_status(:bad_request)
 
         json = JSON.parse(response.body)
-        expect(json['errors'][0]['title']).to eq('Account type is not included in the list')
-        expect(json['errors'][1]['title']).to eq("Account type can't be blank")
+        e = json['errors'].first
+
+        expect(e).not_to be_nil
+        expect(e['title']).to eq('Bad Request')
+        expect(e['code']).to eq('cnp.payment.account.type.invalid')
       end
     end
 
@@ -205,15 +208,18 @@ RSpec.describe V0::Profile::DirectDeposits::DisabilityCompensationsController, t
       end
 
       it 'returns a validation error' do
-        VCR.use_cassette('lighthouse/direct_deposit/update/200_valid') do
+        VCR.use_cassette('lighthouse/direct_deposit/update/400_invalid_account_number') do
           put(:update, params:)
         end
 
-        expect(response).to have_http_status(:unprocessable_entity)
+        expect(response).to have_http_status(:bad_request)
 
         json = JSON.parse(response.body)
-        expect(json['errors'][0]['title']).to eq("Account number can't be blank")
-        expect(json['errors'][0]['detail']).to eq("account-number - can't be blank")
+        e = json['errors'].first
+
+        expect(e).not_to be_nil
+        expect(e['title']).to eq('Bad Request')
+        expect(e['code']).to eq('cnp.payment.account.number.invalid')
       end
     end
 
@@ -226,15 +232,18 @@ RSpec.describe V0::Profile::DirectDeposits::DisabilityCompensationsController, t
       end
 
       it 'returns a validation error' do
-        VCR.use_cassette('lighthouse/direct_deposit/update/200_valid') do
+        VCR.use_cassette('lighthouse/direct_deposit/update/400_invalid_routing_number') do
           put(:update, params:)
         end
 
-        expect(response).to have_http_status(:unprocessable_entity)
+        expect(response).to have_http_status(:bad_request)
 
         json = JSON.parse(response.body)
-        expect(json['errors'][0]['title']).to eq("Routing number can't be blank")
-        expect(json['errors'][1]['title']).to eq('Routing number is invalid')
+        e = json['errors'].first
+
+        expect(e).not_to be_nil
+        expect(e['title']).to eq('Bad Request')
+        expect(e['code']).to eq('cnp.payment.routing.number.invalid')
       end
     end
 

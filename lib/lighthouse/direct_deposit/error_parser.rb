@@ -23,13 +23,13 @@ module Lighthouse
       end
 
       def self.parse_title(body)
-        body[:title] || body[:error] || status_message_from(body[:status]) || 'Unknown error'
+        body[:error] || body[:title] || status_message_from(body[:status]) || 'Unknown error'
       end
 
       def self.parse_detail(body)
         return parse_first_error_code(body) if error_codes?(body)
 
-        body[:detail] || body[:message] || body[:error_description] || body[:error] || 'Unknown error'
+        body[:error_description] || body[:error] || body[:detail] || body[:message] || 'Unknown error'
       end
 
       def self.parse_code(detail)
@@ -41,7 +41,7 @@ module Lighthouse
         return 'cnp.payment.icn.invalid' if detail.include? 'getDirectDeposit.icn size'
         return 'cnp.payment.account.number.invalid' if detail.include? 'payment.accountNumber.invalid'
         return 'cnp.payment.routing.number.invalid' if detail.include? 'payment.accountRoutingNumber.invalid'
-        return 'cnp.payment.account.type.invalid  ' if detail.include? 'payment.accountType.invalid'
+        return 'cnp.payment.account.type.invalid' if detail.include? 'payment.accountType.invalid'
         return 'cnp.payment.routing.number.invalid.checksum' if detail.include? 'accountRoutingNumber.invalidCheckSum'
         return 'cnp.payment.restriction.indicators.present'  if detail.include? 'restriction.indicators.present'
         return 'cnp.payment.routing.number.fraud' if detail.include? 'Routing number related to potential fraud'

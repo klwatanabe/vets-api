@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require 'lighthouse/service_exception'
 require 'lighthouse/direct_deposit/client'
 require 'lighthouse/direct_deposit/payment_account'
 
@@ -9,30 +10,32 @@ module V0
       class DisabilityCompensationsController < ApplicationController
         before_action :controller_enabled?
         before_action { authorize :lighthouse, :access_disability_compensations? }
-        before_action :validate_payment_account, only: :update
+
+        rescue_from(*Lighthouse::ServiceException.exceptions) do |exception|
+          error = { status: exception.status_code, body: exception.errors.first }
+          response = Lighthouse::DirectDeposit::ErrorParser.parse(error)
+
+          render status: response.status, json: response.body
+        end
 
         def show
           response = client.get_payment_info
-          render_response(response)
+
+          render status: response.status,
+                 json: response.body,
+                 serializer: DisabilityCompensationsSerializer
         end
 
         def update
           response = client.update_payment_info(payment_account)
           send_confirmation_email unless response.error?
-          render_response(response)
+
+          render status: response.status,
+                 json: response.body,
+                 serializer: DisabilityCompensationsSerializer
         end
 
         private
-
-        def render_response(response)
-          if response.error?
-            render status: response.status, json: response.body
-          else
-            render status: response.status,
-                   json: response.body,
-                   serializer: DisabilityCompensationsSerializer
-          end
-        end
 
         def controller_enabled?
           routing_error unless Flipper.enabled?(:profile_lighthouse_direct_deposit, @current_user)
@@ -48,13 +51,6 @@ module V0
 
         def payment_account
           @payment_account ||= Lighthouse::DirectDeposit::PaymentAccount.new(payment_account_params)
-        end
-
-        def validate_payment_account
-          unless payment_account.valid?
-            Raven.tags_context(validation: 'direct_deposit')
-            raise Common::Exceptions::ValidationErrors, payment_account
-          end
         end
 
         def send_confirmation_email
