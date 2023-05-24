@@ -4,7 +4,7 @@
 
 require 'carma/client/mule_soft_client'
 require 'carma/models/submission'
-require 'carma/models/attachments'
+require 'carma/models/attachment'
 require 'mpi/service'
 require 'emis/service'
 
