@@ -11,7 +11,7 @@ module V0
         before_action :controller_enabled?
         before_action { authorize :lighthouse, :access_disability_compensations? }
 
-        rescue_from(*Lighthouse::ServiceException.exceptions) do |exception|
+        rescue_from(*Lighthouse::ServiceException::ERROR_MAP.values) do |exception|
           error = { status: exception.status_code, body: exception.errors.first }
           response = Lighthouse::DirectDeposit::ErrorParser.parse(error)
 
@@ -28,7 +28,7 @@ module V0
 
         def update
           response = client.update_payment_info(payment_account)
-          send_confirmation_email unless response.error?
+          send_confirmation_email
 
           render status: response.status,
                  json: response.body,

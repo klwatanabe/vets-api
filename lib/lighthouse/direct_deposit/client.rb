@@ -23,7 +23,7 @@ module DirectDeposit
     def get_payment_info
       response = config.get("?icn=#{@icn}")
       handle_response(response)
-    rescue => e # Faraday::ClientError, Faraday::ServerError
+    rescue Faraday::ClientError, Faraday::ServerError => e
       handle_error(e, config.settings.client_id, config.base_path)
     end
 
@@ -32,7 +32,7 @@ module DirectDeposit
 
       response = config.put("?icn=#{@icn}", body)
       handle_response(response)
-    rescue => e # Faraday::ClientError, Faraday::ServerError
+    rescue Faraday::ClientError, Faraday::ServerError => e
       handle_error(e, config.settings.client_id, config.base_path)
     end
 
