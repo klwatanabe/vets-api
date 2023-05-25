@@ -128,6 +128,12 @@ module Form526RapidReadyForDecisionConcern
 
   def send_post_evss_notifications!
     conditionally_notify_mas
+    Rails.logger.info(
+      'Completed 526 submission to eVSS', id: id, saved_claim_id: saved_claim_id, submitted_claim_id: submitted_claim_id
+    )
+    Rails.logger.debug(
+      'Completed 526 submission to eVSS', id: id, saved_claim_id: saved_claim_id, submitted_claim_id: submitted_claim_id
+    )
   end
 
   # return whether all disabilities on this form are rated as not service-connected
