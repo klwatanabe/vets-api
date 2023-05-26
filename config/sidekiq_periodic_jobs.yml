@@ -1,0 +1,91 @@
+# Ordered by cron schedule to ensure multiple jobs are not running at a given time period
+
+mgr.register('0 0 * * * America/New_York', 'EducationForm::DeleteOldApplications')
+# description: "Clear out processed 22-1990 applications that are older than 1 month"
+mgr.register('20 0 * * * America/New_York', 'TestUserDashboard::DailyMaintenance')
+# description: "Checks in TUD users that weren't properly checked in."
+mgr.register('45 0 * * *', 'AppealsApi::NoticeOfDisagreementCleanUpWeekOldPii')
+# description: "Remove PII of NoticeOfDisagreements that have 1) reached one of the 'completed' statuses and 2) are a week old"
+mgr.register('45 0 * * *', 'AppealsApi::SupplementalClaimCleanUpPii')
+# description: "Remove PII of SupplementalClaims that have 1) reached one of the 'completed' statuses and 2) are a week old
+mgr.register('0 0 1 * *', 'AppealsApi::MonthlyStatsReport')
+# description: "Email a decision reviews stats report for the past month to configured recipients first of the month"
+
+
+mgr.register('0 0 1 */3 * America/New_York', 'IncomeLimits::GmtThresholdsImport')
+# description: "Import income limit data CSVs from S3"
+mgr.register('0 0 1 */3 * America/New_York', 'IncomeLimits::StdCountyImport')
+# description: "Import income limit data CSVs from S3"
+mgr.register('0 0 1 */3 * America/New_York', 'IncomeLimits::StdIncomeThresholdImport')
+# description: "Import income limit data CSVs from S3"
+mgr.register('0 0 1 */3 * America/New_York', 'IncomeLimits::StdStateImport')
+# description: "Import income limit data CSVs from S3"
+mgr.register('0 0 1 */3 * America/New_York', 'IncomeLimits::StdZipcodeImport')
+# description: "Import income limit data CSVs from S3"
+
+mgr.register('*/15 * * * *', 'CovidVaccine::ExpandedScheduledSubmissionJob')
+# description: Iterates vaccine records with state=enrollment_pending and attempts MPI lookup and send to Vetext.
+mgr.register('*/15 * * * * America/New_York', 'CovidVaccine::ScheduledBatchJob')
+# description: Batches received vaccine records and schedules upload to enrollment service.
+mgr.register('0 * * * *', 'CovidVaccine::ExpandedSubmissionStateJob')
+# description: Logs count of states in the covid_vaccine_expanded_registration_submissions table.
+
+mgr.register('0 2 * * * America/New_York', 'EVSS::DeleteOldClaims')
+# description: "Clear out EVSS disability claims that have not been updated in 24 hours"
+mgr.register('20 2 * * * America/New_York', 'DeleteOldPiiLogsJob')
+# description: "Clear out old personal information logs"
+mgr.register('30 2 * * * America/New_York', 'CentralMail::DeleteOldClaims')
+# description: "Clear out central mail claims older than 2 months"
+mgr.register('0 2 1 * * America/New_York', 'VBADocuments::ReportMonthlySubmissions')
+# description: "Monthly report of benefits intake submissions"
+
+mgr.register('0 3 * * * America/New_York" # Daily @ 3am Easter', 'DeleteOldTransactionsJob')
+# description: "Deletes old, completed AsyncTransaction records"
+mgr.register('0 3 * * 1-5 America/New_York', 'EducationForm::CreateDailySpoolFiles')
+# description: "Generate a daily set of spool files and transmit them over SFTP to a backend system"
+mgr.register('30 3 * * 1 America/New_York', 'EVSS::FailedClaimsReport')
+# description: "Notify developers about EVSS claims which could not be uploaded"
+
+mgr.register('0 4 * * * America/New_York', 'EducationForm::CreateDailyFiscalYearToDateReport')
+# description: "Send the daily report to VA stakeholders about Education Benefits submissions"
+mgr.register('5 4 * * 1-5 America/New_York', 'EducationForm::CreateSpoolSubmissionsReport')
+# description: "Send the daily report to the call center about spool file submissions"
+mgr.register('10 4 * * * America/New_York', 'Facilities::DentalServiceReloadJob')
+# description: "Download and cache facility access-to-care metric data"
+mgr.register('25 4 * * * America/New_York', 'Facilities::MentalHealthReloadJob')
+# description: "Download and cache facility mental health phone number data"
+mgr.register('35 4 * * 1-5 America/New_York', 'EducationForm::Create10203SpoolSubmissionsReport')
+# description: "Send the daily 10203 report to the call center about spool file submissions"
+mgr.register('45 4 * * * America/New_York', 'Facilities::AccessDataDownload')
+# description: "Download and cache facility access-to-care metric data"
+mgr.register('55 4 * * * America/New_York', 'Facilities::PSSGDownload')
+# description: "Download and store drive time bands"
+
+mgr.register('0 5 * * 1', 'AppealsApi::WeeklyErrorReport')
+
+mgr.register('0 6 * * * America/New_York', 'AccountLoginStatisticsJob')
+# description: "Gather account login statistics for statsd"
+mgr.register('0 6-18/6 * * * America/New_York', 'EducationForm::Process10203Submissions')
+# description: "Go through 22-10203 submissions and determine if application should be processed as part of normal submission process or rejected"
+
+mgr.register('0 8 * * 1-5 America/New_York', 'AppealsApi::DailyStuckRecordsReport')
+# description: "Daily report of all stuck appeals submissions"
+
+mgr.register('0 12 3 * * America/New_York', 'CypressViewportUpdater::UpdateCypressViewportsJob')
+# description: "Updates Cypress files in vets-website with data from Google Analytics."
+
+mgr.register('0 13 * * 1 America/New_York', 'Mobile::V0::WeeklyMaintenanceWindowLogger')
+# description: "Weekly logs of maintenance windows"
+
+mgr.register('0 20 * * * America/New_York', 'ClaimsApi::ClaimAuditor')
+# description: "Daily alert of pending claims longer than acceptable threshold"
+
+mgr.register('0 23 * * 1-5 America/New_York', 'AppealsApi::DecisionReviewReportDaily')
+# description: "Daily report of appeals submissions"
+mgr.register('0 23 * * 7 America/New_York', 'AppealsApi::DecisionReviewReportWeekly')
+# description: "Weekly report of appeals submissions"
+mgr.register('30 23 * * 1-5 America/New_York', 'AppealsApi::DailyErrorReport')
+# description: "Daily report of appeals errors"
+mgr.register('15 23 * * 7 America/New_York', 'ClaimsApi::ReportUnsuccessfulSubmissions')
+# description: "Weekly report of unsuccessful claims submissions"
+≈
