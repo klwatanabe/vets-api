@@ -214,7 +214,7 @@ describe VAOS::V2::AppointmentsService do
       end
     end
 
-    context 'when requesting a list of appointments containing a non-med non-cnp non-covid appointment' do
+    context 'when requesting a list of appointments containing a non-Med non-CnP non-CC appointment' do
       it 'removes the service type(s) from only the non-med non-cnp non-covid appointment' do
         VCR.use_cassette('vaos/v2/appointments/get_appointments_non_med',
                          allow_playback_repeats: true, match_requests_on: %i[method path query], tag: :force_utf8) do
