@@ -23,6 +23,8 @@ Rails.application.routes.draw do
   get '/v0/sign_in/logingov_logout_proxy', to: 'v0/sign_in#logingov_logout_proxy'
   get '/v0/sign_in/revoke_all_sessions', to: 'v0/sign_in#revoke_all_sessions'
 
+  get '/sign_in/openid_connect/certs' => 'sign_in/openid_connect_certificates#index'
+
   get '/inherited_proofing/auth', to: 'inherited_proofing#auth'
   get '/inherited_proofing/user_attributes', to: 'inherited_proofing#user_attributes'
   get '/inherited_proofing/callback', to: 'inherited_proofing#callback'
@@ -60,6 +62,13 @@ Rails.application.routes.draw do
       collection do
         get 'beneficiary', to: 'letters#beneficiary'
         post ':id', to: 'letters#download'
+      end
+    end
+
+    resources :letters_generator, only: [:index] do
+      collection do
+        get 'beneficiary', to: 'letters_generator#beneficiary'
+        get 'download/:id', to: 'letters_generator#download'
       end
     end
 

@@ -4,9 +4,6 @@ require 'rails_helper'
 require './lib/central_mail/utilities'
 require_relative '../../support/vba_document_fixtures'
 
-require_dependency 'vba_documents/object_store'
-require_dependency 'vba_documents/multipart_parser'
-
 # rubocop:disable Style/OptionalBooleanParameter
 RSpec.describe 'VBA Document Uploads Endpoint', type: :request, retry: 3 do
   include VBADocuments::Fixtures
@@ -71,11 +68,6 @@ RSpec.describe 'VBA Document Uploads Endpoint', type: :request, retry: 3 do
     end
 
     let(:invalid_attachment_oversized) do
-      { attachment1: build_fixture('18x22.pdf'),
-        attachment2: build_fixture('valid_doc.pdf') }
-    end
-
-    let(:invalid_attachment_extra_oversized) do
       { attachment1: build_fixture('10x102.pdf'),
         attachment2: build_fixture('valid_doc.pdf') }
     end
@@ -126,58 +118,18 @@ RSpec.describe 'VBA Document Uploads Endpoint', type: :request, retry: 3 do
     describe 'when an attachment is oversized' do
       let(:params) { {}.merge(valid_metadata).merge(valid_content).merge(invalid_attachment_oversized) }
 
-      context 'with the "vba_documents_larger_page_size_limit" flag turned off' do
-        before { Flipper.disable :vba_documents_larger_page_size_limit }
-
-        it 'returns a UUID with status of error' do
-          post(SUBMIT_ENDPOINT, params:)
-          expect(response).to have_http_status(:bad_request)
-          json = JSON.parse(response.body)
-          @attributes = json['data']['attributes']
-          expect(@attributes).to have_key('guid')
-          expect(@attributes['status']).to eq('error')
-          uploaded_pdf = @attributes['uploaded_pdf']
-          expect(uploaded_pdf['total_documents']).to eq(3)
-          expect(uploaded_pdf['content']['dimensions']['oversized_pdf']).to eq(false)
-          expect(uploaded_pdf['content']['attachments'].first['dimensions']['oversized_pdf']).to eq(true)
-          expect(uploaded_pdf['content']['attachments'].last['dimensions']['oversized_pdf']).to eq(false)
-        end
-      end
-
-      context 'with the "vba_documents_larger_page_size_limit" flag turned on' do
-        before { Flipper.enable :vba_documents_larger_page_size_limit }
-
-        it 'allows the upload, returning a UUID with a status of uploaded and correct metadata' do
-          post(SUBMIT_ENDPOINT, params:)
-          expect(response).to have_http_status(:ok)
-          json = JSON.parse(response.body)
-          @attributes = json['data']['attributes']
-          expect(@attributes).to have_key('guid')
-          expect(@attributes['status']).to eq('uploaded')
-          uploaded_pdf = @attributes['uploaded_pdf']
-          expect(uploaded_pdf['total_documents']).to eq(3)
-          expect(uploaded_pdf['content']['dimensions']['oversized_pdf']).to eq(false)
-          expect(uploaded_pdf['content']['attachments'].first['dimensions']['oversized_pdf']).to eq(false)
-          expect(uploaded_pdf['content']['attachments'].last['dimensions']['oversized_pdf']).to eq(false)
-        end
-
-        context 'when the document has extra large pages' do
-          let(:params) { {}.merge(valid_metadata).merge(valid_content).merge(invalid_attachment_extra_oversized) }
-
-          it 'rejects the extra large document' do
-            post(SUBMIT_ENDPOINT, params:)
-            expect(response).to have_http_status(:bad_request)
-            json = JSON.parse(response.body)
-            @attributes = json['data']['attributes']
-            expect(@attributes).to have_key('guid')
-            expect(@attributes['status']).to eq('error')
-            uploaded_pdf = @attributes['uploaded_pdf']
-            expect(uploaded_pdf['total_documents']).to eq(3)
-            expect(uploaded_pdf['content']['dimensions']['oversized_pdf']).to eq(false)
-            expect(uploaded_pdf['content']['attachments'].first['dimensions']['oversized_pdf']).to eq(true)
-            expect(uploaded_pdf['content']['attachments'].last['dimensions']['oversized_pdf']).to eq(false)
-          end
-        end
+      it 'returns a UUID with status of error' do
+        post(SUBMIT_ENDPOINT, params:)
+        expect(response).to have_http_status(:bad_request)
+        json = JSON.parse(response.body)
+        @attributes = json['data']['attributes']
+        expect(@attributes).to have_key('guid')
+        expect(@attributes['status']).to eq('error')
+        uploaded_pdf = @attributes['uploaded_pdf']
+        expect(uploaded_pdf['total_documents']).to eq(3)
+        expect(uploaded_pdf['content']['dimensions']['oversized_pdf']).to eq(false)
+        expect(uploaded_pdf['content']['attachments'].first['dimensions']['oversized_pdf']).to eq(true)
+        expect(uploaded_pdf['content']['attachments'].last['dimensions']['oversized_pdf']).to eq(false)
       end
     end
 
