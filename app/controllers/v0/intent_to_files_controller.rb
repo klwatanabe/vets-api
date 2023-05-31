@@ -15,7 +15,8 @@ module V0
 
     def index
       intent_to_file_service = ApiProviderFactory.intent_to_file_service_provider(@current_user)
-      response = intent_to_file_service.get_intent_to_file
+      type = params['itf_type'] || 'compensation'
+      response = intent_to_file_service.get_intent_to_file(type, nil, nil)
       render json: response,
              serializer: IntentToFileSerializer
     end
@@ -28,8 +29,8 @@ module V0
 
     def submit
       intent_to_file_service = ApiProviderFactory.intent_to_file_service_provider(@current_user)
-
-      response = intent_to_file_service.create_intent_to_file(params[:type])
+      type = params['itf_type'] || 'compensation'
+      response = intent_to_file_service.create_intent_to_file(type, nil, nil)
       render json: response,
              serializer: IntentToFileSerializer
     end

@@ -49,18 +49,27 @@ module ClaimsApi
         end
 
         def validate_id_with_icn(bgs_claim, lighthouse_claim, request_icn)
-          claim_prtcpnt_id = if bgs_claim&.dig(:benefit_claim_details_dto).present?
-                               bgs_claim&.dig(:benefit_claim_details_dto, :ptcpnt_vet_id)
-                             end
+          if bgs_claim&.dig(:benefit_claim_details_dto).present?
+            clm_prtcpnt_vet_id = bgs_claim&.dig(:benefit_claim_details_dto, :ptcpnt_vet_id)
+            clm_prtcpnt_clmnt_id = bgs_claim&.dig(:benefit_claim_details_dto, :ptcpnt_clmant_id)
+          end
+
           veteran_icn = if lighthouse_claim.present? && lighthouse_claim['veteran_icn'].present?
                           lighthouse_claim['veteran_icn']
                         end
 
-          if claim_prtcpnt_id != target_veteran.participant_id && veteran_icn != request_icn
+          if clm_prtcpnt_cannot_access_claim?(clm_prtcpnt_vet_id, clm_prtcpnt_clmnt_id) && veteran_icn != request_icn
             raise ::Common::Exceptions::ResourceNotFound.new(
               detail: 'Invalid claim ID for the veteran identified.'
             )
           end
+        end
+
+        def clm_prtcpnt_cannot_access_claim?(clm_prtcpnt_vet_id, clm_prtcpnt_clmnt_id)
+          return true if clm_prtcpnt_vet_id.nil? || clm_prtcpnt_clmnt_id.nil?
+
+          # if either of these is false then we have a match and can show the record
+          clm_prtcpnt_vet_id != target_veteran.participant_id && clm_prtcpnt_clmnt_id != target_veteran.participant_id
         end
 
         def generate_show_output(bgs_claim:, lighthouse_claim:) # rubocop:disable Metrics/MethodLength
@@ -90,7 +99,8 @@ module ClaimsApi
         end
 
         def map_claims(bgs_claims:, lighthouse_claims:) # rubocop:disable Metrics/MethodLength
-          mapped_claims = (bgs_claims&.dig(:benefit_claims_dto, :benefit_claim) || []).map do |bgs_claim|
+          extracted_claims = [bgs_claims&.dig(:benefit_claims_dto, :benefit_claim)].flatten.compact
+          mapped_claims = extracted_claims.map do |bgs_claim|
             matching_claim = find_bgs_claim_in_lighthouse_collection(
               lighthouse_collection: lighthouse_claims,
               bgs_claim:
@@ -379,16 +389,12 @@ module ClaimsApi
           end
         end
 
-        def map_upload_and_status(item_id, unique_status)
+        def map_status(item_id, unique_status)
           if supporting_document?(item_id)
-            status = 'SUBMITTED_AWAITING_REVIEW'
-            uploaded = true
+            'SUBMITTED_AWAITING_REVIEW'
           else
-            status = unique_status
-            uploaded = false
+            unique_status
           end
-
-          [status, uploaded]
         end
 
         def build_wwsnfy_items
@@ -397,9 +403,9 @@ module ClaimsApi
           return [] if wwsnfy.empty?
 
           wwsnfy.map do |item|
-            status, uploaded = map_upload_and_status(item[:dvlpmt_item_id], 'NEEDED_FROM_YOU')
+            status = map_status(item[:dvlpmt_item_id], 'NEEDED_FROM_YOU')
 
-            build_tracked_item(find_tracked_item(item[:dvlpmt_item_id]), status, item, uploaded)
+            build_tracked_item(find_tracked_item(item[:dvlpmt_item_id]), status, item, wwsnfy: true)
           end
         end
 
@@ -409,9 +415,9 @@ module ClaimsApi
           return [] if wwd.empty?
 
           wwd.map do |item|
-            status, uploaded = map_upload_and_status(item[:dvlpmt_item_id], 'NEEDED_FROM_OTHERS')
+            status = map_status(item[:dvlpmt_item_id], 'NEEDED_FROM_OTHERS')
 
-            build_tracked_item(find_tracked_item(item[:dvlpmt_item_id]), status, item, uploaded)
+            build_tracked_item(find_tracked_item(item[:dvlpmt_item_id]), status, item)
           end
         end
 
@@ -424,9 +430,8 @@ module ClaimsApi
 
           wwr.map do |item|
             status = accepted?(claim_status_type) ? 'ACCEPTED' : 'INITIAL_REVIEW_COMPLETE'
-            uploaded = true
 
-            build_tracked_item(find_tracked_item(item[:dvlpmt_item_id]), status, item, uploaded)
+            build_tracked_item(find_tracked_item(item[:dvlpmt_item_id]), status, item)
           end
         end
 
@@ -438,9 +443,8 @@ module ClaimsApi
 
           no_longer_needed.map do |tracked_item|
             status = 'NO_LONGER_REQUIRED'
-            uploaded = supporting_document?(tracked_item[:dvlpmt_item_id])
 
-            build_tracked_item(tracked_item, status, {}, uploaded)
+            build_tracked_item(tracked_item, status, {})
           end
         end
 
@@ -453,27 +457,26 @@ module ClaimsApi
            'Complete'].include? status
         end
 
-        def overdue?(tracked_item)
-          overdue_date_present?(tracked_item) ? tracked_item[:suspns_dt] < Time.zone.now : false
+        def overdue?(tracked_item, wwsnfy)
+          if tracked_item[:suspns_dt].present? && tracked_item[:accept_dt].nil? && wwsnfy
+            return tracked_item[:suspns_dt] < Time.zone.now
+          end
+
+          false
         end
 
-        def overdue_date_present?(tracked_item)
-          tracked_item[:suspns_dt].present? && tracked_item[:accept_dt].nil?
-        end
-
-        def build_tracked_item(tracked_item, status, item, uploaded)
+        def build_tracked_item(tracked_item, status, item, wwsnfy: false)
           uploads_allowed = uploads_allowed?(status)
           {
             closed_date: date_present(tracked_item[:accept_dt]),
             description: item[:items],
             display_name: tracked_item[:short_nm],
-            overdue: overdue?(tracked_item),
+            overdue: overdue?(tracked_item, wwsnfy),
             received_date: date_present(tracked_item[:receive_dt]),
             requested_date: tracked_item_req_date(tracked_item, item),
             status:,
             suspense_date: date_present(tracked_item[:suspns_dt]),
             id: tracked_item[:dvlpmt_item_id].to_i,
-            uploaded:,
             uploads_allowed:
           }
         end

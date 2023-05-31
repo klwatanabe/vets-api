@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require_dependency 'mobile/application_controller'
-
 module Mobile
   module V0
     class UsersController < ApplicationController
@@ -39,7 +37,6 @@ module Mobile
       # solution so old app versions will still treat LOGINGOV accounts as multifactor
       def map_logingov_to_idme
         if @current_user.identity.sign_in[:service_name].include? 'LOGINGOV'
-          Rails.logger.info('LOGINGOV getting remapped!!') # REMOVE THIS ONCE LOGINGOV IS CONFIRMED WORKING CORRECTLY
           @current_user.identity.sign_in[:service_name] = 'oauth_IDME'
         end
       end

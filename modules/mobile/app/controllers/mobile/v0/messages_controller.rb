@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require_dependency 'mobile/messaging_controller'
-
 module Mobile
   module V0
     class MessagesController < MessagingController
@@ -105,7 +103,6 @@ module Mobile
 
       def signature
         result = client.get_signature[:data]
-        Rails.logger.info('Mobile Get Message Signature Result', result:)
         result = { signature_name: nil, include_signature: false, signature_title: nil } if result.nil?
         render json: Mobile::V0::MessageSignatureSerializer.new(@current_user.uuid, result).to_json
       end

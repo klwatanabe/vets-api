@@ -29,10 +29,6 @@ features:
   caregiver_use_facilities_API:
     actor_type: user
     description: Allow list of caregiver facilites to be fetched by way of the Facilities API.
-  hca_american_indian_enabled:
-    actor_type: user
-    description: Enables American Indian SIGI question page.
-    enable_in_development: true
   hca_browser_monitoring_enabled:
     actor_type: user
     description: Enables browser monitoring for the health care application.
@@ -270,6 +266,10 @@ features:
     actor_type: user
     description: Manage dependent removal from view dependent page
     enable_in_development: true
+  disability_526_classifier:
+    actor_type: user
+    description: enables sending claims for increase to VRO Contention Classification service for more accurate classification entry.
+    enable_in_development: true
   disability_compensation_flashes:
     actor_type: user
     description: enables sending flashes to BGS for disability_compensation submissions.
@@ -370,6 +370,9 @@ features:
     actor_type: user
     description: Enables form 5490 email submission confirmation (VaNotify)
     enable_in_development: true
+  form214142:
+    actor_type: user
+    description: If enabled shows the digital form experience for form 21-4142
   form264555:
     actor_type: user
     description: If enabled shows the digital form experience for form 26-4555
@@ -396,6 +399,18 @@ features:
   in_progress_form_reminder_age_param:
     actor_type: user
     description: Enable/disable in progress form reminder age param
+    enable_in_development: true
+  clear_stale_in_progress_reminders_sent:
+    actor_type: user
+    description: Enable/disable clearing of one-time in progress reminders after 60 days
+    enable_in_development: true
+  in_progress_1880_form_cron:
+    actor_type: user
+    description: Enable/disable scheduled cron for 1880 in progress form reminders (sent via VaNotify)
+    enable_in_development: true
+  in_progress_1880_form_reminder:
+    actor_type: user
+    description: Enable/disable 1880 in progress form reminders (sent via VaNotify)
     enable_in_development: true
   in_progress_form_reminder_1010ez:
     actor_type: user
@@ -485,13 +500,6 @@ features:
       Toggle for the entire pre-entry covid 19 self-screener available at /covid19screener and to be used by visitors
       to VHA facilities in lieu of manual screening with a VHA employee.
       This toggle is owned by Patrick B. and the rest of the CTO Health Products team.
-  profile_email_specify_change:
-    actor_type: user
-    description: >
-      When enabled, if a user changes a phone number, the notification email will specify whether the home or mobile
-      phone was changed.  For an address change, the notification email will specify whether the residential or correspondence
-      address was changed.
-    enable_in_development: true
   profile_lighthouse_direct_deposit:
     actor_type: user
     description: When enabled, will request direct deposit data from lighthouse API.
@@ -515,6 +523,9 @@ features:
   profile_show_pronouns_and_sexual_orientation:
     actor_type: user
     description: Show/hide Pronouns and Sexual Orientation fields on profile page
+  profile_show_quick_submit_notification_setting:
+    actor_type: user
+    description: Show/Hide the quick submit section of notification settings in profile
   profile_use_experimental:
     description: "Use experimental features for Pofile application - Do not remove"
     enable_in_development: true
@@ -542,10 +553,6 @@ features:
   pw_ehr_cta_use_slo:
     actor_type: user
     description: Use single-logout (SLO) paths for Public Websites-managed EHR CTAs
-  rrd_asthma_compensation:
-    actor_type: user
-    description: Fast tracks 526 disability compensation asthma claims by submitting additional health data
-    enable_in_development: true
   my_va_experimental:
     actor_type: user
     description: Use for experimental features for My VA application
@@ -553,26 +560,6 @@ features:
   my_va_redirect:
     actor_type: user
     description: After authentication redirects a user to the My VA page if they are on the homepage
-    enable_in_development: true
-  rrd_hypertension_compensation:
-    actor_type: user
-    description: Fast tracks 526 disability compensation hypertension claims by submitting additional health data
-    enable_in_development: true
-  rrd_mas_all_claims_tracking:
-    actor_type: user
-    description: Enables Slack and other email notifications for all MAS-eligible claims
-    enable_in_development: true
-  rrd_mas_all_claims_notification:
-    actor_type: user
-    description: Notifies MAS service of all MAS-eligible claims that have come through
-    enable_in_development: true
-  rrd_hypertension_mas_notification:
-    actor_type: user
-    description: Notifies MAS service of single-issue hypertension claims
-    enable_in_development: true
-  rrd_call_vro_service:
-    actor_type: user
-    description: Enables the RRD flow to call VRO for assessing health data and generating RRD PDF
     enable_in_development: true
   search_representative:
     actor_type: user
@@ -773,12 +760,13 @@ features:
     actor_type: user
     enable_in_development: true
     description: Toggle for proof of concept to help Veteran contact a facility when the type of care is not available
+  va_online_scheduling_convert_utc_to_local:
+    actor_type: user
+    enable_in_development: true
+    description: Toggle for converting from UTC to localtime in API vs. frontend application code
   va_view_dependents_access:
     actor_type: user
     description: Allows us to gate the View/ Modify dependents content in a progressive rollout
-  vba_documents_larger_page_size_limit:
-    actor_type: user
-    description: Allows Benefits Intake to accept PDFs up to 78x101 inches (instead of the default 21x21)
   yellow_ribbon_mvp_enhancement:
     actor_type: user
     description: Enhances Yellow Ribbon MVP.
@@ -795,7 +783,7 @@ features:
     description: Enables payment and debt section
   show_dashboard_notifications:
     actor_type: user
-    description: Enables on-site notifications 
+    description: Enables on-site notifications
   show_myva_dashboard_2_0:
     actor_type: user
     description: Enables My VA 2.0
@@ -832,12 +820,20 @@ features:
   show_meb_enhancements:
     actor_type: user
     description: Provides a flag wrapper for minor code changes to be gated from Prod.
+    enable_in_development: true
+  show_meb_enhancements_06:
+    actor_type: user
+    description: Provides a flag wrapper for minor code changes to be gated from Prod.
+    enable_in_development: true
   move_form_back_button:
     actor_type: user
     description: Test moving form back button to the top of the page
   mobile_lighthouse_letters:
     actor_type: user
     description: For mobile app, use Lighthouse instead of EVSS for our letters endpoints upstream service
+  mobile_lighthouse_claims:
+    actor_type: user
+    description: For mobile app, use Lighthouse instead of EVSS for our claims endpoints upstream service
   form526_backup_submission_temp_killswitch:
     actor_type: user
     description: Provide a temporary killswitch to disable form526 backup submission if something were to go awry
@@ -859,3 +855,15 @@ features:
   disability_compensation_lighthouse_intent_to_file_provider:
     actor_type: user
     description: If enabled uses the lighthouse intent to file endpoint
+  virtual_agent_fetch_jwt_token:
+    actor_type: user
+    description: Enable the fetching of a JWT token to access MAP environment
+  income_limits_new:
+    actor_type: user
+    description: If enabled, shows the newly designed income limits application
+  drupal_footer:
+    actor_type: user
+    description: If enabled, pulls Drupal data to populate most of the global footer
+  hlr_disable_submit:
+    actor_type: user
+    description: If enabled, the HLR submit button will be disabled to prevent user testing submission in production

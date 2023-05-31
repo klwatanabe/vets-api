@@ -800,7 +800,6 @@
                           "status": "NO_LONGER_REQUIRED",
                           "suspenseDate": "2021-06-04",
                           "id": 293440,
-                          "uploaded": false,
                           "uploadsAllowed": false
                         },
                         {
@@ -813,7 +812,6 @@
                           "status": "NO_LONGER_REQUIRED",
                           "suspenseDate": "2021-06-04",
                           "id": 293443,
-                          "uploaded": false,
                           "uploadsAllowed": false
                         },
                         {
@@ -826,7 +824,6 @@
                           "status": "NO_LONGER_REQUIRED",
                           "suspenseDate": "2021-06-04",
                           "id": 293444,
-                          "uploaded": false,
                           "uploadsAllowed": false
                         },
                         {
@@ -839,7 +836,6 @@
                           "status": "NO_LONGER_REQUIRED",
                           "suspenseDate": "2021-06-04",
                           "id": 293446,
-                          "uploaded": false,
                           "uploadsAllowed": false
                         }
                       ]
@@ -1217,10 +1213,6 @@
                                     "type": "string",
                                     "nullable": true,
                                     "example": "2017-10-18"
-                                  },
-                                  "uploaded": {
-                                    "type": "boolean",
-                                    "example": true
                                   },
                                   "uploadsAllowed": {
                                     "type": "boolean",
@@ -1912,8 +1904,8 @@
                     "id": "1",
                     "type": "intent_to_file",
                     "attributes": {
-                      "creationDate": "2023-04-24",
-                      "expirationDate": "2024-04-24",
+                      "creationDate": "2023-04-27",
+                      "expirationDate": "2024-04-27",
                       "type": "compensation",
                       "status": "active"
                     }
@@ -2199,27 +2191,50 @@
               "schema": {
                 "type": "object",
                 "required": [
-                  "type"
+                  "data"
                 ],
                 "properties": {
-                  "type": {
-                    "type": "string",
-                    "example": "compensation",
-                    "description": "Type of Intent To File being submitted. For type \"survivor\", the request must include claimantSsn and be made by a valid Veteran Representative. If the Representative is not a Veteran or a VA employee, this method is currently not available to them, and they should use the Benefits Intake API as an alternative.",
-                    "enum": [
-                      "compensation",
-                      "pension",
-                      "survivor"
-                    ]
-                  },
-                  "claimantSsn": {
-                    "type": "string",
-                    "example": "001122334",
-                    "description": "SSN of the Claimant."
+                  "data": {
+                    "type": "object",
+                    "required": [
+                      "attributes"
+                    ],
+                    "properties": {
+                      "attributes": {
+                        "required": [
+                          "type"
+                        ],
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "example": "compensation",
+                            "description": "Type of Intent To File being submitted. For type \"survivor\", the request must include claimantSsn and be made by a valid Veteran Representative. If the Representative is not a Veteran or a VA employee, this method is currently not available to them, and they should use the Benefits Intake API as an alternative.",
+                            "enum": [
+                              "compensation",
+                              "pension",
+                              "survivor"
+                            ]
+                          },
+                          "claimantSsn": {
+                            "type": "string",
+                            "example": "001122334",
+                            "description": "SSN of the Claimant."
+                          }
+                        },
+                        "example": {
+                          "type": "compensation"
+                        }
+                      }
+                    }
                   }
                 },
                 "example": {
-                  "type": "compensation"
+                  "data": {
+                    "type": "intent_to_file",
+                    "attributes": {
+                      "type": "compensation"
+                    }
+                  }
                 }
               }
             }
@@ -2485,27 +2500,50 @@
               "schema": {
                 "type": "object",
                 "required": [
-                  "type"
+                  "data"
                 ],
                 "properties": {
-                  "type": {
-                    "type": "string",
-                    "example": "compensation",
-                    "description": "Type of Intent To File being submitted. For type \"survivor\", the request must include claimantSsn and be made by a valid Veteran Representative. If the Representative is not a Veteran or a VA employee, this method is currently not available to them, and they should use the Benefits Intake API as an alternative.",
-                    "enum": [
-                      "compensation",
-                      "pension",
-                      "survivor"
-                    ]
-                  },
-                  "claimantSsn": {
-                    "type": "string",
-                    "example": "001122334",
-                    "description": "SSN of the Claimant."
+                  "data": {
+                    "type": "object",
+                    "required": [
+                      "attributes"
+                    ],
+                    "properties": {
+                      "attributes": {
+                        "required": [
+                          "type"
+                        ],
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "example": "compensation",
+                            "description": "Type of Intent To File being submitted. For type \"survivor\", the request must include claimantSsn and be made by a valid Veteran Representative. If the Representative is not a Veteran or a VA employee, this method is currently not available to them, and they should use the Benefits Intake API as an alternative.",
+                            "enum": [
+                              "compensation",
+                              "pension",
+                              "survivor"
+                            ]
+                          },
+                          "claimantSsn": {
+                            "type": "string",
+                            "example": "001122334",
+                            "description": "SSN of the Claimant."
+                          }
+                        },
+                        "example": {
+                          "type": "compensation"
+                        }
+                      }
+                    }
                   }
                 },
                 "example": {
-                  "type": "compensation"
+                  "data": {
+                    "type": "intent_to_file",
+                    "attributes": {
+                      "type": "compensation"
+                    }
+                  }
                 }
               }
             }

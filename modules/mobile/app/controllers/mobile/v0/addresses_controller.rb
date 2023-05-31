@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 
-require_dependency 'mobile/application_controller'
 require 'va_profile/address_validation/service'
 
 module Mobile
@@ -39,14 +38,6 @@ module Mobile
                            'validation_key' => response['response']['validation_key'],
                            'address_meta' => a['address_meta_data']
                          ))
-        end
-
-        # No domestic or military addresses should have a province but some have been coming in as a string 'null'
-        suggested_addresses.each do |sa|
-          if sa['address_type'].in?(['DOMESTIC', 'OVERSEAS MILITARY']) && sa['province'].present?
-            Rails.logger.info('Mobile Suggested Address - Province in domestic or military address',
-                              province: sa['province'])
-          end
         end
 
         render json: Mobile::V0::SuggestedAddressSerializer.new(suggested_addresses)

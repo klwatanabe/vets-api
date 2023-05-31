@@ -26,7 +26,11 @@ module VeteranVerification
     # @return [String] Base path for veteran_verification URLs.
     #
     def base_path(host = nil)
-      "#{host || settings.host}/#{VETERAN_VERIFICATION_PATH}"
+      (host || settings.host).to_s
+    end
+
+    def base_api_path(host = nil)
+      "#{base_path(host)}/#{VETERAN_VERIFICATION_PATH}"
     end
 
     ##
@@ -57,7 +61,8 @@ module VeteranVerification
                 lighthouse_client_id,
                 lighthouse_rsa_key_path,
                 options
-              )}"
+              )
+            }"
           }
         )
     end
@@ -68,7 +73,7 @@ module VeteranVerification
     # @return [Faraday::Connection] a Faraday connection instance.
     #
     def connection
-      @conn ||= Faraday.new(base_path, headers: base_request_headers, request: request_options) do |faraday|
+      @conn ||= Faraday.new(base_api_path, headers: base_request_headers, request: request_options) do |faraday|
         faraday.use :breakers
         faraday.use Faraday::Response::RaiseError
 
@@ -101,8 +106,7 @@ module VeteranVerification
           lighthouse_rsa_key_path,
           options[:aud_claim_url],
           options[:host]
-        )
-          .get_token(options[:auth_params])
+        ).get_token(options[:auth_params])
       end
     end
 

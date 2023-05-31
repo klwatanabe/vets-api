@@ -5,7 +5,7 @@ require 'central_mail/upload_error'
 
 module CentralMail
   class UploadError < StandardError
-    attr_accessor :code, :detail
+    attr_accessor :code, :detail, :upstream_http_resp_status
 
     DEFAULT_MESSAGE = 'Internal Server Error'
 
@@ -26,32 +26,30 @@ module CentralMail
 
     STATSD_UPLOAD_FAIL_KEY = 'api.central_mail.upload.fail'
 
-    def self.extra_message_text(code, pdf_validator_options)
+    def self.default_message(code, pdf_validator_options = {})
+      begin
+        message = UploadError.const_get(code.to_sym)
+      rescue NameError
+        message = DEFAULT_MESSAGE
+      end
+
       opts = PDFUtilities::PDFValidator::Validator::DEFAULT_OPTIONS.merge(pdf_validator_options.to_h)
 
       case code.to_s
       when 'DOC106'
-        "Limit is #{PDFUtilities.formatted_file_size(opts[:size_limit_in_bytes])} per document."
+        "#{message} Limit is #{PDFUtilities.formatted_file_size(opts[:size_limit_in_bytes])} per document."
       when 'DOC108'
-        "Limit is #{opts[:width_limit_in_inches]} in x #{opts[:height_limit_in_inches]} in."
+        "#{message} Limit is #{opts[:width_limit_in_inches]} in x #{opts[:height_limit_in_inches]} in."
       else
-        ''
+        message
       end
     end
 
-    def initialize(message = nil, code: nil, detail: nil, pdf_validator_options: {})
-      if message.nil? && code.present?
-        begin
-          message = UploadError.const_get code.to_sym
-          extra = UploadError.extra_message_text(code, pdf_validator_options)
-          message += " #{extra}" if extra.present?
-        rescue NameError
-          message = DEFAULT_MESSAGE
-        end
-      end
-      super(message || DEFAULT_MESSAGE)
+    def initialize(message = nil, code: nil, detail: nil, upstream_http_resp_status: nil, pdf_validator_options: {})
+      super(message || UploadError.default_message(code, pdf_validator_options))
       @code = code
       @detail = detail
+      @upstream_http_resp_status = upstream_http_resp_status
 
       StatsD.increment self.class::STATSD_UPLOAD_FAIL_KEY, tags: ["status:#{code}"]
     end

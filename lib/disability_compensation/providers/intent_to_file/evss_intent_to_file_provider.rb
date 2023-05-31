@@ -6,15 +6,15 @@ require 'evss/intent_to_file/service'
 
 class EvssIntentToFileProvider
   include IntentToFileProvider
-  def initialize(current_user)
-    @service = EVSS::IntentToFile::Service.new(current_user)
+  def initialize(current_user = nil, auth_headers = nil)
+    @service = EVSS::IntentToFile::Service.new(current_user, auth_headers)
   end
 
-  def get_intent_to_file
+  def get_intent_to_file(_type, _client_id, _rsa_key_path)
     @service.get_intent_to_file
   end
 
-  def create_intent_to_file(type)
+  def create_intent_to_file(type, _client_id, _rsa_key_path)
     @service.create_intent_to_file(type)
   end
 end
