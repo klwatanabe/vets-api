@@ -11,8 +11,9 @@ module ClaimsApi
 
       def map_claim
         claim_attributes
+        application_expiration_date
 
-        @evss_claim
+        { form526: @evss_claim }
       end
 
       private
@@ -21,6 +22,10 @@ module ClaimsApi
         @evss_claim[:claimantCertification] = @data[:claimantCertification]
         currentMailingAddress
         disabilities
+        service_information
+
+      def application_expiration_date
+        @evss_claim[:applicationExpirationDate] = Date.today + 1.year
       end
 
       def currentMailingAddress
@@ -41,9 +46,9 @@ module ClaimsApi
 
       def disabilities
         @evss_claim[:disabilities] = @data[:disabilities].map do |disability|
-          disability[:approximateBeginDate] = disability[:approximateDate]
+          disability[:approximateBeginDate] = map_date_to_obj disability[:approximateDate]
           disability[:secondaryDisabilities] = disability[:secondaryDisabilities].map do |secondary|
-            secondary[:approximateBeginDate] = secondary[:approximateDate]
+            secondary[:approximateBeginDate] = map_date_to_obj secondary[:approximateDate]
             secondary.except(:exposureOrEventOrInjury, :approximateDate)
           end
 
@@ -53,6 +58,27 @@ module ClaimsApi
 
           disability.except(:approximateDate, :isRelatedToToxicExposure)
         end
+      end
+
+      def service_information
+        info = @data[:serviceInformation]
+        @evss_claim[:serviceInformation] = {
+          servicePeriods: info[:servicePeriods],
+          reservesNationalGuardService: {
+            obligationTermOfServiceFromDate: info[:reservesNationalGuardService][:obligationTermsOfService][:startDate],
+            obligationTermOfServiceToDate: info[:reservesNationalGuardService][:obligationTermsOfService][:endDate],
+            unitName: info[:reservesNationalGuardService][:unitName],
+          }
+        }
+      end
+
+      def map_date_to_obj(date)
+        date = if date.is_a? Date
+          date
+        else
+          DateTime.parse(date)
+        end
+        { year: date.year, month: date.month, day: date.day }
       end
     end
   end
