@@ -98,7 +98,7 @@ module DebtManagementCenter
         aggregate_fsr_reasons(form, debts)
       end
       submission = persist_form_submission(form, debts)
-      submission.submit_to_vba
+      submission.submit_to_vba(@user.identity_serial)
     end
 
     def create_vha_fsr(form)
@@ -120,19 +120,19 @@ module DebtManagementCenter
       submit_vha_batch_job(submissions)
     end
 
-    def submit_vba_fsr(form)
+    def submit_vba_fsr(form, user_params={})
       Rails.logger.info('5655 Form Submitting to VBA')
       response = perform(:post, 'financial-status-report/formtopdf', form)
       fsr_response = DebtManagementCenter::FinancialStatusReportResponse.new(response.body)
 
-      send_confirmation_email(VBA_CONFIRMATION_TEMPLATE) if response.success?
+      send_confirmation_email(VBA_CONFIRMATION_TEMPLATE, user_params) if response.success?
 
-      update_filenet_id(fsr_response)
+      update_filenet_id(fsr_response, user_params)
 
       { status: fsr_response.status }
     end
 
-    def submit_vha_fsr(form_submission)
+    def submit_vha_fsr(form_submission, user_params={})
       vha_form = form_submission.form
       vha_form['transactionId'] = form_submission.id
       vha_form['timestamp'] = DateTime.now.strftime('%Y%m%dT%H%M%S')
@@ -143,7 +143,8 @@ module DebtManagementCenter
       sharepoint_request.upload(
         form_contents: vha_form,
         form_submission:,
-        station_id: vha_form['facilityNum']
+        station_id: vha_form['facilityNum'],
+        user_params: user_params
       )
       vbs_response = vbs_request.post("#{vbs_settings.base_path}/UploadFSRJsonDocument",
                                       { jsonDocument: vha_form.to_json })
@@ -183,7 +184,7 @@ module DebtManagementCenter
         'DebtManagementCenter::FinancialStatusReportService#send_vha_confirmation_email'
       )
       submission_batch.jobs do
-        vha_submissions.map(&:submit_to_vha)
+        vha_submissions.map{|submission| submission.submit_to_vha(@user.identity_serial)}
       end
     end
 
@@ -195,10 +196,11 @@ module DebtManagementCenter
       debts&.filter { |debt| debt['debtType'] == 'COPAY' }
     end
 
-    def update_filenet_id(response)
-      fsr_params = { REDIS_CONFIG[:financial_status_report][:namespace] => @user.uuid }
+    def update_filenet_id(response, user_params={})
+      user_uuid = user_params["uuid"] || @user&.uuid
+      fsr_params = { REDIS_CONFIG[:financial_status_report][:namespace] => user_uuid }
       fsr = DebtManagementCenter::FinancialStatusReport.new(fsr_params)
-      fsr.update(filenet_id: response.filenet_id, uuid: @user.uuid)
+      fsr.update(filenet_id: response.filenet_id, uuid: user_uuid)
 
       begin
         # Calling #update! will not raise a proper AR validation error
@@ -256,21 +258,22 @@ module DebtManagementCenter
       form['applicantCertifications']['veteranDateSigned'] = date_formatted if form['applicantCertifications']
     end
 
-    def send_confirmation_email(template_id)
+    def send_confirmation_email(template_id, user_params={})
       return unless Flipper.enabled?(:fsr_confirmation_email)
 
-      email = @user.email&.downcase
+      email = user_params["email"] || @user&.email&.downcase
       return if email.blank?
 
-      DebtManagementCenter::VANotifyEmailJob.perform_async(email, template_id, email_personalization_info)
+      DebtManagementCenter::VANotifyEmailJob.perform_async(email, template_id, email_personalization_info(user_params))
     end
 
     def send_vha_confirmation_email
       send_confirmation_email(VHA_CONFIRMATION_TEMPLATE)
     end
 
-    def email_personalization_info
-      { 'name' => @user.first_name, 'time' => '48 hours', 'date' => Time.zone.now.strftime('%m/%d/%Y') }
+    def email_personalization_info(user_params={})
+      name = user_params["first_name"] || @user&.first_name
+      { 'name' => name, 'time' => '48 hours', 'date' => Time.zone.now.strftime('%m/%d/%Y') }
     end
 
     def remove_form_delimiters(form)

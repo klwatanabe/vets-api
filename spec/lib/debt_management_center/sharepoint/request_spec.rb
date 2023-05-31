@@ -2,6 +2,7 @@
 
 require 'rails_helper'
 require 'debt_management_center/sharepoint/request'
+require 'pdf_fill/filler'
 
 RSpec.describe DebtManagementCenter::Sharepoint::Request do
   subject { described_class.new }
@@ -94,6 +95,19 @@ RSpec.describe DebtManagementCenter::Sharepoint::Request do
       expect(client_stub).to receive(:get).once
 
       subject.upload(form_contents: form_content, form_submission:, station_id:)
+    end
+
+    context 'with explicit user data' do
+      it 'uploads a pdf file to SharePoint' do
+        client_stub = mock_faraday
+        # expect(client_stub).to receive(:post).with("/base/_api/Web/GetFolderByServerRelativeUrl('/base/Submissions')/Files/add(url='20230530T134853_1863_lincoln.pdf',overwrite=true)").once
+        # expect(client_stub).to receive(:post).with("/base/_api/Web/Lists/GetByTitle('Submissions')/items(1)").once
+        expect(client_stub).to receive(:post).twice
+        expect(client_stub).to receive(:get).once
+        user_params = {"first_name"=>"x", "last_name"=>"y", "ssn"=>"z"}
+        subject.upload(form_contents: form_content, form_submission:, station_id:, user_params:)
+
+      end
     end
   end
 end

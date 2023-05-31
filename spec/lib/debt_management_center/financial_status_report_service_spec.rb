@@ -133,6 +133,36 @@ RSpec.describe DebtManagementCenter::FinancialStatusReportService, type: :servic
           end
         end
       end
+
+      context 'with explicit user data' do
+        it 'accepts the submission' do
+          VCR.use_cassette('dmc/submit_fsr') do
+            VCR.use_cassette('bgs/people_service/person_data') do
+              service = described_class.new(nil)
+              res = service.submit_vba_fsr(valid_form_data, user.identity_serial)
+              expect(res[:status]).to eq('Document created successfully and uploaded to File Net.')
+            end
+          end
+        end
+
+        it 'sends a confirmation email' do
+          VCR.use_cassette('dmc/submit_fsr') do
+            VCR.use_cassette('bgs/people_service/person_data') do
+              service = described_class.new(nil)
+              expect(DebtManagementCenter::VANotifyEmailJob).to receive(:perform_async).with(
+                user.email.downcase,
+                described_class::VBA_CONFIRMATION_TEMPLATE,
+                {
+                  'name' => user.first_name,
+                  'time' => '48 hours',
+                  'date' => Time.zone.now.strftime('%m/%d/%Y')
+                }
+              )
+              service.submit_vba_fsr(valid_form_data, user.identity_serial)
+            end
+          end
+        end
+      end
     end
 
     context 'with malformed form' do
@@ -203,6 +233,13 @@ RSpec.describe DebtManagementCenter::FinancialStatusReportService, type: :servic
       delimitered_json = { 'name' => "^Gr\neg|" }
       parsed_form_string = service.send(:remove_form_delimiters, delimitered_json).to_s
       expect(['^', '|', "\n"].any? { |i| parsed_form_string.include? i }).to be false
+    end
+
+    context 'with explicit user data' do
+      it 'submits to the VBS endpoint' do
+        service = described_class.new(nil)
+        expect(service.submit_vha_fsr(form_submission, user.identity_serial)).to eq({ status: 200 })
+      end
     end
   end
 

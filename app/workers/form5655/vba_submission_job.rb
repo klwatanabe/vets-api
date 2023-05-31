@@ -8,10 +8,9 @@ module Form5655
 
     sidekiq_options retry: false
 
-    def perform(submission_id, user_uuid)
+    def perform(submission_id, user_params)
       submission = Form5655Submission.find(submission_id)
-      user = User.find(user_uuid)
-      DebtManagementCenter::FinancialStatusReportService.new(user).submit_vba_fsr(submission.form)
+      DebtManagementCenter::FinancialStatusReportService.new(nil).submit_vba_fsr(submission.form, user_params)
     end
   end
 end

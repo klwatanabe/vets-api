@@ -421,6 +421,16 @@ class User < Common::RedisStore
     @relationships ||= get_relationships_array
   end
 
+  def identity_serial
+    {
+      "uuid" => uuid,
+      "first_name" => first_name,
+      "last_name" => last_name,
+      "email" => email,
+      "ssn" => ssn
+    }
+  end
+
   private
 
   def mpi_profile
