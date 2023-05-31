@@ -15,10 +15,10 @@ module ClaimsApi
         @auth_headers = {}
       end
 
-      def submit(claim)
+      def submit(claim, data)
         @auth_headers = claim.auth_headers
 
-        client.post('submit', body: claim.form_data).body
+        client.post('submit', body: data).body
       end
 
       private
