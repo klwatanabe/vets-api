@@ -16,11 +16,14 @@ class AcceptableVerifiedCredentialAdoptionService
 
   def perform
     display_organic_modal_for_logingov_conversion
-    send_email_for_reactivation
+  end
 
-    result[:credential_type] = credential_type
+  def user_qualifies_for_reactivation?
+    (logged_in_with_dsl? || logged_in_with_mhv?) && verified_credential_at?
+  end
 
-    result
+  def user_qualifies_for_conversion?
+    (logged_in_with_dsl? || logged_in_with_mhv?) && !verified_credential_at?
   end
 
   private
@@ -33,21 +36,11 @@ class AcceptableVerifiedCredentialAdoptionService
     @credential_type ||= user.identity.sign_in[:service_name]
   end
 
-  def send_email_for_reactivation
-    result[:reactivation_email] = user_qualifies_for_reactivation?
-  end
-
   def display_organic_modal_for_logingov_conversion
     result[:organic_modal] = Flipper.enabled?(:organic_conversion_experiment, user) && user_qualifies_for_conversion?
+    result[:credential_type] = credential_type
     log_results('organic_modal') if result[:organic_modal] == true
-  end
-
-  def user_qualifies_for_conversion?
-    (logged_in_with_dsl? || logged_in_with_mhv?) && !verified_credential_at?
-  end
-
-  def user_qualifies_for_reactivation?
-    (logged_in_with_dsl? || logged_in_with_mhv?) && verified_credential_at?
+    result
   end
 
   def logged_in_with_dsl?
