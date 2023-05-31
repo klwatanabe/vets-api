@@ -3,7 +3,10 @@
 module Flipper
   class AdminUserConstraint
     def self.matches?(request)
+      puts request.path
+      require 'pry'; binding.pry
       return true if request.method == 'GET'
+
       # return true if Rails.env.development? || request.method == 'GET'
 
       warden = request.env['warden']
@@ -11,15 +14,17 @@ module Flipper
 
       if request.session[:flipper_user].blank?
         warden.authenticate!(scope: :flipper)
+        require 'pry'; binding.pry;
         request.session[:flipper_user] = warden.user
       end
+      require 'pry'; binding.pry;
 
       github_organization_authenticate!(request.session[:flipper_user], Settings.flipper.github_organization)
       github_team_authenticate!(request.session[:flipper_user], Settings.flipper.github_team)
 
       # we want to log who has made a change in Flipper::Instrumentation::EventSubscriber
       
-      true
+      false
     end
 
     # private
