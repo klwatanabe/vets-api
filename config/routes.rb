@@ -42,6 +42,7 @@ Rails.application.routes.draw do
     resources :education_career_counseling_claims, only: :create
     resources :veteran_readiness_employment_claims, only: :create
     resource :virtual_agent_token, only: [:create], controller: :virtual_agent_token
+    resource :virtual_agent_jwt_token, only: [:create], controller: :virtual_agent_jwt_token
 
     get 'form1095_bs/download_pdf/:tax_year', to: 'form1095_bs#download_pdf'
     get 'form1095_bs/download_txt/:tax_year', to: 'form1095_bs#download_txt'
@@ -169,6 +170,8 @@ Rails.application.routes.draw do
     get 'welcome', to: 'example#welcome', as: :welcome
     get 'limited', to: 'example#limited', as: :limited
     get 'status', to: 'admin#status'
+    get 'healthcheck', to: 'example#healthcheck', as: :healthcheck
+    get 'startup_healthcheck', to: 'example#startup_healthcheck', as: :startup_healthcheck
 
     get 'ppiu/payment_information', to: 'ppiu#index'
     put 'ppiu/payment_information', to: 'ppiu#update'
