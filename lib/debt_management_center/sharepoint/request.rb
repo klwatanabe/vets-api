@@ -30,7 +30,7 @@ module DebtManagementCenter
       #
       # @return [Faraday::Response] - Response from SharePoint upload
       #
-      def upload(form_contents:, form_submission:, station_id:, user_params:{})
+      def upload(form_contents:, form_submission:, station_id:, user_params: {})
         upload_response = upload_pdf(form_contents:, form_submission:,
                                      station_id:)
 
@@ -115,21 +115,19 @@ module DebtManagementCenter
       #
       # @return [Faraday::Response]
       #
-      def update_list_item_fields(list_item_id:, form_submission:, station_id:, user_params:{})
+      def update_list_item_fields(list_item_id:, form_submission:, station_id:, user_params: {})
         path = "#{base_path}/_api/Web/Lists/GetByTitle('Submissions')/items(#{list_item_id})"
         user = User.find(form_submission.user_uuid)
-        first_name = user_params["first_name"] || user&.first_name
-        last_name = user_params["last_name"] || user&.last_name
-        ssn = user_params["ssn"] || user&.ssn
+        first_name = user_params['first_name'] || user&.first_name
+        last_name = user_params['last_name'] || user&.last_name
+        ssn = user_params['ssn'] || user&.ssn
         with_monitoring do
           sharepoint_connection.post(path) do |req|
             req.headers['Content-Type'] = 'application/json;odata=verbose'
             req.headers['X-HTTP-METHOD'] = 'MERGE'
             req.headers['If-Match'] = '*'
             req.body = {
-              '__metadata' => {
-                'type' => 'SP.Data.SubmissionsItem'
-              },
+              '__metadata' => { 'type' => 'SP.Data.SubmissionsItem' },
               'StationId' => station_id,
               'UID' => form_submission.id,
               'SSN' => ssn,

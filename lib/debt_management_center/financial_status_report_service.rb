@@ -120,7 +120,7 @@ module DebtManagementCenter
       submit_vha_batch_job(submissions)
     end
 
-    def submit_vba_fsr(form, user_params={})
+    def submit_vba_fsr(form, user_params = {})
       Rails.logger.info('5655 Form Submitting to VBA')
       response = perform(:post, 'financial-status-report/formtopdf', form)
       fsr_response = DebtManagementCenter::FinancialStatusReportResponse.new(response.body)
@@ -132,7 +132,7 @@ module DebtManagementCenter
       { status: fsr_response.status }
     end
 
-    def submit_vha_fsr(form_submission, user_params={})
+    def submit_vha_fsr(form_submission, user_params = {})
       vha_form = form_submission.form
       vha_form['transactionId'] = form_submission.id
       vha_form['timestamp'] = DateTime.now.strftime('%Y%m%dT%H%M%S')
@@ -140,12 +140,10 @@ module DebtManagementCenter
       vbs_request = DebtManagementCenter::VBS::Request.build
       sharepoint_request = DebtManagementCenter::Sharepoint::Request.new
       Rails.logger.info('5655 Form Submitting to VHA', submission_id: form_submission.id)
-      sharepoint_request.upload(
-        form_contents: vha_form,
-        form_submission:,
-        station_id: vha_form['facilityNum'],
-        user_params: user_params
-      )
+      sharepoint_request.upload(form_contents: vha_form,
+                                form_submission:,
+                                station_id: vha_form['facilityNum'],
+                                user_params:)
       vbs_response = vbs_request.post("#{vbs_settings.base_path}/UploadFSRJsonDocument",
                                       { jsonDocument: vha_form.to_json })
 
@@ -184,7 +182,7 @@ module DebtManagementCenter
         'DebtManagementCenter::FinancialStatusReportService#send_vha_confirmation_email'
       )
       submission_batch.jobs do
-        vha_submissions.map{|submission| submission.submit_to_vha(@user.identity_serial)}
+        vha_submissions.map { |submission| submission.submit_to_vha(@user.identity_serial) }
       end
     end
 
@@ -196,8 +194,8 @@ module DebtManagementCenter
       debts&.filter { |debt| debt['debtType'] == 'COPAY' }
     end
 
-    def update_filenet_id(response, user_params={})
-      user_uuid = user_params["uuid"] || @user&.uuid
+    def update_filenet_id(response, user_params = {})
+      user_uuid = user_params['uuid'] || @user&.uuid
       fsr_params = { REDIS_CONFIG[:financial_status_report][:namespace] => user_uuid }
       fsr = DebtManagementCenter::FinancialStatusReport.new(fsr_params)
       fsr.update(filenet_id: response.filenet_id, uuid: user_uuid)
@@ -258,10 +256,10 @@ module DebtManagementCenter
       form['applicantCertifications']['veteranDateSigned'] = date_formatted if form['applicantCertifications']
     end
 
-    def send_confirmation_email(template_id, user_params={})
+    def send_confirmation_email(template_id, user_params = {})
       return unless Flipper.enabled?(:fsr_confirmation_email)
 
-      email = user_params["email"] || @user&.email&.downcase
+      email = user_params['email'] || @user&.email&.downcase
       return if email.blank?
 
       DebtManagementCenter::VANotifyEmailJob.perform_async(email, template_id, email_personalization_info(user_params))
@@ -271,8 +269,8 @@ module DebtManagementCenter
       send_confirmation_email(VHA_CONFIRMATION_TEMPLATE)
     end
 
-    def email_personalization_info(user_params={})
-      name = user_params["first_name"] || @user&.first_name
+    def email_personalization_info(user_params = {})
+      name = user_params['first_name'] || @user&.first_name
       { 'name' => name, 'time' => '48 hours', 'date' => Time.zone.now.strftime('%m/%d/%Y') }
     end
 

@@ -423,11 +423,11 @@ class User < Common::RedisStore
 
   def identity_serial
     {
-      "uuid" => uuid,
-      "first_name" => first_name,
-      "last_name" => last_name,
-      "email" => email,
-      "ssn" => ssn
+      'uuid' => uuid,
+      'first_name' => first_name,
+      'last_name' => last_name,
+      'email' => email,
+      'ssn' => ssn
     }
   end
 

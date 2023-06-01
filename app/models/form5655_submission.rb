@@ -10,11 +10,11 @@ class Form5655Submission < ApplicationRecord
     @form_hash ||= JSON.parse(form_json)
   end
 
-  def submit_to_vba(user_params={})
+  def submit_to_vba(user_params = {})
     Form5655::VBASubmissionJob.perform_async(id, user_params)
   end
 
-  def submit_to_vha(user_params={})
+  def submit_to_vha(user_params = {})
     Form5655::VHASubmissionJob.perform_async(id, user_params)
   end
 end
