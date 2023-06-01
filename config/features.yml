@@ -362,6 +362,10 @@ features:
     actor_type: user
     description: Enables form 1990 email submission confirmation (VaNotify)
     enable_in_development: true
+  form1995_confirmation_email:
+    actor_type: user
+    description: Enables form 1995 email submission confirmation (VaNotify)
+    enable_in_development: true
   form1990e_confirmation_email:
     actor_type: user
     description: Enables form 1990e email submission confirmation (VaNotify)
@@ -827,6 +831,9 @@ features:
     description: Provides a flag wrapper for minor code changes to be gated from Prod.
     enable_in_development: true
   show_meb_enhancements_06:
+    actor_type: user
+    description: Provides a flag wrapper for minor code changes to be gated from Prod.
+  show_meb_enhancements_08:
     actor_type: user
     description: Provides a flag wrapper for minor code changes to be gated from Prod.
     enable_in_development: true

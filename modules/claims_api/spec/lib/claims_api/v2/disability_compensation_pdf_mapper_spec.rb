@@ -121,7 +121,7 @@ describe ClaimsApi::V2::DisabilityCompensationPdfMapper do
         zip = pdf_data[:data][:attributes][:changeOfAddress][:zip]
         state = pdf_data[:data][:attributes][:changeOfAddress][:state]
 
-        expect(beginning_date).to eq('2012-11-31')
+        expect(beginning_date).to eq('2012-11-30')
         expect(ending_date).to eq('2013-10-11')
         expect(type_of_addr_change).to eq('TEMPORARY')
         expect(number_and_street).to eq('10 Peach St')
@@ -336,6 +336,29 @@ describe ClaimsApi::V2::DisabilityCompensationPdfMapper do
         expect(fed_act).to eq('3619-02-11')
         expect(fed_sep).to eq('6705-10-03')
         expect(served_after_nine_eleven).to eq(false)
+      end
+    end
+
+    context '526 section 8, direct deposot' do
+      let(:form_attributes) { auto_claim.dig('data', 'attributes') || {} }
+      let(:mapper) { ClaimsApi::V2::DisabilityCompensationPdfMapper.new(form_attributes, pdf_data) }
+
+      it 'maps the attributes correctly' do
+        mapper.map_claim
+
+        dir_deposit = pdf_data[:data][:attributes][:directDepositInformation]
+
+        account_type = dir_deposit[:accountType]
+        account_number = dir_deposit[:accountNumber]
+        routing_number = dir_deposit[:routingNumber]
+        financial_institution_name = dir_deposit[:financialInstitutionName]
+        no_account = dir_deposit[:noAccount]
+
+        expect(account_type).to eq('CHECKING')
+        expect(account_number).to eq('ABCDEF')
+        expect(routing_number).to eq('123123123')
+        expect(financial_institution_name).to eq('Some Bank')
+        expect(no_account).to eq(false)
       end
     end
   end
