@@ -28,7 +28,6 @@ module ClaimsApi
           pdf_data = get_pdf_data
           pdf_mapper_service(form_attributes, pdf_data).map_claim
 
-
           evss_data = evss_mapper_service(auto_claim).map_claim
           evss_service.submit(auto_claim, evss_data)
 

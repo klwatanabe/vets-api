@@ -11,7 +11,7 @@ module ClaimsApi
 
       def map_claim
         claim_attributes
-        application_expiration_date
+        claim_meta
 
         { form526: @evss_claim }
       end
@@ -19,29 +19,50 @@ module ClaimsApi
       private
 
       def claim_attributes
-        @evss_claim[:claimantCertification] = @data[:claimantCertification]
-        currentMailingAddress
+        change_of_address
+        current_mailing_address
+        direct_deposit
         disabilities
         service_information
-
-      def application_expiration_date
-        @evss_claim[:applicationExpirationDate] = Date.today + 1.year
+        standard_claim
+        veteran_meta
       end
 
-      def currentMailingAddress
+      def change_of_address
+        return if @data[:changeOfAddress].blank?
+
+        @evss_claim[:veteran] ||= {}
+        @evss_claim[:veteran][:changeOfAddress] = @data[:changeOfAddress]
+        @evss_claim[:veteran][:changeOfAddress].merge!({
+                                                         addressLine1: @data[:changeOfAddress][:numberAndStreet],
+                                                         addressLines2: @data[:changeOfAddress][:apartmentOrUnitNumber],
+                                                         type: 'DOMESTIC' # [MILITARY, INTERNATIONAL] # TODO, find this
+                                                       })
+        @evss_claim[:veteran][:changeOfAddress][:addressChangeType] = @data.dig(:changeOfAddress, :typeOfAddressChange)
+        @evss_claim[:veteran][:changeOfAddress][:beginningDate] = @data.dig(:changeOfAddress, :dates, :beginningDate)
+        @evss_claim[:veteran][:changeOfAddress][:endingDate] = @data.dig(:changeOfAddress, :dates, :endingDate)
+        @evss_claim[:veteran][:changeOfAddress].except!(:numberAndStreet, :apartmentOrUnitNumber, :typeOfAddressChange,
+                                                        :dates)
+      end
+
+      def current_mailing_address
         addr = @data.dig(:veteranIdentification, :mailingAddress) || {}
         @evss_claim[:veteran] ||= {}
-        @evss_claim[:veteran][:currentMailingAddress] = {
-          addressLine1: addr[:numberAndStreet],
-          addressLines2: addr[:apartmentOrUnitNumber],
-          city: addr[:city],
-          country: addr[:country],
-          zipFirstFive: addr[:zipFirstFive],
-          zipLastFour: addr[:zipLastFour],
-          state: addr[:state],
-        }
-        @evss_claim[:veteran][:emailAddress] = @data.dig(:veteranIdentification, :emailAddress, :email)
-        @evss_claim[:veteran][:fileNumber] = @data.dig(:veteranIdentification, :vaFileNumber) 
+        @evss_claim[:veteran][:currentMailingAddress] = addr
+        @evss_claim[:veteran][:currentMailingAddress].merge!({
+                                                               addressLine1: addr[:numberAndStreet],
+                                                               addressLines2: addr[:apartmentOrUnitNumber],
+                                                               type: 'DOMESTIC' # [MILITARY, INTERNATIONAL] # TODO, find this
+                                                             })
+        @evss_claim[:veteran][:currentMailingAddress].except!(:numberAndStreet, :apartmentOrUnitNumber)
+      end
+
+      def direct_deposit
+        return if @data[:directDeposit].empty?
+
+        @evss_claim[:directDeposit] = @data[:directDeposit]
+        @evss_claim[:directDeposit][:bankName] = @data[:directDeposit][:financialInstitutionName]
+        @evss_claim[:directDeposit].except!(:financialInstitutionName, :noAccount)
       end
 
       def disabilities
@@ -52,9 +73,7 @@ module ClaimsApi
             secondary.except(:exposureOrEventOrInjury, :approximateDate)
           end
 
-          if disability[:isRelatedToToxicExposure]
-            disability[:specialIssues] = 'PACT'
-          end
+          disability[:specialIssues] = 'PACT' if disability[:isRelatedToToxicExposure]
 
           disability.except(:approximateDate, :isRelatedToToxicExposure)
         end
@@ -67,17 +86,34 @@ module ClaimsApi
           reservesNationalGuardService: {
             obligationTermOfServiceFromDate: info[:reservesNationalGuardService][:obligationTermsOfService][:startDate],
             obligationTermOfServiceToDate: info[:reservesNationalGuardService][:obligationTermsOfService][:endDate],
-            unitName: info[:reservesNationalGuardService][:unitName],
+            unitName: info[:reservesNationalGuardService][:unitName]
           }
         }
       end
 
+      def standard_claim
+        @evss_claim[:standardClaim] = @data[:claimProcessType] == 'STANDARD_CLAIM_PROCESS' # TODO: confirm this
+      end
+
+      def claim_meta
+        @evss_claim[:applicationExpirationDate] = Time.zone.today + 1.year
+        @evss_claim[:claimantCertification] = @data[:claimantCertification]
+        @evss_claim[:submtrApplcnTypeCd] = 'LH-B'
+      end
+
+      def veteran_meta
+        @evss_claim[:veteran] ||= {}
+        @evss_claim[:veteran][:currentlyVAEmployee] = @data.dig(:veteranIdentification, :currentlyVaEmployee)
+        @evss_claim[:veteran][:emailAddress] = @data.dig(:veteranIdentification, :emailAddress, :email)
+        @evss_claim[:veteran][:fileNumber] = @data.dig(:veteranIdentification, :vaFileNumber)
+      end
+
       def map_date_to_obj(date)
         date = if date.is_a? Date
-          date
-        else
-          DateTime.parse(date)
-        end
+                 date
+               else
+                 DateTime.parse(date)
+               end
         { year: date.year, month: date.month, day: date.day }
       end
     end
