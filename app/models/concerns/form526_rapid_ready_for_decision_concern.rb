@@ -111,6 +111,9 @@ module Form526RapidReadyForDecisionConcern
       form526_submission_id: id
     }
 
+    Rails.logger.info(
+      "classifying 526Submission... id: #{id}, saved_claim_id: #{saved_claim_id}"
+    )
     classification = classify_by_diagnostic_code(params)
     update_form_with_classification(classification['classification_code']) if classification.present?
   end
