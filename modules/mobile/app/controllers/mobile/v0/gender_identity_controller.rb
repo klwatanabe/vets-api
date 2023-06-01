@@ -5,6 +5,7 @@ require 'va_profile/demographics/service'
 module Mobile
   module V0
     class GenderIdentityController < ApplicationController
+      before_action(only: :update) { authorize :demographics, :access_update? }
       before_action { authorize :mpi, :queryable? }
 
       def edit

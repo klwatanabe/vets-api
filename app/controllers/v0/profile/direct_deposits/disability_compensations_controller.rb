@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
+require 'lighthouse/service_exception'
 require 'lighthouse/direct_deposit/client'
+require 'lighthouse/direct_deposit/error_parser'
 require 'lighthouse/direct_deposit/payment_account'
 
 module V0
@@ -9,29 +11,29 @@ module V0
       class DisabilityCompensationsController < ApplicationController
         before_action :controller_enabled?
         before_action { authorize :lighthouse, :access_disability_compensations? }
-        before_action :validate_payment_account, only: :update
+
+        rescue_from(*Lighthouse::ServiceException::ERROR_MAP.values) do |exception|
+          error = { status: exception.status_code, body: exception.errors.first }
+          response = Lighthouse::DirectDeposit::ErrorParser.parse(error)
+
+          render status: response.status, json: response.body
+        end
 
         def show
-          response = client.get_payment_information
-          if response.ok?
-            render status: response.status,
-                   json: response.body,
-                   serializer: DisabilityCompensationsSerializer
-          else
-            render status: response.status, json: response.body
-          end
+          response = client.get_payment_info
+
+          render status: response.status,
+                 json: response.body,
+                 serializer: DisabilityCompensationsSerializer
         end
 
         def update
-          response = client.update_payment_information(payment_account_params)
-          if response.ok?
-            send_confirmation_email
-            render status: response.status,
-                   json: response.body,
-                   serializer: DisabilityCompensationsSerializer
-          else
-            render status: response.status, json: response.body
-          end
+          response = client.update_payment_info(payment_account)
+          send_confirmation_email
+
+          render status: response.status,
+                 json: response.body,
+                 serializer: DisabilityCompensationsSerializer
         end
 
         private
@@ -50,13 +52,6 @@ module V0
 
         def payment_account
           @payment_account ||= Lighthouse::DirectDeposit::PaymentAccount.new(payment_account_params)
-        end
-
-        def validate_payment_account
-          unless payment_account.valid?
-            Raven.tags_context(validation: 'direct_deposit')
-            raise Common::Exceptions::ValidationErrors, payment_account
-          end
         end
 
         def send_confirmation_email

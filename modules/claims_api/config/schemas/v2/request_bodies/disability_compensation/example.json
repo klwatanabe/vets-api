@@ -141,16 +141,23 @@
                 "separationLocationCode": "V01D"
               }
           ],
-          "confinements": {
+          "confinements": [
+            {
               "approximateBeginDate": "2016-11-06",
               "approximateEndDate": "2016-11-09"
-          },
+            },
+            {
+              "approximateBeginDate": "2019-11-06",
+              "approximateEndDate": "2019-11-09"
+            }
+          ],
           "reservesNationalGuardService": {
               "obligationTermsOfService": {
                 "startDate":"2016-11-24",
                 "endDate":"2017-11-17"
               },
               "unitName": "DonkeyPants",
+              "unitAddress": "1243 pine court",
               "component": "National Guard",
               "title10Activation": {
                   "anticipatedSeparationDate": "2017-10-03",
@@ -158,12 +165,13 @@
               },
               "unitPhone": {
                   "areaCode": "123",
-                  "phoneNumber": "456-7890"
+                  "phoneNumber": "4567890"
               },
               "receivingInactiveDutyTrainingPay": true
           },
           "alternateNames": [
-              "John Jacob Jingleheimer-Schmidt"
+            "John Jacob Jingleheimer-Schmidt",
+            "Johnathon"
           ],
           "servedInActiveCombatSince911": false
       },
@@ -177,7 +185,7 @@
             "branchOfService": "Army",
             "monthlyAmount": 840.75
         },
-        "retiredStatus": [],
+        "retiredStatus": "RETIRED",
         "receivedSeparationOrSeverancePay": false,
         "separationSeverancePay": {
           "datePaymentReceived": "2018-07-31",

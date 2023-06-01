@@ -370,6 +370,9 @@ features:
     actor_type: user
     description: Enables form 5490 email submission confirmation (VaNotify)
     enable_in_development: true
+  form214142:
+    actor_type: user
+    description: If enabled shows the digital form experience for form 21-4142
   form264555:
     actor_type: user
     description: If enabled shows the digital form experience for form 26-4555
@@ -764,9 +767,6 @@ features:
   va_view_dependents_access:
     actor_type: user
     description: Allows us to gate the View/ Modify dependents content in a progressive rollout
-  vba_documents_larger_page_size_limit:
-    actor_type: user
-    description: Allows Benefits Intake to accept PDFs up to 78x101 inches (instead of the default 21x21)
   yellow_ribbon_mvp_enhancement:
     actor_type: user
     description: Enhances Yellow Ribbon MVP.
@@ -822,6 +822,9 @@ features:
     description: Provides a flag wrapper for minor code changes to be gated from Prod.
     enable_in_development: true
   show_meb_enhancements_06:
+    actor_type: user
+    description: Provides a flag wrapper for minor code changes to be gated from Prod.
+  show_meb_enhancements_08:
     actor_type: user
     description: Provides a flag wrapper for minor code changes to be gated from Prod.
     enable_in_development: true

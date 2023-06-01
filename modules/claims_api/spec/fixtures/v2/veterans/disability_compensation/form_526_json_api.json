@@ -34,16 +34,23 @@
                         "separationLocationCode": "ABCDEFGHIJKLMN"
                     }
                 ],
-                "confinements": {
-                    "approximateBeginDate": "8349-11-06",
-                    "approximateEndDate": "2884-12-09"
-                },
+                "confinements": [
+                    {
+                        "approximateBeginDate": "2018-06-04",
+                        "approximateEndDate": "2018-07-04"
+                    } ,
+                    {
+                        "approximateBeginDate": "2020-06-04",
+                        "approximateEndDate": "2020-07-04"
+                    } 
+                ],
                 "reservesNationalGuardService": {
                     "obligationTermsOfService": {
-                        "startDate":"3995-11-24",
-                        "endDate":"8502-11-17"
+                        "startDate":"2019-06-04",
+                        "endDate":"2020-06-04"
                     },
                     "unitName": "''c'5'l'#l#2z",
+                    "unitAddress": "1243 pine court",
                     "component": "Active",
                     "title10Activation": {
                         "anticipatedSeparationDate": "6705-10-03",
@@ -64,18 +71,18 @@
                 {
                     "disabilityActionType": "REOPEN",
                     "name": "PTSD (post traumatic stress disorder)",
-                    "classificationCode": "ABCDEFGHIJ",
+                    "classificationCode": "5420",
                     "serviceRelevance": "ABCDEFG",
-                    "approximateDate": "4592-11-04",
+                    "approximateDate": "2018-03-02",
                     "ratedDisabilityId": "ABCDEFGHIJKLMNOPQRSTUVWX",
-                    "diagnosticCode": 0,
+                    "diagnosticCode": 9999,
                     "secondaryDisabilities": [
                         {
-                            "name": "ABCDEF",
+                            "name": "Cancer - Musculoskeletal - Elbow",
                             "disabilityActionType": "SECONDARY",
                             "serviceRelevance": "ABCDEFGHIJKLMNOPQ",
-                            "classificationCode": "ABCDEFGHIJKLMNO",
-                            "approximateDate": "9904-01-03",
+                            "classificationCode": "249470",
+                            "approximateDate": "2018-03-02",
                             "exposureOrEventOrInjury": "EXPOSURE"
                         }
                     ],
@@ -84,19 +91,19 @@
                 },
                 {
                     "disabilityActionType": "REOPEN",
-                    "name": "Trauma",
-                    "classificationCode": "ABCDEFGHIJ",
+                    "name": "Traumatic Brain Injury",
+                    "classificationCode": "9020",
                     "serviceRelevance": "ABCDEFG",
-                    "approximateDate": "4592-11-04",
+                    "approximateDate": "2018-03-02",
                     "ratedDisabilityId": "ABCDEFGHIJKLMNOPQRSTUVWX",
                     "diagnosticCode": 0,
                     "secondaryDisabilities": [
                         {
-                            "name": "GHIJKLM",
+                            "name": "Cancer - Musculoskeletal - Elbow",
                             "disabilityActionType": "SECONDARY",
                             "serviceRelevance": "ABCDEFGHIJKLMNOPQ",
-                            "classificationCode": "ABCDEFGHIJKLMNO",
-                            "approximateDate": "9904-01-03",
+                            "classificationCode": "249470",
+                            "approximateDate": "2018-03-02",
                             "exposureOrEventOrInjury": "EXPOSURE"
                         }
                     ],
@@ -167,16 +174,7 @@
             },
             "treatments": [
                 {
-                    "treatedDisabilityNames": ["PTSD (post traumatic stress disorder)", "Trauma"],
-                    "center": {
-                        "name": "Center One",
-                        "state": "GA",
-                        "city": "Decatur"
-                    },
-                    "startDate": "03-1985"
-                },
-                {
-                    "treatedDisabilityNames": ["Trauma"],
+                    "treatedDisabilityNames": ["PTSD (post traumatic stress disorder)"],
                     "center": {
                         "name": "Center One",
                         "state": "GA",
@@ -198,7 +196,7 @@
                 "retiredStatus": "RETIRED",
                 "receivedSeparationOrSeverancePay": false,
                 "separationSeverancePay": {
-                    "datePaymentReceived": "7169-07-31",
+                    "datePaymentReceived": "2022-03-01",
                     "branchOfService": "Naval Academy",
                     "preTaxAmountReceived": 379.25
                 }
