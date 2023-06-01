@@ -503,6 +503,11 @@ features:
   profile_lighthouse_direct_deposit:
     actor_type: user
     description: When enabled, will request direct deposit data from lighthouse API.
+  profile_personal_info_authorization:
+    actor_type: user
+    description: >
+      Authorization check for personal information endpoints.  When enabled, checks if user has an ID.me or Login.gov login.  
+      When disabled, checks if user signed in using ID.me or Login.gov.    
   profile_user_claims:
     actor_type: user
     description: When enabled, /v0/user will return user profile claims for accessing service endpoints.

@@ -5,7 +5,9 @@ require 'va_profile/demographics/service'
 module V0
   module Profile
     class PersonalInformationsController < ApplicationController
-      before_action { authorize :demographics, :access? }
+      include VAProfile::DemographicsAuthorizable
+
+      before_action :authorize_request!, only: :show
       before_action { authorize :mpi, :queryable? }
 
       # Fetches the personal information for the current user.

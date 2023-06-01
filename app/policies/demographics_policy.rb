@@ -19,4 +19,9 @@ DemographicsPolicy = Struct.new(:user, :gender_identity) do
     user.loa3? &&
       allowed_providers.include?(user.identity.sign_in[:service_name])
   end
+
+  def legacy_access?
+    user.loa3? &&
+      (user&.idme_uuid.present? || user&.logingov_uuid.present?)
+  end
 end

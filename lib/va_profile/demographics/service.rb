@@ -19,8 +19,6 @@ module VAProfile
       # Returns a response object containing the user's preferred name, and gender-identity
       def get_demographics
         with_monitoring do
-          return build_response(401, nil) unless DemographicsPolicy.new(@user).access_update?
-
           response = perform(:get, identity_path)
           build_response(response&.status, response&.body)
         end
@@ -57,8 +55,6 @@ module VAProfile
 
       def post_or_put_data(method, model, path, response_class)
         with_monitoring do
-          raise 'User does not have a valid CSP ID' unless DemographicsPolicy.new(@user).access_update?
-
           model.set_defaults(@user)
           response = perform(method, identity_path(path), model.in_json)
 
