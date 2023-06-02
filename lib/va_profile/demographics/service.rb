@@ -19,6 +19,8 @@ module VAProfile
       # Returns a response object containing the user's preferred name, and gender-identity
       def get_demographics
         with_monitoring do
+          return build_response(401, nil) if csp_id_with_aaid.blank?
+
           response = perform(:get, identity_path)
           build_response(response&.status, response&.body)
         end
@@ -55,6 +57,8 @@ module VAProfile
 
       def post_or_put_data(method, model, path, response_class)
         with_monitoring do
+          return build_response(401, nil) if csp_id_with_aaid.blank?
+
           model.set_defaults(@user)
           response = perform(method, identity_path(path), model.in_json)
 
