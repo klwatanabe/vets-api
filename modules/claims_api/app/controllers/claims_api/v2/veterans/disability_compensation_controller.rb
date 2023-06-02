@@ -5,6 +5,7 @@ require 'jsonapi/parser'
 require 'claims_api/v2/disability_compensation_validation'
 require 'claims_api/v2/disability_compensation_pdf_mapper'
 require 'evss_service/base'
+require 'bd/bd'
 
 module ClaimsApi
   module V2
@@ -25,8 +26,9 @@ module ClaimsApi
             veteran_icn: target_veteran.mpi.icn
           )
           pdf_data = get_pdf_data
-          pdf_mapper_service(form_attributes, pdf_data).map_claim
+          claim_pdf = pdf_mapper_service(form_attributes, pdf_data).map_claim
 
+          benefits_doc_api.documents(auto_claim)
           # evss_service.submit(auto_claim)
 
           render json: auto_claim
@@ -53,6 +55,10 @@ module ClaimsApi
 
         def evss_service
           ClaimsApi::EVSSService::Base.new(request)
+        end
+
+        def benefits_doc_api
+          ClaimsApi::BD.new()
         end
       end
     end
