@@ -11,6 +11,7 @@ RSpec.describe 'user', type: :request do
   describe 'GET /mobile/v1/user' do
     before do
       iam_sign_in(build(:iam_user))
+      allow_any_instance_of(IAMUser).to receive(:idme_uuid).and_return('b2fab2b5-6af0-45e1-a9e2-394347af91ef')
     end
 
     context 'with no upstream errors' do
@@ -450,7 +451,9 @@ RSpec.describe 'user', type: :request do
 
       it 'returns a record not found error' do
         VCR.use_cassette('mobile/user/get_facilities', match_requests_on: %i[method uri]) do
-          get '/mobile/v1/user', headers: iam_headers
+          VCR.use_cassette('mobile/va_profile/demographics/demographics') do
+            get '/mobile/v1/user', headers: iam_headers
+          end
         end
 
         expect(response).to have_http_status(:not_found)
@@ -679,6 +682,7 @@ RSpec.describe 'user', type: :request do
     context 'no idme_uuid or logingov_uuid' do
       before do
         iam_sign_in(FactoryBot.build(:iam_user, :no_multifactor))
+        allow_any_instance_of(IAMUser).to receive(:idme_uuid).and_return(nil)
 
         VCR.use_cassette('mobile/payment_information/payment_information') do
           VCR.use_cassette('mobile/user/get_facilities') do
