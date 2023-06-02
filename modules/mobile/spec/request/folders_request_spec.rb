@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
 require 'rails_helper'
-require_relative '../support/iam_session_helper'
-require_relative '../support/mobile_sm_client_helper'
+require_relative '../support/helpers/iam_session_helper'
+require_relative '../support/helpers/mobile_sm_client_helper'
 
 RSpec.describe 'Mobile Folders Integration', type: :request do
   include Mobile::MessagingClientHelper
@@ -65,7 +65,7 @@ RSpec.describe 'Mobile Folders Integration', type: :request do
 
         it 'retrieve cached folders rather than hitting the service' do
           expect do
-            get '/mobile/v0/messaging/health/folders', headers: iam_headers, params: params
+            get('/mobile/v0/messaging/health/folders', headers: iam_headers, params:)
             expect(response).to be_successful
             expect(response.body).to be_a(String)
             parsed_response_contents = response.parsed_body['data']
@@ -109,7 +109,7 @@ RSpec.describe 'Mobile Folders Integration', type: :request do
 
         it 'response to POST #create' do
           VCR.use_cassette('sm_client/folders/creates_a_folder_and_deletes_a_folder') do
-            post '/mobile/v0/messaging/health/folders', headers: iam_headers, params: params
+            post '/mobile/v0/messaging/health/folders', headers: iam_headers, params:
           end
 
           expect(response).to be_successful
@@ -157,7 +157,7 @@ RSpec.describe 'Mobile Folders Integration', type: :request do
 
         it 'retrieve cached messages rather than hitting the service' do
           expect do
-            get "/mobile/v0/messaging/health/folders/#{inbox_id}/messages", headers: iam_headers, params: params
+            get("/mobile/v0/messaging/health/folders/#{inbox_id}/messages", headers: iam_headers, params:)
             expect(response).to be_successful
             expect(response.body).to be_a(String)
             parsed_response_contents = response.parsed_body['data']

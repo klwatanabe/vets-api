@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require_dependency 'mobile/messaging_controller'
-
 module Mobile
   module V0
     class MessagesController < MessagingController
@@ -13,7 +11,7 @@ module Mobile
 
         resource = params[:filter].present? ? resource.find_by(filter_params) : resource
         resource = resource.sort(params[:sort])
-        resource = resource.paginate(pagination_params)
+        resource = resource.paginate(**pagination_params)
 
         render json: resource.data,
                serializer: CollectionSerializer,
@@ -41,6 +39,7 @@ module Mobile
 
         message_params[:id] = message_params.delete(:draft_id) if message_params[:draft_id].present?
         create_message_params = { message: message_params.to_h }.merge(upload_params)
+        Rails.logger.info('Mobile SM Category Tracking', category: create_message_params.dig(:message, :category))
 
         client_response = if message.uploads.present?
                             client.post_create_message_with_attachment(create_message_params)
@@ -104,7 +103,6 @@ module Mobile
 
       def signature
         result = client.get_signature[:data]
-        Rails.logger.info('Mobile Get Message Signature Result', result: result)
         result = { signature_name: nil, include_signature: false, signature_title: nil } if result.nil?
         render json: Mobile::V0::MessageSignatureSerializer.new(@current_user.uuid, result).to_json
       end

@@ -3,7 +3,7 @@
 module CheckIn
   module V2
     class AppointmentIdentifiersSerializer
-      include FastJsonapi::ObjectSerializer
+      include JSONAPI::Serializer
 
       set_id(&:id)
       set_type :appointment_identifier
@@ -18,6 +18,10 @@ module CheckIn
 
       attribute :icn do |object|
         object.payload.dig(:demographics, :icn)
+      end
+
+      attribute :mobilePhone do |object|
+        object.payload.dig(:demographics, :mobilePhone)
       end
     end
   end

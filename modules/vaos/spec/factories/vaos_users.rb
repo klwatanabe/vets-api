@@ -16,6 +16,7 @@ FactoryBot.modify do
       birth_date { '1953-04-01' }
       ssn { '796061976' }
       va_patient { true }
+      stub_mpi { false }
 
       loa do
         {
@@ -28,7 +29,7 @@ FactoryBot.modify do
       after(:build) do |_user, _t|
         stub_mpi(
           build(
-            :mvi_profile,
+            :mpi_profile,
             given_names: %w[Judy Snow],
             family_name: 'Morrison',
             suffix: nil,
@@ -69,6 +70,7 @@ FactoryBot.modify do
       birth_date { '1962-02-07' }
       ssn { '796029146' }
       va_patient { true }
+      stub_mpi { false }
 
       loa do
         {
@@ -81,7 +83,7 @@ FactoryBot.modify do
       after(:build) do |_user, _t|
         stub_mpi(
           build(
-            :mvi_profile,
+            :mpi_profile,
             given_names: %w[Jacqueline Kain],
             family_name: 'Morgan',
             suffix: nil,

@@ -19,7 +19,7 @@ namespace :mvi do
       uuid = SecureRandom.uuid
 
       identity = UserIdentity.new(
-        uuid: uuid,
+        uuid:,
         first_name: ENV['first_name'],
         middle_name: ENV['middle_name'],
         last_name: ENV['last_name'],
@@ -36,12 +36,14 @@ namespace :mvi do
       identity.save
 
       user = User.new(
-        uuid: uuid,
-        identity: identity
+        uuid:,
+        identity:
       )
 
       user.last_signed_in = Time.now.utc
+      # rubocop:disable Lint/Debugger
       pp MPIData.for_user(user).profile
+      # rubocop:enable Lint/Debugger
     rescue => e
       puts "User query failed: #{e.message}"
     end

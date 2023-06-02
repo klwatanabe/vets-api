@@ -32,11 +32,11 @@ describe SignIn::Logingov::Service do
     OpenStruct.new({
                      sub: user_uuid,
                      iss: 'https://idp.int.identitysandbox.gov/',
-                     email: email,
+                     email:,
                      email_verified: true,
                      given_name: first_name,
                      family_name: last_name,
-                     address: address,
+                     address:,
                      birthdate: birth_date,
                      social_security_number: ssn,
                      verified_at: 1_635_465_286
@@ -50,9 +50,9 @@ describe SignIn::Logingov::Service do
     {
       formatted: formatted_address,
       street_address: street,
-      postal_code: postal_code,
-      region: region,
-      locality: locality
+      postal_code:,
+      region:,
+      locality:
     }
   end
   let(:formatted_address) { "#{street}\n#{locality}, #{region} #{postal_code}" }
@@ -69,7 +69,7 @@ describe SignIn::Logingov::Service do
   let(:acr) { 'some-acr' }
 
   describe '#render_auth' do
-    let(:response) { subject.render_auth(state: state, acr: acr).to_s }
+    let(:response) { subject.render_auth(state:, acr:).to_s }
     let(:expected_log) { "[SignIn][Logingov][Service] Rendering auth, state: #{state}, acr: #{acr}" }
 
     it 'logs information to rails logger' do
@@ -91,19 +91,48 @@ describe SignIn::Logingov::Service do
     let(:logout_redirect_uri) { Settings.logingov.logout_redirect_uri }
     let(:expected_url_params) do
       {
-        client_id: client_id,
+        client_id:,
         post_logout_redirect_uri: logout_redirect_uri,
-        state: state
+        state: encoded_state
       }
     end
+    let(:encoded_state) { Base64.encode64(state_payload.to_json) }
+    let(:state_payload) do
+      {
+        logout_redirect: client_logout_redirect_uri,
+        seed:
+      }
+    end
+    let(:seed) { 'some-seed' }
     let(:expected_url_host) { Settings.logingov.oauth_url }
     let(:expected_url_path) { 'openid_connect/logout' }
     let(:expected_url) { "#{expected_url_host}/#{expected_url_path}?#{expected_url_params.to_query}" }
+    let(:client_logout_redirect_uri) { 'some-client-logout-redirect-uri' }
 
-    before { allow(SecureRandom).to receive(:hex).and_return(state) }
+    before { allow(SecureRandom).to receive(:hex).and_return(seed) }
 
-    it 'renders expected logout url' do
-      expect(subject.render_logout).to eq(expected_url)
+    it 'returns expected logout url' do
+      expect(subject.render_logout(client_logout_redirect_uri)).to eq(expected_url)
+    end
+  end
+
+  describe '#render_logout_redirect' do
+    let(:encoded_state) { Base64.encode64(state_payload.to_json) }
+    let(:state_payload) do
+      {
+        logout_redirect: client_logout_redirect_uri,
+        seed:
+      }
+    end
+    let(:seed) { 'some-seed' }
+    let(:client_logout_redirect_uri) { 'some-client-logout-redirect-uri' }
+
+    it 'renders the oauth_get_form template' do
+      expect(subject.render_logout_redirect(encoded_state)).to include('form id="oauth-form"')
+    end
+
+    it 'directs to the expected logout redirect uri' do
+      expect(subject.render_logout_redirect(encoded_state)).to include(client_logout_redirect_uri)
     end
   end
 
@@ -145,9 +174,23 @@ describe SignIn::Logingov::Service do
   end
 
   describe '#user_info' do
-    it 'returns a user attributes' do
+    it 'returns user attributes' do
       VCR.use_cassette('identity/logingov_200_responses') do
         expect(subject.user_info(token)).to eq(user_info)
+      end
+    end
+
+    context 'when log_credential is enabled in idme configuration' do
+      before do
+        allow_any_instance_of(SignIn::Logingov::Configuration).to receive(:log_credential).and_return(true)
+        allow(MockedAuthentication::Mockdata::Writer).to receive(:save_credential)
+      end
+
+      it 'makes a call to mocked authentication writer to save the credential' do
+        VCR.use_cassette('identity/logingov_200_responses') do
+          expect(MockedAuthentication::Mockdata::Writer).to receive(:save_credential)
+          subject.user_info(token)
+        end
       end
     end
 
@@ -171,40 +214,43 @@ describe SignIn::Logingov::Service do
   end
 
   describe '#normalized_attributes' do
-    let(:client_id) { SignIn::Constants::Auth::WEB_CLIENT }
     let(:expected_standard_attributes) do
       {
         logingov_uuid: user_uuid,
-        current_ial: IAL::TWO,
-        max_ial: IAL::TWO,
-        service_name: service_name,
+        current_ial: SignIn::Constants::Auth::IAL_TWO,
+        max_ial: SignIn::Constants::Auth::IAL_TWO,
+        service_name:,
         csp_email: email,
-        multifactor: multifactor,
-        authn_context: authn_context,
-        auto_uplevel: auto_uplevel
+        multifactor:,
+        authn_context:,
+        auto_uplevel:
       }
     end
-    let(:credential_level) { create(:credential_level, current_ial: IAL::TWO, max_ial: IAL::TWO) }
-    let(:service_name) { SAML::User::LOGINGOV_CSID }
+    let(:credential_level) do
+      create(:credential_level, current_ial: SignIn::Constants::Auth::IAL_TWO,
+                                max_ial: SignIn::Constants::Auth::IAL_TWO)
+    end
+
+    let(:service_name) { SignIn::Constants::Auth::LOGINGOV }
     let(:auth_broker) { SignIn::Constants::Auth::BROKER_CODE }
-    let(:authn_context) { IAL::LOGIN_GOV_IAL2 }
+    let(:authn_context) { SignIn::Constants::Auth::LOGIN_GOV_IAL2 }
     let(:auto_uplevel) { false }
     let(:expected_address) do
       {
         street: street.split("\n").first,
         street2: street.split("\n").last,
-        postal_code: postal_code,
+        postal_code:,
         state: region,
         city: locality,
-        country: country
+        country:
       }
     end
     let(:country) { 'USA' }
     let(:expected_attributes) do
       expected_standard_attributes.merge({ ssn: ssn.tr('-', ''),
-                                           birth_date: birth_date,
-                                           first_name: first_name,
-                                           last_name: last_name,
+                                           birth_date:,
+                                           first_name:,
+                                           last_name:,
                                            address: expected_address })
     end
 

@@ -4,6 +4,7 @@ require 'common/client/base'
 require 'common/client/concerns/mhv_session_based_client'
 require 'rx/configuration'
 require 'rx/client_session'
+require 'rx/rx_gateway_timeout'
 require 'active_support/core_ext/hash/slice'
 
 module Rx
@@ -17,6 +18,12 @@ module Rx
     client_session Rx::ClientSession
 
     CACHE_TTL = 3600 * 1 # 1 hour cache
+
+    def request(method, path, params = {}, headers = {}, options = {})
+      super(method, path, params, headers, options)
+    rescue Common::Exceptions::GatewayTimeout
+      raise Rx::RxGatewayTimeout
+    end
 
     ##
     # Get a list of active Prescriptions
@@ -60,7 +67,7 @@ module Rx
     def get_tracking_rx(id)
       json = perform(:get, "prescription/rxtracking/#{id}", nil, token_headers).body
       data = json[:data].first.merge(prescription_id: id)
-      Tracking.new(json.merge(data: data))
+      Tracking.new(json.merge(data:))
     end
 
     ##
@@ -72,7 +79,7 @@ module Rx
     def get_tracking_history_rx(id)
       json = perform(:get, "prescription/rxtracking/#{id}", nil, token_headers).body
       tracking_history = json[:data].map { |t| t.to_h.merge(prescription_id: id) }
-      Common::Collection.new(::Tracking, json.merge(data: tracking_history))
+      Common::Collection.new(::Tracking, **json.merge(data: tracking_history))
     end
 
     ##

@@ -7,13 +7,13 @@ FactoryBot.define do
     skip_create
 
     status { MPI::Responses::FindProfileResponse::OK }
-    profile { create(:mvi_profile) }
+    profile { create(:mpi_profile) }
     error { nil }
 
     initialize_with do
-      new(status: status,
-          profile: profile,
-          error: error)
+      new(status:,
+          profile:,
+          error:)
     end
   end
 
@@ -25,9 +25,9 @@ FactoryBot.define do
     error { MPI::Errors::RecordNotFound.new('Record not found') }
 
     initialize_with do
-      new(status: status,
-          profile: profile,
-          error: error)
+      new(status:,
+          profile:,
+          error:)
     end
   end
 
@@ -39,9 +39,9 @@ FactoryBot.define do
     error { MPI::Errors::FailedRequestError.new('Server error') }
 
     initialize_with do
-      new(status: status,
-          profile: profile,
-          error: error)
+      new(status:,
+          profile:,
+          error:)
     end
   end
 end

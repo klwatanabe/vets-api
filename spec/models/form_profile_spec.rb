@@ -2,15 +2,15 @@
 
 require 'rails_helper'
 require 'decision_review/schemas'
+require 'disability_compensation/factories/api_provider_factory'
 
 RSpec.describe FormProfile, type: :model do
   include SchemaMatchers
 
-  let(:user) { build(:user, :loa3, :mvi_profile_street_and_suffix) }
-  let(:mvi_profile) { build(:mvi_profile, suffix: 'Jr.') }
+  let(:user) { build(:user, :loa3, suffix: 'Jr.', address: build(:mpi_profile_address)) }
 
   before do
-    stub_mpi(mvi_profile)
+    Flipper.disable(:hca_vaprofile_military_info)
     stub_evss_pciu(user)
     described_class.instance_variable_set(:@mappings, nil)
   end
@@ -18,7 +18,7 @@ RSpec.describe FormProfile, type: :model do
   let(:street_check) { build(:street_check) }
 
   let(:form_profile) do
-    described_class.new(form_id: 'foo', user: user)
+    described_class.new(form_id: 'foo', user:)
   end
 
   let(:us_phone) { form_profile.send :pciu_us_phone }
@@ -515,8 +515,7 @@ RSpec.describe FormProfile, type: :model do
       'postNov111998Combat' => true,
       'gender' => user.gender,
       'homePhone' => us_phone,
-      'veteranSocialSecurityNumber' => user.ssn,
-      'vaCompensationType' => 'highDisability'
+      'veteranSocialSecurityNumber' => user.ssn
     }
   end
 
@@ -827,6 +826,85 @@ RSpec.describe FormProfile, type: :model do
     }
   end
 
+  let(:v26_4555_expected) do
+    {
+      'veteran' => {
+        'fullName' => {
+          'first' => user.first_name&.capitalize,
+          'last' => user.last_name&.capitalize,
+          'suffix' => user.suffix
+        },
+        'ssn' => '796111863',
+        'dateOfBirth' => '1809-02-12',
+        'homePhone' => '14445551212',
+        'email' => user.pciu_email,
+        'address' => {
+          'street' => street_check[:street],
+          'street2' => street_check[:street2],
+          'city' => user.address[:city],
+          'state' => user.address[:state],
+          'country' => user.address[:country],
+          'postal_code' => user.address[:postal_code][0..4]
+        }
+      }
+    }
+  end
+
+  let(:v21_4142_expected) do
+    {
+      'veteran' => {
+        'fullName' => {
+          'first' => user.first_name&.capitalize,
+          'last' => user.last_name&.capitalize,
+          'suffix' => user.suffix
+        },
+        'ssn' => '796111863',
+        'dateOfBirth' => '1809-02-12',
+        'homePhone' => '14445551212',
+        'email' => user.pciu_email,
+        'address' => {
+          'street' => street_check[:street],
+          'street2' => street_check[:street2],
+          'city' => user.address[:city],
+          'state' => user.address[:state],
+          'country' => user.address[:country],
+          'postal_code' => user.address[:postal_code][0..4]
+        }
+      }
+    }
+  end
+
+  describe '#initialize_military_information_vaprofile' do
+    context 'when va profile is down in production' do
+      before do
+        allow(Rails.env).to receive(:production?).and_return(true)
+      end
+
+      it 'logs exception and returns empty hash' do
+        expect(form_profile).to receive(:log_exception_to_sentry).with(
+          instance_of(VCR::Errors::UnhandledHTTPRequestError), {}, prefill: :vaprofile_military
+        )
+
+        expect(form_profile.send(:initialize_military_information_vaprofile)).to eq({})
+      end
+    end
+
+    it 'prefills military data from va profile' do
+      VCR.use_cassette('va_profile/military_personnel/post_read_service_histories_200') do
+        expect(form_profile.send(:initialize_military_information_vaprofile)).to eq(
+          {
+            'hca_last_service_branch' => 'army',
+            'last_entry_date' => '2012-03-02',
+            'last_discharge_date' => '2018-10-31',
+            'discharge_type' => nil,
+            'post_nov111998_combat' => false,
+            'sw_asia_combat' => false
+          }
+        )
+      end
+    end
+  end
+
   describe '#pciu_us_phone' do
     def self.test_pciu_us_phone(primary, expected)
       it "returns #{expected}" do
@@ -878,7 +956,7 @@ RSpec.describe FormProfile, type: :model do
     end
 
     def expect_prefilled(form_id)
-      prefilled_data = Oj.load(described_class.for(form_id: form_id, user: user).prefill.to_json)['form_data']
+      prefilled_data = Oj.load(described_class.for(form_id:, user:).prefill.to_json)['form_data']
 
       case form_id
       when '1010ez'
@@ -951,7 +1029,7 @@ RSpec.describe FormProfile, type: :model do
         error = RuntimeError.new('foo')
         expect(Rails.env).to receive(:production?).and_return(true)
         expect(user.military_information).to receive(:hca_last_service_branch).and_return('air force').and_raise(error)
-        form_profile = described_class.for(form_id: '1010ez', user: user)
+        form_profile = described_class.for(form_id: '1010ez', user:)
         expect(form_profile).to receive(:log_exception_to_sentry).with(error, {}, external_service: :emis)
         form_profile.prefill
       end
@@ -967,7 +1045,7 @@ RSpec.describe FormProfile, type: :model do
           country: nil,
           postal_code: nil
         )
-        described_class.for(form_id: '22-1990e', user: user).prefill
+        described_class.for(form_id: '22-1990e', user:).prefill
       end
     end
 
@@ -1114,7 +1192,7 @@ RSpec.describe FormProfile, type: :model do
               VCR.use_cassette('evss/gi_bill_status/gi_bill_status') do
                 VCR.use_cassette('gi_client/gets_the_institution_details') do
                   prefilled_data = Oj.load(
-                    described_class.for(form_id: '22-10203', user: user).prefill.to_json
+                    described_class.for(form_id: '22-10203', user:).prefill.to_json
                   )['form_data']
                   expect(prefilled_data).to eq(form_profile.send(:clean!, v22_10203_expected))
                 end
@@ -1136,7 +1214,7 @@ RSpec.describe FormProfile, type: :model do
           end
 
           it 'omits address fields in 686c-674 form' do
-            prefilled_data = described_class.for(form_id: '686C-674', user: user).prefill[:form_data]
+            prefilled_data = described_class.for(form_id: '686C-674', user:).prefill[:form_data]
             v686_c_674_expected['veteranContactInformation'].delete('veteranAddress')
             expect(prefilled_data).to eq(v686_c_674_expected)
           end
@@ -1157,6 +1235,8 @@ RSpec.describe FormProfile, type: :model do
           28-8832
           28-1900
           26-1880
+          26-4555
+          21-4142
         ].each do |form_id|
           it "returns prefilled #{form_id}" do
             expect_prefilled(form_id)
@@ -1164,6 +1244,10 @@ RSpec.describe FormProfile, type: :model do
         end
 
         context 'with a user that can prefill evss' do
+          before do
+            allow_any_instance_of(Auth::ClientCredentials::Service).to receive(:get_token).and_return('usyergd')
+          end
+
           # NOTE: `increase only` and `all claims` use the same form prefilling
           context 'when Vet360 prefill is disabled' do
             before do
@@ -1172,6 +1256,7 @@ RSpec.describe FormProfile, type: :model do
             end
 
             it 'returns prefilled 21-526EZ' do
+              Flipper.disable(ApiProviderFactory::FEATURE_TOGGLE_RATED_DISABILITIES)
               VCR.use_cassette('evss/pciu_address/address_domestic') do
                 VCR.use_cassette('evss/disability_compensation_form/rated_disabilities') do
                   VCR.use_cassette('evss/ppiu/payment_information') do
@@ -1197,6 +1282,7 @@ RSpec.describe FormProfile, type: :model do
               end
 
               it 'returns prefilled 21-526EZ' do
+                Flipper.disable(ApiProviderFactory::FEATURE_TOGGLE_RATED_DISABILITIES)
                 expect(user).to receive(:authorize).with(:ppiu, :access?).and_return(true).at_least(:once)
                 expect(user).to receive(:authorize).with(:evss, :access?).and_return(true).at_least(:once)
                 VCR.use_cassette('evss/pciu_address/address_domestic') do
@@ -1251,7 +1337,7 @@ RSpec.describe FormProfile, type: :model do
     context 'with a higher level review form' do
       let(:schema_name) { '20-0996' }
       let(:schema) { VetsJsonSchema::SCHEMAS[schema_name] }
-      let(:form_profile) { described_class.for(form_id: schema_name, user: user) }
+      let(:form_profile) { described_class.for(form_id: schema_name, user:) }
       let(:prefill) { Oj.load(form_profile.prefill.to_json)['form_data'] }
 
       before do
@@ -1300,7 +1386,7 @@ RSpec.describe FormProfile, type: :model do
         DecisionReview::Schemas::NOD_CREATE_REQUEST.merge '$schema': 'http://json-schema.org/draft-04/schema#'
       end
 
-      let(:form_profile) { described_class.for(form_id: schema_name, user: user) }
+      let(:form_profile) { described_class.for(form_id: schema_name, user:) }
       let(:prefill) { Oj.load(form_profile.prefill.to_json)['form_data'] }
 
       before do
@@ -1358,15 +1444,15 @@ RSpec.describe FormProfile, type: :model do
 
     context 'when the form mapping can not be found' do
       it 'raises an IOError' do
-        expect { described_class.new(form_id: 'foo', user: user).prefill }.to raise_error(IOError)
+        expect { described_class.new(form_id: 'foo', user:).prefill }.to raise_error(IOError)
       end
     end
   end
 
   describe '.mappings_for_form' do
     context 'with multiple form profile instances' do
-      let(:instance1) { FormProfile.new(form_id: '1010ez', user: user) }
-      let(:instance2) { FormProfile.new(form_id: '1010ez', user: user) }
+      let(:instance1) { FormProfile.new(form_id: '1010ez', user:) }
+      let(:instance2) { FormProfile.new(form_id: '1010ez', user:) }
 
       it 'loads the yaml file only once' do
         expect(YAML).to receive(:load_file).once.and_return(

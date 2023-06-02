@@ -4,7 +4,7 @@ require 'sidekiq'
 require 'claims_api/poa_vbms_sidekiq'
 require 'claims_api/poa_pdf_constructor/organization'
 require 'claims_api/poa_pdf_constructor/individual'
-require_dependency 'claims_api/stamp_signature_error'
+require 'claims_api/stamp_signature_error'
 
 module ClaimsApi
   class PoaFormBuilderJob
@@ -30,7 +30,7 @@ module ClaimsApi
       rescue_file_not_found(power_of_attorney)
     rescue ClaimsApi::StampSignatureError => e
       signature_errors = (power_of_attorney.signature_errors || []).push(e.detail)
-      power_of_attorney.update(status: ClaimsApi::PowerOfAttorney::ERRORED, signature_errors: signature_errors)
+      power_of_attorney.update(status: ClaimsApi::PowerOfAttorney::ERRORED, signature_errors:)
     end
 
     def pdf_constructor(poa_code)

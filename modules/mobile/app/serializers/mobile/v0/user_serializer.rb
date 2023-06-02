@@ -1,12 +1,12 @@
 # frozen_string_literal: true
 
-require 'fast_jsonapi'
+require 'jsonapi/serializer'
 require 'va_profile/demographics/service'
 
 module Mobile
   module V0
     class UserSerializer
-      include FastJsonapi::ObjectSerializer
+      include JSONAPI::Serializer
 
       ADDRESS_KEYS = %i[
         id
@@ -46,12 +46,14 @@ module Mobile
         directDepositBenefits: %i[evss ppiu],
         disabilityRating: :evss,
         lettersAndDocuments: :evss,
-        militaryServiceHistory: :emis,
+        militaryServiceHistory: :vet360,
         paymentHistory: :bgs,
         userProfileUpdate: :vet360,
         secureMessaging: :mhv_messaging,
         scheduleAppointments: :schedule_appointment,
-        prescriptions: :mhv_prescriptions
+        prescriptions: :mhv_prescriptions,
+        preferredName: :demographics,
+        genderIdentity: :demographics
       }.freeze
 
       set_type :user
@@ -67,22 +69,10 @@ module Mobile
         @user = user
         fetch_additional_resources
         resource = UserStruct.new(user.uuid, profile, authorized_services, health)
-        province_log(profile)
         super(resource, options)
       end
 
       private
-
-      # No domestic or military addresses should have a province but some have been coming in as a string 'null'
-      def province_log(profile)
-        address_type = profile.dig(:residential_address, :address_type)
-        province = profile.dig(:residential_address, :province)
-        if address_type.in?(['DOMESTIC', 'OVERSEAS MILITARY']) && province.present?
-          Rails.logger.info('Mobile User Address - Province in domestic or military address',
-                            province: province,
-                            address_type: address_type)
-        end
-      end
 
       def filter_keys(value, keys)
         value&.to_h&.slice(*keys)
@@ -120,9 +110,7 @@ module Mobile
 
       def direct_deposit_update_access?
         user.authorize(:ppiu, :access_update?)
-      rescue => e
-        message = e.respond_to?(:messages) ? e.messages : e.message
-        Rails.logger.error('Error fetching user data from EVSS', user_uuid: user.uuid, details: message)
+      rescue
         false
       end
 
@@ -141,7 +129,7 @@ module Mobile
       def facility(facility_id, facility_name)
         cerner_facility_ids = user.cerner_facility_ids || []
         {
-          facility_id: facility_id,
+          facility_id:,
           is_cerner: cerner_facility_ids.include?(facility_id),
           facility_name: facility_name.nil? ? '' : facility_name
         }

@@ -25,16 +25,15 @@ module SM
           @meta_attributes = split_meta_fields!
           @errors = @parsed_json.delete(:errors) || {}
 
-          data =  parsed_threads  ||
+          data =  parsed_threads_object ||
                   preferences     ||
                   parsed_triage   ||
                   parsed_folders  ||
                   normalize_message(parsed_messages) ||
                   parsed_categories ||
                   parsed_signature
-
           @parsed_json = {
-            data: data,
+            data:,
             errors: @errors,
             metadata: @meta_attributes
           }
@@ -48,6 +47,10 @@ module SM
 
         def preferences
           %i[notify_me 0].any? { |k| @parsed_json.key?(k) } ? @parsed_json : nil
+        end
+
+        def parsed_threads_object
+          @parsed_json.is_a?(Array) && @parsed_json.each { |t| return false unless t.key?(:thread_id) }
         end
 
         def parsed_folders
@@ -95,9 +98,9 @@ module SM
           attachments = Array.wrap(message_json[:attachments])
           # remove the outermost object name for attachment and inject message_id
           attachments = attachments.map do |attachment|
-            attachment[:attachment].map { |e| e.merge(message_id: message_id) }
+            attachment[:attachment].map { |e| e.merge(message_id:) }
           end.flatten
-          message_json.merge(attachments: attachments)
+          message_json.merge(attachments:)
         end
       end
     end

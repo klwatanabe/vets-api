@@ -5,27 +5,34 @@ require 'rails_helper'
 RSpec.describe SignIn::AccessToken, type: :model do
   let(:access_token) do
     create(:access_token,
-           session_handle: session_handle,
-           client_id: client_id,
-           user_uuid: user_uuid,
-           refresh_token_hash: refresh_token_hash,
-           parent_refresh_token_hash: parent_refresh_token_hash,
-           anti_csrf_token: anti_csrf_token,
-           last_regeneration_time: last_regeneration_time,
-           expiration_time: expiration_time,
-           version: version,
-           created_time: created_time)
+           session_handle:,
+           client_id:,
+           user_uuid:,
+           audience:,
+           refresh_token_hash:,
+           parent_refresh_token_hash:,
+           anti_csrf_token:,
+           last_regeneration_time:,
+           expiration_time:,
+           version:,
+           created_time:)
   end
 
   let(:session_handle) { create(:oauth_session).handle }
   let(:user_uuid) { create(:user_account).id }
-  let(:client_id) { SignIn::Constants::Auth::MOBILE_CLIENT }
+  let!(:client_config) do
+    create(:client_config, authentication:, access_token_duration:)
+  end
+  let(:access_token_duration) { SignIn::Constants::AccessToken::VALIDITY_LENGTH_SHORT_MINUTES }
+  let(:client_id) { client_config.client_id }
+  let(:audience) { 'some-audience' }
+  let(:authentication) { SignIn::Constants::Auth::API }
   let(:refresh_token_hash) { SecureRandom.hex }
   let(:parent_refresh_token_hash) { SecureRandom.hex }
   let(:anti_csrf_token) { SecureRandom.hex }
   let(:last_regeneration_time) { Time.zone.now }
   let(:version) { SignIn::Constants::AccessToken::CURRENT_VERSION }
-  let(:validity_length) { SignIn::ClientConfig.new(client_id: client_id).access_token_duration }
+  let(:validity_length) { client_config.access_token_duration }
   let(:expiration_time) { Time.zone.now + validity_length }
   let(:created_time) { Time.zone.now }
 
@@ -49,19 +56,21 @@ RSpec.describe SignIn::AccessToken, type: :model do
 
       context 'when client_id is nil' do
         let(:client_id) { nil }
-        let(:validity_length) { 5.minutes }
-        let(:expected_error_message) { "Validation failed: Client can't be blank, Client is not included in the list" }
+        let(:expected_error_message) { "Validation failed: Client can't be blank" }
         let(:expected_error) { ActiveModel::ValidationError }
 
         it 'raises validation error' do
           expect { subject }.to raise_error(expected_error, expected_error_message)
         end
       end
+    end
 
-      context 'when client_id is arbitrary' do
-        let(:client_id) { 'some-arbitrary-client-id' }
-        let(:validity_length) { 5.minutes }
-        let(:expected_error_message) { 'Validation failed: Client is not included in the list' }
+    describe '#audience' do
+      subject { access_token.audience }
+
+      context 'when audience is nil' do
+        let(:audience) { nil }
+        let(:expected_error_message) { "Validation failed: Audience can't be blank" }
         let(:expected_error) { ActiveModel::ValidationError }
 
         it 'raises validation error' do
@@ -160,18 +169,18 @@ RSpec.describe SignIn::AccessToken, type: :model do
         let(:expiration_time) { nil }
         let(:expected_expiration_time) { Time.zone.now + validity_length }
 
-        context 'and client_id is in a short token expiration defined config' do
-          let(:client_id) { SignIn::Constants::Auth::WEB_CLIENT }
-          let(:validity_length) { SignIn::Constants::AccessToken::VALIDITY_LENGTH_SHORT_MINUTES.minutes }
+        context 'and client_id refers to a short token expiration defined config' do
+          let(:access_token_duration) { SignIn::Constants::AccessToken::VALIDITY_LENGTH_SHORT_MINUTES }
+          let(:validity_length) { SignIn::Constants::AccessToken::VALIDITY_LENGTH_SHORT_MINUTES }
 
           it 'sets expired time to VALIDITY_LENGTH_SHORT_MINUTES from now' do
             expect(subject).to eq(expected_expiration_time)
           end
         end
 
-        context 'and client_id is in a long token expiration defined config' do
-          let(:client_id) { SignIn::Constants::Auth::MOBILE_CLIENT }
-          let(:validity_length) { SignIn::Constants::AccessToken::VALIDITY_LENGTH_LONG_MINUTES.minutes }
+        context 'and client_id refers to a long token expiration defined config' do
+          let(:access_token_duration) { SignIn::Constants::AccessToken::VALIDITY_LENGTH_LONG_MINUTES }
+          let(:validity_length) { SignIn::Constants::AccessToken::VALIDITY_LENGTH_LONG_MINUTES }
 
           it 'sets expired time to VALIDITY_LENGTH_LONG_MINUTES from now' do
             expect(subject).to eq(expected_expiration_time)

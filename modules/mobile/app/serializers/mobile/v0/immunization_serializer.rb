@@ -3,9 +3,9 @@
 module Mobile
   module V0
     class ImmunizationSerializer
-      include FastJsonapi::ObjectSerializer
+      include JSONAPI::Serializer
 
-      BASE_URL = "#{Settings.hostname}/mobile/v0/health/locations/"
+      BASE_URL = "#{Settings.hostname}/mobile/v0/health/locations/".freeze
 
       attributes :cvx_code,
                  :date,

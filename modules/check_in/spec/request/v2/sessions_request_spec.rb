@@ -67,7 +67,7 @@ RSpec.describe 'V2::SessionsController', type: :request do
         {
           params: {
             session: {
-              uuid: uuid,
+              uuid:,
               dob: '1947-08-15',
               last_name: 'Johnson'
             }
@@ -77,7 +77,7 @@ RSpec.describe 'V2::SessionsController', type: :request do
 
       before do
         VCR.use_cassette 'check_in/lorota/token/token_200' do
-          post '/check_in/v2/sessions', session_params
+          post '/check_in/v2/sessions', **session_params
         end
       end
 
@@ -101,7 +101,7 @@ RSpec.describe 'V2::SessionsController', type: :request do
 
       context 'refresh_precheckin returns 200' do
         it 'returns a valid unauthorized response' do
-          VCR.use_cassette('check_in/chip/refresh_pre_check_in/refresh_pre_check_in_200', erb: { uuid: uuid }) do
+          VCR.use_cassette('check_in/chip/refresh_pre_check_in/refresh_pre_check_in_200', erb: { uuid: }) do
             VCR.use_cassette 'check_in/chip/token/token_200' do
               get "/check_in/v2/sessions/#{uuid}?checkInType=preCheckIn"
 
@@ -127,7 +127,7 @@ RSpec.describe 'V2::SessionsController', type: :request do
         end
 
         it 'throws a 404 error' do
-          VCR.use_cassette('check_in/chip/refresh_pre_check_in/refresh_pre_check_in_404', erb: { uuid: uuid }) do
+          VCR.use_cassette('check_in/chip/refresh_pre_check_in/refresh_pre_check_in_404', erb: { uuid: }) do
             VCR.use_cassette 'check_in/chip/token/token_200' do
               get "/check_in/v2/sessions/#{uuid}?checkInType=preCheckIn"
 
@@ -153,7 +153,7 @@ RSpec.describe 'V2::SessionsController', type: :request do
         end
 
         it 'throws an error' do
-          VCR.use_cassette('check_in/chip/refresh_pre_check_in/refresh_pre_check_in_500', erb: { uuid: uuid }) do
+          VCR.use_cassette('check_in/chip/refresh_pre_check_in/refresh_pre_check_in_500', erb: { uuid: }) do
             VCR.use_cassette 'check_in/chip/token/token_200' do
               get "/check_in/v2/sessions/#{uuid}?checkInType=preCheckIn"
 
@@ -191,7 +191,7 @@ RSpec.describe 'V2::SessionsController', type: :request do
       {
         params: {
           session: {
-            uuid: uuid,
+            uuid:,
             last4: '5555',
             last_name: 'Johnson'
           }
@@ -216,7 +216,7 @@ RSpec.describe 'V2::SessionsController', type: :request do
         {
           params: {
             session: {
-              uuid: uuid,
+              uuid:,
               dob: '19-7-8',
               last_name: ''
             }
@@ -225,7 +225,7 @@ RSpec.describe 'V2::SessionsController', type: :request do
       end
 
       it 'returns an error response' do
-        post '/check_in/v2/sessions', session_params
+        post '/check_in/v2/sessions', **session_params
 
         expect(response.status).to eq(400)
         expect(JSON.parse(response.body)).to eq(resp)
@@ -237,7 +237,7 @@ RSpec.describe 'V2::SessionsController', type: :request do
         {
           params: {
             session: {
-              uuid: uuid,
+              uuid:,
               dob: '1980-03-18',
               last_name: 'Johnson'
             }
@@ -251,7 +251,7 @@ RSpec.describe 'V2::SessionsController', type: :request do
 
         Rails.cache.write(key, 'jwt-123-1bc', namespace: 'check-in-lorota-v2-cache')
 
-        post '/check_in/v2/sessions', session_params
+        post '/check_in/v2/sessions', **session_params
 
         expect(response.status).to eq(200)
         expect(JSON.parse(response.body)).to eq(resp)
@@ -263,7 +263,7 @@ RSpec.describe 'V2::SessionsController', type: :request do
         {
           params: {
             session: {
-              uuid: uuid,
+              uuid:,
               dob: '1980-03-18',
               last_name: 'Johnson'
             }
@@ -277,7 +277,7 @@ RSpec.describe 'V2::SessionsController', type: :request do
 
       it 'returns a success response' do
         VCR.use_cassette 'check_in/lorota/token/token_200' do
-          post '/check_in/v2/sessions', session_params
+          post '/check_in/v2/sessions', **session_params
 
           expect(response.status).to eq(200)
           expect(JSON.parse(response.body)).to eq(resp)
@@ -304,7 +304,7 @@ RSpec.describe 'V2::SessionsController', type: :request do
           {
             params: {
               session: {
-                uuid: uuid,
+                uuid:,
                 dob: '1980-03-18',
                 last_name: 'Johnson'
               }
@@ -326,7 +326,7 @@ RSpec.describe 'V2::SessionsController', type: :request do
 
           it 'returns a 401 error' do
             VCR.use_cassette 'check_in/lorota/token/token_401' do
-              post '/check_in/v2/sessions', session_params_with_dob
+              post '/check_in/v2/sessions', **session_params_with_dob
 
               expect(response.status).to eq(401)
               expect(JSON.parse(response.body)).to eq(resp)
@@ -335,7 +335,7 @@ RSpec.describe 'V2::SessionsController', type: :request do
 
           it 'increments retry_attempt count in redis' do
             VCR.use_cassette 'check_in/lorota/token/token_401' do
-              post '/check_in/v2/sessions', session_params_with_dob
+              post '/check_in/v2/sessions', **session_params_with_dob
 
               redis_retry_attempt = Rails.cache.read(
                 "authentication_retry_limit_#{uuid}",
@@ -359,10 +359,10 @@ RSpec.describe 'V2::SessionsController', type: :request do
           end
 
           it 'returns a 410 error' do
-            VCR.use_cassette('check_in/chip/delete/delete_from_lorota_200', erb: { uuid: uuid }) do
+            VCR.use_cassette('check_in/chip/delete/delete_from_lorota_200', erb: { uuid: }) do
               VCR.use_cassette 'check_in/chip/token/token_200' do
                 VCR.use_cassette 'check_in/lorota/token/token_401' do
-                  post '/check_in/v2/sessions', session_params_with_dob
+                  post '/check_in/v2/sessions', **session_params_with_dob
 
                   expect(response.status).to eq(410)
                   expect(JSON.parse(response.body)).to eq(error_response_410)
@@ -372,10 +372,10 @@ RSpec.describe 'V2::SessionsController', type: :request do
           end
 
           it 'returns a 410 unique error message for any token endpoint failure message' do
-            VCR.use_cassette('check_in/chip/delete/delete_from_lorota_200', erb: { uuid: uuid }) do
+            VCR.use_cassette('check_in/chip/delete/delete_from_lorota_200', erb: { uuid: }) do
               VCR.use_cassette 'check_in/chip/token/token_200' do
                 VCR.use_cassette 'check_in/lorota/token/token_dob_mismatch_401' do
-                  post '/check_in/v2/sessions', session_params_with_dob
+                  post '/check_in/v2/sessions', **session_params_with_dob
 
                   expect(response.status).to eq(410)
                   expect(JSON.parse(response.body)).to eq(error_response_410)
@@ -385,10 +385,10 @@ RSpec.describe 'V2::SessionsController', type: :request do
           end
 
           it 'still returns a 410 error message if delete endpoint fails' do
-            VCR.use_cassette('check_in/chip/delete/delete_from_lorota_500', erb: { uuid: uuid }) do
+            VCR.use_cassette('check_in/chip/delete/delete_from_lorota_500', erb: { uuid: }) do
               VCR.use_cassette 'check_in/chip/token/token_200' do
                 VCR.use_cassette 'check_in/lorota/token/token_dob_mismatch_401' do
-                  post '/check_in/v2/sessions', session_params_with_dob
+                  post '/check_in/v2/sessions', **session_params_with_dob
 
                   expect(response.status).to eq(410)
                   expect(JSON.parse(response.body)).to eq(error_response_410)
@@ -405,7 +405,7 @@ RSpec.describe 'V2::SessionsController', type: :request do
         {
           params: {
             session: {
-              uuid: uuid,
+              uuid:,
               dob: '1940-06-19',
               last_name: 'Johnson',
               check_in_type: 'preCheckIn'
@@ -417,10 +417,10 @@ RSpec.describe 'V2::SessionsController', type: :request do
       context 'when CHIP sets precheckin started status successfully' do
         it 'returns a success response' do
           VCR.use_cassette('check_in/chip/set_precheckin_started/set_precheckin_started_200',
-                           erb: { uuid: uuid }) do
+                           erb: { uuid: }) do
             VCR.use_cassette 'check_in/chip/token/token_200' do
               VCR.use_cassette 'check_in/lorota/token/token_200' do
-                post '/check_in/v2/sessions', session_params
+                post '/check_in/v2/sessions', **session_params
 
                 expect(response.status).to eq(200)
                 expect(JSON.parse(response.body)).to eq(resp)
@@ -433,10 +433,10 @@ RSpec.describe 'V2::SessionsController', type: :request do
       context 'when CHIP returns 404 for precheckin started' do
         it 'returns a success response' do
           VCR.use_cassette('check_in/chip/set_precheckin_started/set_precheckin_started_404',
-                           erb: { uuid: uuid }) do
+                           erb: { uuid: }) do
             VCR.use_cassette 'check_in/chip/token/token_200' do
               VCR.use_cassette 'check_in/lorota/token/token_200' do
-                post '/check_in/v2/sessions', session_params
+                post '/check_in/v2/sessions', **session_params
 
                 expect(response.status).to eq(200)
                 expect(JSON.parse(response.body)).to eq(resp)
@@ -449,10 +449,10 @@ RSpec.describe 'V2::SessionsController', type: :request do
       context 'when CHIP returns 500 error for precheckin started call' do
         it 'returns a success response' do
           VCR.use_cassette('check_in/chip/set_precheckin_started/set_precheckin_started_500',
-                           erb: { uuid: uuid }) do
+                           erb: { uuid: }) do
             VCR.use_cassette 'check_in/chip/token/token_200' do
               VCR.use_cassette 'check_in/lorota/token/token_200' do
-                post '/check_in/v2/sessions', session_params
+                post '/check_in/v2/sessions', **session_params
 
                 expect(response.status).to eq(200)
                 expect(JSON.parse(response.body)).to eq(resp)

@@ -3,6 +3,7 @@
 require 'string_helpers'
 require 'sentry_logging'
 require 'va_profile/configuration'
+require 'hca/military_information'
 
 # TODO(AJD): Virtus POROs for now, will become ActiveRecord when the profile is persisted
 class FormFullName
@@ -104,7 +105,10 @@ class FormProfile
     fsr: ['5655'],
     vre_counseling: ['28-8832'],
     vre_readiness: ['28-1900'],
-    coe: ['26-1880']
+    coe: ['26-1880'],
+    adapted_housing: ['26-4555'],
+    medical_release: ['21-4142'],
+    lay_witness: ['21-10210']
   }.freeze
 
   FORM_ID_TO_CLASS = {
@@ -137,10 +141,13 @@ class FormProfile
     '28-8832' => ::FormProfiles::VA288832,
     '28-1900' => ::FormProfiles::VA281900,
     '22-1990EZ' => ::FormProfiles::VA1990ez,
-    '26-1880' => ::FormProfiles::VA261880
+    '26-1880' => ::FormProfiles::VA261880,
+    '26-4555' => ::FormProfiles::VA264555,
+    '21-4142' => ::FormProfiles::VA214142,
+    '21-10210' => ::FormProfiles::VA2110210
   }.freeze
 
-  APT_REGEX = /\S\s+((apt|apartment|unit|ste|suite).+)/i.freeze
+  APT_REGEX = /\S\s+((apt|apartment|unit|ste|suite).+)/i
 
   attr_reader :form_id, :user
 
@@ -157,7 +164,7 @@ class FormProfile
   # lookup FormProfile subclass by form_id and initialize (or use FormProfile if lookup fails)
   def self.for(form_id:, user:)
     form_id = form_id.upcase
-    FORM_ID_TO_CLASS.fetch(form_id, self).new(form_id: form_id, user: user)
+    FORM_ID_TO_CLASS.fetch(form_id, self).new(form_id:, user:)
   end
 
   def initialize(form_id:, user:)
@@ -198,10 +205,29 @@ class FormProfile
     form = form_id == '1010EZ' ? '1010ez' : form_id
     form_data = generate_prefill(mappings) if FormProfile.prefill_enabled_forms.include?(form)
 
-    { form_data: form_data, metadata: metadata }
+    { form_data:, metadata: }
   end
 
   private
+
+  def initialize_military_information_vaprofile
+    military_information_data = {}
+    military_information = HCA::MilitaryInformation.new(user)
+
+    HCA::MilitaryInformation::PREFILL_METHODS.each do |attr|
+      military_information_data[attr] = military_information.public_send(attr)
+    end
+
+    military_information_data
+  rescue => e
+    if Rails.env.production?
+      log_exception_to_sentry(e, {}, prefill: :vaprofile_military)
+
+      {}
+    else
+      raise e
+    end
+  end
 
   def initialize_military_information
     return {} unless user.authorize :emis, :access?
@@ -209,11 +235,15 @@ class FormProfile
     military_information = user.military_information
     military_information_data = {}
 
+    military_information_data.merge!(initialize_military_information_vaprofile) if Flipper.enabled?(
+      :hca_vaprofile_military_info, user
+    )
+
     military_information_data[:vic_verified] = user.can_access_id_card?
 
     begin
       EMISRedis::MilitaryInformation::PREFILL_METHODS.each do |attr|
-        military_information_data[attr] = military_information.public_send(attr)
+        military_information_data[attr] = military_information.public_send(attr) if military_information_data[attr].nil?
       end
     rescue => e
       if Rails.env.production?

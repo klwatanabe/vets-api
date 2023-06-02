@@ -8,10 +8,11 @@ jobs:
     name: Linting and Security
     env:
       BUNDLE_ENTERPRISE__CONTRIBSYS__COM: ${{ secrets.BUNDLE_ENTERPRISE__CONTRIBSYS__COM }}
-    runs-on: ubuntu-20.04 # Doesn't run on self-hosted runners as there are SSL issues within the TIC
+    runs-on: ubuntu-16-cores-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
+      # Lock back to an @v1-version once https://github.com/ruby/setup-ruby/pull/491 is merged
       - uses: ruby/setup-ruby@v1
         with:
           bundler-cache: true
@@ -20,32 +21,23 @@ jobs:
         run:  bundle exec bundle-audit check --update  --ignore CVE-2022-46648
 
       - name: Run Rubocop
-        run: bundle exec rubocop --parallel --format progress --format json --out rubocop.json
+        run: bundle exec rubocop --parallel --format github
 
       - name: Run Brakeman
-        run:  bundle exec brakeman --ensure-latest --confidence-level=2 -o brakeman.json
-
-      - uses: actions/upload-artifact@v3
-        if: always()
-        with:
-          name: Linting and Security Results
-          path: |
-            rubocop.json
-            brakeman.json
-          if-no-files-found: ignore
+        run:  bundle exec brakeman --ensure-latest --confidence-level=2 --format github
 
   tests:
     name: Test
     env:
       BUNDLE_ENTERPRISE__CONTRIBSYS__COM: ${{ secrets.BUNDLE_ENTERPRISE__CONTRIBSYS__COM }}
       CI: true
-      NODE_EXTRA_CA_CERTS: '/etc/ssl/certs/VA-Internal-S2-RCA1-v1.cer.pem' # Needed for self-hosted runners (cache, upload-artifact)
       RAILS_ENV: test
       TERM: xterm-256color
-      DOCKER_IMAGE: ${{ github.sha }}-${{ github.run_id }}${{ github.run_number }}
-    runs-on: asg
+      DOCKER_BUILDKIT: 1
+      COMPOSE_DOCKER_CLI_BUILD: 1
+    runs-on: ubuntu-16-cores-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - uses: docker/login-action@v2
         with:
@@ -56,10 +48,8 @@ jobs:
         run: |
           echo "VETS_API_USER_ID=$(id -u)" >> $GITHUB_ENV
 
-      - name: Setup Docker
-        run: |
-          docker volume create --name=test_bundle_v2_7_6-cache-v3
-          cp /etc/ssl/certs/VA-Internal-S2-RCA1-v1.cer.pem config/ca-trust/
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
 
       - name: Build Docker Image
         uses: docker/build-push-action@v4
@@ -68,79 +58,50 @@ jobs:
             sidekiq_license=${{ env.BUNDLE_ENTERPRISE__CONTRIBSYS__COM }}
             userid=${{ env.VETS_API_USER_ID }}
           context: .
-          target: development
+          target: builder
           push: false
           load: true
-          tags: vets-api:${{ env.DOCKER_IMAGE }}
-          no-cache: true
+          tags: vets-api
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
       - name: Setup Database
         run: |
-             docker-compose -f docker-compose.test.yml -f  docker-compose.gha.yml -p ${{ env.DOCKER_IMAGE}} \
-             run --rm --service-ports --no-TTY vets-api bash \
-             -c "RAILS_ENV=test DISABLE_BOOTSNAP=true parallel_test -n 14 -e 'bundle exec rake db:reset'"
+             docker-compose -f docker-compose.test.yml run vets-api bash \
+             -c "CI=true RAILS_ENV=test DISABLE_BOOTSNAP=true parallel_test -n 13 -e 'bin/rails db:reset'"
 
       - name: Run Specs
+        timeout-minutes: 20
         run: |
-             docker-compose -f docker-compose.test.yml -f docker-compose.gha.yml -p ${{ env.DOCKER_IMAGE}} \
-             run --rm --service-ports --no-TTY vets-api bash \
-             -c "DISABLE_BOOTSNAP=true bundle exec parallel_rspec spec/ modules/ -n 14 -o '--color --tty'"
+             docker-compose -f docker-compose.test.yml run vets-api bash \
+             -c "CI=true DISABLE_BOOTSNAP=true bundle exec parallel_rspec spec/ modules/ -n 13 -o '--color --tty'"
 
       - name: Upload Coverage Report
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         if: always()
         with:
           name: Coverage Report
           path: coverage
 
       - name: Upload Test Results
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         if: always()
         with:
           name: Test Results
           path: log/*.xml
           if-no-files-found: ignore
 
-      # rm -rf .git is a temporary fix for actions/checkout@v2 action
-      # see: https://github.com/actions/checkout/issues/582
-      - name: Cleanup
-        if: always()
-        run: |
-          docker rmi -f vets-api:${{ env.DOCKER_IMAGE }} 2> /dev/null || true
-          docker rm -f ${{ env.DOCKER_IMAGE }}-postgres-1 2> /dev/null || true
-          docker network prune -f
-          rm -rf .git
-
   publish_results:
-    name: Publish Results
-    env:
-      BUNDLE_ENTERPRISE__CONTRIBSYS__COM: ${{ secrets.BUNDLE_ENTERPRISE__CONTRIBSYS__COM }}
+    name: Publish Test Results and Coverage
     if: always()
-    needs: [linting_and_security, tests]
-    runs-on: ubuntu-20.04 # Doesn't run on self-hosted runners as there are SSL issues within the TIC
+    needs: [tests]
+    runs-on: ubuntu-16-cores-latest
 
     steps:
-      - uses: actions/checkout@v2
-
-      - uses: ruby/setup-ruby@v1
-        with:
-          bundler-cache: true
-
-      - uses: actions/download-artifact@v2
-
-      - uses: duderman/rubocop-annotate-action@v0.1.0
-        with:
-          path: Linting and Security Results/rubocop.json
-        if: hashFiles('Linting and Security Results/rubocop.json') != ''
-
-      - uses: devmasx/brakeman-linter-action@v1.0.0
-        env:
-          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
-          REPORT_PATH: Linting and Security Results/brakeman.json
-        if: hashFiles('Linting and Security/brakeman.json') != ''
+      - uses: actions/download-artifact@v3
 
       - name: Publish Test Results to GitHub
-        uses: docker://ghcr.io/enricomi/publish-unit-test-result-action:v1
+        uses: EnricoMi/publish-unit-test-result-action@v2
         if: always()
         with:
           check_name: Test Results
@@ -151,7 +112,7 @@ jobs:
       - name: Fix up coverage report to work with coverage-check-action
         run: sed -i 's/"line"/"covered_percent"/g' 'Coverage Report/.last_run.json'
 
-      - name: Publish Coverage Report to GitHub
+      - name: Publish Coverage Report
         uses: devmasx/coverage-check-action@v1.2.0
         if: hashFiles('Coverage Report/.last_run.json') != ''
         with:
@@ -159,33 +120,3 @@ jobs:
           result_path: Coverage Report/.last_run.json
           min_coverage: 90
           token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v1-node16
-        if: always()
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: 'us-gov-west-1'
-
-      - name: Set BIGQUERY_SERVICE_CREDENTIALS Environment Variable
-        uses: 'marvinpinto/action-inject-ssm-secrets@v1.2.1'
-        if: always()
-        with:
-          ssm_parameter: '/dsva-vagov/testing-team/bigquery_service_credentials'
-          env_variable_name: 'BIGQUERY_SERVICE_CREDENTIALS'
-
-      - name: Set up Cloud SDK
-        uses: google-github-actions/setup-gcloud@v0
-        if: always()
-        with:
-          project_id: vsp-analytics-and-insights
-          service_account_key: ${{ env.BIGQUERY_SERVICE_CREDENTIALS }}
-          export_default_credentials: true
-
-      - name: Push unit test data to BigQuery
-        run:  bundle exec ruby rakelib/test_stats_to_bigquery.rb
-        if: always()
-        env:
-          BIGQUERY_CREDENTIALS: ${{ env.BIGQUERY_SERVICE_CREDENTIALS }}
-          BRANCH_NAME: ${{ github.ref }}

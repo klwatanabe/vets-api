@@ -15,7 +15,7 @@ class OpenidApplicationController < ApplicationController
   skip_before_action :verify_authenticity_token
   skip_after_action :set_csrf_header
   before_action :authenticate
-  TOKEN_REGEX = /Bearer /.freeze
+  TOKEN_REGEX = /Bearer /
 
   private
 
@@ -54,7 +54,6 @@ class OpenidApplicationController < ApplicationController
     return false if @session.uuid.nil?
 
     @current_user = OpenidUser.find(@session.uuid)
-    confirm_icn_match(profile)
   end
 
   # Populates launch context if an applicable launch scope is found
@@ -150,28 +149,14 @@ class OpenidApplicationController < ApplicationController
   def establish_session(profile)
     ttl = token.payload['exp'] - Time.current.utc.to_i
 
-    user_identity = OpenidUserIdentity.build_from_profile(uuid: token.identifiers.uuid, profile: profile, ttl: ttl)
-    @current_user = OpenidUser.build_from_identity(identity: user_identity, ttl: ttl)
+    user_identity = OpenidUserIdentity.build_from_profile(uuid: token.identifiers.uuid, profile:, ttl:)
+    @current_user = OpenidUser.build_from_identity(identity: user_identity, ttl:)
     @session = build_session(ttl,
                              token.identifiers.uuid,
                              Okta::UserProfile.new({ 'last_login_type' => profile['last_login_type'],
                                                      'SecID' => profile['SecID'], 'VistaId' => profile['VistaId'],
                                                      'npi' => profile['npi'], 'icn' => profile['icn'] }))
     @session.save && user_identity.save && @current_user.save
-  end
-
-  # Ensure the Okta profile ICN continues to match the MPI ICN
-  # If mismatched, revoke in Okta, set @session to nil, and return false
-  # POA support (profile['icn'].nil?)
-  def confirm_icn_match(profile)
-    if profile['icn'].nil? || @current_user&.icn == profile['icn']
-      true
-    else
-      log_message_to_sentry('Profile ICN mismatch detected.', :warn)
-      @session = nil
-      Okta::Service.new.clear_user_session(token.identifiers.okta_uid)
-      false
-    end
   end
 
   def establish_ssoi_session(profile)
@@ -226,13 +211,13 @@ class OpenidApplicationController < ApplicationController
   end
 
   def build_session(ttl, uuid, profile)
-    session = Session.new(token: hash_token(token), uuid: uuid, profile: profile)
+    session = Session.new(token: hash_token(token), uuid:, profile:)
     session.expire(ttl)
     session
   end
 
   def build_launch_session(ttl, launch)
-    session = Session.new(token: hash_token(token), launch: launch)
+    session = Session.new(token: hash_token(token), launch:)
     session.expire(ttl)
     session
   end
@@ -348,7 +333,7 @@ class OpenidApplicationController < ApplicationController
     return false unless token.payload
 
     if (actions.empty? ||
-      Array.wrap(actions).map(&:to_s).include?(action_name)) && (Array.wrap(scopes) & token.payload['scp']).empty?
+      Array.wrap(actions).map(&:to_s).include?(action_name)) && !Array.wrap(scopes).intersect?(token.payload['scp'])
       render_unauthorized
     end
   end

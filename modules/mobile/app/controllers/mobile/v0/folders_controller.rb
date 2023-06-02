@@ -1,14 +1,11 @@
 # frozen_string_literal: true
 
-require_dependency 'mobile/messaging_controller'
-require_dependency 'mobile/v0/folder_serializer'
-
 module Mobile
   module V0
     class FoldersController < MessagingController
       def index
         resource = client.get_folders(@current_user.uuid, use_cache?)
-        resource = resource.paginate(pagination_params)
+        resource = resource.paginate(**pagination_params)
 
         render json: resource.data,
                serializer: CollectionSerializer,

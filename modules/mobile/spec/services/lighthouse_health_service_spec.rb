@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require 'rails_helper'
-require_relative '../support/iam_session_helper'
+require_relative '../support/helpers/iam_session_helper'
 
 describe Mobile::V0::LighthouseHealth::Service do
   let(:user) { FactoryBot.build(:iam_user) }
@@ -73,13 +73,6 @@ describe Mobile::V0::LighthouseHealth::Service do
     }
   end
 
-  before(:all) do
-    @original_cassette_dir = VCR.configure(&:cassette_library_dir)
-    VCR.configure { |c| c.cassette_library_dir = 'modules/mobile/spec/support/vcr_cassettes' }
-  end
-
-  after(:all) { VCR.configure { |c| c.cassette_library_dir = @original_cassette_dir } }
-
   before do
     allow(File).to receive(:read).and_return(rsa_key.to_s)
     allow_any_instance_of(IAMUser).to receive(:icn).and_return('9000682')
@@ -92,7 +85,7 @@ describe Mobile::V0::LighthouseHealth::Service do
   describe '#get_immunizations' do
     context 'when an access_token is not cached' do
       let!(:response) do
-        VCR.use_cassette('lighthouse_health/get_immunizations', match_requests_on: %i[method uri]) do
+        VCR.use_cassette('mobile/lighthouse_health/get_immunizations', match_requests_on: %i[method uri]) do
           service.get_immunizations
         end
       end
@@ -113,12 +106,13 @@ describe Mobile::V0::LighthouseHealth::Service do
     context 'with a cached access_token' do
       before do
         allow(Mobile::V0::LighthouseSession).to receive(:get_cached).and_return(
-          Mobile::V0::LighthouseSession.new(access_token: access_token, expires_in: 300)
+          Mobile::V0::LighthouseSession.new(access_token:, expires_in: 300)
         )
       end
 
       let!(:response) do
-        VCR.use_cassette('lighthouse_health/get_immunizations_cached_token', match_requests_on: %i[method uri]) do
+        VCR.use_cassette('mobile/lighthouse_health/get_immunizations_cached_token',
+                         match_requests_on: %i[method uri]) do
           service.get_immunizations
         end
       end

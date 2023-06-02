@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require 'bgs/service'
 require 'common/models/concerns/cache_aside'
 
 class BankName < Common::RedisStore
@@ -18,7 +19,7 @@ class BankName < Common::RedisStore
     bank_name = find(routing_number)
 
     if bank_name.blank?
-      bank_name = new(routing_number: routing_number)
+      bank_name = new(routing_number:)
       bank_name.bank_name = BGS::Service.new(user).find_bank_name_by_routng_trnsit_nbr(routing_number)
       bank_name.save!
     end

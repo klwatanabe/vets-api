@@ -59,13 +59,13 @@ module VAOS
       end
 
       def statsd_increment(key, env, error = nil)
-        StatsDMetric.new(key: key).save
+        StatsDMetric.new(key:).save
         tags = [
           "method:#{env.method.upcase}",
           "url:#{StringHelpers.filtered_endpoint_tag(env.url.path)}",
           "http_status:#{error.present? ? error.class : env.status}"
         ]
-        StatsD.increment(key, tags: tags)
+        StatsD.increment(key, tags:)
       end
 
       # #log invokes the Rails.logger
@@ -75,7 +75,7 @@ module VAOS
       # @param tags [Hash] key value pairs of semantically relevant tags needed for debugging
       # @return [Boolean] returns true or false
       def log(type, message, tags)
-        Rails.logger.send(type, message, tags)
+        Rails.logger.send(type, message, **tags)
       end
 
       # #decode_jwt_no_sig_check decodes the JWT token received in the response without signature verification

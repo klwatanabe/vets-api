@@ -48,7 +48,7 @@ FactoryBot.define do
 
     factory :auto_established_claim_with_supporting_documents do
       after(:create) do |auto_established_claim|
-        create_list(:supporting_document, 1, auto_established_claim: auto_established_claim)
+        create_list(:supporting_document, 1, auto_established_claim:)
       end
     end
   end
@@ -143,6 +143,14 @@ FactoryBot.define do
   factory :bgs_response_with_under_review_lc_status, class: OpenStruct do
     benefit_claim_details_dto { (association :bgs_claim_details_dto_with_under_review_lc_status).to_h }
   end
+  factory :bgs_response_with_phaseback_lc_status, class: OpenStruct do
+    benefit_claim_details_dto { (association :bgs_claim_details_dto_with_phaseback_lc_status).to_h }
+  end
+  factory :bgs_response_claim_with_unmatched_ptcpnt_vet_id, class: OpenStruct do
+    benefit_claim_details_dto {
+      (association :bgs_claim_details_with_unmatched_vet_id).to_h
+    }
+  end
   factory :bgs_claim_details_dto_with_under_review_lc_status, class: OpenStruct do
     benefit_claim_id { '111111111' }
     phase_chngd_dt { Faker::Time.backward(days: 5, period: :morning) }
@@ -173,10 +181,18 @@ FactoryBot.define do
     claim_complete_dt { Faker::Time.backward(days: 3, period: :morning) }
     claim_status_type { 'Compensation' }
     bnft_claim_lc_status {
-      [(association :bnft_claim_lc_status_one).to_h, (association :bnft_claim_lc_status_two).to_h,
-       (association :bnft_claim_lc_status_three).to_h,
-       (association :bnft_claim_lc_status_four).to_h, (association :bnft_claim_lc_status_five).to_h]
+      [(association :bnft_claim_lc_status_five).to_h, (association :bnft_claim_lc_status_four).to_h,
+       (association :bnft_claim_lc_status_three).to_h, (association :bnft_claim_lc_status_two).to_h,
+       (association :bnft_claim_lc_status_one).to_h]
     }
+  end
+  factory :bgs_claim_details_dto_with_phaseback_lc_status, class: OpenStruct do
+    benefit_claim_id { '111111111' }
+    phase_chngd_dt { Faker::Time.backward(days: 5, period: :morning) }
+    ptcpnt_clmant_id { Faker::Number.number(digits: 17) }
+    ptcpnt_vet_id { Faker::Number.number(digits: 17) }
+    claim_status_type { 'Compensation' }
+    bnft_claim_lc_status { [(association :bnft_claim_lc_status_phaseback).to_h] }
   end
   factory :bnft_claim_lc_status_one, class: OpenStruct do
     max_est_claim_complete_dt { Faker::Time.backward(days: 5, period: :morning) }
@@ -212,5 +228,22 @@ FactoryBot.define do
     phase_chngd_dt { Faker::Time.backward(days: 6, period: :morning) }
     phase_type { 'Preparation for Decision' }
     phase_type_change_ind { '45' }
+  end
+  factory :bnft_claim_lc_status_phaseback, class: OpenStruct do
+    max_est_claim_complete_dt { Faker::Time.backward(days: 5, period: :morning) }
+    min_est_claim_complete_dt { Faker::Time.backward(days: 7, period: :morning) }
+    phase_chngd_dt { Faker::Time.backward(days: 6, period: :morning) }
+    phase_type { 'Under Review' }
+    phase_type_change_ind { '32' }
+  end
+  factory :bgs_claim_details_with_unmatched_vet_id, class: OpenStruct do
+    benefit_claim_id { '111111111' }
+    phase_chngd_dt { Faker::Time.backward(days: 5, period: :morning) }
+    phase_type { 'Pending Decision Approval' }
+    phase_type_change_ind { '76' }
+    ptcpnt_vet_id { Faker::Number.number(digits: 9) }
+    ptcpnt_clmant_id { '8675309' }
+    claim_status_type { 'Compensation' }
+    bnft_claim_lc_status { [(association :bnft_claim_lc_status_one).to_h] }
   end
 end

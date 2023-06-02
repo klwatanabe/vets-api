@@ -94,6 +94,85 @@ describe VAProfile::ContactInformation::Service, skip_vet360: true do
     end
   end
 
+  describe '.get_person' do
+    context 'when successful' do
+      it 'returns a status of 200' do
+        VCR.use_cassette('va_profile/contact_information/person_full', VCR::MATCH_EVERYTHING) do
+          response = described_class.get_person(vet360_id)
+          expect(response).to be_ok
+          expect(response.person).to be_a(VAProfile::Models::Person)
+        end
+      end
+
+      it 'supports international provinces' do
+        VCR.use_cassette('va_profile/contact_information/person_intl_addr', VCR::MATCH_EVERYTHING) do
+          response = described_class.get_person(vet360_id)
+
+          expect(response.person.addresses[0].province).to eq('province')
+        end
+      end
+
+      it 'has a bad address' do
+        VCR.use_cassette('va_profile/contact_information/person_full', VCR::MATCH_EVERYTHING) do
+          response = described_class.get_person(vet360_id)
+
+          expect(response.person.addresses[0].bad_address).to eq(true)
+        end
+      end
+    end
+
+    context 'when not successful' do
+      let(:vet360_id) { '6767671' }
+
+      context 'with a 400 error' do
+        it 'returns nil person' do
+          VCR.use_cassette('va_profile/contact_information/person_error_400', VCR::MATCH_EVERYTHING) do
+            response = described_class.get_person(vet360_id)
+            expect(response).not_to be_ok
+            expect(response.person).to be_nil
+          end
+        end
+      end
+
+      it 'returns a status of 404' do
+        VCR.use_cassette('va_profile/contact_information/person_error', VCR::MATCH_EVERYTHING) do
+          expect_any_instance_of(SentryLogging).to receive(:log_exception_to_sentry).with(
+            instance_of(Common::Client::Errors::ClientError),
+            { vet360_id: user.vet360_id },
+            { va_profile: :person_not_found },
+            :warning
+          )
+
+          response = described_class.get_person(vet360_id)
+          expect(response).not_to be_ok
+          expect(response.person).to be_nil
+        end
+      end
+    end
+
+    context 'when service returns a 503 error code' do
+      it 'raises a BackendServiceException error' do
+        VCR.use_cassette('va_profile/contact_information/person_status_503', VCR::MATCH_EVERYTHING) do
+          expect { described_class.get_person(vet360_id) }.to raise_error do |e|
+            expect(e).to be_a(Common::Exceptions::BackendServiceException)
+            expect(e.status_code).to eq(502)
+            expect(e.errors.first.code).to eq('VET360_502')
+          end
+        end
+      end
+    end
+
+    context 'when person response has no body data' do
+      it 'returns 200' do
+        VCR.use_cassette('va_profile/contact_information/person_without_data', VCR::MATCH_EVERYTHING) do
+          response = described_class.get_person(vet360_id)
+          expect(response).to be_ok
+          expect(response.person).to be_a(VAProfile::Models::Person)
+        end
+      end
+    end
+  end
+
   describe '#post_email' do
     let(:email) { build(:email, vet360_id: user.vet360_id, source_system_user: user.icn) }
 
@@ -356,7 +435,7 @@ describe VAProfile::ContactInformation::Service, skip_vet360: true do
 
       context 'with an old_email record' do
         before do
-          OldEmail.create(email: 'email@email.com', transaction_id: transaction_id)
+          OldEmail.create(email: 'email@email.com', transaction_id:)
         end
 
         it 'calls send_email_change_notification' do
@@ -364,12 +443,12 @@ describe VAProfile::ContactInformation::Service, skip_vet360: true do
             expect(VANotifyEmailJob).to receive(:perform_async).with(
               'email@email.com',
               described_class::CONTACT_INFO_CHANGE_TEMPLATE,
-              'contact_info' => 'Email address'
+              { 'contact_info' => 'Email address' }
             )
             expect(VANotifyEmailJob).to receive(:perform_async).with(
               'person43@example.com',
               described_class::CONTACT_INFO_CHANGE_TEMPLATE,
-              'contact_info' => 'Email address'
+              { 'contact_info' => 'Email address' }
             )
 
             subject.get_email_transaction_status(transaction_id)
@@ -476,7 +555,7 @@ describe VAProfile::ContactInformation::Service, skip_vet360: true do
     let(:transaction) { double }
     let(:transaction_status) do
       OpenStruct.new(
-        transaction: transaction
+        transaction:
       )
     end
     let(:transaction_id) { '123' }
@@ -489,7 +568,7 @@ describe VAProfile::ContactInformation::Service, skip_vet360: true do
 
       context 'transaction notification already exists' do
         before do
-          TransactionNotification.create(transaction_id: transaction_id)
+          TransactionNotification.create(transaction_id:)
         end
 
         it 'doesnt send an email' do
@@ -516,7 +595,7 @@ describe VAProfile::ContactInformation::Service, skip_vet360: true do
               expect(VANotifyEmailJob).to receive(:perform_async).with(
                 user.va_profile_email,
                 described_class::CONTACT_INFO_CHANGE_TEMPLATE,
-                'contact_info' => 'Email address'
+                { 'contact_info' => 'Email address' }
               )
 
               subject.send(:send_contact_change_notification, transaction_status, :email)

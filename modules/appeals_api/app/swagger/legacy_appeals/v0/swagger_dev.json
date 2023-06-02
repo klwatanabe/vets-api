@@ -7,7 +7,7 @@
       "name": "developer.va.gov"
     },
     "termsOfService": "https://developer.va.gov/terms-of-service",
-    "description": "The Legacy Appeals API returns a list of a claimant's active legacy appeals, which are not part of the Appeals Modernization Act (AMA) process. This list can be used to determine whether to opt in to the new decision review process. [Learn more about managing a legacy appeal.](https://www.va.gov/decision-reviews/legacy-appeals/).\n\nTo check the status of all decision reviews and appeals for a specified individual, use the [Appeals Status API](https://dev-developer.va.gov/explore/appeals/docs/appeals?version=current).\n\nTo file an appeal or decision review, use one of these APIs:\n* [Higher-Level Reviews API](https://dev-developer.va.gov/explore/appeals/docs/higher_level_reviews)\n* [Notice of Disagreements API](https://dev-developer.va.gov/explore/appeals/docs/notice_of_disagreements)\n* [Supplemental Claims API](https://dev-developer.va.gov/explore/appeals/docs/supplemental_claims)\n\n## Technical overview\nThe Legacy Appeals API pulls data from Caseflow, a case management system. It provides decision review and appeal data that can be used for submitting a Higher Level Review, Notice of Disagreement, or Supplemental Claim.\n\n### Authorization and Access\nThe authentication model for the Legacy Appeals API uses OAuth 2.0/OpenID Connect. The following authorization models are supported:\n* [Authorization code flow](https://dev-developer.va.gov/explore/authorization/docs/authorization-code)\n* [Client Credentials Grant (CCG)](https://dev-developer.va.gov/explore/authorization/docs/client-credentials)\n\nTo use this API, you must first [request sandbox access](https://dev-developer.va.gov/onboarding/request-sandbox-access). Then, follow our authentication process for [authorization code flow](https://dev-developer.va.gov/explore/authorization/docs/authorization-code) or [client credentials grant](https://dev-developer.va.gov/explore/authorization/docs/client-credentials).\n"
+    "description": "The Legacy Appeals API returns a list of a claimant's active legacy appeals, which are not part of the Appeals Modernization Act (AMA) process. This list can be used to determine whether to opt in to the new decision review process. [Learn more about managing a legacy appeal.](https://www.va.gov/decision-reviews/legacy-appeals/).\n\nTo check the status of all decision reviews and appeals for a specified individual, use the [Appeals Status API](https://dev-developer.va.gov/explore/appeals/docs/appeals?version=current).\n\nTo file an appeal or decision review, use one of these APIs:\n* [Higher-Level Reviews API](https://dev-developer.va.gov/explore/appeals/docs/higher_level_reviews)\n* [Notice of Disagreements API](https://dev-developer.va.gov/explore/appeals/docs/notice_of_disagreements)\n* [Supplemental Claims API](https://dev-developer.va.gov/explore/appeals/docs/supplemental_claims)\n\n## Technical overview\nThe Legacy Appeals API pulls data from Caseflow, a case management system. It provides decision review and appeal data that can be used for submitting a Higher Level Review, Notice of Disagreement, or Supplemental Claim.\n\n### Authorization and Access\nThe authentication model for the Legacy Appeals API uses OAuth 2.0/OpenID Connect. The following authorization models are supported:\n* [Authorization code flow](https://dev-developer.va.gov/explore/authorization/docs/authorization-code)\n* [Client Credentials Grant (CCG)](https://dev-developer.va.gov/explore/authorization/docs/client-credentials)\n\nTo use this API, you must first [request sandbox access](https://dev-developer.va.gov/onboarding/request-sandbox-access). Then, follow our authentication process for [authorization code flow](https://dev-developer.va.gov/explore/authorization/docs/authorization-code) or [client credentials grant](https://dev-developer.va.gov/explore/authorization/docs/client-credentials).\n\n**Important:** To get production access using client credentials grant, you must either work for VA or have specific VA agreements in place. If you have questions, [contact us](https://dev-developer.va.gov/support/contact-us).\n"
   },
   "tags": [
     {
@@ -16,7 +16,7 @@
     }
   ],
   "paths": {
-    "/legacy_appeals": {
+    "/legacy-appeals": {
       "get": {
         "summary": "Returns eligible appeals in the legacy process for a Veteran.",
         "tags": [
@@ -25,18 +25,17 @@
         "operationId": "getLegacyAppeals",
         "security": [
           {
-            "apikey": [
-
-            ]
-          },
-          {
             "productionOauth": [
-              "claim.read"
+              "veteran/LegacyAppeals.read",
+              "representative/LegacyAppeals.read",
+              "system/LegacyAppeals.read"
             ]
           },
           {
             "sandboxOauth": [
-              "claim.read"
+              "veteran/LegacyAppeals.read",
+              "representative/LegacyAppeals.read",
+              "system/LegacyAppeals.read"
             ]
           },
           {
@@ -134,6 +133,15 @@
                     "value": {
                       "errors": [
                         {
+                          "title": "Validation error",
+                          "detail": "Validation error",
+                          "code": "100",
+                          "source": {
+                            "pointer": "/"
+                          },
+                          "status": "422"
+                        },
+                        {
                           "title": "Invalid length",
                           "detail": "'' did not fit within the defined length limits",
                           "code": "142",
@@ -157,11 +165,67 @@
                           "meta": {
                             "regex": "^[0-9]{9}$"
                           }
+                        },
+                        {
+                          "title": "Invalid pattern",
+                          "detail": "'' did not match the defined pattern",
+                          "code": "143",
+                          "source": {
+                            "pointer": "/X-VA-File-Number"
+                          },
+                          "status": "422",
+                          "meta": {
+                            "regex": "[^ \\f\\n\\r\\t\\v\\u00a0\\u1680\\u2000-\\u200a\\u2028\\u2029\\u202f\\u205f\\u3000\\ufeff]"
+                          }
+                        },
+                        {
+                          "title": "Invalid length",
+                          "detail": "'' did not fit within the defined length limits",
+                          "code": "142",
+                          "source": {
+                            "pointer": "/X-VA-File-Number"
+                          },
+                          "status": "422",
+                          "meta": {
+                            "max_length": 9,
+                            "min_length": 1
+                          }
                         }
                       ]
                     }
                   },
-                  "when ssn formatted incorrectly": {
+                  "when X-VA-ICN is missing": {
+                    "value": {
+                      "errors": [
+                        {
+                          "title": "Invalid length",
+                          "detail": "'' did not fit within the defined length limits",
+                          "code": "142",
+                          "source": {
+                            "pointer": "/X-VA-ICN"
+                          },
+                          "status": "422",
+                          "meta": {
+                            "max_length": 17,
+                            "min_length": 17
+                          }
+                        },
+                        {
+                          "title": "Invalid pattern",
+                          "detail": "'' did not match the defined pattern",
+                          "code": "143",
+                          "source": {
+                            "pointer": "/X-VA-ICN"
+                          },
+                          "status": "422",
+                          "meta": {
+                            "regex": "^[0-9]{10}V[0-9]{6}$"
+                          }
+                        }
+                      ]
+                    }
+                  },
+                  "when SSN formatted incorrectly": {
                     "value": {
                       "errors": [
                         {
@@ -187,6 +251,37 @@
                           "status": "422",
                           "meta": {
                             "regex": "^[0-9]{9}$"
+                          }
+                        }
+                      ]
+                    }
+                  },
+                  "when ICN formatted incorrectly": {
+                    "value": {
+                      "errors": [
+                        {
+                          "title": "Invalid length",
+                          "detail": "'12345' did not fit within the defined length limits",
+                          "code": "142",
+                          "source": {
+                            "pointer": "/X-VA-ICN"
+                          },
+                          "status": "422",
+                          "meta": {
+                            "max_length": 17,
+                            "min_length": 17
+                          }
+                        },
+                        {
+                          "title": "Invalid pattern",
+                          "detail": "'12345' did not match the defined pattern",
+                          "code": "143",
+                          "source": {
+                            "pointer": "/X-VA-ICN"
+                          },
+                          "status": "422",
+                          "meta": {
+                            "regex": "^[0-9]{10}V[0-9]{6}$"
                           }
                         }
                       ]
@@ -260,11 +355,6 @@
   },
   "components": {
     "securitySchemes": {
-      "apikey": {
-        "type": "apiKey",
-        "name": "apikey",
-        "in": "header"
-      },
       "bearer_token": {
         "type": "http",
         "scheme": "bearer",
@@ -278,8 +368,12 @@
             "authorizationUrl": "https://api.va.gov/oauth2/authorization",
             "tokenUrl": "https://api.va.gov/oauth2/token",
             "scopes": {
-              "claim.read": "Retrieve claim data",
-              "claim.write": "Submit claim data"
+              "veteran/LegacyAppeals.read": "Allows a veteran to see their own legacy appeals",
+              "representative/LegacyAppeals.read": "Allows a veteran representative to see a veteran's legacy appeals",
+              "system/LegacyAppeals.read": "Allows a system to see a veteran's legacy appeals",
+              "veteran/appeals.read": "Allows a veteran to see all their own decision review or appeal data",
+              "representative/appeals.read": "Allows a veteran representative to see all decision review or appeal data for a veteran",
+              "system/appeals.read": "Allows a system to see all decision review or appeal data for a veteran"
             }
           }
         }
@@ -292,8 +386,12 @@
             "authorizationUrl": "https://sandbox-api.va.gov/oauth2/authorization",
             "tokenUrl": "https://sandbox-api.va.gov/oauth2/token",
             "scopes": {
-              "claim.read": "Retrieve claim data",
-              "claim.write": "Submit claim data"
+              "veteran/LegacyAppeals.read": "Allows a veteran to see their own legacy appeals",
+              "representative/LegacyAppeals.read": "Allows a veteran representative to see a veteran's legacy appeals",
+              "system/LegacyAppeals.read": "Allows a system to see a veteran's legacy appeals",
+              "veteran/appeals.read": "Allows a veteran to see all their own decision review or appeal data",
+              "representative/appeals.read": "Allows a veteran representative to see all decision review or appeal data for a veteran",
+              "system/appeals.read": "Allows a system to see all decision review or appeal data for a veteran"
             }
           }
         }
@@ -440,25 +538,25 @@
           }
         ]
       },
-      "X-VA-SSN": {
-        "description": "social security number",
-        "type": "string",
-        "minLength": 9,
-        "maxLength": 9,
-        "pattern": "^[0-9]{9}$"
-      },
       "X-VA-ICN": {
         "description": "Veteran's Integration Control Number, a unique identifier established via the Master Person Index (MPI)",
         "type": "string",
         "minLength": 17,
         "maxLength": 17,
         "pattern": "^[0-9]{10}V[0-9]{6}$"
+      },
+      "X-VA-SSN": {
+        "description": "social security number",
+        "type": "string",
+        "minLength": 9,
+        "maxLength": 9,
+        "pattern": "^[0-9]{9}$"
       }
     }
   },
   "servers": [
     {
-      "url": "https://sandbox-api.va.gov/services/appeals/legacy_appeals/{version}",
+      "url": "https://sandbox-api.va.gov/services/appeals/legacy-appeals/{version}",
       "description": "VA.gov API sandbox environment",
       "variables": {
         "version": {
@@ -467,7 +565,7 @@
       }
     },
     {
-      "url": "https://api.va.gov/services/appeals/legacy_appeals/{version}",
+      "url": "https://api.va.gov/services/appeals/legacy-appeals/{version}",
       "description": "VA.gov API production environment",
       "variables": {
         "version": {

@@ -3,6 +3,18 @@
 require 'rails_helper'
 
 RSpec.describe SavedClaim::CaregiversAssistanceClaim do
+  describe 'schema' do
+    it 'is deep frozen' do
+      expect do
+        VetsJsonSchema::SCHEMAS['10-10CG']['title'] = 'foo'
+      end.to raise_error(FrozenError)
+
+      expect(VetsJsonSchema::SCHEMAS['10-10CG']['title']).to eq(
+        'Application for Comprehensive Assistance for Family Caregivers Program (10-10CG)'
+      )
+    end
+  end
+
   describe '#to_pdf' do
     let(:claim) do
       build(:caregivers_assistance_claim)
@@ -21,18 +33,31 @@ RSpec.describe SavedClaim::CaregiversAssistanceClaim do
     end
 
     it 'calls PdfFill::Filler#fill_form' do
-      expect(PdfFill::Filler).to receive(:fill_form).with(claim, claim.guid, {}).once.and_return(:expected_file_paths)
+      if RUBY_VERSION =~ /2.7/
+        expect(PdfFill::Filler).to receive(:fill_form).with(claim, claim.guid, {}).once.and_return(:expected_file_paths)
+      else
+        expect(PdfFill::Filler).to receive(:fill_form).with(claim, claim.guid).once.and_return(:expected_file_paths)
+      end
       expect(claim.to_pdf).to eq(:expected_file_paths)
     end
 
     it 'passes arguments to PdfFill::Filler#fill_form' do
-      expect(PdfFill::Filler).to receive(
-        :fill_form
-      ).with(
-        claim,
-        'my_other_filename',
-        {}
-      ).once.and_return(:expected_file_paths)
+      if RUBY_VERSION =~ /2.7/
+        expect(PdfFill::Filler).to receive(
+          :fill_form
+        ).with(
+          claim,
+          'my_other_filename',
+          {}
+        ).once.and_return(:expected_file_paths)
+      else
+        expect(PdfFill::Filler).to receive(
+          :fill_form
+        ).with(
+          claim,
+          'my_other_filename'
+        ).once.and_return(:expected_file_paths)
+      end
 
       # Calling with only filename
       claim.to_pdf('my_other_filename')

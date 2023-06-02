@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'rails_helper'
+require 'bgs_service/local_bgs'
 
 RSpec.describe 'Intent to file', type: :request do
   let(:headers) do
@@ -19,7 +20,7 @@ RSpec.describe 'Intent to file', type: :request do
       participant_claimant_id: '123_456_789',
       received_date: '2015-01-05T17:42:12.058Z' }
   end
-  let(:schema) { File.read(Rails.root.join('modules', 'claims_api', 'config', 'schemas', '0966.json')) }
+  let(:schema) { File.read(Rails.root.join('modules', 'claims_api', 'config', 'schemas', 'v1', '0966.json')) }
 
   before do
     stub_poa_verification
@@ -60,12 +61,12 @@ RSpec.describe 'Intent to file', type: :request do
         end
       end
 
-      it 'posts a 422 error with detail when BGS returns a 500 response' do
+      it 'posts a 404 error with detail when BGS returns a 500 response' do
         with_okta_user(scopes) do |auth_header|
           VCR.use_cassette('bgs/intent_to_file_web_service/insert_intent_to_file_500') do
             data[:data][:attributes] = { type: 'pension' }
             post path, params: data.to_json, headers: headers.merge(auth_header)
-            expect(response.status).to eq(422)
+            expect(response.status).to eq(404)
           end
         end
       end
@@ -153,7 +154,7 @@ RSpec.describe 'Intent to file', type: :request do
       describe 'handling the claimant fields' do
         context "when 'participant_claimant_id' is provided" do
           it 'that field and value are sent to BGS' do
-            expect_any_instance_of(BGS::IntentToFileWebService)
+            expect_any_instance_of(ClaimsApi::LocalBGS)
               .to receive(:insert_intent_to_file).with(hash_including(participant_claimant_id: '123')).and_return({})
 
             with_okta_user(scopes) do |auth_header|
@@ -165,7 +166,7 @@ RSpec.describe 'Intent to file', type: :request do
 
         context "when 'claimant_ssn' is provided" do
           it 'that field and value are sent to BGS' do
-            expect_any_instance_of(BGS::IntentToFileWebService)
+            expect_any_instance_of(ClaimsApi::LocalBGS)
               .to receive(:insert_intent_to_file).with(hash_including(claimant_ssn: '123')).and_return({})
 
             with_okta_user(scopes) do |auth_header|
@@ -177,11 +178,11 @@ RSpec.describe 'Intent to file', type: :request do
 
         context "when neither 'participant_claimant_id' or 'claimant_ssn' is provided" do
           before do
-            stub_mpi(build(:mvi_profile, participant_id: '999'))
+            stub_mpi(build(:mpi_profile, participant_id: '999'))
           end
 
           it "'participant_claimant_id' is set to the target_veteran.participant_id and sent to BGS " do
-            expect_any_instance_of(BGS::IntentToFileWebService)
+            expect_any_instance_of(ClaimsApi::LocalBGS)
               .to receive(:insert_intent_to_file).with(hash_including(participant_claimant_id: '999')).and_return({})
 
             with_okta_user(scopes) do |auth_header|
@@ -192,7 +193,7 @@ RSpec.describe 'Intent to file', type: :request do
 
         context "when both 'participant_claimant_id' and 'claimant_ssn' are provided" do
           it "both 'participant_claimant_id' and 'claimant_ssn' are sent to BGS " do
-            expect_any_instance_of(BGS::IntentToFileWebService)
+            expect_any_instance_of(ClaimsApi::LocalBGS)
               .to receive(:insert_intent_to_file).with(
                 hash_including(
                   participant_claimant_id: '123', claimant_ssn: '456'
@@ -232,7 +233,7 @@ RSpec.describe 'Intent to file', type: :request do
                   post path, params: data.to_json, headers: headers.merge(auth_header)
                 end.to change(ClaimsApi::IntentToFile, :count).by(1)
                 expect(ClaimsApi::IntentToFile.last.status).to eq(ClaimsApi::IntentToFile::ERRORED)
-                expect(response.status).to eq(422)
+                expect(response.status).to eq(404)
               end
             end
           end
@@ -273,7 +274,7 @@ RSpec.describe 'Intent to file', type: :request do
     context 'when Veteran has participant_id' do
       context 'when Veteran is missing a birls_id' do
         before do
-          stub_mpi(build(:mvi_profile, birls_id: nil))
+          stub_mpi(build(:mpi_profile, birls_id: nil))
         end
 
         it 'returns an unprocessible entity status' do
@@ -380,7 +381,7 @@ RSpec.describe 'Intent to file', type: :request do
 
     it 'returns a 422 when invalid target_veteran' do
       with_okta_user(scopes) do |auth_header|
-        vet = FactoryBot.build(:user_with_no_birls_id, :loa3)
+        vet = build(:claims_veteran, :nil_birls_id)
         allow_any_instance_of(ClaimsApi::V1::ApplicationController)
           .to receive(:veteran_from_headers).and_return(vet)
 

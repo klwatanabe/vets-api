@@ -18,6 +18,8 @@ module AppealsApi
     attr_readonly :auth_headers
     attr_readonly :form_data
 
+    before_create :assign_metadata
+
     scope :pii_expunge_policy, lambda {
       where(
         status: COMPLETE_STATUSES
@@ -30,6 +32,10 @@ module AppealsApi
     scope :stuck_unsubmitted, lambda {
       where('created_at < ? AND status IN (?)', 2.hours.ago, %w[pending submitting])
     }
+
+    scope :v1, -> { where(api_version: 'V1') }
+    scope :v2, -> { where(api_version: 'V2') }
+    scope :v0, -> { where(api_version: 'V0') }
 
     def self.past?(date)
       date < Time.zone.today
@@ -61,7 +67,7 @@ module AppealsApi
               :claimant_birth_date_is_in_the_past,
               if: proc { |a| a.api_version.upcase != 'V1' && a.form_data.present? }
 
-    validate :validate_requesting_extension, if: :version_2?
+    validate :validate_requesting_extension, if: proc { |a| a.api_version.upcase != 'V1' && a.form_data.present? }
     validate :validate_api_version_presence
 
     has_many :evidence_submissions, as: :supportable, dependent: :destroy
@@ -77,7 +83,7 @@ module AppealsApi
     def veteran
       @veteran ||= Appellant.new(
         type: :veteran,
-        auth_headers: auth_headers,
+        auth_headers:,
         form_data: data_attributes&.dig('veteran')
       )
     end
@@ -85,7 +91,7 @@ module AppealsApi
     def claimant
       @claimant ||= Appellant.new(
         type: :claimant,
-        auth_headers: auth_headers,
+        auth_headers:,
         form_data: data_attributes&.dig('claimant')
       )
     end
@@ -208,6 +214,10 @@ module AppealsApi
       'BVA'
     end
 
+    def assign_metadata
+      metadata['central_mail_business_line'] = lob
+    end
+
     def accepts_evidence?
       board_review_option == 'evidence_submission'
     end
@@ -239,9 +249,9 @@ module AppealsApi
 
       send(
         raise_on_error ? :update! : :update,
-        status: status,
-        code: code,
-        detail: detail
+        status:,
+        code:,
+        detail:
       )
 
       if status != current_status || code != current_code || detail != current_detail
@@ -252,8 +262,8 @@ module AppealsApi
             to: status.to_s,
             status_update_time: Time.zone.now.iso8601,
             statusable_id: id,
-            code: code,
-            detail: detail
+            code:,
+            detail:
           }.stringify_keys
         )
 
@@ -263,7 +273,7 @@ module AppealsApi
           AppealsApi::AppealReceivedJob.perform_async(
             {
               receipt_event: 'nod_received',
-              email_identifier: email_identifier,
+              email_identifier:,
               first_name: veteran_first_name,
               date_submitted: veterans_local_time.iso8601,
               guid: id,
@@ -277,14 +287,14 @@ module AppealsApi
     # rubocop:enable Metrics/MethodLength
 
     def update_status!(status:, code: nil, detail: nil)
-      update_status(status: status, code: code, detail: detail, raise_on_error: true)
+      update_status(status:, code:, detail:, raise_on_error: true)
     end
 
     private
 
     def mpi_veteran
       AppealsApi::Veteran.new(
-        ssn: ssn,
+        ssn:,
         first_name: veteran_first_name,
         last_name: veteran_last_name,
         birth_date: veteran_birth_date.iso8601
@@ -360,10 +370,6 @@ module AppealsApi
     def validate_api_version_presence
       # We'll likely never see this since the controller should supply this in all circumstances
       errors.add :api_version, 'Appeal must include the api_version attribute' if api_version.blank?
-    end
-
-    def version_2?
-      pii_present? && api_version.upcase == 'V2'
     end
 
     # After expunging pii, form_data is nil, update will fail unless validation skipped

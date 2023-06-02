@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require 'rails_helper'
-require_relative '../support/iam_session_helper'
+require_relative '../support/helpers/iam_session_helper'
 
 RSpec.describe Mobile::ApplicationController, type: :controller do
   controller do
@@ -28,12 +28,6 @@ RSpec.describe Mobile::ApplicationController, type: :controller do
           expect(response).to have_http_status(:unauthorized)
           expect(error_detail).to eq('Missing Authorization header')
         end
-
-        it 'increments the failure metric once' do
-          expect do
-            get :index
-          end.to trigger_statsd_increment('mobile.authentication.failure', times: 1)
-        end
       end
 
       context 'when the Authentication header is blank' do
@@ -44,12 +38,6 @@ RSpec.describe Mobile::ApplicationController, type: :controller do
 
           expect(response).to have_http_status(:unauthorized)
           expect(error_detail).to eq('Authorization header Bearer token is blank')
-        end
-
-        it 'increments the failure metric once' do
-          expect do
-            get :index
-          end.to trigger_statsd_increment('mobile.authentication.failure', times: 1)
         end
       end
     end
@@ -65,14 +53,6 @@ RSpec.describe Mobile::ApplicationController, type: :controller do
 
           expect(response).to have_http_status(:unauthorized)
           expect(error_detail).to eq('IAM user session is inactive')
-        end
-
-        it 'increments the auth failure metric once' do
-          expect do
-            VCR.use_cassette('iam_ssoe_oauth/introspect_inactive') do
-              get :index
-            end
-          end.to trigger_statsd_increment('mobile.authentication.failure', times: 1)
         end
 
         it 'increments the inactive session metric once' do
@@ -91,14 +71,6 @@ RSpec.describe Mobile::ApplicationController, type: :controller do
           end
 
           expect(response).to have_http_status(:ok)
-        end
-
-        it 'increments the auth success metric once' do
-          expect do
-            VCR.use_cassette('iam_ssoe_oauth/introspect_active') do
-              get :index
-            end
-          end.to trigger_statsd_increment('mobile.authentication.success', times: 1)
         end
 
         it 'increments the session creation success metric once' do
@@ -126,12 +98,6 @@ RSpec.describe Mobile::ApplicationController, type: :controller do
           get :index
 
           expect(response).to have_http_status(:ok)
-        end
-
-        it 'increments the auth success metric once' do
-          expect do
-            get :index
-          end.to trigger_statsd_increment('mobile.authentication.success', times: 1)
         end
       end
 
@@ -217,7 +183,7 @@ RSpec.describe Mobile::ApplicationController, type: :controller do
 
       context 'with Authentication-Method header value of SIS' do
         let(:access_token) { create(:access_token) }
-        let(:bearer_token) { SignIn::AccessTokenJwtEncoder.new(access_token: access_token).perform }
+        let(:bearer_token) { SignIn::AccessTokenJwtEncoder.new(access_token:).perform }
         let!(:user) { create(:user, :loa3, uuid: access_token.user_uuid) }
 
         before do

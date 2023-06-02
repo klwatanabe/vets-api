@@ -38,12 +38,16 @@ module BGS
       end
     end
 
+    def find_rating_data
+      service.rating.find_rating_data(@user.ssn)
+    end
+
     def create_proc_form(vnp_proc_id, form_type_code)
       # Temporary log proc_id to sentry
       log_message_to_sentry(vnp_proc_id, :warn, '', { team: 'vfs-ebenefits' })
       with_multiple_attempts_enabled do
         service.vnp_proc_form.vnp_proc_form_create(
-          { vnp_proc_id: vnp_proc_id, form_type_cd: form_type_code }.merge(bgs_auth)
+          { vnp_proc_id:, form_type_cd: form_type_code }.merge(bgs_auth)
         )
       end
     end
@@ -69,7 +73,7 @@ module BGS
           {
             vnp_proc_id: proc_id,
             ptcpnt_type_nm: 'Person',
-            corp_ptcpnt_id: corp_ptcpnt_id,
+            corp_ptcpnt_id:,
             ssn: @user.ssn
           }.merge(bgs_auth)
         )
@@ -131,7 +135,7 @@ module BGS
 
       increment_params.merge!(user_ssn) if Settings.bgs.mock_response == true
       with_multiple_attempts_enabled do
-        service.share_data.find_benefit_claim_type_increment(increment_params)
+        service.share_data.find_benefit_claim_type_increment(**increment_params)
       end
     end
 
@@ -189,7 +193,7 @@ module BGS
         financial_institution_name: lambda do
           BankName.get_bank_name(@user, routing_number)
         rescue => e
-          log_exception_to_sentry(e, { routing_number: routing_number }, { error: 'ch33_dd' })
+          log_exception_to_sentry(e, { routing_number: }, { error: 'ch33_dd' })
           nil
         end.call
       )

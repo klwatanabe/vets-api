@@ -2,6 +2,8 @@
 
 require 'rails_helper'
 require_relative '../support/vba_document_fixtures'
+require 'vba_documents/multipart_parser'
+require 'vba_documents/pdf_inspector'
 
 RSpec.describe VBADocuments::UploadProcessor, type: :job do
   include VBADocuments::Fixtures
@@ -71,6 +73,7 @@ RSpec.describe VBADocuments::UploadProcessor, type: :job do
 
   before do
     allow_any_instance_of(described_class).to receive(:cancelled?).and_return(false)
+    allow_any_instance_of(Tempfile).to receive(:size).and_return(1) # must be > 0 or submission will error w/DOC107
     objstore = instance_double(VBADocuments::ObjectStore)
     version = instance_double(Aws::S3::ObjectVersion)
     bucket = instance_double(Aws::S3::Bucket)
@@ -222,6 +225,22 @@ RSpec.describe VBADocuments::UploadProcessor, type: :job do
       expect(metadata['numberAttachments']).to eq(1)
       updated = VBADocuments::UploadSubmission.find_by(guid: upload.guid)
       expect(updated.status).to eq('received')
+    end
+
+    context 'when payload is empty' do
+      let(:empty_payload) { get_fixture('emptyfile.blob') }
+
+      before do
+        allow(VBADocuments::PayloadManager).to receive(:download_raw_file).and_return([empty_payload, DateTime.now])
+      end
+
+      it 'sets error status with DOC107: Empty payload' do
+        described_class.new.perform(upload.guid, test_caller)
+        upload.reload
+        expect(upload.status).to eq('error')
+        expect(upload.code).to eq('DOC107')
+        expect(upload.detail).to eq('Empty payload')
+      end
     end
 
     context 'with pdf size too large' do
@@ -480,6 +499,7 @@ RSpec.describe VBADocuments::UploadProcessor, type: :job do
     end
 
     it 'saves the SHA-256 checksum to the submission metadata' do
+      allow(VBADocuments::MultipartParser).to receive(:parse) { { 'content' => valid_doc } }
       sha256_char_length = 64
       described_class.new.perform(upload.guid, test_caller)
       upload.reload
@@ -488,6 +508,7 @@ RSpec.describe VBADocuments::UploadProcessor, type: :job do
     end
 
     it 'saves the MD5 checksum to the submission metadata' do
+      allow(VBADocuments::MultipartParser).to receive(:parse) { { 'content' => valid_doc } }
       md5_char_length = 32
       described_class.new.perform(upload.guid, test_caller)
       upload.reload
@@ -496,8 +517,8 @@ RSpec.describe VBADocuments::UploadProcessor, type: :job do
     end
 
     context 'with invalid sizes' do
-      %w[18x22 22x18].each do |invalid_size|
-        it 'sets an error status for invalid size' do
+      %w[10x102 79x10].each do |invalid_size|
+        it "sets an error status for invalid size of #{invalid_size}" do
           allow(VBADocuments::MultipartParser).to receive(:parse) {
             { 'metadata' => valid_metadata, 'content' => get_fixture("#{invalid_size}.pdf") }
           }
@@ -506,6 +527,27 @@ RSpec.describe VBADocuments::UploadProcessor, type: :job do
           expect(updated.status).to eq('error')
           expect(updated.code).to eq('DOC108')
         end
+      end
+    end
+
+    context 'when metadata.json contains an unrecognized key/value pair' do
+      let(:special_metadata) { JSON.parse(valid_metadata).merge({ 'unrecognized' => true }).to_json }
+
+      before do
+        allow(CentralMail::Service).to receive(:new) { client_stub }
+        allow(faraday_response).to receive(:status).and_return(200)
+        allow(faraday_response).to receive(:body).and_return('')
+        allow(faraday_response).to receive(:success?).and_return(true)
+        allow(client_stub).to receive(:upload).and_return(faraday_response)
+      end
+
+      it 'ignores the unrecognized key/value pair' do
+        allow(VBADocuments::MultipartParser).to receive(:parse) do
+          { 'metadata' => special_metadata, 'content' => valid_doc }
+        end
+        described_class.new.perform(upload.guid, test_caller)
+        updated = VBADocuments::UploadSubmission.find_by(guid: upload.guid)
+        expect(updated.status).to eq('received')
       end
     end
 
@@ -518,14 +560,15 @@ RSpec.describe VBADocuments::UploadProcessor, type: :job do
       updated = VBADocuments::UploadSubmission.find_by(guid: upload.guid)
       pdf_data = updated.uploaded_pdf
       expect(pdf_data).to be_a(Hash)
-      expect(pdf_data).to have_key('doc_type')
       expect(pdf_data).to have_key('total_documents')
       expect(pdf_data).to have_key('total_pages')
       expect(pdf_data).to have_key('content')
       content = pdf_data['content']
-      expect(content).to have_key('page_count')
-      expect(content).to have_key('dimensions')
-      expect(content).to have_key('attachments')
+      attachment = pdf_data.dig('content', 'attachments').first
+      %w[page_count dimensions file_size sha256_checksum].each do |metadata_key|
+        expect(content).to have_key(metadata_key)
+        expect(attachment).to have_key(metadata_key)
+      end
     end
 
     context 'with valid line of business' do

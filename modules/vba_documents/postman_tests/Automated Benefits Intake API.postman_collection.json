@@ -1359,7 +1359,7 @@
 								{
 									"key": "attachment1",
 									"type": "file",
-									"src": "18x22.pdf"
+									"src": "10x102.pdf"
 								},
 								{
 									"key": "attachment2",
@@ -3263,7 +3263,7 @@
 									"    const error = jsonData.errors[0];",
 									"",
 									"    pm.expect(error.title).to.eql(\"Document failed validation\");",
-									"    pm.expect(error.detail).to.eql(\"Document exceeds the page size limit of 21 in. x 21 in.\");",
+									"    pm.expect(error.detail).to.eql(\"Document exceeds the page size limit of 78 in. x 101 in.\");",
 									"    pm.expect(error.status).to.eql(\"422\");",
 									"});"
 								],
@@ -3283,7 +3283,7 @@
 						"body": {
 							"mode": "file",
 							"file": {
-								"src": "18x22.pdf"
+								"src": "10x102.pdf"
 							}
 						},
 						"url": {

@@ -12,6 +12,24 @@ RSpec.describe 'Health Care Application Integration', type: %i[request serialize
     )
   end
 
+  describe 'GET rating_info' do
+    let(:current_user) { build(:ch33_dd_user) }
+
+    before do
+      sign_in_as(current_user)
+    end
+
+    it 'returns the users rating info' do
+      VCR.use_cassette('bgs/service/find_rating_data', VCR::MATCH_EVERYTHING) do
+        get(rating_info_v0_health_care_applications_path)
+      end
+
+      expect(JSON.parse(response.body)['data']['attributes']).to eq(
+        { 'user_percent_of_disability' => 100 }
+      )
+    end
+  end
+
   describe 'GET healthcheck' do
     subject do
       get(healthcheck_v0_health_care_applications_path)
@@ -53,6 +71,13 @@ RSpec.describe 'Health Care Application Integration', type: %i[request serialize
             'veteranSocialSecurityNumber', 'gender'
           )
         }
+      end
+
+      it 'logs user loa' do
+        allow(Raven).to receive(:extra_context)
+        expect(Raven).to receive(:extra_context).with(user_loa: nil)
+
+        get(enrollment_status_v0_health_care_applications_path, params: user_attributes)
       end
 
       it 'returns the enrollment status data' do
@@ -164,11 +189,7 @@ RSpec.describe 'Health Care Application Integration', type: %i[request serialize
 
     context 'with invalid params' do
       before do
-        Settings.sentry.dsn = 'asdf'
-      end
-
-      after do
-        Settings.sentry.dsn = nil
+        allow(Settings.sentry).to receive(:dsn).and_return('asdf')
       end
 
       let(:params) do
@@ -258,7 +279,7 @@ RSpec.describe 'Health Care Application Integration', type: %i[request serialize
       end
 
       context 'while authenticated', skip_mvi: true do
-        let(:current_user) { build(:user, :mhv, edipi: nil, icn: nil, sec_id: nil) }
+        let(:current_user) { build(:user, :mhv) }
 
         before do
           sign_in_as(current_user)
@@ -340,11 +361,7 @@ RSpec.describe 'Health Care Application Integration', type: %i[request serialize
           let(:error) { Common::Client::Errors::HTTPError.new('error message') }
 
           before do
-            Settings.sentry.dsn = 'asdf'
-          end
-
-          after do
-            Settings.sentry.dsn = nil
+            allow(Settings.sentry).to receive(:dsn).and_return('asdf')
           end
 
           it 'renders error message' do

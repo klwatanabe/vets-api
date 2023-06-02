@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'rails_helper'
+require 'sidekiq/form526_job_status_tracker/job_tracker'
 
 describe Sidekiq::Form526JobStatusTracker::JobTracker do
   let(:worker_class) do
@@ -13,7 +14,7 @@ describe Sidekiq::Form526JobStatusTracker::JobTracker do
   context 'with an exhausted callback message' do
     let!(:form526_submission) { create :form526_submission }
     let!(:form526_job_status) do
-      create :form526_job_status, job_id: msg['jid'], form526_submission: form526_submission
+      create :form526_job_status, job_id: msg['jid'], form526_submission:
     end
 
     let(:msg) do
@@ -25,6 +26,8 @@ describe Sidekiq::Form526JobStatusTracker::JobTracker do
         'error_class' => 'Common::Exceptions::GatewayTimeout'
       }
     end
+
+    before { allow(Settings.form526_backup).to receive(:enabled).and_return(true) }
 
     it 'tracks an exhausted job' do
       expect_any_instance_of(Sidekiq::Form526JobStatusTracker::Metrics).to receive(:increment_exhausted)
@@ -48,10 +51,9 @@ describe Sidekiq::Form526JobStatusTracker::JobTracker do
       allow_any_instance_of(Form526Submission).to receive(:birls_ids_that_havent_been_tried_yet).and_return([])
       form526_submission.auth_headers.delete('va_eauth_birlsfilenumber')
       form526_submission.save!
-      Settings.form526_backup.enabled = true
-      VCR.use_cassette('form526_backup/200_lighthouse_intake_upload_location') do
+      VCR.use_cassette('lighthouse/benefits_intake/200_lighthouse_intake_upload_location') do
         VCR.use_cassette('form526_backup/200_evss_get_pdf') do
-          VCR.use_cassette('form526_backup/200_lighthouse_intake_upload') do
+          VCR.use_cassette('lighthouse/benefits_intake/200_lighthouse_intake_upload') do
             expect do
               worker_class.job_exhausted(msg, 'stats_key')
               worker_class.drain

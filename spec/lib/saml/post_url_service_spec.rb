@@ -11,14 +11,13 @@ RSpec.describe SAML::PostURLService do
 
   context 'using ial/1 context' do
     subject do
-      described_class.new(saml_settings, session: session, user: user, params: params)
+      described_class.new(saml_settings, session:, user:, params:)
     end
 
     let(:user) { build(:logingov_ial1_user) }
     let(:session) { Session.create(uuid: user.uuid, token: 'abracadabra') }
 
     around do |example|
-      User.create(user)
       Timecop.freeze('2018-04-09T17:52:03Z')
       RequestStore.store['request_id'] = request_id
       example.run
@@ -84,14 +83,13 @@ RSpec.describe SAML::PostURLService do
 
   context 'using loa/3/vets context' do
     subject do
-      described_class.new(saml_settings, session: session, user: user, params: params)
+      described_class.new(saml_settings, session:, user:, params:)
     end
 
     let(:user) { build(:user) }
     let(:session) { Session.create(uuid: user.uuid, token: 'abracadabra') }
 
     around do |example|
-      User.create(user)
       Timecop.freeze('2018-04-09T17:52:03Z')
       RequestStore.store['request_id'] = request_id
       example.run
@@ -323,7 +321,7 @@ RSpec.describe SAML::PostURLService do
             it 'has a login redirect url with fail' do
               expect(subject.login_redirect_url(auth: 'fail',
                                                 code: SAML::Responses::Base::CLICKED_DENY_ERROR_CODE,
-                                                request_id: request_id))
+                                                request_id:))
                 .to eq("#{values[:base_redirect]}#{SAML::URLService::LOGIN_REDIRECT_PARTIAL}"\
                        "?auth=fail&code=001&request_id=#{request_id}&type=idme")
             end
@@ -351,7 +349,7 @@ RSpec.describe SAML::PostURLService do
             it 'is a failure' do
               expect(subject.login_redirect_url(auth: 'fail',
                                                 code: SAML::Responses::Base::CLICKED_DENY_ERROR_CODE,
-                                                request_id: request_id))
+                                                request_id:))
                 .to eq("#{values[:base_redirect]}#{SAML::URLService::LOGIN_REDIRECT_PARTIAL}"\
                        "?auth=force-needed&code=001&request_id=#{request_id}&type=custom")
             end
@@ -371,15 +369,14 @@ RSpec.describe SAML::PostURLService do
 
   context 'using loa/3 context' do
     subject do
-      described_class.new(saml_settings, session: session, user: user,
-                                         params: params, loa3_context: LOA::IDME_LOA3)
+      described_class.new(saml_settings, session:, user:,
+                                         params:, loa3_context: LOA::IDME_LOA3)
     end
 
     let(:user) { build(:user) }
     let(:session) { Session.create(uuid: user.uuid, token: 'abracadabra') }
 
     around do |example|
-      User.create(user)
       Timecop.freeze('2018-04-09T17:52:03Z')
       RequestStore.store['request_id'] = request_id
       example.run
@@ -589,7 +586,7 @@ RSpec.describe SAML::PostURLService do
             it 'has a login redirect url with fail' do
               expect(subject.login_redirect_url(auth: 'fail',
                                                 code: SAML::Responses::Base::CLICKED_DENY_ERROR_CODE,
-                                                request_id: request_id))
+                                                request_id:))
                 .to eq("#{values[:base_redirect]}#{SAML::URLService::LOGIN_REDIRECT_PARTIAL}"\
                        "?auth=fail&code=001&request_id=#{request_id}&type=idme")
             end
@@ -617,7 +614,7 @@ RSpec.describe SAML::PostURLService do
   end
 
   context 'review instance' do
-    subject { described_class.new(saml_settings, session: session, user: user, params: params) }
+    subject { described_class.new(saml_settings, session:, user:, params:) }
 
     let(:user) { build(:user) }
     let(:session) { Session.create(uuid: user.uuid, token: 'abracadabra') }
@@ -627,7 +624,6 @@ RSpec.describe SAML::PostURLService do
     end
 
     around do |example|
-      User.create(user)
       Timecop.freeze('2018-04-09T17:52:03Z')
       RequestStore.store['request_id'] = request_id
       with_settings(Settings.saml_ssoe, relay: "http://#{slug_id}.review.vetsgov-internal/auth/login/callback") do

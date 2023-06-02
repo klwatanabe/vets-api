@@ -4,8 +4,7 @@ require 'appeals_api/decision_review_report'
 
 module AppealsApi
   class WeeklyErrorReportMailer < ApplicationMailer
-    def build(date_from:, date_to:, recipients:, friendly_duration: '')
-      @report = DecisionReviewReport.new(from: date_from, to: date_to)
+    def build(recipients:, friendly_duration: '')
       @friendly_duration = friendly_duration
       @friendly_env = (Settings.vsp_environment || Rails.env).titleize
 
@@ -26,8 +25,8 @@ module AppealsApi
 
     def stuck_err_hlrs
       stuck_hlr_statuses = HigherLevelReview::STATUSES - HigherLevelReview::COMPLETE_STATUSES - ['error']
-      err_hlrs   = HigherLevelReview.v2.where(status: 'error')
-      stuck_hlrs = HigherLevelReview.v2.where(status: stuck_hlr_statuses)
+      err_hlrs   = HigherLevelReview.v2_or_v0.where(status: 'error')
+      stuck_hlrs = HigherLevelReview.v2_or_v0.where(status: stuck_hlr_statuses)
                                     .where('updated_at < ?', 1.week.ago.beginning_of_day)
       err_hlrs.or(stuck_hlrs).order(:created_at).map { |hlr| "HLR, #{build_line(hlr)}" }
     end

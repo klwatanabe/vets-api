@@ -9,26 +9,24 @@ module BGS
     include Sidekiq::Worker
     include SentryLogging
 
-    # we do individual service retries in lib/bgs/service.rb
     sidekiq_options retry: false
 
     def perform(user_uuid, saved_claim_id, vet_info)
-      in_progress_form = InProgressForm.find_by(form_id: FORM_ID, user_uuid: user_uuid)
-      in_progress_copy = in_progress_form_copy(in_progress_form)
       user = User.find(user_uuid)
+      Rails.logger.info('BGS::SubmitForm674Job running!', { user_uuid:, saved_claim_id:, icn: user&.icn })
+      in_progress_form = InProgressForm.find_by(form_id: FORM_ID, user_uuid:)
+      in_progress_copy = in_progress_form_copy(in_progress_form)
       claim_data = valid_claim_data(saved_claim_id, vet_info)
 
       BGS::Form674.new(user).submit(claim_data)
       send_confirmation_email(user)
       in_progress_form&.destroy
+      Rails.logger.info('BGS::SubmitForm674Job succeeded!', { user_uuid:, saved_claim_id:, icn: user&.icn })
     rescue => e
+      Rails.logger.error('BGS::SubmitForm674Job failed!', { user_uuid:, saved_claim_id:, icn: user&.icn, error: e.message }) # rubocop:disable Layout/LineLength
       log_message_to_sentry(e, :error, {}, { team: 'vfs-ebenefits' })
       salvage_save_in_progress_form(FORM_ID, user_uuid, in_progress_copy)
       DependentsApplicationFailureMailer.build(user).deliver_now if user.present?
-    end
-
-    def downtime_checks
-      [{ service_name: 'BDN', extra_delay: 120 }]
     end
 
     private
@@ -44,7 +42,6 @@ module BGS
     end
 
     def send_confirmation_email(user)
-      return unless Flipper.enabled?(:form674_confirmation_email)
       return if user.va_profile_email.blank?
 
       VANotify::ConfirmationEmail.send(

@@ -193,7 +193,7 @@ module SAML
                   else
                     SAML::User::AUTHN_CONTEXTS.fetch(authn_context).fetch(:sign_in)
                   end
-        sign_in.merge(account_type: account_type, auth_broker: SAML::URLService::BROKER_CODE)
+        sign_in.merge(account_type:, auth_broker: SAML::URLService::BROKER_CODE)
       end
 
       def needs_csp_id_mpi_update?
@@ -201,15 +201,18 @@ module SAML
       end
 
       def to_hash
-        SERIALIZABLE_ATTRIBUTES.index_with { |k| send(k) }.merge(authn_context: authn_context)
+        SERIALIZABLE_ATTRIBUTES.index_with { |k| send(k) }.merge(authn_context:)
       end
 
       # Raise any fatal exceptions due to validation issues
       def validate!
         multiple_id_validations
         if should_raise_missing_uuid_error
-          data = SAML::UserAttributeError::ERRORS[:uuid_missing].merge({ identifier: mhv_icn })
-          raise SAML::UserAttributeError, data
+          data = SAML::UserAttributeError::ERRORS[:uuid_missing]
+          raise SAML::UserAttributeError.new(code: data[:code],
+                                             message: data[:message],
+                                             tag: data[:tag],
+                                             identifier: mhv_icn)
         end
       end
 
@@ -277,7 +280,11 @@ module SAML
           mismatched_ids_error = SAML::UserAttributeError::ERRORS[multiple_ids_error_type]
           error_data = { mismatched_ids: ids, icn: mhv_icn }
           Rails.logger.warn("[SAML::UserAttributes::SSOe] #{mismatched_ids_error[:message]}, #{error_data}")
-          raise SAML::UserAttributeError, mismatched_ids_error unless mhv_outbound_redirect(mismatched_ids_error)
+          unless mhv_outbound_redirect(mismatched_ids_error)
+            raise SAML::UserAttributeError.new(message: mismatched_ids_error[:message],
+                                               code: mismatched_ids_error[:code],
+                                               tag: mismatched_ids_error[:tag])
+          end
         end
       end
 

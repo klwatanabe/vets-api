@@ -2,7 +2,6 @@
 
 require 'rails_helper'
 require './lib/webhooks/utilities'
-require './app/models/webhooks/utilities'
 
 # use these loads when running in a rails console
 # load './app/models/webhooks/notification.rb'
@@ -35,8 +34,8 @@ describe Webhooks::Utilities, type: :model do
     # load dependent models
     module Testing
       include Webhooks::Utilities
-      EVENTS = %w[model_event model_event2].freeze
-      register_events(*EVENTS, api_name: API_NAME, max_retries: 3) do
+      MODEL_EVENTS = %w[model_event model_event2].freeze
+      register_events(*MODEL_EVENTS, api_name: API_NAME, max_retries: 3) do
         'working!'
       end
     end
@@ -63,13 +62,13 @@ describe Webhooks::Utilities, type: :model do
     expect(subscription.api_name.eql?(API_NAME)).to be true
     expect(subscription.events.eql?(observers)).to be true
 
-    Testing::EVENTS.each do |e|
-      params = { consumer_id: consumer_id, consumer_name: consumer_name, event: e, api_guid: api_guid, msg: msg }
-      notifications = Webhooks::Utilities.record_notifications(params)
+    Testing::MODEL_EVENTS.each do |e|
+      params = { consumer_id:, consumer_name:, event: e, api_guid:, msg: }
+      notifications = Webhooks::Utilities.record_notifications(**params)
       validate_common_columns(subscription, notifications)
       urls = notifications.map(&:callback_url)
 
-      if e.eql? Testing::EVENTS.first
+      if e.eql? Testing::MODEL_EVENTS.first
         expect(notifications.count).to be 2
         expect(notifications.first.event.eql?('model_event')).to be true
         expect(notifications.first.msg.eql?(msg)).to be true

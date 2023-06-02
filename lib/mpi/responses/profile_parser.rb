@@ -71,7 +71,7 @@ module MPI
         patient = locate_element(subject, PATIENT_XPATH)
         return MPI::Models::MviProfile.new({ transaction_id: @transaction_id }) unless patient
 
-        build_mvi_profile(patient)
+        build_mpi_profile(patient)
       end
 
       def error_details
@@ -90,14 +90,14 @@ module MPI
             error_details[:error_texts].append(error_text) unless error_details[:error_texts].include?(error_text)
           end
         end
-        { error_details: error_details }
+        { error_details: }
       end
 
       private
 
-      def build_mvi_profile(patient)
-        profile_identity_hash = create_mvi_profile_identity(patient, PATIENT_PERSON_PREFIX)
-        profile_ids_hash = create_mvi_profile_ids(patient)
+      def build_mpi_profile(patient)
+        profile_identity_hash = create_mpi_profile_identity(patient, PATIENT_PERSON_PREFIX)
+        profile_ids_hash = create_mpi_profile_ids(patient)
         misc_hash = {
           search_token: locate_element(@original_body, 'id').attributes[:extension],
           relationships: parse_relationships(patient.locate(PATIENT_RELATIONSHIP_XPATH)),
@@ -110,14 +110,14 @@ module MPI
       end
 
       def parse_relationships(relationships_array)
-        relationships_array.map { |relationship| build_relationship_mvi_profile(relationship) }
+        relationships_array.map { |relationship| build_relationship_mpi_profile(relationship) }
       end
 
-      def build_relationship_mvi_profile(relationship)
-        relationship_identity_hash = create_mvi_profile_identity(relationship,
+      def build_relationship_mpi_profile(relationship)
+        relationship_identity_hash = create_mpi_profile_identity(relationship,
                                                                  RELATIONSHIP_PREFIX,
                                                                  optional_params: true)
-        relationship_ids_hash = create_mvi_profile_ids(locate_element(relationship, RELATIONSHIP_PREFIX))
+        relationship_ids_hash = create_mpi_profile_ids(locate_element(relationship, RELATIONSHIP_PREFIX))
 
         MPI::Models::MviProfileRelationship.new(relationship_identity_hash.merge(relationship_ids_hash))
       end
@@ -127,7 +127,7 @@ module MPI
         code == ID_THEFT_INDICATOR
       end
 
-      def create_mvi_profile_identity(person, person_prefix, optional_params: false)
+      def create_mpi_profile_identity(person, person_prefix, optional_params: false)
         person_component = locate_element(person, person_prefix)
         person_types = parse_person_type(person)
         name = parse_name(locate_elements(person_component, NAME_XPATH), optional_params)
@@ -141,11 +141,11 @@ module MPI
           ssn: parse_ssn(locate_element(person_component, SSN_XPATH), optional_params),
           address: parse_address(person_component),
           home_phone: parse_phone(person, person_prefix),
-          person_types: person_types
+          person_types:
         }
       end
 
-      def create_mvi_profile_ids(patient)
+      def create_mpi_profile_ids(patient)
         full_mvi_ids = get_extensions(patient.locate('id'))
         parsed_mvi_ids = parse_xml_gcids(patient.locate('id'))
         create_ids_obj(full_mvi_ids, parsed_mvi_ids)
@@ -153,7 +153,7 @@ module MPI
 
       def create_ids_obj(full_mvi_ids, parsed_mvi_ids)
         {
-          full_mvi_ids: full_mvi_ids
+          full_mvi_ids:
         }.merge(parse_single_ids(parsed_mvi_ids).merge(parse_multiple_ids(parsed_mvi_ids)))
       end
 
@@ -216,7 +216,7 @@ module MPI
       def validate_dob(dob, icn)
         Date.iso8601(dob)
       rescue Date::Error
-        Rails.logger.warn 'MPI::Response.parse_dob failed', { dob: dob, icn: icn }
+        Rails.logger.warn 'MPI::Response.parse_dob failed', { dob:, icn: }
       end
 
       def parse_name(name, optional_params)
@@ -226,7 +226,7 @@ module MPI
         given = [*name_element.locate('given')].map { |el| el.nodes.first.capitalize }
         family = name_element.locate('family').first.nodes.first.capitalize
         suffix = name_element.locate('suffix')&.first&.nodes&.first&.capitalize
-        { given: given, family: family, suffix: suffix }
+        { given:, family:, suffix: }
       rescue
         Rails.logger.warn 'MPI::Response.parse_name failed'
         { given: nil, family: nil }

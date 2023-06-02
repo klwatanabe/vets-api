@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2023_02_14_001703) do
+ActiveRecord::Schema.define(version: 2023_05_12_221434) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "btree_gin"
@@ -322,6 +322,22 @@ ActiveRecord::Schema.define(version: 2023_02_14_001703) do
     t.date "verified_decryptable_at"
   end
 
+  create_table "client_configs", force: :cascade do |t|
+    t.string "client_id", null: false
+    t.string "authentication", null: false
+    t.boolean "anti_csrf", null: false
+    t.text "redirect_uri", null: false
+    t.interval "access_token_duration", null: false
+    t.string "access_token_audience", null: false
+    t.interval "refresh_token_duration", null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.text "logout_redirect_uri"
+    t.boolean "pkce"
+    t.string "certificates", array: true
+    t.index ["client_id"], name: "index_client_configs_on_client_id", unique: true
+  end
+
   create_table "covid_vaccine_expanded_registration_submissions", id: :serial, force: :cascade do |t|
     t.string "submission_uuid", null: false
     t.string "vetext_sid"
@@ -606,6 +622,28 @@ ActiveRecord::Schema.define(version: 2023_02_14_001703) do
     t.index ["edipi"], name: "index_gibs_not_found_users_on_edipi"
   end
 
+  create_table "gmt_thresholds", force: :cascade do |t|
+    t.integer "effective_year", null: false
+    t.string "state_name", null: false
+    t.string "county_name", null: false
+    t.integer "fips", null: false
+    t.integer "trhd1", null: false
+    t.integer "trhd2", null: false
+    t.integer "trhd3", null: false
+    t.integer "trhd4", null: false
+    t.integer "trhd5", null: false
+    t.integer "trhd6", null: false
+    t.integer "trhd7", null: false
+    t.integer "trhd8", null: false
+    t.integer "msa", null: false
+    t.string "msa_name"
+    t.integer "version", null: false
+    t.datetime "created", null: false
+    t.datetime "updated"
+    t.string "created_by"
+    t.string "updated_by"
+  end
+
   create_table "health_care_applications", id: :serial, force: :cascade do |t|
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
@@ -677,20 +715,6 @@ ActiveRecord::Schema.define(version: 2023_02_14_001703) do
     t.index ["end_time"], name: "index_maintenance_windows_on_end_time"
     t.index ["pagerduty_id"], name: "index_maintenance_windows_on_pagerduty_id"
     t.index ["start_time"], name: "index_maintenance_windows_on_start_time"
-  end
-
-  create_table "mhv_accounts", id: :serial, force: :cascade do |t|
-    t.string "user_uuid", null: false
-    t.string "account_state", null: false
-    t.datetime "registered_at"
-    t.datetime "upgraded_at"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.string "mhv_correlation_id"
-    t.uuid "user_account_id"
-    t.index ["mhv_correlation_id"], name: "index_mhv_accounts_on_mhv_correlation_id"
-    t.index ["user_account_id"], name: "index_mhv_accounts_on_user_account_id"
-    t.index ["user_uuid", "mhv_correlation_id"], name: "index_mhv_accounts_on_user_uuid_and_mhv_correlation_id", unique: true
   end
 
   create_table "mhv_opt_in_flags", force: :cascade do |t|
@@ -816,6 +840,75 @@ ActiveRecord::Schema.define(version: 2023_02_14_001703) do
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
     t.index ["rpo", "filename"], name: "index_spool_file_events_uniqueness", unique: true
+  end
+
+  create_table "std_counties", force: :cascade do |t|
+    t.string "name", null: false
+    t.integer "county_number", null: false
+    t.string "description", null: false
+    t.integer "state_id", null: false
+    t.integer "version", null: false
+    t.datetime "created", null: false
+    t.datetime "updated"
+    t.string "created_by"
+    t.string "updated_by"
+  end
+
+  create_table "std_incomethresholds", force: :cascade do |t|
+    t.integer "income_threshold_year", null: false
+    t.integer "exempt_amount", null: false
+    t.integer "medical_expense_deductible", null: false
+    t.integer "child_income_exclusion", null: false
+    t.integer "dependent", null: false
+    t.integer "add_dependent_threshold", null: false
+    t.integer "property_threshold", null: false
+    t.integer "pension_threshold"
+    t.integer "pension_1_dependent"
+    t.integer "add_dependent_pension"
+    t.integer "ninety_day_hospital_copay"
+    t.integer "add_ninety_day_hospital_copay"
+    t.integer "outpatient_basic_care_copay"
+    t.integer "outpatient_specialty_copay"
+    t.datetime "threshold_effective_date"
+    t.integer "aid_and_attendance_threshold"
+    t.integer "outpatient_preventive_copay"
+    t.integer "medication_copay"
+    t.integer "medication_copay_annual_cap"
+    t.integer "ltc_inpatient_copay"
+    t.integer "ltc_outpatient_copay"
+    t.integer "ltc_domiciliary_copay"
+    t.integer "inpatient_per_diem"
+    t.string "description"
+    t.integer "version", null: false
+    t.datetime "created", null: false
+    t.datetime "updated"
+    t.string "created_by"
+    t.string "updated_by"
+  end
+
+  create_table "std_states", force: :cascade do |t|
+    t.string "name", null: false
+    t.string "postal_name", null: false
+    t.integer "fips_code", null: false
+    t.integer "country_id", null: false
+    t.integer "version", null: false
+    t.datetime "created", null: false
+    t.datetime "updated"
+    t.string "created_by"
+    t.string "updated_by"
+  end
+
+  create_table "std_zipcodes", force: :cascade do |t|
+    t.integer "zip_code", null: false
+    t.integer "zip_classification_id"
+    t.integer "preferred_zip_place_id"
+    t.integer "state_id", null: false
+    t.integer "county_number", null: false
+    t.integer "version", null: false
+    t.datetime "created", null: false
+    t.datetime "updated"
+    t.string "created_by"
+    t.string "updated_by"
   end
 
   create_table "terms_and_conditions", id: :serial, force: :cascade do |t|
@@ -950,6 +1043,15 @@ ActiveRecord::Schema.define(version: 2023_02_14_001703) do
     t.index ["valid_pdf"], name: "index_va_forms_forms_on_valid_pdf"
   end
 
+  create_table "va_notify_in_progress_reminders_sent", force: :cascade do |t|
+    t.string "form_id", null: false
+    t.uuid "user_account_id", null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["user_account_id", "form_id"], name: "index_in_progress_reminders_sent_user_account_form_id", unique: true
+    t.index ["user_account_id"], name: "index_va_notify_in_progress_reminders_sent_on_user_account_id"
+  end
+
   create_table "vba_documents_git_items", force: :cascade do |t|
     t.string "url", null: false
     t.jsonb "git_item"
@@ -1039,19 +1141,6 @@ ActiveRecord::Schema.define(version: 2023_02_14_001703) do
     t.index ["guid"], name: "index_vic_submissions_on_guid", unique: true
   end
 
-  create_table "virtual_agent_user_access_records", force: :cascade do |t|
-    t.string "action_type", null: false
-    t.string "first_name"
-    t.string "last_name"
-    t.string "ssn", null: false
-    t.string "icn", null: false
-    t.datetime "created_at", precision: 6, null: false
-    t.datetime "updated_at", precision: 6, null: false
-    t.index ["action_type"], name: "index_virtual_agent_user_access_records_on_action_type"
-    t.index ["icn"], name: "index_virtual_agent_user_access_records_on_icn"
-    t.index ["ssn"], name: "index_virtual_agent_user_access_records_on_ssn"
-  end
-
   create_table "webhooks_notification_attempt_assocs", id: false, force: :cascade do |t|
     t.bigint "webhooks_notification_id", null: false
     t.bigint "webhooks_notification_attempt_id", null: false
@@ -1107,7 +1196,6 @@ ActiveRecord::Schema.define(version: 2023_02_14_001703) do
   add_foreign_key "health_quest_questionnaire_responses", "user_accounts"
   add_foreign_key "in_progress_forms", "user_accounts"
   add_foreign_key "inherited_proof_verified_user_accounts", "user_accounts"
-  add_foreign_key "mhv_accounts", "user_accounts"
   add_foreign_key "mhv_opt_in_flags", "user_accounts"
   add_foreign_key "oauth_sessions", "user_accounts"
   add_foreign_key "oauth_sessions", "user_verifications"
@@ -1115,5 +1203,6 @@ ActiveRecord::Schema.define(version: 2023_02_14_001703) do
   add_foreign_key "user_acceptable_verified_credentials", "user_accounts"
   add_foreign_key "user_credential_emails", "user_verifications"
   add_foreign_key "user_verifications", "user_accounts"
+  add_foreign_key "va_notify_in_progress_reminders_sent", "user_accounts"
   add_foreign_key "veteran_device_records", "devices"
 end

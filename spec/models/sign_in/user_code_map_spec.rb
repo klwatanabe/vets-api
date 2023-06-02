@@ -5,16 +5,16 @@ require 'rails_helper'
 RSpec.describe SignIn::UserCodeMap, type: :model do
   let(:user_code_map) do
     create(:user_code_map,
-           login_code: login_code,
-           type: type,
-           client_state: client_state,
-           client_id: client_id)
+           login_code:,
+           type:,
+           client_state:,
+           client_config:)
   end
 
   let(:login_code) { 'some-login-code' }
   let(:type) { 'some-type' }
   let(:client_state) { 'some-client-state' }
-  let(:client_id) { 'some-client-id' }
+  let(:client_config) { create(:client_config) }
 
   describe 'validations' do
     describe '#login_code' do
@@ -40,10 +40,10 @@ RSpec.describe SignIn::UserCodeMap, type: :model do
         end
       end
 
-      context 'when client_id is nil' do
-        let(:client_id) { nil }
+      context 'when client_config is nil' do
+        let(:client_config) { nil }
         let(:expected_error) { ActiveModel::ValidationError }
-        let(:expected_error_message) { "Validation failed: Client can't be blank" }
+        let(:expected_error_message) { "Validation failed: Client config can't be blank" }
 
         it 'raises validation error' do
           expect { subject }.to raise_error(expected_error, expected_error_message)

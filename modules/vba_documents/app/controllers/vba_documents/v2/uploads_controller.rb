@@ -1,13 +1,9 @@
 # frozen_string_literal: true
 
 require 'zip'
-
-require_dependency 'vba_documents/application_controller'
-require_dependency 'vba_documents/upload_error'
-require_dependency 'vba_documents/payload_manager'
-require_dependency 'vba_documents/upload_validator'
-require_dependency 'vba_documents/multipart_parser'
 require 'common/exceptions'
+require 'vba_documents/payload_manager'
+require 'vba_documents/upload_validator'
 require './lib/webhooks/utilities'
 
 module VBADocuments
@@ -113,7 +109,7 @@ module VBADocuments
           upload_model.update(status: 'error', code: 'DOC104', detail: e.message)
         end
         status = upload_model.status.eql?('error') ? 400 : 200
-        render json: upload_model, serializer: VBADocuments::V2::UploadSerializer, status: status
+        render json: upload_model, serializer: VBADocuments::V2::UploadSerializer, status:
       end
       # rubocop:enable Metrics/MethodLength
 

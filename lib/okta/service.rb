@@ -11,9 +11,9 @@ module Okta
 
     STATSD_KEY_PREFIX = 'api.okta'
     API_BASE_PATH = '/api/v1'
-    USER_API_BASE_PATH = "#{API_BASE_PATH}/users"
-    APP_API_BASE_PATH = "#{API_BASE_PATH}/apps"
-    AUTH_SERVER_API_BASE_PATH = "#{API_BASE_PATH}/authorizationServers"
+    USER_API_BASE_PATH = "#{API_BASE_PATH}/users".freeze
+    APP_API_BASE_PATH = "#{API_BASE_PATH}/apps".freeze
+    AUTH_SERVER_API_BASE_PATH = "#{API_BASE_PATH}/authorizationServers".freeze
 
     configuration Okta::Configuration
 
@@ -59,12 +59,6 @@ module Okta
     def user_search_by_icn(icn)
       with_monitoring do
         get_url_with_token("#{USER_API_BASE_PATH}?search=profile.lighthouseId+eq+%22#{icn}%22")
-      end
-    end
-
-    def clear_user_session(user_id)
-      with_monitoring do
-        delete_url_with_token("#{USER_API_BASE_PATH}/#{user_id}/sessions?oauthTokens=TRUE")
       end
     end
 

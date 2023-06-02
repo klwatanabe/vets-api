@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'string_helpers'
+
 module Breakers
   class StatsdPlugin
     def get_tags(upstream_request)
@@ -31,10 +33,8 @@ module Breakers
     def send_metric(status, service, request_env, response_env)
       tags = get_tags(request_env)
       metric_base = "api.external_http_request.#{service.name}."
-      StatsD.increment(metric_base + status, 1, tags: tags)
-      if response_env && response_env[:duration]
-        StatsD.measure("#{metric_base}time", response_env[:duration], tags: tags)
-      end
+      StatsD.increment(metric_base + status, 1, tags:)
+      StatsD.measure("#{metric_base}time", response_env[:duration], tags:) if response_env && response_env[:duration]
     end
   end
 end

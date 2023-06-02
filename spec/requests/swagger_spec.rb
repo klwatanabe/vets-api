@@ -2,6 +2,7 @@
 
 require 'rails_helper'
 
+require 'lighthouse/direct_deposit/configuration'
 require 'support/bb_client_helpers'
 require 'support/pagerduty/services/spec_setup'
 require 'support/stub_debt_letters'
@@ -70,9 +71,9 @@ RSpec.describe 'the API documentation', type: %i[apivore request], order: :defin
         let(:code_challenge) { '1BUpxy37SoIPmKw96wbd6MDcvayOYm3ptT-zbe6L_zM' }
         let!(:code_container) do
           create(:code_container,
-                 code: code,
-                 code_challenge: code_challenge,
-                 user_verification_id: user_verification_id)
+                 code:,
+                 code_challenge:,
+                 user_verification_id:)
         end
 
         it 'validates the authorization_code & returns tokens' do
@@ -87,14 +88,14 @@ RSpec.describe 'the API documentation', type: %i[apivore request], order: :defin
 
       describe 'POST v0/sign_in/refresh' do
         let(:user_verification) { create(:user_verification) }
-        let(:validated_credential) { create(:validated_credential, user_verification: user_verification) }
+        let(:validated_credential) { create(:validated_credential, user_verification:) }
         let(:session_container) do
-          SignIn::SessionCreator.new(validated_credential: validated_credential).perform
+          SignIn::SessionCreator.new(validated_credential:).perform
         end
         let(:refresh_token) do
           CGI.escape(SignIn::RefreshTokenEncryptor.new(refresh_token: session_container.refresh_token).perform)
         end
-        let(:refresh_token_param) { { refresh_token: refresh_token } }
+        let(:refresh_token_param) { { refresh_token: } }
 
         it 'refreshes the session and returns new tokens' do
           expect(subject).to validate(
@@ -125,9 +126,9 @@ RSpec.describe 'the API documentation', type: %i[apivore request], order: :defin
 
       describe 'POST v0/sign_in/revoke' do
         let(:user_verification) { create(:user_verification) }
-        let(:validated_credential) { create(:validated_credential, user_verification: user_verification) }
+        let(:validated_credential) { create(:validated_credential, user_verification:) }
         let(:session_container) do
-          SignIn::SessionCreator.new(validated_credential: validated_credential).perform
+          SignIn::SessionCreator.new(validated_credential:).perform
         end
         let(:refresh_token) do
           CGI.escape(SignIn::RefreshTokenEncryptor.new(refresh_token: session_container.refresh_token).perform)
@@ -146,9 +147,9 @@ RSpec.describe 'the API documentation', type: %i[apivore request], order: :defin
 
       describe 'GET v0/sign_in/revoke_all_sessions' do
         let(:user_verification) { create(:user_verification) }
-        let(:validated_credential) { create(:validated_credential, user_verification: user_verification) }
+        let(:validated_credential) { create(:validated_credential, user_verification:) }
         let(:session_container) do
-          SignIn::SessionCreator.new(validated_credential: validated_credential).perform
+          SignIn::SessionCreator.new(validated_credential:).perform
         end
         let(:access_token_object) { session_container.access_token }
         let!(:user) { create(:user, :loa3, uuid: access_token_object.user_uuid, middle_name: 'leo') }
@@ -668,11 +669,15 @@ RSpec.describe 'the API documentation', type: %i[apivore request], order: :defin
         end
       end
 
-      context 'medical copays send_new_statements_notifications' do
+      context 'medical copays send_statement_notifications' do
+        let(:headers) do
+          { '_headers' => { 'apiKey' => 'abcd1234abcd1234abcd1234abcd1234abcd1234' } }
+        end
+
         it 'validates the route' do
           expect(subject).to validate(
             :post,
-            '/v0/medical_copays/send_new_statements_notifications',
+            '/v0/medical_copays/send_statement_notifications',
             200,
             headers
           )
@@ -753,6 +758,21 @@ RSpec.describe 'the API documentation', type: %i[apivore request], order: :defin
         json = JSON.parse(json_string)
         json.delete('email')
         json.to_json
+      end
+      let(:user) { build(:ch33_dd_user) }
+      let(:headers) do
+        { '_headers' => { 'Cookie' => sign_in(user, nil, true) } }
+      end
+
+      it 'supports getting the disability rating' do
+        VCR.use_cassette('bgs/service/find_rating_data', VCR::MATCH_EVERYTHING) do
+          expect(subject).to validate(
+            :get,
+            '/v0/health_care_applications/rating_info',
+            200,
+            headers
+          )
+        end
       end
 
       it 'supports getting the hca enrollment status' do
@@ -940,6 +960,8 @@ RSpec.describe 'the API documentation', type: %i[apivore request], order: :defin
     describe 'disability compensation' do
       before do
         create(:in_progress_form, form_id: FormProfiles::VA526ez::FORM_ID, user_uuid: mhv_user.uuid)
+        # TODO: remove Flipper feature toggle when lighthouse provider is implemented
+        Flipper.disable('disability_compensation_lighthouse_rated_disabilities_provider')
       end
 
       let(:form526v2) do
@@ -1076,6 +1098,11 @@ RSpec.describe 'the API documentation', type: %i[apivore request], order: :defin
     end
 
     describe 'intent to file' do
+      before do
+        # TODO: remove Flipper feature toggle when lighthouse provider is implemented
+        Flipper.disable('disability_compensation_lighthouse_intent_to_file_provider')
+      end
+
       it 'supports getting all intent to file' do
         expect(subject).to validate(:get, '/v0/intent_to_file', 401)
         VCR.use_cassette('evss/intent_to_file/intent_to_file') do
@@ -1130,7 +1157,7 @@ RSpec.describe 'the API documentation', type: %i[apivore request], order: :defin
       end
 
       context 'when user is missing birls only' do
-        let(:mhv_user) { build(:user_with_no_birls_id) }
+        let(:mhv_user) { build(:user, :loa3, birls_id: nil) }
 
         it 'fails with 422' do
           expect(subject).to validate(:post, '/v0/mvi_users/{id}', 422, headers.merge('id' => '21-0966'))
@@ -1766,8 +1793,8 @@ RSpec.describe 'the API documentation', type: %i[apivore request], order: :defin
 
     context 'without EVSS mock' do
       before do
-        Settings.evss.mock_gi_bill_status = false
-        Settings.evss.mock_letters = false
+        allow(Settings.evss).to receive(:mock_gi_bill_status).and_return(false)
+        allow(Settings.evss).to receive(:mock_letters).and_return(false)
       end
 
       it 'supports getting EVSS Gi Bill Status' do
@@ -2208,6 +2235,69 @@ RSpec.describe 'the API documentation', type: %i[apivore request], order: :defin
       end
     end
 
+    describe 'Direct Deposit Disability Compensation' do
+      let(:user) { create(:user, :loa3, :accountable, icn: '1012666073V986297') }
+
+      before do
+        token = 'abcdefghijklmnop'
+        allow_any_instance_of(DirectDeposit::Configuration).to receive(:access_token).and_return(token)
+      end
+
+      context 'GET' do
+        it 'returns a 200' do
+          headers = { '_headers' => { 'Cookie' => sign_in(user, nil, true) } }
+          VCR.use_cassette('lighthouse/direct_deposit/show/200_valid') do
+            expect(subject).to validate(:get, '/v0/profile/direct_deposits/disability_compensations', 200, headers)
+          end
+        end
+
+        it 'returns a 400' do
+          headers = { '_headers' => { 'Cookie' => sign_in(user, nil, true) } }
+          VCR.use_cassette('lighthouse/direct_deposit/show/400_invalid_icn') do
+            expect(subject).to validate(:get, '/v0/profile/direct_deposits/disability_compensations', 400, headers)
+          end
+        end
+
+        it 'returns a 401' do
+          headers = { '_headers' => { 'Cookie' => sign_in(user, nil, true) } }
+          VCR.use_cassette('lighthouse/direct_deposit/show/401_invalid_token') do
+            expect(subject).to validate(:get, '/v0/profile/direct_deposits/disability_compensations', 401, headers)
+          end
+        end
+
+        it 'returns a 404' do
+          headers = { '_headers' => { 'Cookie' => sign_in(user, nil, true) } }
+          VCR.use_cassette('lighthouse/direct_deposit/show/404_icn_not_found') do
+            expect(subject).to validate(:get, '/v0/profile/direct_deposits/disability_compensations', 404, headers)
+          end
+        end
+      end
+
+      context 'PUT' do
+        it 'returns a 200' do
+          headers = { '_headers' => { 'Cookie' => sign_in(user, nil, true) } }
+          params = { account_number: '1234567890', account_type: 'CHECKING', routing_number: '031000503' }
+          VCR.use_cassette('lighthouse/direct_deposit/update/200_valid') do
+            expect(subject).to validate(:put,
+                                        '/v0/profile/direct_deposits/disability_compensations',
+                                        200,
+                                        headers.merge('_data' => params))
+          end
+        end
+
+        it 'returns a 400' do
+          headers = { '_headers' => { 'Cookie' => sign_in(user, nil, true) } }
+          params = { account_number: '1234567890', account_type: 'CHECKING', routing_number: '031000503' }
+          VCR.use_cassette('lighthouse/direct_deposit/update/400_routing_number_fraud') do
+            expect(subject).to validate(:put,
+                                        '/v0/profile/direct_deposits/disability_compensations',
+                                        400,
+                                        headers.merge('_data' => params))
+          end
+        end
+      end
+    end
+
     describe 'onsite notifications' do
       let(:private_key) { OpenSSL::PKey::EC.new(File.read('spec/support/certificates/notification-private.pem')) }
 
@@ -2314,14 +2404,9 @@ RSpec.describe 'the API documentation', type: %i[apivore request], order: :defin
       end
     end
 
-    describe 'mhv accounts' do
-      it 'supports getting mhv account data' do
-        expect(subject).to validate(:get, '/v0/mhv_account', 401)
-        expect(subject).to validate(:get, '/v0/mhv_account', 200, headers)
-      end
-    end
-
     describe 'profiles' do
+      let(:mhv_user) { create(:user, :loa3) }
+
       it 'supports getting email address data' do
         expect(subject).to validate(:get, '/v0/profile/email', 401)
         VCR.use_cassette('evss/pciu/email') do
@@ -2407,7 +2492,7 @@ RSpec.describe 'the API documentation', type: %i[apivore request], order: :defin
       it 'supports getting full name data' do
         expect(subject).to validate(:get, '/v0/profile/full_name', 401)
 
-        user = build(:user_with_suffix, :loa3)
+        user = build(:user, :loa3, middle_name: 'Robert')
         headers = { '_headers' => { 'Cookie' => sign_in(user, nil, true) } }
 
         expect(subject).to validate(:get, '/v0/profile/full_name', 200, headers)
@@ -2878,7 +2963,7 @@ RSpec.describe 'the API documentation', type: %i[apivore request], order: :defin
       before do
         # vet360_id appears in the API request URI so we need it to match the cassette
         allow_any_instance_of(MPIData).to receive(:response_from_redis_or_service).and_return(
-          create(:find_profile_response, profile: build(:mvi_profile, vet360_id: '1'))
+          create(:find_profile_response, profile: build(:mpi_profile, vet360_id: '1'))
         )
       end
 
@@ -2927,7 +3012,7 @@ RSpec.describe 'the API documentation', type: %i[apivore request], order: :defin
     end
 
     describe 'profile/person/status/:transaction_id' do
-      let(:user_without_vet360_id) { build(:user_with_suffix, :loa3) }
+      let(:user_without_vet360_id) { build(:user, :loa3) }
       let(:headers) { { '_headers' => { 'Cookie' => sign_in(user_without_vet360_id, nil, true) } } }
 
       before do
@@ -2940,7 +3025,7 @@ RSpec.describe 'the API documentation', type: %i[apivore request], order: :defin
           :va_profile_initialize_person_transaction,
           :init_vet360_id,
           user_uuid: user_without_vet360_id.uuid,
-          transaction_id: transaction_id
+          transaction_id:
         )
 
         expect(subject).to validate(
@@ -2967,7 +3052,7 @@ RSpec.describe 'the API documentation', type: %i[apivore request], order: :defin
       let(:headers) { { '_headers' => { 'Cookie' => sign_in(user, token, true) } } }
 
       before do
-        Session.create(uuid: user.uuid, token: token)
+        Session.create(uuid: user.uuid, token:)
       end
 
       it 'supports getting connected applications' do
@@ -3013,6 +3098,11 @@ RSpec.describe 'the API documentation', type: %i[apivore request], order: :defin
 
     describe 'when MVI returns an unexpected response body' do
       it 'supports returning a custom 502 response' do
+        allow_any_instance_of(UserIdentity).to receive(:sign_in).and_return({
+                                                                              service_name: 'oauth_IDME',
+                                                                              auth_broker: 'IDME'
+                                                                            })
+
         allow_any_instance_of(MPI::Models::MviProfile).to receive(:gender).and_return(nil)
         allow_any_instance_of(MPI::Models::MviProfile).to receive(:birth_date).and_return(nil)
 

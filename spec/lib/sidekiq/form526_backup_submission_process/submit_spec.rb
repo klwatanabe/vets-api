@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
 require 'rails_helper'
-# frozen_string_literal: true
 
 require 'evss/disability_compensation_auth_headers' # required to build a Form526Submission
+require 'sidekiq/form526_backup_submission_process/submit'
 
 RSpec.describe Sidekiq::Form526BackupSubmissionProcess::Submit, type: :job do
   subject { described_class }
@@ -20,7 +20,7 @@ RSpec.describe Sidekiq::Form526BackupSubmissionProcess::Submit, type: :job do
   describe '.perform_async, disabled' do
     # Make sure it doesnt do anything if flipper disabled
     before do
-      Settings.form526_backup.enabled = false
+      allow(Settings.form526_backup).to receive(:enabled).and_return(false)
     end
 
     let!(:submission) { create :form526_submission, :with_everything }
@@ -37,8 +37,8 @@ RSpec.describe Sidekiq::Form526BackupSubmissionProcess::Submit, type: :job do
   %w[single multi].each do |payload_method|
     describe ".perform_async, enabled, #{payload_method} payload" do
       before do
-        Settings.form526_backup.submission_method = payload_method
-        Settings.form526_backup.enabled = true
+        allow(Settings.form526_backup).to receive(:submission_method).and_return(payload_method)
+        allow(Settings.form526_backup).to receive(:enabled).and_return(true)
       end
 
       let!(:submission) { create :form526_submission, :with_everything }
@@ -59,9 +59,9 @@ RSpec.describe Sidekiq::Form526BackupSubmissionProcess::Submit, type: :job do
         end
 
         it 'submits' do
-          VCR.use_cassette('form526_backup/200_lighthouse_intake_upload_location') do
+          VCR.use_cassette('lighthouse/benefits_intake/200_lighthouse_intake_upload_location') do
             VCR.use_cassette('form526_backup/200_evss_get_pdf') do
-              VCR.use_cassette('form526_backup/200_lighthouse_intake_upload') do
+              VCR.use_cassette('lighthouse/benefits_intake/200_lighthouse_intake_upload') do
                 jid = subject.perform_async(submission.id)
                 last = subject.jobs.last
                 jid_from_jobs = last['jid']
@@ -123,8 +123,8 @@ RSpec.describe Sidekiq::Form526BackupSubmissionProcess::Submit, type: :job do
 
   describe '.perform_async, enabled, and converts non-pdf evidence to pdf' do
     before do
-      Settings.form526_backup.submission_method = 'single'
-      Settings.form526_backup.enabled = true
+      allow(Settings.form526_backup).to receive(:submission_method).and_return('single')
+      allow(Settings.form526_backup).to receive(:enabled).and_return(true)
     end
 
     let!(:submission) { create :form526_submission, :with_non_pdf_uploads }
@@ -143,9 +143,9 @@ RSpec.describe Sidekiq::Form526BackupSubmissionProcess::Submit, type: :job do
       end
 
       it 'converts and submits' do
-        VCR.use_cassette('form526_backup/200_lighthouse_intake_upload_location') do
+        VCR.use_cassette('lighthouse/benefits_intake/200_lighthouse_intake_upload_location') do
           VCR.use_cassette('form526_backup/200_evss_get_pdf') do
-            VCR.use_cassette('form526_backup/200_lighthouse_intake_upload') do
+            VCR.use_cassette('lighthouse/benefits_intake/200_lighthouse_intake_upload') do
               jid = subject.perform_async(submission.id)
               last = subject.jobs.last
               jid_from_jobs = last['jid']

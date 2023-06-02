@@ -55,6 +55,11 @@ module VAProfile
         handle_error(e)
       end
 
+      def self.get_person(vet360_id)
+        stub_user = OpenStruct.new(vet360_id:)
+        new(stub_user).get_person
+      end
+
       def update_address(address)
         address_type =
           if address.address_pou == VAProfile::Models::BaseAddress::RESIDENCE
@@ -116,7 +121,7 @@ module VAProfile
         route = "#{@user.vet360_id}/addresses/status/#{transaction_id}"
         transaction_status = get_transaction_status(route, AddressTransactionResponse)
 
-        changes = specify_changes? ? transaction_status.changed_field : :address
+        changes = transaction_status.changed_field
         send_contact_change_notification(transaction_status, changes)
 
         transaction_status
@@ -182,7 +187,7 @@ module VAProfile
         route = "#{@user.vet360_id}/telephones/status/#{transaction_id}"
         transaction_status = get_transaction_status(route, TelephoneTransactionResponse)
 
-        changes = specify_changes? ? transaction_status.changed_field : :phone
+        changes = transaction_status.changed_field
         send_contact_change_notification(transaction_status, changes)
 
         transaction_status
@@ -230,10 +235,6 @@ module VAProfile
 
       private
 
-      def specify_changes?
-        Flipper.enabled?(:profile_email_specify_change, @user)
-      end
-
       def update_model(model, attr, method_name)
         contact_info = VAProfileRedis::ContactInformation.for_user(@user)
         model.id = contact_info.public_send(attr)&.id
@@ -264,7 +265,7 @@ module VAProfile
             get_email_personalisation(personalisation)
           )
 
-          TransactionNotification.create(transaction_id: transaction_id)
+          TransactionNotification.create(transaction_id:)
         end
       end
 

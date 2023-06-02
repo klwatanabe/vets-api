@@ -64,7 +64,7 @@ RSpec.describe EVSS::FailedClaimsReport, type: :job do
       it 'gets the document hash from sidekiq' do
         expect(
           subject.get_document_hash(
-            user_uuid: user_uuid,
+            user_uuid:,
             tracked_item_id: 1234,
             file_name: 'foo.pdf'
           )
@@ -76,7 +76,7 @@ RSpec.describe EVSS::FailedClaimsReport, type: :job do
       it 'returns nil' do
         expect(
           subject.get_document_hash(
-            user_uuid: user_uuid,
+            user_uuid:,
             tracked_item_id: 123,
             file_name: 'foo.pdf'
           )
@@ -99,9 +99,11 @@ RSpec.describe EVSS::FailedClaimsReport, type: :job do
       end
 
       expect(Aws::S3::Resource).to receive(:new).once.with(
-        access_key_id: 'EVSS_S3_AWS_ACCESS_KEY_ID_XYZ',
-        secret_access_key: 'EVSS_S3_AWS_SECRET_ACCESS_KEY_XYZ',
-        region: 'evss_s3_region'
+        {
+          access_key_id: 'EVSS_S3_AWS_ACCESS_KEY_ID_XYZ',
+          secret_access_key: 'EVSS_S3_AWS_SECRET_ACCESS_KEY_XYZ',
+          region: 'evss_s3_region'
+        }
       ).and_return(s3)
       allow(s3).to receive(:bucket).twice.and_return(bucket)
       allow(bucket).to receive(:objects).and_return(objects)

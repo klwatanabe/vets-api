@@ -4,16 +4,16 @@ require 'rails_helper'
 
 RSpec.describe SignIn::UserLoader do
   describe '#perform' do
-    subject { SignIn::UserLoader.new(access_token: access_token, request_ip: request_ip).perform }
+    subject { SignIn::UserLoader.new(access_token:, request_ip:).perform }
 
-    let(:access_token) { create(:access_token, user_uuid: user.uuid, session_handle: session_handle) }
+    let(:access_token) { create(:access_token, user_uuid: user.uuid, session_handle:) }
     let!(:user) { create(:user, :loa3, uuid: user_uuid, loa: user_loa, icn: user_icn) }
     let(:user_uuid) { user_account.id }
     let(:user_account) { create(:user_account) }
-    let(:user_verification) { create(:idme_user_verification, user_account: user_account) }
-    let(:user_loa) { { current: LOA::THREE, highest: LOA::THREE } }
+    let(:user_verification) { create(:idme_user_verification, user_account:) }
+    let(:user_loa) { { current: SignIn::Constants::Auth::LOA_THREE, highest: SignIn::Constants::Auth::LOA_THREE } }
     let(:user_icn) { user_account.icn }
-    let(:session) { create(:oauth_session, user_account: user_account, user_verification: user_verification) }
+    let(:session) { create(:oauth_session, user_account:, user_verification:) }
     let(:session_handle) { session.handle }
     let(:request_ip) { '123.456.78.90' }
 
@@ -30,21 +30,26 @@ RSpec.describe SignIn::UserLoader do
       end
 
       context 'and associated session exists' do
-        let(:session) { create(:oauth_session, user_account: user_account, user_verification: user_verification) }
+        let(:session) do
+          create(:oauth_session, client_id:, user_account:, user_verification:)
+        end
         let(:edipi) { 'some-mpi-edipi' }
         let(:idme_uuid) { user_verification.idme_uuid }
         let(:email) { session.credential_email }
-        let(:authn_context) { LOA::IDME_LOA3 }
-        let(:credential_service_name) { user_verification.credential_type }
+        let(:authn_context) { SignIn::Constants::Auth::IDME_LOA3 }
+        let(:service_name) { user_verification.credential_type }
         let(:multifactor) { true }
+        let(:client_config) { create(:client_config) }
+        let(:client_id) { client_config.client_id }
+        let(:auth_broker) { SignIn::Constants::Auth::BROKER_CODE }
         let(:sign_in) do
-          { service_name: credential_service_name,
-            auth_broker: SignIn::Constants::Auth::BROKER_CODE,
-            client_id: SignIn::Constants::Auth::MOBILE_CLIENT }
+          { service_name:,
+            auth_broker:,
+            client_id: }
         end
 
         before do
-          stub_mpi(build(:mvi_profile, edipi: edipi, icn: user_icn))
+          stub_mpi(build(:mpi_profile, edipi:, icn: user_icn))
         end
 
         it 'reloads user object with expected attributes' do

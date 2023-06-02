@@ -4,58 +4,50 @@ require 'rails_helper'
 require './modules/vba_documents/app/workers/vba_documents/slack_notifier'
 
 RSpec.describe 'VBADocuments::SlackNotifier', type: :job do
-  let(:faraday_response) { instance_double('Faraday::Response') }
-  let(:slack_settings) do
-    {
-      in_flight_notification_hung_time_in_days: 14,
-      renotification_in_minutes: 240,
-      update_stalled_notification_in_minutes: 180,
-      daily_notification_hour: 7,
-      default_alert_url: '',
-      enabled: true
-    }
-  end
+  let(:slack_messenger) { instance_double('VBADocuments::Slack::Messenger') }
+  let(:slack_enabled) { true }
 
   before do
-    Settings.vba_documents.slack = Config::Options.new
-    slack_settings.each_pair do |k, v|
-      Settings.vba_documents.slack.send("#{k}=".to_sym, v)
-    end
-    allow(faraday_response).to receive(:success?).and_return(true)
+    allow(Settings.vba_documents.slack).to receive(:in_flight_notification_hung_time_in_days).and_return(14)
+    allow(Settings.vba_documents.slack).to receive(:renotification_in_minutes).and_return(240)
+    allow(Settings.vba_documents.slack).to receive(:update_stalled_notification_in_minutes).and_return(180)
+    allow(Settings.vba_documents.slack).to receive(:enabled).and_return(slack_enabled)
+    allow(VBADocuments::Slack::Messenger).to receive(:new).and_return(slack_messenger)
+    allow(slack_messenger).to receive(:notify!)
     @job = VBADocuments::SlackNotifier.new
-    allow(@job).to receive(:send_to_slack) {
-      faraday_response
-    }
     @results = nil
   end
 
-  after do
-    Settings.vba_documents.slack = nil
+  context 'when flag is disabled' do
+    let(:slack_enabled) { false }
+
+    it 'does nothing' do
+      with_settings(Settings.vba_documents.slack, enabled: false) do
+        @results = @job.perform
+        expect(slack_messenger).not_to have_received(:notify!)
+        expect(@results).to be(nil)
+      end
+    end
   end
 
-  it 'does nothing if the flag is disabled' do
-    with_settings(Settings.vba_documents.slack, enabled: false) do
+  context 'summary notification' do
+    before do
+      u = VBADocuments::UploadSubmission.create(status: 'received')
+      u.metadata['status']['received']['start'] = 15.minutes.ago.to_i
+      u.save!
+    end
+
+    it 'notifies on every run' do
       @results = @job.perform
-      expect(@results).to be(nil)
-    end
-  end
-
-  context 'daily notification' do
-    it 'does the daily notification at the correct hour' do
-      Timecop.freeze(Time.at(1_616_673_917).utc) do
-        # Time.at(1616673917).utc.hour is 12 (12 - 5 is 7 (5 is EST time offset)). See daily_notification_hour above
-        @results = @job.perform
-      end
-      expect(@results[:daily_notification]).to be(true)
-    end
-
-    it 'does not do the daily notification at the incorrect hour' do
-      Timecop.freeze(Time.at(1_616_657_401).utc) do
-        # Time.at(1616657401).utc.hour is not 12
-        @results = @job.perform
-      end
-      expect(@results).to have_key(:daily_notification)
-      expect(@results[:daily_notification]).to be(nil)
+      expect(VBADocuments::Slack::Messenger).to have_received(:new).with(
+        {
+          class: 'VBADocuments::SlackNotifier',
+          alert: 'Status Report (worst offenders over past week)',
+          details: "\n\tStatus 'received' for 15 minutes"
+        }
+      )
+      expect(slack_messenger).to have_received(:notify!).once
+      expect(@results[:summary_notification]).to be(true)
     end
   end
 
@@ -71,6 +63,7 @@ RSpec.describe 'VBADocuments::SlackNotifier', type: :job do
 
     it 'notifies when submission are in flight for too long' do
       @results = @job.perform
+      expect(slack_messenger).to have_received(:notify!).twice # once for long flyers and once for summary
       expect(@results[:long_flyers_alerted]).to be(true)
       expect(@results[:upload_stalled_alerted]).to be(nil)
     end
@@ -79,15 +72,19 @@ RSpec.describe 'VBADocuments::SlackNotifier', type: :job do
       @job.perform
       @results = @job.perform
       expect(@results[:long_flyers_alerted]).to be(nil)
+
       travel_time = Settings.vba_documents.slack.renotification_in_minutes + 1
       Timecop.travel(travel_time.minutes.from_now) do
         @results = @job.perform
         expect(@results[:long_flyers_alerted]).to be(true)
+
         Timecop.travel(1.minute.from_now) do
           @results = @job.perform
           expect(@results[:long_flyers_alerted]).to be(nil)
         end
       end
+
+      expect(slack_messenger).to have_received(:notify!).exactly(6).times # twice for long flyers and 4x for summary
     end
   end
 
@@ -103,6 +100,7 @@ RSpec.describe 'VBADocuments::SlackNotifier', type: :job do
 
     it 'notifies when submission are in uploaded for too long' do
       @results = @job.perform
+      expect(slack_messenger).to have_received(:notify!).twice # once for stalled uploads and once for summary
       expect(@results[:upload_stalled_alerted]).to be(true)
       expect(@results[:long_flyers_alerted]).to be(nil)
     end
@@ -111,15 +109,19 @@ RSpec.describe 'VBADocuments::SlackNotifier', type: :job do
       @job.perform
       @results = @job.perform
       expect(@results[:upload_stalled_alerted]).to be(nil)
+
       travel_time = Settings.vba_documents.slack.renotification_in_minutes + 1
       Timecop.travel(travel_time.minutes.from_now) do
         @results = @job.perform
         expect(@results[:upload_stalled_alerted]).to be(true)
+
         Timecop.travel(1.minute.from_now) do
           @results = @job.perform
           expect(@results[:upload_stalled_alerted]).to be(nil)
         end
       end
+
+      expect(slack_messenger).to have_received(:notify!).exactly(6).times # twice for stalled uploads and 4x for summary
     end
   end
 
@@ -143,7 +145,7 @@ RSpec.describe 'VBADocuments::SlackNotifier', type: :job do
     Timecop.travel(1.minute.from_now) do
       @job.perform
     end
-    u = VBADocuments::UploadSubmission.find_by(guid: guid)
+    u = VBADocuments::UploadSubmission.find_by(guid:)
     expect(last_notified).to be < u.metadata['last_slack_notification'].to_i
   end
 
@@ -156,14 +158,18 @@ RSpec.describe 'VBADocuments::SlackNotifier', type: :job do
 
     it 'notifies when invalid parts exist' do
       @results = @job.perform
+      expect(slack_messenger).to have_received(:notify!).twice # once for invalid parts and once for summary
       expect(@results[:invalid_parts_alerted]).to be(true)
     end
 
     it 'does not notify more than once when invalid parts exist' do
       @results = @job.perform
       expect(@results[:invalid_parts_alerted]).to be(true)
+
       @results = @job.perform
       expect(@results[:invalid_parts_alerted]).to be(nil)
+
+      expect(slack_messenger).to have_received(:notify!).exactly(3).times # once for invalid parts and twice for summary
     end
   end
 end

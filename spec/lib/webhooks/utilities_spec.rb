@@ -5,12 +5,6 @@ require 'rails_helper'
 require './lib/webhooks/utilities'
 
 RSpec.describe 'Webhooks::Utilities' do
-  let(:websocket_settings) do
-    {
-      require_https: false
-    }
-  end
-
   let(:observers) do
     {
       'subscriptions' => [
@@ -35,18 +29,11 @@ RSpec.describe 'Webhooks::Utilities' do
     end
   end
 
-  before do
-    Settings.websockets = Config::Options.new
-    websocket_settings.each_pair do |k, v|
-      Settings.websockets.send("#{k}=".to_sym, v)
-    end
-  end
-
   it 'registers events and blocks' do
     module Testing
       include Webhooks::Utilities
-      EVENTS = %w[event1 event2 event3].freeze
-      register_events(*EVENTS,
+      LIB_EVENTS = %w[event1 event2 event3].freeze
+      register_events(*LIB_EVENTS,
                       api_name: 'TEST_API2', max_retries: 3) do
         'working!'
       end
@@ -55,7 +42,7 @@ RSpec.describe 'Webhooks::Utilities' do
     # initial registration in before block adds one
     # expect(Webhooks::Utilities.supported_events.length).to be(total_events)
     # Above test on the build server gets hard to do if another tests causes a registration.  We check each event...
-    Testing::EVENTS.each do |e|
+    Testing::LIB_EVENTS.each do |e|
       expect(Webhooks::Utilities.supported_events.include?(e)).to be true
       expect(Webhooks::Utilities.event_to_api_name[e]).to be 'TEST_API2'
     end

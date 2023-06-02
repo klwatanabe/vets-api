@@ -2,10 +2,19 @@
 #      stretch (or in alpine) and is switched automatically to pdftk-java in buster
 #      https://github.com/department-of-veterans-affairs/va.gov-team/issues/3032
 
+FROM ruby:3.2.2-slim-bullseye AS modules
+
+WORKDIR /tmp
+
+# Copy each module's Gemfile, gemspec, and version.rb files
+COPY modules/ modules/
+RUN find modules -type f ! \( -name Gemfile -o -name "*.gemspec" -o -path "*/lib/*/version.rb" \) -delete && \
+    find modules -type d -empty -delete
+
 ###
 # shared build/settings for all child images, reuse these layers yo
 ###
-FROM ruby:2.7.6-slim-bullseye AS base
+FROM ruby:3.2.2-slim-bullseye AS base
 
 ARG userid=993
 SHELL ["/bin/bash", "-c"]
@@ -50,6 +59,7 @@ ARG rails_env=development
 
 ENV BUNDLE_ENTERPRISE__CONTRIBSYS__COM=$sidekiq_license
 ENV RAILS_ENV=$rails_env
+ENV BUNDLER_VERSION=2.4.9
 
 # only extra dev/build opts go here, common packages go in base 👆
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y \
@@ -60,6 +70,7 @@ USER vets-api
 RUN freshclam --config-file freshclam.conf
 RUN gem install vtk
 ENTRYPOINT ["/usr/bin/dumb-init", "--", "./docker-entrypoint.sh"]
+RUN gem install bundler:${BUNDLER_VERSION} --no-document
 
 ###
 # build stage; use --target=builder to stop here
@@ -72,12 +83,18 @@ ENTRYPOINT ["/usr/bin/dumb-init", "--", "./docker-entrypoint.sh"]
 FROM development AS builder
 # XXX: move modules/ to seperate repos so we can only copy Gemfile* and install a slim layer
 ARG bundler_opts
+
+COPY --chown=vets-api:vets-api Gemfile Gemfile.lock ./
+COPY --chown=vets-api:vets-api --from=modules /tmp/modules modules/
+
+RUN bundle install --binstubs="${BUNDLE_APP_CONFIG}/bin" $bundler_opts \
+  && rm -rf /usr/local/bundle/cache/*.gem \
+  && find /usr/local/bundle/gems/ -name "*.c" -delete \
+  && find /usr/local/bundle/gems/ -name "*.o" -delete \
+  && find /usr/local/bundle/gems/ -name ".git" -type d -prune -execdir rm -rf {} +
+
 COPY --chown=vets-api:vets-api . .
 USER vets-api
-# --no-cache doesn't do the right thing, so trim it during build
-# https://github.com/bundler/bundler/issues/6680
-RUN bundle install --binstubs="${BUNDLE_APP_CONFIG}/bin" $bundler_opts && \
-    find ${BUNDLE_APP_CONFIG}/cache -type f -name \*.gem -delete
 
 ###
 # prod stage; default if no target given

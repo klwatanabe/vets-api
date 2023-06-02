@@ -3,7 +3,7 @@
 module CheckIn
   module Utils
     class Logger
-      API_STATUS_REGEXP = /\W+status\W+([^"|^,|^\\]*)/.freeze
+      API_STATUS_REGEXP = /\W+status\W+([^"|^,|^\\]*)/
 
       attr_reader :ctrl
 
@@ -20,13 +20,13 @@ module CheckIn
       end
 
       def after
-        common.merge({ api_status: api_status, filter: :after_action })
+        common.merge({ api_status:, filter: :after_action })
       end
 
       def common
         {
-          workflow: workflow,
-          uuid: uuid,
+          workflow:,
+          uuid:,
           controller: ctrl_name,
           action: ctrl_action
         }

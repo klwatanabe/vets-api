@@ -12,7 +12,6 @@ module Mobile
           @user = user
         end
 
-        # rubocop:disable Metrics/MethodLength
         def get_appointments(start_date:, end_date:, include_pending:, pagination_params: {})
           statuses = include_pending ? VAOS_STATUSES : VAOS_STATUSES.excluding('proposed')
 
@@ -20,17 +19,9 @@ module Mobile
           # or the upstream serice does not use them.
           response = vaos_v2_appointments_service.get_appointments(start_date, end_date, statuses.join(','),
                                                                    pagination_params)
-          # Temporary logging for bug found only in production
-          ids = response[:data].pluck(:id)
-
-          if ids.include?('16668268')
-            response[:data].each do |a|
-              Rails.logger.info('Mobile VAOS response', user: @user.uuid, appointment: a)
-            end
-          end
 
           appointments = response[:data]
-          filterer = PresentationFilter.new(include_pending: include_pending)
+          filterer = PresentationFilter.new(include_pending:)
           appointments = appointments.keep_if { |appt| filterer.user_facing?(appt) }
 
           appointments = merge_clinic_facility_address(appointments)
@@ -39,15 +30,8 @@ module Mobile
 
           appointments = vaos_v2_to_v0_appointment_adapter.parse(appointments)
 
-          if ids.include?('16668268')
-            appointments.each do |a|
-              Rails.logger.info('Mobile appointment response', user: @user.uuid, appointment: a)
-            end
-          end
-
-          appointments.sort_by(&:start_date_utc)
+          [appointments.sort_by(&:start_date_utc), response[:meta][:failures]]
         end
-        # rubocop:enable Metrics/MethodLength
 
         private
 
@@ -65,11 +49,11 @@ module Mobile
         end
 
         def get_facility(location_id)
-          vaos_mobile_facility_service.get_facility(location_id)
+          vaos_mobile_facility_service.get_facility_with_cache(location_id)
         rescue Common::Exceptions::BackendServiceException => e
           Rails.logger.error(
             "Error fetching facility details for location_id #{location_id}",
-            location_id: location_id,
+            location_id:,
             vamf_msg: e.original_body
           )
           nil
@@ -93,12 +77,12 @@ module Mobile
         end
 
         def get_clinic(location_id, clinic_id)
-          vaos_mobile_facility_service.get_clinic(station_id: location_id, clinic_id: clinic_id)
+          vaos_mobile_facility_service.get_clinic(station_id: location_id, clinic_id:)
         rescue Common::Exceptions::BackendServiceException => e
           Rails.logger.error(
             "Error fetching clinic #{clinic_id} for location #{location_id}",
-            clinic_id: clinic_id,
-            location_id: location_id,
+            clinic_id:,
+            location_id:,
             vamf_msg: e.original_body
           )
           nil

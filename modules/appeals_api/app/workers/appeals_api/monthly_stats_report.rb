@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'sidekiq/monitored_worker'
+
 class AppealsApi::MonthlyStatsReport
   include Sidekiq::Worker
   include Sidekiq::MonitoredWorker
@@ -17,9 +19,9 @@ class AppealsApi::MonthlyStatsReport
     date_from = (date_to - 1.month).beginning_of_day
 
     AppealsApi::StatsReportMailer.build(
-      date_from: date_from,
-      date_to: date_to,
-      recipients: recipients,
+      date_from:,
+      date_to:,
+      recipients:,
       subject: "Lighthouse appeals stats report for month starting #{date_from.strftime('%Y-%m-%d')}"
     ).deliver_now
   end

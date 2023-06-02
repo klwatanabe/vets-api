@@ -2,10 +2,15 @@
 
 require 'mail_automation/client'
 require 'lighthouse/veterans_health/client'
+require 'virtual_regional_office/client'
 
 # rubocop:disable Metrics/ModuleLength
+# For use with Form526Submission
+# TODO rename Form526RapidReadyForDecisionConcern to Form526ClaimFastTrackingConcern
 module Form526RapidReadyForDecisionConcern
   extend ActiveSupport::Concern
+
+  STATSD_KEY_PREFIX = 'worker.rapid_ready_for_decision'
 
   def send_rrd_alert_email(subject, message, error = nil, to = Settings.rrd.alerts.recipients)
     RrdAlertMailer.build(self, subject, message, error, to).deliver_now
@@ -53,7 +58,7 @@ module Form526RapidReadyForDecisionConcern
   end
 
   Uploader = RapidReadyForDecision::FastTrackPdfUploadManager
-  PDF_FILENAME_REGEX = /#{Uploader::DOCUMENT_NAME_PREFIX}.*#{Uploader::DOCUMENT_NAME_SUFFIX}/.freeze
+  PDF_FILENAME_REGEX = /#{Uploader::DOCUMENT_NAME_PREFIX}.*#{Uploader::DOCUMENT_NAME_SUFFIX}/
 
   # @return if an RRD pdf has been included as a file to upload
   def rrd_pdf_added_for_uploading?
@@ -73,18 +78,55 @@ module Form526RapidReadyForDecisionConcern
     form.dig('form526', 'form526', 'disabilities')
   end
 
+  def increase_only?
+    disabilities.all? { |disability| disability['disabilityActionType']&.upcase == 'INCREASE' }
+  end
+
   def diagnostic_codes
     disabilities.map { |disability| disability['diagnosticCode'] }
   end
 
   def prepare_for_evss!
+    begin
+      update_classification
+    rescue => e
+      Rails.logger.error "Contention Classification failed #{e.message}.", backtrace: e.backtrace
+    end
+
     return if pending_eps? || disabilities_not_service_connected?
 
     save_metadata(forward_to_mas_all_claims: true)
   end
 
+  def update_classification
+    return unless Flipper.enabled?(:disability_526_classifier)
+    return unless increase_only?
+    return unless disabilities.count == 1
+    return unless diagnostic_codes.count == 1
+
+    diagnostic_code = diagnostic_codes.first
+    params = {
+      diagnostic_code:,
+      claim_id: saved_claim_id,
+      form526_submission_id: id
+    }
+
+    classification = classify_by_diagnostic_code(params)
+    update_form_with_classification(classification['classification_code']) if classification.present?
+  end
+
+  # check claims
+  def classify_by_diagnostic_code(params)
+    vro_client = VirtualRegionalOffice::Client.new
+    response = vro_client.classify_contention_by_diagnostic_code(params)
+    response.body
+  end
+
+  def update_form_with_classification(_classification_code)
+    # TODO: update form[FORM_526] to include the classification code
+  end
+
   def send_post_evss_notifications!
-    send_completed_notification if rrd_job_selector.rrd_applicable?
     conditionally_notify_mas
   end
 
@@ -106,8 +148,13 @@ module Form526RapidReadyForDecisionConcern
 
   # fetch, memoize, and return all of the veteran's rated disabilities from EVSS
   def all_rated_disabilities
+    settings = Settings.lighthouse.veteran_verification.form526
+    icn = UserAccount.where(id: user_account_id).first&.icn
+    service = ApiProviderFactory.rated_disabilities_service_provider(
+      { auth_headers:, icn: }
+    )
     @all_rated_disabilities ||= begin
-      response = EVSS::DisabilityCompensationForm::Service.new(auth_headers).get_rated_disabilities
+      response = service.get_rated_disabilities(settings.access_token.client_id, settings.access_token.rsa_key)
       response.rated_disabilities
     end
   end
@@ -115,10 +162,6 @@ module Form526RapidReadyForDecisionConcern
   # @return if this claim submission was processed and fast-tracked by RRD
   def rrd_claim_processed?
     rrd_pdf_added_for_uploading? && rrd_special_issue_set?
-  end
-
-  def notify_mas_tracking
-    RrdMasNotificationMailer.build(self).deliver_now
   end
 
   def notify_mas_all_claims_tracking
@@ -136,13 +179,11 @@ module Form526RapidReadyForDecisionConcern
                                         })
     response = client.initiate_apcas_processing
     save_metadata(mas_packetId: response.dig('body', 'packetId'))
+    StatsD.increment("#{STATSD_KEY_PREFIX}.notify_mas.success")
   rescue => e
     send_rrd_alert_email("Failure: MA claim - #{submitted_claim_id}", e.to_s, nil,
                          Settings.rrd.mas_tracking.recipients)
-  end
-
-  def send_completed_notification
-    RrdCompletedMailer.build(self).deliver_now
+    StatsD.increment("#{STATSD_KEY_PREFIX}.notify_mas.failure")
   end
 end
 # rubocop:enable Metrics/ModuleLength

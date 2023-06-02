@@ -5,8 +5,8 @@ require 'rails_helper'
 RSpec.describe AppealsApi::WeeklyErrorReportMailer, type: [:mailer] do
   describe '#build' do
     subject do
-      described_class.build(date_from: 7.days.ago, date_to: Time.zone.now, friendly_duration: 'Weekly',
-                            recipients: recipients).deliver_now
+      described_class.build(friendly_duration: 'Weekly',
+                            recipients:).deliver_now
     end
 
     let(:recipients) do

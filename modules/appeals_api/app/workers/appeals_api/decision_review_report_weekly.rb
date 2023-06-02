@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'sidekiq'
+require 'sidekiq/monitored_worker'
 
 module AppealsApi
   class DecisionReviewReportWeekly
@@ -16,7 +17,7 @@ module AppealsApi
         recipients = load_recipients(:report_weekly)
         if recipients.present?
           DecisionReviewMailer.build(date_from: from, date_to: to, friendly_duration: 'Weekly',
-                                     recipients: recipients).deliver_now
+                                     recipients:).deliver_now
         end
       end
     end

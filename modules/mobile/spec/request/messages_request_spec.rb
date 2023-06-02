@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
 require 'rails_helper'
-require_relative '../support/iam_session_helper'
-require_relative '../support/mobile_sm_client_helper'
+require_relative '../support/helpers/iam_session_helper'
+require_relative '../support/helpers/mobile_sm_client_helper'
 
 RSpec.describe 'Mobile Messages Integration', type: :request do
   include Mobile::MessagingClientHelper
@@ -107,7 +107,7 @@ RSpec.describe 'Mobile Messages Integration', type: :request do
       end
       let(:message_params) { attributes_for(:message, subject: 'CI Run', body: 'Continuous Integration') }
       let(:params) { message_params.slice(:subject, :category, :recipient_id, :body) }
-      let(:params_with_attachments) { { message: params }.merge(uploads: uploads) }
+      let(:params_with_attachments) { { message: params }.merge(uploads:) }
 
       context 'message' do
         it 'without attachments' do

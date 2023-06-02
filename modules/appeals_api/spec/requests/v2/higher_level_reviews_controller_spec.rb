@@ -11,7 +11,7 @@ describe AppealsApi::V2::DecisionReviews::HigherLevelReviewsController, type: :r
   end
 
   def new_base_path(path)
-    "/services/appeals/higher_level_reviews/v0/#{path}"
+    "/services/appeals/higher-level-reviews/v0/#{path}"
   end
 
   before do
@@ -35,7 +35,7 @@ describe AppealsApi::V2::DecisionReviews::HigherLevelReviewsController, type: :r
         uuid_2 = create(:higher_level_review_v2, veteran_icn: '1013062086V794840').id
         create(:higher_level_review_v2, veteran_icn: 'something_else')
 
-        get(path, headers: { 'X-VA-ICN' => ' 1013062086V794840   ' })
+        get(path, headers: { 'X-VA-ICN' => '1013062086V794840' })
 
         expect(parsed['data'].length).to eq(2)
         # Returns HLRs in desc creation date, so expect 2 before 1
@@ -51,7 +51,7 @@ describe AppealsApi::V2::DecisionReviews::HigherLevelReviewsController, type: :r
         create(:higher_level_review_v2, veteran_icn: 'someone_else')
         create(:higher_level_review_v2, veteran_icn: 'also_someone_else')
 
-        get(path, headers: { 'X-VA-ICN' => ' 1013062086V794840   ' })
+        get(path, headers: { 'X-VA-ICN' => '1013062086V794840' })
 
         expect(parsed['data'].length).to eq(0)
       end
@@ -59,13 +59,21 @@ describe AppealsApi::V2::DecisionReviews::HigherLevelReviewsController, type: :r
 
     context 'when no ICN is provided' do
       it 'returns a 422 error' do
-        @headers_extra.delete('X-VA-ICN')
-
-        get(path, headers: {})
+        get(path, headers: @headers_extra.except('X-VA-ICN'))
 
         expect(response.status).to eq(422)
         expect(parsed['errors']).to be_an Array
         expect(parsed['errors'][0]['detail']).to include('X-VA-ICN is required')
+      end
+    end
+
+    context 'when provided ICN is in an invalid format' do
+      it 'returns a 422 error' do
+        get(path, headers: { 'X-VA-ICN' => '1393231' })
+
+        expect(response.status).to eq(422)
+        expect(parsed['errors']).to be_an Array
+        expect(parsed['errors'][0]['detail']).to include('X-VA-ICN has an invalid format')
       end
     end
   end
@@ -79,6 +87,7 @@ describe AppealsApi::V2::DecisionReviews::HigherLevelReviewsController, type: :r
         hlr_guid = JSON.parse(response.body)['data']['id']
         hlr = AppealsApi::HigherLevelReview.find(hlr_guid)
         expect(hlr.source).to eq('va.gov')
+        expect(hlr.api_version).to eq('V2')
         expect(parsed['data']['type']).to eq('higherLevelReview')
         expect(parsed['data']['attributes']['status']).to eq('pending')
         expect(parsed.dig('data', 'attributes', 'formData')).to be_a Hash
@@ -119,6 +128,30 @@ describe AppealsApi::V2::DecisionReviews::HigherLevelReviewsController, type: :r
         expect(hlr.veteran_icn).to eq('1013062086V794840')
         # since icn is already provided in header, the icn updater sidekiq worker is redundant and skipped
         expect(icn_updater_sidekiq_worker).not_to have_received(:perform_async)
+      end
+    end
+
+    context 'when icn header is present but does not meet length requirements' do
+      let(:icn) { '1393231' }
+
+      it 'returns a 422 error with details' do
+        post(path, params: @data_extra, headers: @minimum_required_headers.merge({ 'X-VA-ICN' => icn }))
+
+        expect(response).to have_http_status(:unprocessable_entity)
+        expect(parsed['errors'][0]['title']).to eql('Invalid length')
+        expect(parsed['errors'][0]['detail']).to include("'#{icn}' did not fit within the defined length limits")
+      end
+    end
+
+    context 'when icn header is present but does not meet pattern requirements' do
+      let(:icn) { '49392810394830103' }
+
+      it 'returns a 422 error with details' do
+        post(path, params: @data_extra, headers: @minimum_required_headers.merge({ 'X-VA-ICN' => icn }))
+
+        expect(response).to have_http_status(:unprocessable_entity)
+        expect(parsed['errors'][0]['title']).to eql('Invalid pattern')
+        expect(parsed['errors'][0]['detail']).to include("'#{icn}' did not match the defined pattern")
       end
     end
 
@@ -166,7 +199,7 @@ describe AppealsApi::V2::DecisionReviews::HigherLevelReviewsController, type: :r
         headers = @minimum_required_headers
         headers['X-VA-Birth-Date'] = 'apricot'
 
-        post(path, params: @data.to_json, headers: headers)
+        post(path, params: @data.to_json, headers:)
         expect(response.status).to eq(422)
         expect(parsed['errors']).to be_an Array
       end
@@ -271,7 +304,7 @@ describe AppealsApi::V2::DecisionReviews::HigherLevelReviewsController, type: :r
 
       it_behaves_like(
         'an endpoint with OpenID auth',
-        AppealsApi::HigherLevelReviews::V0::HigherLevelReviewsController::OAUTH_SCOPES[:POST]
+        scopes: AppealsApi::HigherLevelReviews::V0::HigherLevelReviewsController::OAUTH_SCOPES[:POST]
       ) do
         def make_request(auth_header)
           post(oauth_path, params: @data, headers: @headers.merge(auth_header))
@@ -366,12 +399,36 @@ describe AppealsApi::V2::DecisionReviews::HigherLevelReviewsController, type: :r
       end
     end
 
+    context 'when icn header is present but does not meet length requirements' do
+      let(:icn) { '1393231' }
+
+      it 'returns a 422 error with details' do
+        post(path, params: @data_extra, headers: @minimum_required_headers.merge({ 'X-VA-ICN' => icn }))
+
+        expect(response).to have_http_status(:unprocessable_entity)
+        expect(parsed['errors'][0]['title']).to eql('Invalid length')
+        expect(parsed['errors'][0]['detail']).to include("'#{icn}' did not fit within the defined length limits")
+      end
+    end
+
+    context 'when icn header is present but does not meet pattern requirements' do
+      let(:icn) { '49392810394830103' }
+
+      it 'returns a 422 error with details' do
+        post(path, params: @data_extra, headers: @minimum_required_headers.merge({ 'X-VA-ICN' => icn }))
+
+        expect(response).to have_http_status(:unprocessable_entity)
+        expect(parsed['errors'][0]['title']).to eql('Invalid pattern')
+        expect(parsed['errors'][0]['detail']).to include("'#{icn}' did not match the defined pattern")
+      end
+    end
+
     context 'with oauth' do
       let(:oauth_path) { new_base_path 'forms/200996/validate' }
 
       it_behaves_like(
         'an endpoint with OpenID auth',
-        AppealsApi::HigherLevelReviews::V0::HigherLevelReviewsController::OAUTH_SCOPES[:POST]
+        scopes: AppealsApi::HigherLevelReviews::V0::HigherLevelReviewsController::OAUTH_SCOPES[:POST]
       ) do
         def make_request(auth_header)
           post(oauth_path, params: @data, headers: @headers.merge(auth_header))
@@ -444,7 +501,7 @@ describe AppealsApi::V2::DecisionReviews::HigherLevelReviewsController, type: :r
 
     it_behaves_like(
       'an endpoint with OpenID auth',
-      AppealsApi::HigherLevelReviews::V0::HigherLevelReviewsController::OAUTH_SCOPES[:GET]
+      scopes: AppealsApi::HigherLevelReviews::V0::HigherLevelReviewsController::OAUTH_SCOPES[:GET]
     ) do
       def make_request(auth_header)
         get(oauth_path, headers: auth_header)

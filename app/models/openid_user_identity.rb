@@ -15,12 +15,13 @@ class OpenidUserIdentity < ::UserIdentity
   # @return [OpenidUserIdentity]
   def self.build_from_profile(uuid:, profile:, ttl:)
     identity = new(
-      uuid: uuid,
+      uuid:,
       email: profile['email'],
       first_name: profile['firstName'],
       middle_name: profile['middleName'],
       last_name: profile['lastName'],
       mhv_icn: profile['icn'],
+      icn: profile['icn'],
       loa: profile.derived_loa
     )
     identity.expire(ttl)

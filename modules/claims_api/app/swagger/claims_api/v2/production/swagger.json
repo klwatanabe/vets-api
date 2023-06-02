@@ -3,7 +3,7 @@
   "info": {
     "title": "Benefits Claims",
     "version": "v2",
-    "description": "## Background\n\nThe Benefits Claims API Version 2 offers internal consumers the ability to retrieve existing claim information, including status, by claim ID. Additional functionality will be added over time. \n\nYou should use the [Benefits Claims API Version 1](https://developer.va.gov/explore/benefits/docs/claims?version=current) if: \n\n-   You are not an internal consumer, and/or\n-   You want automatic establishment of disability compensation claims in Veterans Benefits Management System (VBMS) or power of attorney (POA)\n    \n## Technical Overview\n\nThis API accepts a payload of requests and responses with the payload identifying the claim and Veteran. Responses provide the submission’s processing status. Responses also provide a unique ID which can be used with the appropriate GET endpoint to return detailed, end-to-end claims status tracking. \n\nEnd-to-end claims tracking provides the status of claims as they move through the submission process, but does not return whether the claim was approved or denied. \n\n### Claim statuses\n\nWhen the claim is successfully submitted to Lighthouse, the status is Pending. If the submission runs into any upstream errors, the status is Errored. Other statuses this API returns align with the [VA.gov](http://va.gov/) [claim status descriptions](https://www.va.gov/resources/what-your-claim-status-means/), which are: \n\n-   Claim received\n-   Initial review\n-   Evidence gathering, review, and decision\n-   Preparation for notification\n-   Complete\n\n### Finding a Veteran's unique VA ID\n\nThis API uses a unique Veteran identifier to identify the subject of each API request. This Veteran identifier can be retrieved by passing the Veteran’s first name, last name, DOB, and SSN to the ‘/veteran-id’ endpoint. This identifier should then be used as the Veteran ID parameter in request URLs.\n\nNote: though Veteran identifiers are typically static, they may change over time. If a specific Veteran ID suddenly responds with a ‘404 not found’ error, the identifier may have changed. It’s a good idea to periodically check the identifier for each Veteran.\n\n### Authentication and authorization\n\nTo make an API request, use our [client credentials grant](https://developer.va.gov/explore/authorization/docs/client-credentials?api=claims) to receive an [OAuth token](https://oauth.net/2/). \n\n### Test data for sandbox environment use\n\nWe use mock [test data in the sandbox environment](https://github.com/department-of-veterans-affairs/vets-api-clients/blob/master/test_accounts.md). Sandbox test data and test users for the Benefits Claims API are valid for all versions of the API.\n"
+    "description": "## Background\n\nThe Benefits Claims API Version 2 lets internal consumers: \n\n-   Retrieve existing claim information, including status, by claim ID\n-   Automatically establish an Intent To File (21-0966) in VBMS\n\nAdditional functionality will be added over time.\n\nYou should use the [Benefits Claims API Version 1](https://developer.va.gov/explore/benefits/docs/claims?version=current) if: \n\n-   You are not an internal consumer, and/or\n-   You want automatic establishment of disability compensation claims in Veterans Benefits Management System (VBMS) or power of attorney (POA)\n    \n## Technical Overview\n\nThis API accepts a payload of requests and responses with the payload identifying the claim and Veteran. Responses provide the submission’s processing status. Responses also provide a unique ID which can be used with the appropriate GET endpoint to return detailed, end-to-end claims status tracking. \n\nEnd-to-end claims tracking provides the status of claims as they move through the submission process, but does not return whether the claim was approved or denied. \n\n### Claim statuses\n\n-   Pending - the claim is successfully submitted to Lighthouse\n-   Errored -  the submission encountered upstream errors\n-   Canceled -  the claim was identified as a duplicate or another issue caused the claim to be canceled. For duplicate claims,  the tracking of the claim's progress happens under a different Claim ID . \n\nOther statuses this API returns align with the [VA.gov](http://va.gov/) [claim status descriptions](https://www.va.gov/resources/what-your-claim-status-means/), which are:\n\n-   Claim received\n-   Initial review\n-   Evidence gathering, review, and decision\n-   Preparation for notification\n-   Complete\n\n### Finding a Veteran's unique VA ID\n\nThis API uses a unique Veteran identifier to identify the subject of each API request. This Veteran identifier can be retrieved by passing the Veteran’s first name, last name, DOB, and SSN to the ‘/veteran-id’ endpoint. This identifier should then be used as the Veteran ID parameter in request URLs.\n\nNote: though Veteran identifiers are typically static, they may change over time. If a specific Veteran ID suddenly responds with a ‘404 not found’ error, the identifier may have changed. It’s a good idea to periodically check the identifier for each Veteran.\n\n### Authentication and authorization\n\nTo make an API request, use our [client credentials grant](https://developer.va.gov/explore/authorization/docs/client-credentials?api=claims) to receive an [OAuth token](https://oauth.net/2/). \n\n### Test data for sandbox environment use\n\nWe use mock [test data in the sandbox environment](https://github.com/department-of-veterans-affairs/vets-api-clients/blob/master/test_accounts.md). Sandbox test data and test users for the Benefits Claims API are valid for all versions of the API.\n"
   },
   "tags": [
     {
@@ -17,6 +17,10 @@
     {
       "name": "5103 Waiver",
       "description": "Allows authenticated and authorized users to file a 5103 Notice Response on a claim."
+    },
+    {
+      "name": "Intent to File",
+      "description": "Allows authenticated and authorized users to automatically establish an Intent to File (21-0966) in VBMS.\n"
     }
   ],
   "components": {
@@ -34,8 +38,8 @@
             "authorizationUrl": "https://api.va.gov/oauth2/authorization",
             "tokenUrl": "https://api.va.gov/oauth2/token",
             "scopes": {
-              "claim.read": "Retrieve claim data",
-              "claim.write": "Submit claim data"
+              "system/claim.read": "Retrieve claim data",
+              "system/claim.write": "Submit claim data"
             }
           }
         }
@@ -48,8 +52,8 @@
             "authorizationUrl": "https://sandbox-api.va.gov/oauth2/authorization",
             "tokenUrl": "https://sandbox-api.va.gov/oauth2/token",
             "scopes": {
-              "claim.read": "Retrieve claim data",
-              "claim.write": "Submit claim data"
+              "system/claim.read": "Retrieve claim data",
+              "system/claim.write": "Submit claim data"
             }
           }
         }
@@ -67,12 +71,12 @@
         "security": [
           {
             "productionOauth": [
-              "claim.read"
+              "system/claim.read"
             ]
           },
           {
             "sandboxOauth": [
-              "claim.read"
+              "system/claim.read"
             ]
           },
           {
@@ -374,12 +378,12 @@
         "security": [
           {
             "productionOauth": [
-              "claim.read"
+              "system/claim.read"
             ]
           },
           {
             "sandboxOauth": [
-              "claim.read"
+              "system/claim.read"
             ]
           },
           {
@@ -450,7 +454,7 @@
                           "id": {
                             "type": "string",
                             "nullable": true,
-                            "description": "Claim ID in VBMS",
+                            "description": "Claim ID in VBMS. If a claim was submitted with Lighthouse and not successfully established upstream, it could have a null claimId.",
                             "example": "600131328"
                           },
                           "type": {
@@ -543,7 +547,7 @@
                                   "PREPARATION_FOR_NOTIFICATION",
                                   "COMPLETE",
                                   "ERRORED",
-                                  "CANCELLED"
+                                  "CANCELED"
                                 ]
                               }
                             }
@@ -675,12 +679,12 @@
         "security": [
           {
             "productionOauth": [
-              "claim.read"
+              "system/claim.read"
             ]
           },
           {
             "sandboxOauth": [
-              "claim.read"
+              "system/claim.read"
             ]
           },
           {
@@ -725,24 +729,40 @@
                       "claimTypeCode": "400PREDSCHRG",
                       "claimDate": "2017-05-02",
                       "claimPhaseDates": {
-                        "phaseChangeDate": null,
+                        "phaseChangeDate": "2017-10-18",
                         "currentPhaseBack": false,
-                        "latestPhaseType": "Complete",
+                        "latestPhaseType": "COMPLETE",
                         "previousPhases": {
-                          "phase1CompleteDate": "2017-10-18"
+                          "phase7CompleteDate": "2017-10-18"
                         }
                       },
                       "claimType": "Compensation",
                       "closeDate": "2017-10-18",
-                      "contentionList": [
-                        "abnormal heart (New)",
-                        "abscess kidney (New)",
-                        "encephalitis lethargica residuals (New)",
-                        "dracunculiasis (New)",
-                        "gingivitis (New)",
-                        "abnormal weight loss (New)",
-                        "groin condition (New)",
-                        "metritis (New)"
+                      "contentions": [
+                        {
+                          "name": "abnormal heart (New)"
+                        },
+                        {
+                          "name": "abscess kidney (New)"
+                        },
+                        {
+                          "name": "encephalitis lethargica residuals (New)"
+                        },
+                        {
+                          "name": "dracunculiasis (New)"
+                        },
+                        {
+                          "name": "gingivitis (New)"
+                        },
+                        {
+                          "name": "abnormal weight loss (New)"
+                        },
+                        {
+                          "name": "groin condition (New)"
+                        },
+                        {
+                          "name": "metritis (New)"
+                        }
                       ],
                       "decisionLetterSent": false,
                       "developmentLetterSent": false,
@@ -771,31 +791,51 @@
                       "tempJurisdiction": null,
                       "trackedItems": [
                         {
-                          "closedDate": null,
+                          "closedDate": "2021-06-04",
                           "description": null,
-                          "displayedName": "Request 1",
-                          "dvlpmtTc": "CLMNTRQST",
-                          "openedDate": null,
-                          "overdue": true,
-                          "requestedDate": "2022-02-04",
-                          "suspenseDate": "2022-03-06",
-                          "trackedItemId": 325525,
-                          "trackedItemStatus": "NEEDED",
-                          "uploaded": false,
+                          "displayName": "21-4142a",
+                          "overdue": false,
+                          "receivedDate": null,
+                          "requestedDate": "2021-05-05",
+                          "status": "NO_LONGER_REQUIRED",
+                          "suspenseDate": "2021-06-04",
+                          "id": 293440,
                           "uploadsAllowed": false
                         },
                         {
-                          "closedDate": null,
+                          "closedDate": "2021-06-04",
                           "description": null,
-                          "displayedName": "Request 2",
-                          "dvlpmtTc": "CLMNTRQST",
-                          "openedDate": null,
-                          "overdue": true,
-                          "requestedDate": "2022-02-04",
-                          "suspenseDate": "2022-03-06",
-                          "trackedItemId": 325524,
-                          "trackedItemStatus": "NEEDED",
-                          "uploaded": false,
+                          "displayName": "Employment info needed",
+                          "overdue": false,
+                          "receivedDate": null,
+                          "requestedDate": "2021-05-05",
+                          "status": "NO_LONGER_REQUIRED",
+                          "suspenseDate": "2021-06-04",
+                          "id": 293443,
+                          "uploadsAllowed": false
+                        },
+                        {
+                          "closedDate": "2021-06-04",
+                          "description": null,
+                          "displayName": "Accidental injury - 21-4176 needed",
+                          "overdue": false,
+                          "receivedDate": null,
+                          "requestedDate": "2021-05-05",
+                          "status": "NO_LONGER_REQUIRED",
+                          "suspenseDate": "2021-06-04",
+                          "id": 293444,
+                          "uploadsAllowed": false
+                        },
+                        {
+                          "closedDate": "2021-06-04",
+                          "description": null,
+                          "displayName": "Buddy mentioned - No complete address",
+                          "overdue": false,
+                          "receivedDate": null,
+                          "requestedDate": "2021-05-05",
+                          "status": "NO_LONGER_REQUIRED",
+                          "suspenseDate": "2021-06-04",
+                          "id": 293446,
                           "uploadsAllowed": false
                         }
                       ]
@@ -822,7 +862,7 @@
                         "id": {
                           "type": "string",
                           "nullable": true,
-                          "description": "Claim ID in VBMS",
+                          "description": "Claim ID in VBMS. If a claim was submitted with Lighthouse and not successfully established upstream, it could have a null claimId.",
                           "example": "600131328"
                         },
                         "type": {
@@ -838,7 +878,7 @@
                             "claimPhaseDates",
                             "claimType",
                             "closeDate",
-                            "contentionList",
+                            "contentions",
                             "decisionLetterSent",
                             "developmentLetterSent",
                             "documentsNeeded",
@@ -867,16 +907,18 @@
                               "description": "Name of claim type",
                               "example": "Compensation"
                             },
-                            "contentionList": {
+                            "contentions": {
                               "type": "array",
-                              "items": {
-                                "type": "string"
-                              },
                               "description": "The contentions being submitted with a claim",
-                              "example": [
-                                "abnormal heart (New)",
-                                "abscess kidney (New)"
-                              ]
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "name": {
+                                    "type": "string",
+                                    "example": "abscess kidney (New)"
+                                  }
+                                }
+                              }
                             },
                             "claimDate": {
                               "format": "date",
@@ -894,6 +936,16 @@
                                 },
                                 "latestPhaseType": {
                                   "type": "string",
+                                  "enum": [
+                                    "CLAIM_RECEIVED",
+                                    "UNDER_REVIEW",
+                                    "GATHERING_OF_EVIDENCE",
+                                    "REVIEW_OF_EVIDENCE",
+                                    "PREPARATION_FOR_DECISION",
+                                    "PENDING_DECISION_APPROVAL",
+                                    "PREPARATION_FOR_NOTIFICATION",
+                                    "COMPLETE"
+                                  ],
                                   "nullable": true,
                                   "description": "The most current phase for the claim"
                                 },
@@ -1040,7 +1092,7 @@
                                 "PREPARATION_FOR_NOTIFICATION",
                                 "COMPLETE",
                                 "ERRORED",
-                                "CANCELLED"
+                                "CANCELED"
                               ]
                             },
                             "submitterApplicationCode": {
@@ -1111,13 +1163,6 @@
                                     "description": "Description of the tracked item",
                                     "example": "Buddy mentioned - No complete address"
                                   },
-                                  "suspensionDate": {
-                                    "format": "date",
-                                    "type": "string",
-                                    "nullable": true,
-                                    "description": "Suspension date on the tracked item",
-                                    "example": "2017-10-18"
-                                  },
                                   "requestedDate": {
                                     "format": "date",
                                     "type": "string",
@@ -1125,27 +1170,22 @@
                                     "description": "Date the tracked item was requested",
                                     "example": "2017-10-18"
                                   },
-                                  "trackedItemId": {
+                                  "id": {
                                     "type": "integer",
                                     "description": "ID of the tracked item",
                                     "example": 293454
                                   },
-                                  "dvlpmtTc": {
+                                  "displayName": {
                                     "type": "string",
                                     "nullable": true,
-                                    "example": "CLMNTRQST"
+                                    "description": "Description of the tracked item",
+                                    "example": "Buddy mentioned - No complete address"
                                   },
-                                  "displayedName": {
-                                    "type": "string",
-                                    "nullable": true,
-                                    "description": "Request #",
-                                    "example": "Request 5"
-                                  },
-                                  "openedDate": {
+                                  "receivedDate": {
                                     "format": "date",
                                     "type": "string",
                                     "nullable": true,
-                                    "description": "Date the tracked item was opened",
+                                    "description": "Date the tracked item was received",
                                     "example": "2017-10-18"
                                   },
                                   "overdue": {
@@ -1154,26 +1194,28 @@
                                     "description": "True if the item is overdue",
                                     "example": true
                                   },
+                                  "status": {
+                                    "type": "string",
+                                    "nullable": true,
+                                    "description": "Enum with the status of the tracked item",
+                                    "example": "NO_LONGER_REQUIRED",
+                                    "enum": [
+                                      "ACCEPTED",
+                                      "INITIAL_REVIEW_COMPLETE",
+                                      "NEEDED_FROM_YOU",
+                                      "NEEDED_FROM_OTHERS",
+                                      "NO_LONGER_REQUIRED",
+                                      "SUBMITTED_AWAITING_REVIEW"
+                                    ]
+                                  },
                                   "suspenseDate": {
                                     "format": "date",
                                     "type": "string",
                                     "nullable": true,
                                     "example": "2017-10-18"
                                   },
-                                  "trackedItemStatus": {
-                                    "type": "string",
-                                    "nullable": true,
-                                    "description": "Enum with the status of the tracked item",
-                                    "example": "NO_LONGER_REQUIRED"
-                                  },
-                                  "uploaded": {
-                                    "type": "boolean",
-                                    "nullable": true,
-                                    "example": true
-                                  },
                                   "uploadsAllowed": {
                                     "type": "boolean",
-                                    "nullable": true,
                                     "example": true
                                   }
                                 }
@@ -1360,12 +1402,12 @@
         "security": [
           {
             "productionOauth": [
-              "claim.write"
+              "system/claim.write"
             ]
           },
           {
             "sandboxOauth": [
-              "claim.write"
+              "system/claim.write"
             ]
           },
           {
@@ -1524,6 +1566,989 @@
               }
             }
           }
+        }
+      }
+    },
+    "/veterans/{veteranId}/intent-to-file/{type}": {
+      "get": {
+        "summary": "Returns last active Intent to File form submission for given 'type'.",
+        "tags": [
+          "Intent to File"
+        ],
+        "operationId": "active0966itf",
+        "security": [
+          {
+            "productionOauth": [
+              "system/claim.read"
+            ]
+          },
+          {
+            "sandboxOauth": [
+              "system/claim.read"
+            ]
+          },
+          {
+            "bearer_token": [
+
+            ]
+          }
+        ],
+        "description": "Returns Veteran's last active Intent to File submission for given benefit type.",
+        "parameters": [
+          {
+            "name": "veteranId",
+            "in": "path",
+            "required": true,
+            "example": "1012667145V762142",
+            "description": "ID of Veteran",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "type",
+            "in": "path",
+            "required": true,
+            "description": "Type of Intent to File to return. Available values - compensation, pension, survivor.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response with active Intent to File",
+            "content": {
+              "application/json": {
+                "example": {
+                  "data": {
+                    "id": "193685",
+                    "type": "intent_to_file",
+                    "attributes": {
+                      "creationDate": "2021-03-16T19:15:21.000-05:00",
+                      "expirationDate": "2022-03-16T19:15:20.000-05:00",
+                      "type": "compensation",
+                      "status": "active"
+                    }
+                  }
+                },
+                "schema": {
+                  "$schema": "http://json-schema.org/draft-04/schema#",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "id",
+                        "type",
+                        "attributes"
+                      ],
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "description": "Intent To File ID",
+                          "example": "600131328"
+                        },
+                        "type": {
+                          "type": "string",
+                          "example": "intent_to_file"
+                        },
+                        "attributes": {
+                          "required": [
+                            "creationDate",
+                            "expirationDate",
+                            "status",
+                            "type"
+                          ],
+                          "properties": {
+                            "creationDate": {
+                              "type": "string",
+                              "format": "date",
+                              "description": "Date the Intent to File was received at the VA"
+                            },
+                            "expirationDate": {
+                              "type": "string",
+                              "format": "date",
+                              "description": "Date the Intent to File expires, this is 1 year from the createdDate"
+                            },
+                            "status": {
+                              "type": "string",
+                              "description": "The status of the Intent to File",
+                              "example": "active"
+                            },
+                            "type": {
+                              "type": "string",
+                              "description": "The type of Intent to File filed.",
+                              "example": "compensation"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "example": {
+                  "errors": [
+                    {
+                      "title": "Not authorized",
+                      "detail": "Not authorized."
+                    }
+                  ]
+                },
+                "schema": {
+                  "required": [
+                    "errors"
+                  ],
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "additionalProperties": false,
+                        "required": [
+                          "title",
+                          "detail"
+                        ],
+                        "properties": {
+                          "title": {
+                            "type": "string",
+                            "description": "HTTP error title"
+                          },
+                          "detail": {
+                            "type": "string",
+                            "description": "HTTP error detail"
+                          },
+                          "source": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "description": "Source of error",
+                            "properties": {
+                              "pointer": {
+                                "type": "string",
+                                "description": "Pointer to source of error"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "example": {
+                  "errors": [
+                    {
+                      "title": "Forbidden",
+                      "detail": "Forbidden"
+                    }
+                  ]
+                },
+                "schema": {
+                  "required": [
+                    "errors"
+                  ],
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "additionalProperties": false,
+                        "required": [
+                          "title",
+                          "detail"
+                        ],
+                        "properties": {
+                          "title": {
+                            "type": "string",
+                            "description": "HTTP error title"
+                          },
+                          "detail": {
+                            "type": "string",
+                            "description": "HTTP error detail"
+                          },
+                          "source": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "description": "Source of error",
+                            "properties": {
+                              "pointer": {
+                                "type": "string",
+                                "description": "Pointer to source of error"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "content": {
+              "application/json": {
+                "example": {
+                  "errors": [
+                    {
+                      "title": "Resource not found",
+                      "detail": "No active 'compensation' intent to file found."
+                    }
+                  ]
+                },
+                "schema": {
+                  "required": [
+                    "errors"
+                  ],
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "additionalProperties": false,
+                        "required": [
+                          "title",
+                          "detail"
+                        ],
+                        "properties": {
+                          "title": {
+                            "type": "string",
+                            "description": "HTTP error title"
+                          },
+                          "detail": {
+                            "type": "string",
+                            "description": "HTTP error detail"
+                          },
+                          "source": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "description": "Source of error",
+                            "properties": {
+                              "pointer": {
+                                "type": "string",
+                                "description": "Pointer to source of error"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/veterans/{veteranId}/intent-to-file": {
+      "post": {
+        "summary": "Submit form 0966 Intent to File.",
+        "tags": [
+          "Intent to File"
+        ],
+        "operationId": "post0966itf",
+        "security": [
+          {
+            "productionOauth": [
+              "system/claim.read",
+              "system/claim.write"
+            ]
+          },
+          {
+            "sandboxOauth": [
+              "system/claim.read",
+              "system/claim.write"
+            ]
+          },
+          {
+            "bearer_token": [
+
+            ]
+          }
+        ],
+        "description": "Establishes an Intent to File for disability compensation, pension, and survivor claims.",
+        "parameters": [
+          {
+            "name": "veteranId",
+            "in": "path",
+            "required": true,
+            "example": "1012667145V762142",
+            "description": "ID of Veteran",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "0966 Response",
+            "content": {
+              "application/json": {
+                "example": {
+                  "data": {
+                    "id": "1",
+                    "type": "intent_to_file",
+                    "attributes": {
+                      "creationDate": "2023-04-27",
+                      "expirationDate": "2024-04-27",
+                      "type": "compensation",
+                      "status": "active"
+                    }
+                  }
+                },
+                "schema": {
+                  "$schema": "http://json-schema.org/draft-04/schema#",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "id",
+                        "type",
+                        "attributes"
+                      ],
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "description": "Intent To File ID",
+                          "example": "600131328"
+                        },
+                        "type": {
+                          "type": "string",
+                          "example": "intent_to_file"
+                        },
+                        "attributes": {
+                          "required": [
+                            "creationDate",
+                            "expirationDate",
+                            "status",
+                            "type"
+                          ],
+                          "properties": {
+                            "creationDate": {
+                              "type": "string",
+                              "format": "date",
+                              "description": "Date the Intent to File was received at the VA"
+                            },
+                            "expirationDate": {
+                              "type": "string",
+                              "format": "date",
+                              "description": "Date the Intent to File expires, this is 1 year from the createdDate"
+                            },
+                            "status": {
+                              "type": "string",
+                              "description": "The status of the Intent to File",
+                              "example": "active"
+                            },
+                            "type": {
+                              "type": "string",
+                              "description": "The type of Intent to File filed.",
+                              "example": "compensation"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "example": {
+                  "errors": [
+                    {
+                      "title": "invalid value for type",
+                      "detail": "some-invalid-value is not valid for type"
+                    }
+                  ]
+                },
+                "schema": {
+                  "required": [
+                    "errors"
+                  ],
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "additionalProperties": false,
+                        "required": [
+                          "title",
+                          "detail"
+                        ],
+                        "properties": {
+                          "title": {
+                            "type": "string",
+                            "description": "HTTP error title"
+                          },
+                          "detail": {
+                            "type": "string",
+                            "description": "HTTP error detail"
+                          },
+                          "source": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "description": "Source of error",
+                            "properties": {
+                              "pointer": {
+                                "type": "string",
+                                "description": "Pointer to source of error"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "example": {
+                  "errors": [
+                    {
+                      "title": "Not authorized",
+                      "detail": "Not authorized."
+                    }
+                  ]
+                },
+                "schema": {
+                  "required": [
+                    "errors"
+                  ],
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "additionalProperties": false,
+                        "required": [
+                          "title",
+                          "detail"
+                        ],
+                        "properties": {
+                          "title": {
+                            "type": "string",
+                            "description": "HTTP error title"
+                          },
+                          "detail": {
+                            "type": "string",
+                            "description": "HTTP error detail"
+                          },
+                          "source": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "description": "Source of error",
+                            "properties": {
+                              "pointer": {
+                                "type": "string",
+                                "description": "Pointer to source of error"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "example": {
+                  "errors": [
+                    {
+                      "title": "Forbidden",
+                      "detail": "Forbidden"
+                    }
+                  ]
+                },
+                "schema": {
+                  "required": [
+                    "errors"
+                  ],
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "additionalProperties": false,
+                        "required": [
+                          "title",
+                          "detail"
+                        ],
+                        "properties": {
+                          "title": {
+                            "type": "string",
+                            "description": "HTTP error title"
+                          },
+                          "detail": {
+                            "type": "string",
+                            "description": "HTTP error detail"
+                          },
+                          "source": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "description": "Source of error",
+                            "properties": {
+                              "pointer": {
+                                "type": "string",
+                                "description": "Pointer to source of error"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable entity",
+            "content": {
+              "application/json": {
+                "example": {
+                  "errors": [
+                    {
+                      "title": "Unprocessable Entity",
+                      "detail": "Claimant SSN cannot be the same as veteran SSN for type 'survivor'"
+                    }
+                  ]
+                },
+                "schema": {
+                  "required": [
+                    "errors"
+                  ],
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "additionalProperties": false,
+                        "required": [
+                          "title",
+                          "detail"
+                        ],
+                        "properties": {
+                          "title": {
+                            "type": "string",
+                            "description": "HTTP error title"
+                          },
+                          "detail": {
+                            "type": "string",
+                            "description": "HTTP error detail"
+                          },
+                          "source": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "description": "Source of error",
+                            "properties": {
+                              "pointer": {
+                                "type": "string",
+                                "description": "Pointer to source of error"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "data"
+                ],
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "required": [
+                      "attributes"
+                    ],
+                    "properties": {
+                      "attributes": {
+                        "required": [
+                          "type"
+                        ],
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "example": "compensation",
+                            "description": "Type of Intent To File being submitted. For type \"survivor\", the request must include claimantSsn and be made by a valid Veteran Representative. If the Representative is not a Veteran or a VA employee, this method is currently not available to them, and they should use the Benefits Intake API as an alternative.",
+                            "enum": [
+                              "compensation",
+                              "pension",
+                              "survivor"
+                            ]
+                          },
+                          "claimantSsn": {
+                            "type": "string",
+                            "example": "001122334",
+                            "description": "SSN of the Claimant."
+                          }
+                        },
+                        "example": {
+                          "type": "compensation"
+                        }
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "data": {
+                    "type": "intent_to_file",
+                    "attributes": {
+                      "type": "compensation"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "required": true
+        }
+      }
+    },
+    "/veterans/{veteranId}/intent-to-file/validate": {
+      "post": {
+        "summary": "Validate form 0966 Intent to File.",
+        "tags": [
+          "Intent to File"
+        ],
+        "operationId": "validate0966itf",
+        "security": [
+          {
+            "productionOauth": [
+              "system/claim.read",
+              "system/claim.write"
+            ]
+          },
+          {
+            "sandboxOauth": [
+              "system/claim.read",
+              "system/claim.write"
+            ]
+          },
+          {
+            "bearer_token": [
+
+            ]
+          }
+        ],
+        "description": "Validates an Intent to File for disability compensation, pension, and survivor claims.",
+        "parameters": [
+          {
+            "name": "veteranId",
+            "in": "path",
+            "required": true,
+            "example": "1012667145V762142",
+            "description": "ID of Veteran",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "0966 Response",
+            "content": {
+              "application/json": {
+                "example": {
+                  "data": {
+                    "type": "intent_to_file_validation",
+                    "attributes": {
+                      "status": "valid"
+                    }
+                  }
+                },
+                "schema": {
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "type",
+                        "attributes"
+                      ],
+                      "properties": {
+                        "type": {
+                          "type": "string"
+                        },
+                        "attributes": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "status"
+                          ],
+                          "properties": {
+                            "status": {
+                              "type": "string",
+                              "description": "The status of the Intent to File",
+                              "enum": [
+                                "valid"
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "example": {
+                  "errors": [
+                    {
+                      "title": "invalid value for type",
+                      "detail": "some-invalid-value is not valid for type"
+                    }
+                  ]
+                },
+                "schema": {
+                  "required": [
+                    "errors"
+                  ],
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "additionalProperties": false,
+                        "required": [
+                          "title",
+                          "detail"
+                        ],
+                        "properties": {
+                          "title": {
+                            "type": "string",
+                            "description": "HTTP error title"
+                          },
+                          "detail": {
+                            "type": "string",
+                            "description": "HTTP error detail"
+                          },
+                          "source": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "description": "Source of error",
+                            "properties": {
+                              "pointer": {
+                                "type": "string",
+                                "description": "Pointer to source of error"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "example": {
+                  "errors": [
+                    {
+                      "title": "Not authorized",
+                      "detail": "Not authorized."
+                    }
+                  ]
+                },
+                "schema": {
+                  "required": [
+                    "errors"
+                  ],
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "additionalProperties": false,
+                        "required": [
+                          "title",
+                          "detail"
+                        ],
+                        "properties": {
+                          "title": {
+                            "type": "string",
+                            "description": "HTTP error title"
+                          },
+                          "detail": {
+                            "type": "string",
+                            "description": "HTTP error detail"
+                          },
+                          "source": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "description": "Source of error",
+                            "properties": {
+                              "pointer": {
+                                "type": "string",
+                                "description": "Pointer to source of error"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "example": {
+                  "errors": [
+                    {
+                      "title": "Forbidden",
+                      "detail": "Forbidden"
+                    }
+                  ]
+                },
+                "schema": {
+                  "required": [
+                    "errors"
+                  ],
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "additionalProperties": false,
+                        "required": [
+                          "title",
+                          "detail"
+                        ],
+                        "properties": {
+                          "title": {
+                            "type": "string",
+                            "description": "HTTP error title"
+                          },
+                          "detail": {
+                            "type": "string",
+                            "description": "HTTP error detail"
+                          },
+                          "source": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "description": "Source of error",
+                            "properties": {
+                              "pointer": {
+                                "type": "string",
+                                "description": "Pointer to source of error"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "data"
+                ],
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "required": [
+                      "attributes"
+                    ],
+                    "properties": {
+                      "attributes": {
+                        "required": [
+                          "type"
+                        ],
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "example": "compensation",
+                            "description": "Type of Intent To File being submitted. For type \"survivor\", the request must include claimantSsn and be made by a valid Veteran Representative. If the Representative is not a Veteran or a VA employee, this method is currently not available to them, and they should use the Benefits Intake API as an alternative.",
+                            "enum": [
+                              "compensation",
+                              "pension",
+                              "survivor"
+                            ]
+                          },
+                          "claimantSsn": {
+                            "type": "string",
+                            "example": "001122334",
+                            "description": "SSN of the Claimant."
+                          }
+                        },
+                        "example": {
+                          "type": "compensation"
+                        }
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "data": {
+                    "type": "intent_to_file",
+                    "attributes": {
+                      "type": "compensation"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "required": true
         }
       }
     }

@@ -22,6 +22,8 @@ module SAML
     LOGIN_REDIRECT_PARTIAL = '/auth/login/callback'
     LOGOUT_REDIRECT_PARTIAL = '/logout/'
     BROKER_CODE = 'iam'
+    WEB_CLIENT_ID = 'web'
+    MOBILE_CLIENT_ID = 'mobile'
     UNIFIED_SIGN_IN_CLIENTS = %w[vaweb mhv myvahealth ebenefits vamobile vaoccmobile].freeze
 
     attr_reader :saml_settings, :session, :user, :authn_context, :type, :query_params, :tracker
@@ -46,8 +48,8 @@ module SAML
       @query_params = {}
       @tracker = initialize_tracker(params)
 
-      Raven.extra_context(params: params)
-      Raven.user_context(session: session, user: user)
+      Raven.extra_context(params:)
+      Raven.user_context(session:, user:)
     end
 
     # REDIRECT_URLS
@@ -192,7 +194,7 @@ module SAML
     def relay_state_params
       rs_params = {
         originating_request_id: RequestStore.store['request_id'],
-        type: type
+        type:
       }
       rs_params[:review_instance_slug] = Settings.review_instance_slug unless Settings.review_instance_slug.nil?
       rs_params.to_json
@@ -241,11 +243,11 @@ module SAML
       # if created_at is set to nil (meaning no previous tracker to use), it
       # will be initialized to the current time when it is saved
       SAMLRequestTracker.new(
-        payload: { type: type,
-                   transaction_id: transaction_id,
-                   redirect: redirect,
-                   application: application,
-                   post_login: post_login }.compact,
+        payload: { type:,
+                   transaction_id:,
+                   redirect:,
+                   application:,
+                   post_login: }.compact,
 
         created_at: previous&.created_at
       )

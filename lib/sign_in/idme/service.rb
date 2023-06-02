@@ -2,6 +2,7 @@
 
 require 'sign_in/idme/configuration'
 require 'sign_in/idme/errors'
+require 'mockdata/writer'
 
 module SignIn
   module Idme
@@ -10,23 +11,9 @@ module SignIn
 
       attr_accessor :type
 
-      def render_auth(state: SecureRandom.hex, acr: LOA::IDME_LOA1_VETS)
-        renderer = ActionController::Base.renderer
-        renderer.controller.prepend_view_path(Rails.root.join('lib', 'sign_in', 'templates'))
+      def render_auth(state: SecureRandom.hex, acr: Constants::Auth::IDME_LOA1)
         Rails.logger.info("[SignIn][Idme][Service] Rendering auth, state: #{state}, acr: #{acr}")
-        renderer.render(template: 'oauth_get_form',
-                        locals: {
-                          url: auth_url,
-                          params:
-                          {
-                            scope: acr,
-                            state: state,
-                            client_id: config.client_id,
-                            redirect_uri: config.redirect_uri,
-                            response_type: config.response_type
-                          }
-                        },
-                        format: :html)
+        RedirectUrlGenerator.new(redirect_uri: auth_url, params_hash: auth_params(acr, state)).perform
       end
 
       def normalized_attributes(user_info, credential_level)
@@ -61,6 +48,16 @@ module SignIn
 
       private
 
+      def auth_params(acr, state)
+        {
+          scope: acr,
+          state:,
+          client_id: config.client_id,
+          redirect_uri: config.redirect_uri,
+          response_type: config.response_type
+        }
+      end
+
       def raise_client_error(client_error, function_name)
         status = client_error.status
         description = client_error.body && client_error.body[:error_description]
@@ -84,11 +81,13 @@ module SignIn
       def get_authn_context(current_ial)
         case type
         when Constants::Auth::IDME
-          current_ial == IAL::TWO ? LOA::IDME_LOA3 : LOA::IDME_LOA1_VETS
-        when Constants::Auth::DSLOGON
-          current_ial == IAL::TWO ? LOA::IDME_DSLOGON_LOA3 : LOA::IDME_DSLOGON_LOA1
+          current_ial == Constants::Auth::IAL_TWO ? Constants::Auth::IDME_LOA3 : Constants::Auth::IDME_LOA1
         when Constants::Auth::MHV
-          current_ial == IAL::TWO ? LOA::IDME_MHV_LOA3 : LOA::IDME_MHV_LOA1
+          current_ial == Constants::Auth::IAL_TWO ? Constants::Auth::IDME_MHV_LOA3 : Constants::Auth::IDME_MHV_LOA1
+        when Constants::Auth::DSLOGON
+          return Constants::Auth::IDME_DSLOGON_LOA3 if current_ial == Constants::Auth::IAL_TWO
+
+          Constants::Auth::IDME_DSLOGON_LOA1
         end
       end
 
@@ -158,6 +157,7 @@ module SignIn
             algorithm: config.jwt_decode_algorithm
           }
         )&.first
+        log_parsed_credential(decoded_jwt) if config.log_credential
         OpenStruct.new(decoded_jwt)
       rescue JWT::VerificationError
         raise Errors::JWTVerificationError, '[SignIn][Idme][Service] JWT body does not match signature'
@@ -167,6 +167,10 @@ module SignIn
         raise Errors::JWTDecodeError, '[SignIn][Idme][Service] JWT is malformed'
       end
 
+      def log_parsed_credential(decoded_jwt)
+        MockedAuthentication::Mockdata::Writer.save_credential(credential: decoded_jwt, credential_type: type)
+      end
+
       def auth_url
         "#{config.base_path}/#{config.auth_path}"
       end
@@ -174,7 +178,7 @@ module SignIn
       def token_params(code)
         {
           grant_type: config.grant_type,
-          code: code,
+          code:,
           client_id: config.client_id,
           client_secret: config.client_secret,
           redirect_uri: config.redirect_uri

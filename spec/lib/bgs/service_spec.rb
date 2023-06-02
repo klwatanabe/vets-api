@@ -10,8 +10,19 @@ RSpec.describe BGS::Service do
   let(:participant_id) { '149456' }
   let(:first_name) { 'abraham.lincoln@vets.gov' }
 
+  describe '#find_rating_data' do
+    let(:user_object) { build(:ch33_dd_user) }
+
+    it 'gets the users disability rating data' do
+      VCR.use_cassette('bgs/service/find_rating_data', VCR::MATCH_EVERYTHING) do
+        response = bgs_service.find_rating_data
+        expect(response[:disability_rating_record][:service_connected_combined_degree]).to eq('100')
+      end
+    end
+  end
+
   context 'direct deposit methods' do
-    let(:user_object) { build(:ch33_dd_user, first_name: first_name) }
+    let(:user_object) { build(:ch33_dd_user, first_name:) }
 
     before { allow_any_instance_of(User).to receive(:common_name).and_return(first_name) }
 
@@ -72,7 +83,7 @@ RSpec.describe BGS::Service do
             VCR.use_cassette('bgs/ddeft/find_bank_name_invalid_routing') do
               expect(bgs_service).to receive(:log_exception_to_sentry).with(
                 an_instance_of(Savon::SOAPFault),
-                { routing_number: routing_number },
+                { routing_number: },
                 { error: 'ch33_dd' }
               )
 

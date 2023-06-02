@@ -14,17 +14,16 @@ module V0
     def create
       feature = params[:feature]
       unless MHVOptInFlag::FEATURES.include?(feature)
-        raise MHVOptInFlagFeatureNotValid,
-              message: 'Feature param is not valid'
+        raise MHVOptInFlagFeatureNotValid.new message: 'Feature param is not valid'
       end
 
       status = :ok
       opt_in_flag = MHVOptInFlag.find_or_create_by(user_account: current_user.user_account,
-                                                   feature: feature) do |_mhv_opt_in_flag|
+                                                   feature:) do |_mhv_opt_in_flag|
         status = :created
       end
       render json: { mhv_opt_in_flag: { user_account_id: opt_in_flag.user_account_id, feature: opt_in_flag.feature } },
-             status: status
+             status:
     rescue MHVOptInFlagFeatureNotValid => e
       render json: { errors: e }, status: :bad_request
     rescue

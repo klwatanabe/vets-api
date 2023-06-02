@@ -9,11 +9,11 @@ module SignIn
     end
 
     def perform
-      SessionContainer.new(session: session,
-                           refresh_token: refresh_token,
-                           access_token: access_token,
-                           anti_csrf_token: anti_csrf_token,
-                           client_id: client_id)
+      SessionContainer.new(session:,
+                           refresh_token:,
+                           access_token:,
+                           anti_csrf_token:,
+                           client_config:)
     end
 
     private
@@ -23,7 +23,7 @@ module SignIn
     end
 
     def refresh_token
-      @refresh_token ||= create_new_refresh_token(parent_refresh_token_hash: parent_refresh_token_hash)
+      @refresh_token ||= create_new_refresh_token(parent_refresh_token_hash:)
     end
 
     def access_token
@@ -49,11 +49,12 @@ module SignIn
     def create_new_access_token
       AccessToken.new(
         session_handle: handle,
-        client_id: client_id,
-        user_uuid: user_uuid,
-        refresh_token_hash: refresh_token_hash,
-        parent_refresh_token_hash: parent_refresh_token_hash,
-        anti_csrf_token: anti_csrf_token,
+        client_id:,
+        user_uuid:,
+        audience:,
+        refresh_token_hash:,
+        parent_refresh_token_hash:,
+        anti_csrf_token:,
         last_regeneration_time: refresh_created_time
       )
     end
@@ -61,18 +62,18 @@ module SignIn
     def create_new_refresh_token(parent_refresh_token_hash: nil)
       RefreshToken.new(
         session_handle: handle,
-        user_uuid: user_uuid,
-        parent_refresh_token_hash: parent_refresh_token_hash,
-        anti_csrf_token: anti_csrf_token
+        user_uuid:,
+        parent_refresh_token_hash:,
+        anti_csrf_token:
       )
     end
 
     def create_new_session
-      OAuthSession.create!(user_account: user_account,
-                           user_verification: user_verification,
-                           client_id: client_id,
-                           credential_email: credential_email,
-                           handle: handle,
+      OAuthSession.create!(user_account:,
+                           user_verification:,
+                           client_id:,
+                           credential_email:,
+                           handle:,
                            hashed_refresh_token: double_parent_refresh_token_hash,
                            refresh_expiration: refresh_expiration_time,
                            refresh_creation: refresh_created_time)
@@ -91,7 +92,7 @@ module SignIn
     end
 
     def client_id
-      @client_id ||= validated_credential.client_id
+      @client_id ||= client_config.client_id
     end
 
     def user_verification
@@ -114,8 +115,16 @@ module SignIn
       @handle ||= SecureRandom.uuid
     end
 
+    def audience
+      @audience ||= client_config.access_token_audience
+    end
+
+    def client_config
+      @client_config ||= validated_credential.client_config
+    end
+
     def validity_length
-      SignIn::ClientConfig.new(client_id: client_id).refresh_token_duration
+      client_config.refresh_token_duration
     end
   end
 end

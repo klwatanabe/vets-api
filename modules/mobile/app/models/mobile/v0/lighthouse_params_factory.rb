@@ -24,7 +24,7 @@ module Mobile
           client_assertion_type: 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer',
           client_assertion: token(@api),
           scope: scopes[@api],
-          launch: launch
+          launch:
         }
 
         URI.encode_www_form(hash)
@@ -38,8 +38,7 @@ module Mobile
 
       def scopes
         {
-          health: Settings.lighthouse_health_immunization.scopes.join(' '),
-          letters: Settings.mobile_lighthouse_letters.api_scopes.join(' ')
+          health: Settings.lighthouse_health_immunization.scopes.join(' ')
         }
       end
 

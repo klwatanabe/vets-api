@@ -138,7 +138,7 @@ class User < Common::RedisStore
   end
 
   def mhv_correlation_id
-    identity.mhv_correlation_id || mpi.mhv_correlation_id
+    identity.mhv_correlation_id || mpi_mhv_correlation_id
   end
 
   def middle_name
@@ -171,6 +171,7 @@ class User < Common::RedisStore
   delegate :icn, to: :mpi, prefix: true
   delegate :icn_with_aaid, to: :mpi
   delegate :id_theft_flag, to: :mpi
+  delegate :mhv_correlation_id, to: :mpi, prefix: true
   delegate :mhv_ien, to: :mpi
   delegate :mhv_iens, to: :mpi, prefix: true
   delegate :participant_id, to: :mpi
@@ -325,13 +326,6 @@ class User < Common::RedisStore
     false
   end
 
-  def mhv_account
-    @mhv_account ||= MHVAccount.find_or_initialize_by(user_uuid: uuid,
-                                                      mhv_correlation_id: mhv_correlation_id,
-                                                      user_account: user_account)
-                               .tap { |m| m.user = self } # MHV account should not re-initialize use
-  end
-
   def in_progress_forms
     InProgressForm.for_user(self)
   end
@@ -449,11 +443,11 @@ class User < Common::RedisStore
     when SAML::User::DSLOGON_CSID
       return UserVerification.find_by(dslogon_uuid: identity.edipi) if identity.edipi
     when SAML::User::LOGINGOV_CSID
-      return UserVerification.find_by(logingov_uuid: logingov_uuid) if logingov_uuid
+      return UserVerification.find_by(logingov_uuid:) if logingov_uuid
     end
     return nil unless idme_uuid
 
-    UserVerification.find_by(idme_uuid: idme_uuid) || UserVerification.find_by(backing_idme_uuid: idme_uuid)
+    UserVerification.find_by(idme_uuid:) || UserVerification.find_by(backing_idme_uuid: idme_uuid)
   end
 
   def get_relationships_array

@@ -3,7 +3,7 @@
 require 'rails_helper'
 
 describe MPIData, skip_mvi: true do
-  let(:user) { build(:user, :loa3) }
+  let(:user) { build(:user, :loa3, :no_mpi_profile) }
 
   describe '.for_user' do
     subject { MPIData.for_user(user.identity) }
@@ -29,14 +29,14 @@ describe MPIData, skip_mvi: true do
     let(:mpi_data) { MPIData.for_user(user.identity) }
     let(:profile_response_error) { create(:find_profile_server_error_response) }
     let(:profile_response) { create(:find_profile_response, profile: mpi_profile) }
-    let(:mpi_profile) { build(:mvi_profile) }
+    let(:mpi_profile) { build(:mpi_profile) }
 
     context 'with a successful add' do
-      let(:add_response) { create(:add_person_response, parsed_codes: parsed_codes) }
+      let(:add_response) { create(:add_person_response, parsed_codes:) }
       let(:parsed_codes) do
         {
-          birls_id: birls_id,
-          participant_id: participant_id
+          birls_id:,
+          participant_id:
         }
       end
       let(:birls_id) { '111985523' }
@@ -62,16 +62,16 @@ describe MPIData, skip_mvi: true do
       let(:phone) { '(800) 867-5309' }
       let(:person_types) { ['VET'] }
       let(:mpi_profile) do
-        build(:mvi_profile,
-              given_names: given_names,
-              family_name: family_name,
-              birth_date: birth_date,
-              icn: icn,
-              edipi: edipi,
-              search_token: search_token,
-              ssn: ssn,
-              person_types: person_types,
-              gender: gender)
+        build(:mpi_profile,
+              given_names:,
+              family_name:,
+              birth_date:,
+              icn:,
+              edipi:,
+              search_token:,
+              ssn:,
+              person_types:,
+              gender:)
       end
 
       before do
@@ -82,11 +82,11 @@ describe MPIData, skip_mvi: true do
       end
 
       it 'creates a birls_id from add_person_proxy and adds it to existing mpi data object' do
-        expect { subject }.to change(mpi_data, :birls_id).from(mpi_profile.birls_id).to(birls_id)
+        expect { subject }.to change(mpi_data, :birls_id).from(user.birls_id).to(birls_id)
       end
 
       it 'creates a participant_id from add_person_proxy and adds it to existing mpi data object' do
-        expect { subject }.to change(mpi_data, :participant_id).from(mpi_profile.participant_id).to(participant_id)
+        expect { subject }.to change(mpi_data, :participant_id).from(user.participant_id).to(participant_id)
       end
 
       it 'copies relevant results from orchestration search to fields for add person call' do
@@ -145,7 +145,6 @@ describe MPIData, skip_mvi: true do
     end
 
     context 'when user is loa3' do
-      let(:user) { build(:user, :loa3) }
       let(:profile_response) { 'some-profile-response' }
 
       before do
@@ -199,7 +198,7 @@ describe MPIData, skip_mvi: true do
         end
 
         context 'and the response is not successful with not found response' do
-          let(:profile_response) { create(:find_profile_not_found_response, profile: profile) }
+          let(:profile_response) { create(:find_profile_not_found_response, profile:) }
           let(:profile) { 'some-unsuccessful-profile' }
 
           it 'returns the unsuccessful response' do
@@ -213,7 +212,7 @@ describe MPIData, skip_mvi: true do
         end
 
         context 'and the response is not successful with server error response' do
-          let(:profile_response) { create(:find_profile_server_error_response, profile: profile) }
+          let(:profile_response) { create(:find_profile_server_error_response, profile:) }
           let(:profile) { 'some-unsuccessful-profile' }
 
           it 'returns the unsuccessful response' do
@@ -232,7 +231,7 @@ describe MPIData, skip_mvi: true do
   describe 'delegated attribute functions' do
     context 'with a successful response' do
       let(:mpi_data) { MPIData.for_user(user.identity) }
-      let(:mpi_profile) { build(:mvi_profile) }
+      let(:mpi_profile) { build(:mpi_profile) }
       let(:profile_response) { create(:find_profile_response, profile: mpi_profile) }
 
       before do
@@ -314,7 +313,7 @@ describe MPIData, skip_mvi: true do
 
     context 'with an error response' do
       let(:mpi_data) { MPIData.for_user(user.identity) }
-      let(:profile_response_error) { create(:find_profile_server_error_response, error: error) }
+      let(:profile_response_error) { create(:find_profile_server_error_response, error:) }
       let(:error) { 'some-error' }
 
       before do

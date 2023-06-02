@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require_dependency 'mobile/application_controller'
-
 module Mobile
   module V0
     class MaintenanceWindowsController < ApplicationController
@@ -15,12 +13,11 @@ module Mobile
         %i[bgs payment_history],
         %i[arcgis facility_locator],
         %i[caseflow appeals],
-        %i[emis military_service_history],
+        %i[vet360 military_service_history],
         %i[evss claims],
         %i[evss direct_deposit_benefits],
         %i[evss disability_rating],
         %i[evss letters_and_documents],
-        %i[idme auth_idme],
         %i[mhv secure_messaging],
         %i[vaos appointments],
         %i[vet360 user_profile_update],

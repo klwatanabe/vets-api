@@ -9,6 +9,7 @@ require 'common/client/middleware/response/snakecase'
 require 'common/client/middleware/response/mhv_xml_html_errors'
 require 'rx/middleware/response/rx_parser'
 require 'rx/middleware/response/rx_failed_station'
+require 'rx/middleware/response/rx_raise_error'
 require 'typhoeus'
 require 'typhoeus/adapters/faraday'
 
@@ -59,14 +60,14 @@ module Rx
         conn.request :json
 
         # Uncomment this if you want curl command equivalent or response output to log
-        # conn.request(:curl, ::Logger.new(STDOUT), :warn) unless Rails.env.production?
-        # conn.response(:logger, ::Logger.new(STDOUT), bodies: true) unless Rails.env.production?
+        # conn.request(:curl, ::Logger.new($stdout), :warn) unless Rails.env.production?
+        # conn.response(:logger, ::Logger.new($stdout), bodies: true) unless Rails.env.production?
 
         conn.response :betamocks if Settings.mhv.rx.mock
         conn.response :rx_failed_station
         conn.response :rx_parser
         conn.response :snakecase
-        conn.response :raise_error, error_prefix: service_name
+        conn.response :rx_raise_error, error_prefix: service_name
         conn.response :mhv_errors
         conn.response :mhv_xml_html_errors
         conn.response :json_parser
@@ -86,7 +87,7 @@ module Rx
         # conn.response(:logger, ::Logger.new(STDOUT), bodies: true) unless Rails.env.production?
 
         conn.response :snakecase
-        conn.response :raise_error, error_prefix: service_name
+        conn.response :rx_raise_error, error_prefix: service_name
         conn.response :mhv_errors
         conn.response :json_parser
 

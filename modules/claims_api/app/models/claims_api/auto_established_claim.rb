@@ -54,7 +54,7 @@ module ClaimsApi
 
     alias token id
 
-    def to_internal
+    def to_internal # rubocop:disable Metrics/MethodLength
       form_data['applicationExpirationDate'] ||= build_application_expiration
       form_data['claimDate'] ||= persisted? ? created_at.iso8601 : Time.zone.now.iso8601
       cast_claim_date!
@@ -66,6 +66,7 @@ module ClaimsApi
       form_data['disabilites'] = massage_invalid_disability_names
       form_data['disabilites'] = remove_special_issues_from_secondary_disabilities
       form_data['treatments'] = transform_treatment_dates if treatments?
+      form_data['treatments'] = transform_treatment_center_names if treatments?
       form_data['serviceInformation'] = transform_service_branch
       transform_service_pay_service_branch
 
@@ -80,7 +81,7 @@ module ClaimsApi
     end
 
     def self.pending?(id)
-      query = where(id: id)
+      query = where(id:)
       query.exists? && query.first.evss_id.nil? ? query.first : false
     end
 
@@ -90,14 +91,14 @@ module ClaimsApi
 
     def self.get_by_id_or_evss_id(id)
       if id.to_s.include?('-')
-        find_by(id: id)
+        find_by(id:)
       else
         find_by(evss_id: id)
       end
     end
 
     def self.get_by_id_and_icn(id, icn)
-      find_by(id: id, veteran_icn: icn)
+      find_by(id:, veteran_icn: icn)
     end
 
     def set_md5
@@ -252,10 +253,20 @@ module ClaimsApi
       treatments = form_data['treatments']
 
       treatments.map do |treatment|
-        treatment = transform_treatment_start_date(treatment: treatment)
-        treatment = transform_treatment_end_date(treatment: treatment)
+        treatment = transform_treatment_start_date(treatment:)
+        treatment = transform_treatment_end_date(treatment:)
         treatment
       end
+    end
+
+    def transform_treatment_center_names
+      treatments = form_data['treatments']
+
+      treatments.map do |treatment|
+        treatment['center']['name'] = ' ' if treatment.dig('center', 'name').empty?
+        treatment
+      end
+      treatments
     end
 
     def transform_treatment_start_date(treatment:)
@@ -298,9 +309,9 @@ module ClaimsApi
 
       disabilities.map do |disability|
         name = disability['name']
-        name = truncate_disability_name(name: name) if name.length > 255
-        name = sanitize_disablity_name(name: name, regex: invalid_characters) if name.match?(invalid_characters)
-        name = strip_disablity_name(name: name)
+        name = truncate_disability_name(name:) if name.length > 255
+        name = sanitize_disablity_name(name:, regex: invalid_characters) if name.match?(invalid_characters)
+        name = strip_disablity_name(name:)
         disability['name'] = name
 
         disability

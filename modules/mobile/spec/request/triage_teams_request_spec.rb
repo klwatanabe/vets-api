@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
 require 'rails_helper'
-require_relative '../support/iam_session_helper'
-require_relative '../support/mobile_sm_client_helper'
+require_relative '../support/helpers/iam_session_helper'
+require_relative '../support/helpers/mobile_sm_client_helper'
 
 RSpec.describe 'Mobile Triage Teams Integration', type: :request do
   include Mobile::MessagingClientHelper
@@ -41,7 +41,7 @@ RSpec.describe 'Mobile Triage Teams Integration', type: :request do
 
       it 'retrieve cached triage teams rather than hitting the service' do
         expect do
-          get '/mobile/v0/messaging/health/recipients', headers: iam_headers, params: params
+          get('/mobile/v0/messaging/health/recipients', headers: iam_headers, params:)
           expect(response).to be_successful
           expect(response.body).to be_a(String)
           parsed_response_contents = response.parsed_body['data']

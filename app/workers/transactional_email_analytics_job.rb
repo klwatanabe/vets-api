@@ -57,7 +57,7 @@ class TransactionalEmailAnalyticsJob
 
   def relevant_emails(page)
     @all_emails = govdelivery_client.email_messages.get(
-      page: page,
+      page:,
       sort_by: 'created_at',
       sort_order: 'DESC',
       page_size: 50
@@ -69,7 +69,7 @@ class TransactionalEmailAnalyticsJob
       created_at = Time.zone.parse(email.created_at)
       if created_at > @time_range_start && created_at <= @time_range_end && email.status == 'completed'
         TransactionalEmailMailer.descendants.each_with_object(grouped_emails) do |mailer, grouped|
-          grouped[mailer] << email if mailer::SUBJECT == email.subject
+          grouped[mailer] << email if email.subject == mailer::SUBJECT
         end
       end
     end
@@ -80,7 +80,7 @@ class TransactionalEmailAnalyticsJob
     @govdelivery_client ||= GovDelivery::TMS::Client.new(
       Settings.govdelivery.token,
       api_root: "https://#{Settings.govdelivery.server}",
-      logger: logger
+      logger:
     )
   end
 

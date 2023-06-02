@@ -11,7 +11,7 @@ describe AppealsApi::V2::DecisionReviews::NoticeOfDisagreementsController, type:
   end
 
   def new_base_path(path)
-    "/services/appeals/notice_of_disagreements/v0/#{path}"
+    "/services/appeals/notice-of-disagreements/v0/#{path}"
   end
 
   before do
@@ -56,13 +56,21 @@ describe AppealsApi::V2::DecisionReviews::NoticeOfDisagreementsController, type:
 
     context 'when no ICN is provided' do
       it 'returns a 422 error' do
-        @max_headers.delete('X-VA-ICN')
-
-        get(path, headers: @max_headers)
+        get(path, headers: @max_headers.except('X-VA-ICN'))
 
         expect(response.status).to eq(422)
         expect(parsed['errors']).to be_an Array
         expect(parsed['errors'][0]['detail']).to include('X-VA-ICN is required')
+      end
+    end
+
+    context 'when provided ICN is in an invalid format' do
+      it 'returns a 422 error' do
+        get(path, headers: { 'X-VA-ICN' => '1393231' })
+
+        expect(response.status).to eq(422)
+        expect(parsed['errors']).to be_an Array
+        expect(parsed['errors'][0]['detail']).to include('X-VA-ICN has an invalid format')
       end
     end
   end
@@ -76,6 +84,7 @@ describe AppealsApi::V2::DecisionReviews::NoticeOfDisagreementsController, type:
         nod = AppealsApi::NoticeOfDisagreement.find_by(id: parsed['data']['id'])
 
         expect(nod.source).to eq('va.gov')
+        expect(nod.api_version).to eq('V2')
         expect(nod.veteran_icn).to eq('1013062086V794840')
         expect(parsed['data']['type']).to eq('noticeOfDisagreement')
         expect(parsed['data']['attributes']['status']).to eq('pending')
@@ -97,6 +106,30 @@ describe AppealsApi::V2::DecisionReviews::NoticeOfDisagreementsController, type:
         post(path, params: @minimum_data, headers: @headers.except('X-VA-File-Number'))
         expect(response.status).to eq(422)
         expect(parsed['errors']).to be_an Array
+      end
+    end
+
+    context 'when icn header is present but does not meet length requirements' do
+      let(:icn) { '1393231' }
+
+      it 'returns a 422 error with details' do
+        post(path, params: @minimum_data, headers: @headers.merge({ 'X-VA-ICN' => icn }))
+
+        expect(response).to have_http_status(:unprocessable_entity)
+        expect(parsed['errors'][0]['title']).to eql('Invalid length')
+        expect(parsed['errors'][0]['detail']).to include("'#{icn}' did not fit within the defined length limits")
+      end
+    end
+
+    context 'when icn header is present but does not meet pattern requirements' do
+      let(:icn) { '49392810394830103' }
+
+      it 'returns a 422 error with details' do
+        post(path, params: @minimum_data, headers: @headers.merge({ 'X-VA-ICN' => icn }))
+
+        expect(response).to have_http_status(:unprocessable_entity)
+        expect(parsed['errors'][0]['title']).to eql('Invalid pattern')
+        expect(parsed['errors'][0]['detail']).to include("'#{icn}' did not match the defined pattern")
       end
     end
 
@@ -186,7 +219,7 @@ describe AppealsApi::V2::DecisionReviews::NoticeOfDisagreementsController, type:
 
       it_behaves_like(
         'an endpoint with OpenID auth',
-        AppealsApi::NoticeOfDisagreements::V0::NoticeOfDisagreementsController::OAUTH_SCOPES[:POST]
+        scopes: AppealsApi::NoticeOfDisagreements::V0::NoticeOfDisagreementsController::OAUTH_SCOPES[:POST]
       ) do
         def make_request(auth_header)
           post(oauth_path, params: @max_data, headers: @max_headers.merge(auth_header))
@@ -253,7 +286,7 @@ describe AppealsApi::V2::DecisionReviews::NoticeOfDisagreementsController, type:
 
       it_behaves_like(
         'an endpoint with OpenID auth',
-        AppealsApi::NoticeOfDisagreements::V0::NoticeOfDisagreementsController::OAUTH_SCOPES[:GET]
+        scopes: AppealsApi::NoticeOfDisagreements::V0::NoticeOfDisagreementsController::OAUTH_SCOPES[:GET]
       ) do
         def make_request(auth_header)
           get(oauth_path, headers: auth_header)
@@ -339,12 +372,36 @@ describe AppealsApi::V2::DecisionReviews::NoticeOfDisagreementsController, type:
       end
     end
 
+    context 'when icn header is present but does not meet length requirements' do
+      let(:icn) { '1393231' }
+
+      it 'returns a 422 error with details' do
+        post(path, params: @minimum_data, headers: @headers.merge({ 'X-VA-ICN' => icn }))
+
+        expect(response).to have_http_status(:unprocessable_entity)
+        expect(parsed['errors'][0]['title']).to eql('Invalid length')
+        expect(parsed['errors'][0]['detail']).to include("'#{icn}' did not fit within the defined length limits")
+      end
+    end
+
+    context 'when icn header is present but does not meet pattern requirements' do
+      let(:icn) { '49392810394830103' }
+
+      it 'returns a 422 error with details' do
+        post(path, params: @minimum_data, headers: @headers.merge({ 'X-VA-ICN' => icn }))
+
+        expect(response).to have_http_status(:unprocessable_entity)
+        expect(parsed['errors'][0]['title']).to eql('Invalid pattern')
+        expect(parsed['errors'][0]['detail']).to include("'#{icn}' did not match the defined pattern")
+      end
+    end
+
     context 'with oauth' do
       let(:oauth_path) { new_base_path 'forms/10182/validate' }
 
       it_behaves_like(
         'an endpoint with OpenID auth',
-        AppealsApi::NoticeOfDisagreements::V0::NoticeOfDisagreementsController::OAUTH_SCOPES[:POST]
+        scopes: AppealsApi::NoticeOfDisagreements::V0::NoticeOfDisagreementsController::OAUTH_SCOPES[:POST]
       ) do
         def make_request(auth_header)
           post(oauth_path, params: @max_data, headers: @max_headers.merge(auth_header))
@@ -359,7 +416,7 @@ describe AppealsApi::V2::DecisionReviews::NoticeOfDisagreementsController, type:
         with_openid_auth(
           AppealsApi::NoticeOfDisagreements::V0::NoticeOfDisagreementsController::OAUTH_SCOPES[:POST]
         ) do |auth_header|
-          post(oauth_path, params: @minimum_data, headers: @headers.merge(auth_header))
+          post(oauth_path, params: @max_data, headers: @max_headers.merge(auth_header))
         end
         oauth_status = response.status
         oauth_body = JSON.parse(response.body)
@@ -387,7 +444,7 @@ describe AppealsApi::V2::DecisionReviews::NoticeOfDisagreementsController, type:
       data['data']['attributes']['boardReviewOption'] = 'hearing'
       headers = @max_headers.merge('X-VA-Birth-Date' => '3000-01-02')
 
-      post(path, params: data.to_json, headers: headers)
+      post(path, params: data.to_json, headers:)
 
       expect(response.status).to eq 422
       expect(parsed['errors'].count).to eq 3

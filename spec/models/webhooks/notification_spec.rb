@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require 'rails_helper'
-require_dependency './lib/webhooks/utilities'
 
 describe Webhooks::Notification, type: :model do
   let(:consumer_id) { 'f7d83733-a047-413b-9cce-e89269dcb5b1' }
@@ -17,11 +16,11 @@ describe Webhooks::Notification, type: :model do
   before do
     @subscription = Webhooks::Utilities.register_webhook(consumer_id, consumer_name, observers, api_id)
     @notifications = Webhooks::Utilities.record_notifications(
-      consumer_id: consumer_id,
-      consumer_name: consumer_name,
-      event: event,
+      consumer_id:,
+      consumer_name:,
+      event:,
       api_guid: api_id,
-      msg: msg
+      msg:
     )
   end
 

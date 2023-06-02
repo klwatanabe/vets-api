@@ -219,15 +219,15 @@ RSpec.describe OpenidApplicationController, type: :controller do
     end
 
     context 'with a MHV credential profile' do
-      let(:mvi_profile) do
-        build(:mvi_profile,
+      let(:mpi_profile) do
+        build(:mpi_profile,
               icn: '1013062086V794840',
               family_name: 'zackariah')
       end
 
       before do
         allow(JWT).to receive(:decode).and_return(token)
-        stub_mpi(mvi_profile)
+        stub_mpi(mpi_profile)
       end
 
       let(:okta_response) { FactoryBot.build(:okta_mhv_response) }
@@ -254,15 +254,15 @@ RSpec.describe OpenidApplicationController, type: :controller do
     context 'with a DSLogon credential profile' do
       let(:okta_response) { FactoryBot.build(:okta_dslogon_response) }
       let(:faraday_response) { instance_double('Faraday::Response') }
-      let(:mvi_profile) do
-        build(:mvi_profile,
+      let(:mpi_profile) do
+        build(:mpi_profile,
               icn: '1013062086V794840',
               family_name: 'WEAVER')
       end
 
       before do
         allow(JWT).to receive(:decode).and_return(token)
-        stub_mpi(mvi_profile)
+        stub_mpi(mpi_profile)
       end
 
       it 'returns 200 and add user to session' do
@@ -286,15 +286,15 @@ RSpec.describe OpenidApplicationController, type: :controller do
     context 'with an ID.me credential profile' do
       let(:okta_response) { FactoryBot.build(:okta_idme_response) }
       let(:faraday_response) { instance_double('Faraday::Response') }
-      let(:mvi_profile) do
-        build(:mvi_profile,
+      let(:mpi_profile) do
+        build(:mpi_profile,
               icn: '1013062086V794840',
               family_name: 'CARROLL')
       end
 
       before do
         allow(JWT).to receive(:decode).and_return(token)
-        stub_mpi(mvi_profile)
+        stub_mpi(mpi_profile)
       end
 
       it 'returns 200 and add user to session' do
@@ -311,33 +311,6 @@ RSpec.describe OpenidApplicationController, type: :controller do
           expect(JSON.parse(response.body)['icn']).to eq('1013062086V794840')
           expect(JSON.parse(response.body)['last_name']).to eq('CARROLL')
           expect(JSON.parse(response.body)['loa_current']).to eq(3)
-        end
-      end
-    end
-
-    context 'with an ID.me credential profile with mismatched mvi profile' do
-      let(:okta_response) { FactoryBot.build(:okta_idme_response) }
-      let(:faraday_response) { instance_double('Faraday::Response') }
-      let(:mvi_profile) do
-        build(:mvi_profile,
-              icn: '1013062086V794841',
-              family_name: 'CARROLL')
-      end
-
-      before do
-        allow(JWT).to receive(:decode).and_return(token)
-        stub_mpi(mvi_profile)
-      end
-
-      it 'returns 401 and mismatched session' do
-        with_okta_configured do
-          allow_any_instance_of(Okta::Service).to receive(:user).and_return(faraday_response)
-          allow(faraday_response).to receive(:success?).and_return(true)
-          allow(faraday_response).to receive(:body).and_return(okta_response)
-
-          request.headers['Authorization'] = 'Bearer FakeToken'
-          get :index
-          expect(response.status).to eq(401)
         end
       end
     end

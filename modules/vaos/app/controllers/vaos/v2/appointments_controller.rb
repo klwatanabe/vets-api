@@ -4,8 +4,15 @@ require 'common/exceptions'
 
 module VAOS
   module V2
-    class AppointmentsController < VAOS::V0::BaseController
+    class AppointmentsController < VAOS::BaseController
       STATSD_KEY = 'api.vaos.va_mobile.response.partial'
+      NPI_NOT_FOUND_MSG = "We're sorry, we can't display your provider's information right now."
+      PAP_COMPLIANCE_TELE = 'PAP COMPLIANCE/TELE'
+      PAP_COMPLIANCE_TELE_KEY = 'PAP COMPLIANCE/TELE Appointment Details'
+      FACILITY_ERROR_MSG = 'Error fetching facility details'
+      APPT_INDEX = 'Appointment Index'
+      APPT_SHOW = 'Appointment Show'
+      APPT_CREATE = 'Appointment Create'
 
       # cache utilized by the controller to store key/value pairs of provider name and npi
       # in order to prevent duplicate service call lookups during index/show/create
@@ -16,7 +23,6 @@ module VAOS
 
         appointments[:data].each do |appt|
           find_and_merge_provider_name(appt) if appt[:kind] == 'cc' && appt[:status] == 'proposed'
-          log_type_of_care_and_provider(appt)
         end
 
         # clear provider cache after processing appointments
@@ -24,6 +30,10 @@ module VAOS
 
         _include&.include?('clinics') && merge_clinics(appointments[:data])
         _include&.include?('facilities') && merge_facilities(appointments[:data])
+
+        appointments[:data].each do |appt|
+          log_pap_compliance_appt_data(appt, APPT_INDEX) if appt&.[](:reason)&.include? PAP_COMPLIANCE_TELE
+        end
 
         serializer = VAOS::V2::VAOSSerializer.new
         serialized = serializer.serialize(appointments[:data], 'appointments')
@@ -50,11 +60,11 @@ module VAOS
           appointment[:friendly_name] = clinic&.[](:friendly_name) if clinic&.[](:friendly_name)
         end
 
-        # rubocop:disable Style/IfUnlessModifier
-        unless appointment[:location_id].nil?
-          appointment[:location] = get_facility(appointment[:location_id])
+        appointment[:location] = get_facility(appointment[:location_id]) unless appointment[:location_id].nil?
+
+        if appointment&.[](:reason_code)&.[](:text)&.include? PAP_COMPLIANCE_TELE
+          log_pap_compliance_appt_data(appointment, APPT_SHOW)
         end
-        # rubocop:enable Style/IfUnlessModifier
 
         serializer = VAOS::V2::VAOSSerializer.new
         serialized = serializer.serialize(appointment, 'appointments')
@@ -77,6 +87,11 @@ module VAOS
         unless new_appointment[:location_id].nil?
           new_appointment[:location] = get_facility(new_appointment[:location_id])
         end
+
+        if new_appointment&.[](:reason_code)&.[](:text)&.include? PAP_COMPLIANCE_TELE
+          log_pap_compliance_appt_data(new_appointment, APPT_CREATE)
+        end
+
         serializer = VAOS::V2::VAOSSerializer.new
         serialized = serializer.serialize(new_appointment, 'appointments')
         render json: { data: serialized }, status: :created
@@ -144,17 +159,15 @@ module VAOS
       # uses find_npi helper method to extract npi from appointment response,
       # then uses the npi to look up the provider name via mobile_ppms_service
       #
-      # will cache the key value pair of npi and provider name to avoid
-      # duplicate get_provider_name calls
-
-      NPI_NOT_FOUND_MSG = "We're sorry, we can't display your provider's information right now."
+      # will cache at the class level the key value pair of npi and provider name to avoid
+      # duplicate get_provider_with_cache calls
 
       def find_and_merge_provider_name(appt)
         found_npi = find_npi(appt)
         if found_npi
           if !read_provider_cache(found_npi)
             begin
-              provider_response = mobile_ppms_service.get_provider(found_npi)
+              provider_response = mobile_ppms_service.get_provider_with_cache(found_npi)
               appt[:preferred_provider_name] = provider_response[:name]
             rescue Common::Exceptions::BackendServiceException => e
               appt[:preferred_provider_name] = NPI_NOT_FOUND_MSG
@@ -177,6 +190,7 @@ module VAOS
             return i[:value] if i[:system].include? 'us-npi'
           end
         end
+        nil
       end
 
       def clear_provider_cache
@@ -191,28 +205,10 @@ module VAOS
         @@provider_cache[key] = value
       end
 
-      def logged_toc_providers
-        @logged_toc_providers ||= Set.new
-      end
-
-      def log_type_of_care_and_provider(appt)
-        logged_key = "#{appt[:kind]}-#{appt[:status]}-#{appt[:service_type]}-#{appt[:practitioners]}"
-        if logged_toc_providers.exclude?(logged_key)
-          Rails.logger.info(
-            'VAOS Type of care and provider',
-            kind: appt[:kind],
-            status: appt[:status],
-            type_of_care: appt[:service_type],
-            provider: appt[:practitioners]
-          )
-          logged_toc_providers.add(logged_key)
-        end
-      end
-
       # Makes a call to the VAOS service to create a new appointment.
       def get_new_appointment
         if create_params[:kind] == 'clinic' && create_params[:status] == 'booked' # a direct scheduled appointment
-          modify_desired_date(create_params, get_facility_timezone)
+          modify_desired_date(create_params, get_facility_timezone(create_params[:location_id]))
         end
 
         appointments_service.post_appointment(create_params)
@@ -248,9 +244,13 @@ module VAOS
       end
 
       # Returns the facility timezone id (eg. 'America/New_York') associated with facility id (location_id)
-      def get_facility_timezone
-        facility_info = get_facility(create_params[:location_id])
-        facility_info[:timezone]&.[](:time_zone_id)
+      def get_facility_timezone(facility_location_id)
+        facility_info = get_facility(facility_location_id)
+        if facility_info == FACILITY_ERROR_MSG
+          nil # returns nil if unable to fetch facility info, which will be handled by the timezone conversion
+        else
+          facility_info[:timezone]&.[](:time_zone_id)
+        end
       end
 
       def merge_clinics(appointments)
@@ -289,24 +289,39 @@ module VAOS
       end
 
       def get_clinic(location_id, clinic_id)
-        mobile_facility_service.get_clinic(station_id: location_id, clinic_id: clinic_id)
+        mobile_facility_service.get_clinic_with_cache(station_id: location_id, clinic_id:)
       rescue Common::Exceptions::BackendServiceException => e
         Rails.logger.error(
           "Error fetching clinic #{clinic_id} for location #{location_id}",
-          clinic_id: clinic_id,
-          location_id: location_id,
+          clinic_id:,
+          location_id:,
           vamf_msg: e.original_body
         )
         nil # on error log and return nil, calling code will handle nil
       end
 
       def get_facility(location_id)
-        mobile_facility_service.get_facility(location_id)
+        mobile_facility_service.get_facility_with_cache(location_id)
       rescue Common::Exceptions::BackendServiceException
         Rails.logger.error(
           "Error fetching facility details for location_id #{location_id}",
-          location_id: location_id
+          location_id:
         )
+        FACILITY_ERROR_MSG
+      end
+
+      def log_pap_compliance_appt_data(appt, appt_method)
+        pap_compliance_entry = { PAP_COMPLIANCE_TELE_KEY => pap_compliance_details(appt[:location_id], appt[:clinic],
+                                                                                   appt_method) }
+        Rails.logger.info('Details for PAP COMPLIANCE/TELE appointment', pap_compliance_entry.to_json)
+      end
+
+      def pap_compliance_details(location_id, clinic, appt_method)
+        {
+          endpoint_method: appt_method,
+          location_id:,
+          clinic:
+        }
       end
 
       def update_appt_id

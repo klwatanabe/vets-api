@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'sentry_logging'
+require 'sidekiq/form526_backup_submission_process/submit'
 
 class Form526Submission < ApplicationRecord
   include SentryLogging
@@ -48,72 +49,15 @@ class Form526Submission < ApplicationRecord
   BIRLS_KEY = 'va_eauth_birlsfilenumber'
   SUBMIT_FORM_526_JOB_CLASSES = %w[SubmitForm526AllClaim SubmitForm526].freeze
 
+  # Called when the DisabilityCompensation form controller is ready to hand off to the backend
+  # submission process. Currently this passes directly to the retryable EVSS workflow, but if any
+  # one-time setup or workflow redirection (e.g. for Claims Fast-Tracking) needs to happen, it should
+  # go here and call start_evss_submission_job when done.
   def start
-    rrd_sidekiq_job = rrd_job_selector.sidekiq_job
-    if rrd_sidekiq_job
-      start_rrd_job(rrd_sidekiq_job, use_backup_job: true)
-    else
-      start_evss_submission_job
-    end
-  rescue => e
-    Rails.logger.error 'The fast track was skipped due to the following error ' \
-                       " and start_evss_submission_job is being called: #{e}"
     start_evss_submission_job
   end
 
-  def start_rrd_job(rrd_sidekiq_job, use_backup_job: false)
-    workflow_batch = Sidekiq::Batch.new
-    workflow_batch.on(
-      :success,
-      'Form526Submission#rrd_complete_handler',
-      'submission_id' => id
-    )
-    workflow_batch.on(
-      :death,
-      'Form526Submission#rrd_processor_failed_handler',
-      'submission_id' => id,
-      'use_backup_job' => use_backup_job
-    )
-    job_ids = workflow_batch.jobs do
-      rrd_sidekiq_job.perform_async(id)
-    end
-    job_ids.first
-  end
-
-  # Called by Sidekiq::Batch as part of the Form 526 submission workflow
-  # When the refactored job fails, this _handler is called to run a backup_sidekiq_job.
-  def rrd_processor_failed_handler(_status, options)
-    submission = Form526Submission.find(options['submission_id'])
-    backup_sidekiq_job = submission.rrd_job_selector.sidekiq_job(backup: true) if options['use_backup_job']
-    if backup_sidekiq_job
-      message = "Restarting with backup #{backup_sidekiq_job} for submission #{submission.id}."
-      submission.send_rrd_alert_email('RRD Processor Selector alert - backup job', message)
-      return submission.start_rrd_job(backup_sidekiq_job)
-    end
-    submission.save_metadata(error: 'RRD Processor failed')
-    submission.start_evss_submission_job
-  rescue => e
-    message = <<~MESSAGE
-      RRD was skipped for submission #{submission.id} due to an error.<br/>
-      Sidekiq Job options: #{options}<br/>
-    MESSAGE
-    submission.send_rrd_alert_email('RRD Processor Selector alert', message, e)
-    submission.save_metadata(error: 'RRD Processor Selector failed')
-    submission.start_evss_submission_job
-  end
-
-  def rrd_job_selector
-    @rrd_job_selector ||= RapidReadyForDecision::SidekiqJobSelector.new(self)
-  end
-
-  # Afer RapidReadyForDecision is complete, this method is
-  # called by Sidekiq::Batch as part of the Form 526 submission workflow
-  def rrd_complete_handler(_status, options)
-    submission = Form526Submission.find(options['submission_id'])
-    submission.start_evss_submission_job
-  end
-
-  # Kicks off a 526 submit workflow batch. The first step in a submission workflow is to submit
+  # Kicks off a retryable 526 submit workflow. The first step in a submission workflow is to submit
   # an increase only or all claims form. Once the first job succeeds the batch will callback and run
   # one (cleanup job) or more ancillary jobs such as uploading supporting evidence or submitting ancillary forms.
   #
@@ -148,7 +92,13 @@ class Form526Submission < ApplicationRecord
     silence_errors_and_log_to_sentry: false
   )
     untried_birls_id = birls_ids_that_havent_been_tried_yet.first
-    return unless untried_birls_id
+
+    # If there are no more ids to try, queue backup (if enabled), and return. End of the road, do not retry.
+    unless untried_birls_id
+      # hits this when it has a non-retryable error and has exhausted all birls
+      queue_central_mail_backup_submission_for_non_retryable_error!
+      return
+    end
 
     self.birls_id = untried_birls_id
     save!
@@ -160,6 +110,11 @@ class Form526Submission < ApplicationRecord
     # `sidekiq_retries_exhausted` block. It seems like the value of self for that block won't be the
     # Sidekiq job instance (so no access to the log_exception_to_sentry method). Also, rethrowing the error
     # (and letting it bubble up to Sidekiq) might trigger the current job to retry (which we don't want).
+
+    # If we error, we still need to attempt a backup submission, but we cannot use `ensure` here because
+    # we don't want to send a backup if it is proceeding on to trying the next birls id
+    queue_central_mail_backup_submission_for_non_retryable_error!(e)
+
     raise unless silence_errors_and_log_to_sentry
 
     log_exception_to_sentry e, extra_content_for_sentry
@@ -380,6 +335,30 @@ class Form526Submission < ApplicationRecord
   end
 
   private
+
+  def queue_central_mail_backup_submission_for_non_retryable_error!(e: nil)
+    # Entry-point for backup 526 CMP submission
+    #
+    # Required criteria to send a backup 526 submission from here:
+    # Enabled in settings and flipper
+    # Does not have a valid claim ID (through RRD process or otherwise) (protect against dup submissions)
+    # Does not have a backup submission ID (protect against dup submissions)
+    backup_job_jid = nil
+    flipper_sym = :form526_backup_submission_temp_killswitch
+    send_backup_submission = Settings.form526_backup.enabled &&
+                             Flipper.enabled?(flipper_sym) &&
+                             submitted_claim_id.nil? &&
+                             backup_submitted_claim_id.nil?
+    backup_job_jid = Sidekiq::Form526BackupSubmissionProcess::Submit.perform_async(id) if send_backup_submission
+
+    log_message = {
+      submission_id: id
+    }
+    log_message['error_class']   = e.class unless e.nil?
+    log_message['error_message'] = e.message unless e.nil?
+    log_message['backup_job_id'] = backup_job_jid unless backup_job_jid.nil?
+    ::Rails.logger.error('Form526 Exhausted or Errored (non-retryable-error-path)', log_message)
+  end
 
   def submit_uploads
     # Put uploads on a one minute delay because of shared workload with EVSS

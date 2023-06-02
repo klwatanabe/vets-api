@@ -25,6 +25,44 @@ describe AppealsApi::SupplementalClaim, type: :model do
     end
   end
 
+  describe 'before hooks' do
+    before { @supplemental_claim = build(:extra_supplemental_claim) }
+
+    describe 'assign_metadata' do
+      it 'assigns all metadata fields when pact act boolean feature flag is enabled' do
+        Flipper.enable(:decision_review_sc_pact_act_boolean)
+
+        @supplemental_claim.save
+
+        expect(@supplemental_claim.metadata.dig('form_data', 'evidence_type')).to eq %w[upload retrieval]
+        expect(@supplemental_claim.metadata.dig('form_data', 'potential_pact_act')).to be true
+        expect(@supplemental_claim.metadata.dig('pact', 'potential_pact_act')).to be true
+      end
+
+      it 'assigns only evidence_type when pact act boolean feature flag is disabled' do
+        Flipper.disable(:decision_review_sc_pact_act_boolean)
+
+        @supplemental_claim.save
+
+        expect(@supplemental_claim.metadata.dig('form_data', 'evidence_type')).to eq %w[upload retrieval]
+        expect(@supplemental_claim.metadata.dig('form_data', 'potential_pact_act')).to be_nil
+        expect(@supplemental_claim.metadata.dig('pact', 'potential_pact_act')).to be_nil
+      end
+
+      it 'saves consumer benefit type to metadata' do
+        expect(supplemental_claim_veteran_only.metadata.dig('form_data', 'benefit_type')).to eq 'fiduciary'
+        expect(supplemental_claim_veteran_only.metadata['central_mail_business_line']).to eq 'FID'
+      end
+
+      it 'assigns no metadata when api_version is not V2 or V0' do
+        @supplemental_claim.api_version = 'V1'
+        @supplemental_claim.save
+
+        expect(@supplemental_claim.metadata).to eql({})
+      end
+    end
+  end
+
   describe 'validations' do
     let(:appeal) { build(:extra_supplemental_claim) }
 
@@ -95,6 +133,10 @@ describe AppealsApi::SupplementalClaim, type: :model do
     it { expect(sc_with_nvc.claimant_type_other_text).to eq 'Veteran Attorney' }
   end
 
+  describe '#potential_pact_act' do
+    it { expect(sc_with_nvc.potential_pact_act).to be(true) }
+  end
+
   describe '#contestable_issues' do
     subject { sc_with_nvc.contestable_issues.to_json }
 
@@ -126,7 +168,35 @@ describe AppealsApi::SupplementalClaim, type: :model do
   end
 
   describe '#soc_opt_in' do
-    it { expect(sc_with_nvc.soc_opt_in).to be true }
+    let(:sc_opted_in) { create(:extra_supplemental_claim) }
+    let(:sc_not_opted_in) { create(:minimal_supplemental_claim) }
+
+    describe 'when pdf version is unset' do
+      it 'uses the value from the record' do
+        expect(sc_opted_in.soc_opt_in).to be true
+        expect(sc_not_opted_in.soc_opt_in).to be false
+      end
+    end
+
+    describe 'when pdf_version is v2' do
+      let(:sc_opted_in) { create(:extra_supplemental_claim, pdf_version: 'v2') }
+      let(:sc_not_opted_in) { create(:minimal_supplemental_claim, pdf_version: 'v2') }
+
+      it 'uses the value from the record' do
+        expect(sc_opted_in.soc_opt_in).to be true
+        expect(sc_not_opted_in.soc_opt_in).to be false
+      end
+    end
+
+    describe 'when pdf_version is v3' do
+      let(:sc_opted_in) { create(:extra_supplemental_claim, pdf_version: 'v3') }
+      let(:sc_not_opted_in) { create(:minimal_supplemental_claim, pdf_version: 'v3') }
+
+      it 'is always true' do
+        expect(sc_opted_in.soc_opt_in).to be true
+        expect(sc_not_opted_in.soc_opt_in).to be true
+      end
+    end
   end
 
   describe '#form_5103_notice_acknowledged' do
@@ -153,10 +223,14 @@ describe AppealsApi::SupplementalClaim, type: :model do
       full_last_name = 'AAAAAAAAAAbbbbbbbbbbCCCCCCCCCCdddddddddd'
       default_auth_headers['X-VA-Last-Name'] = full_last_name
 
-      sc = AppealsApi::SupplementalClaim.new(auth_headers: default_auth_headers, form_data: form_data)
+      sc = AppealsApi::SupplementalClaim.new(auth_headers: default_auth_headers, form_data:)
 
       expect(sc.stamp_text).to eq 'AAAAAAAAAAbbbbbbbbbbCCCCCCCCCCdd... - 6789'
     end
+  end
+
+  describe '#evidence_type' do
+    it { expect(sc_with_nvc.evidence_type).to eq %w[upload retrieval] }
   end
 
   describe '#lob' do

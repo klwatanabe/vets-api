@@ -5,20 +5,16 @@ require 'sentry_logging'
 require 'sftp_writer/factory'
 
 module EducationForm
-  WINDOWS_NOTEPAD_LINEBREAK = "\r\n"
-  STATSD_KEY = 'worker.education_benefits_claim'
-  STATSD_FAILURE_METRIC = "#{STATSD_KEY}.failed_spool_file"
-
   class FormattingError < StandardError
-  end
-
-  class DailySpoolFileLogging < StandardError
   end
 
   class DailySpoolFileError < StandardError
   end
 
   class CreateDailySpoolFiles
+    WINDOWS_NOTEPAD_LINEBREAK = "\r\n"
+    STATSD_KEY = 'worker.education_benefits_claim'
+    STATSD_FAILURE_METRIC = "#{STATSD_KEY}.failed_spool_file".freeze
     LIVE_FORM_TYPES = %w[1990 1995 1990e 5490 1990n 5495 0993 0994 10203 1990S].map { |t| "22-#{t.upcase}" }.freeze
     AUTOMATED_DECISIONS_STATES = [nil, 'denied', 'processed'].freeze
     include Sidekiq::Worker
@@ -51,7 +47,7 @@ module EducationForm
         regional_data = group_submissions_by_region(records)
         formatted_records = format_records(regional_data)
         # Create a remote file for each region, and write the records into them
-        writer = SFTPWriter::Factory.get_writer(Settings.edu.sftp).new(Settings.edu.sftp, logger: logger)
+        writer = SFTPWriter::Factory.get_writer(Settings.edu.sftp).new(Settings.edu.sftp, logger:)
         write_files(writer, structured_data: formatted_records)
       rescue => e
         StatsD.increment("#{STATSD_FAILURE_METRIC}.general")
@@ -70,7 +66,7 @@ module EducationForm
     # open for a shorter period of time.
     def format_records(grouped_data)
       raw_groups = grouped_data.each do |region, v|
-        region_id = EducationFacility.facility_for(region: region)
+        region_id = EducationFacility.facility_for(region:)
         grouped_data[region] = v.map do |record|
           format_application(record, rpo: region_id)
         end.compact
@@ -84,7 +80,7 @@ module EducationForm
     # Creates or updates an SpoolFileEvent for tracking and to prevent multiple files per RPO per date during retries
     def write_files(writer, structured_data:)
       structured_data.each do |region, records|
-        region_id = EducationFacility.facility_for(region: region)
+        region_id = EducationFacility.facility_for(region:)
         filename = "#{region_id}_#{Time.zone.now.strftime('%m%d%Y_%H%M%S')}_vetsgov.spl"
         spool_file_event = SpoolFileEvent.build_event(region_id, filename)
 
@@ -93,10 +89,21 @@ module EducationForm
         else
           log_submissions(records, filename)
           # create the single textual spool file
-          contents = records.map(&:text).join(EducationForm::WINDOWS_NOTEPAD_LINEBREAK)
+          contents = records.map(&:text).join(EducationForm::CreateDailySpoolFiles::WINDOWS_NOTEPAD_LINEBREAK)
 
           begin
             writer.write(contents, filename)
+
+            # send copy of staging spool files to testers
+            # This mailer is intended to only work for development, staging and NOT production
+            # Rails.env will return 'production' on the development & staging servers and  which
+            # will trip the unwary. To be safe, use ENV['HOSTNAME']
+            email_staging_spool_files(contents) if
+              # local developer development
+              Rails.env.eql?('development') ||
+
+              # VA Staging environment where we really want this to work.
+              ENV['HOSTNAME'].eql?('staging-api.va.gov')
 
             # track and update the records as processed once the file has been successfully written
             track_submissions(region_id)
@@ -202,6 +209,10 @@ module EducationForm
       return unless Flipper.enabled?(:spool_testing_error_3) && !FeatureFlipper.staging_email?
 
       CreateDailySpoolFilesMailer.build(region).deliver_now
+    end
+
+    def email_staging_spool_files(contents)
+      CreateStagingSpoolFilesMailer.build(contents).deliver_now
     end
   end
 end

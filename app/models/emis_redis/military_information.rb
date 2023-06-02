@@ -62,7 +62,7 @@ module EMISRedis
 
     NOV_1998 = Date.new(1998, 11, 11)
     # Date range for the Gulf War
-    GULF_WAR_RANGE = (Date.new(1990, 8, 2)..NOV_1998).freeze
+    GULF_WAR_RANGE = (Date.new(1990, 8, 2)..NOV_1998)
 
     # ISO Country codes for southwest Asia
     SOUTHWEST_ASIA = %w[
@@ -126,7 +126,7 @@ module EMISRedis
     # Vietnam ISO country code
     VIETNAM = 'VNM'
     # Date range for Vietnam War
-    VIETNAM_WAR_RANGE = (Date.new(1962, 1, 9)..Date.new(1975, 5, 7)).freeze
+    VIETNAM_WAR_RANGE = (Date.new(1962, 1, 9)..Date.new(1975, 5, 7))
 
     # @return [Boolean] true if the user is currently
     #  serving in active duty
@@ -196,7 +196,7 @@ module EMISRedis
         return {} unless service_branch
 
         {
-          service_branch: service_branch,
+          service_branch:,
           date_range: {
             from: military_service_episode.begin_date.to_s,
             to: military_service_episode.end_date.to_s
@@ -227,7 +227,7 @@ module EMISRedis
     def discharge_type
       return if latest_service_episode.blank?
 
-      DISCHARGE_TYPES[latest_service_episode&.discharge_character_of_service_code] || 'other'
+      DISCHARGE_TYPES[latest_service_episode&.discharge_character_of_service_code]
     end
 
     # @return [Boolean] true if veteran served a tour of duty

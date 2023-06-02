@@ -53,6 +53,9 @@ spec/services/sign_in/ @department-of-veterans-affairs/vsp-identity
 app/controllers/v0/sign_in_controller.rb @department-of-veterans-affairs/vsp-identity
 spec/controllers/v0/sign_in_controller_spec.rb @department-of-veterans-affairs/vsp-identity
 
+# mocked sign in service authentication
+modules/mocked_authentication/ @department-of-veterans-affairs/vsp-identity
+
 # inherited proofing
 app/controllers/inherited_proofing_controller.rb @department-of-veterans-affairs/vsp-identity
 spec/controllers/inherited_proofing_controller_spec.rb @department-of-veterans-affairs/vsp-identity
@@ -126,3 +129,6 @@ spec/lib/pdf_utilities/pdf_validator @department-of-veterans-affairs/va-api-engi
 
 # Decision Reviews (Appeals) API product
 modules/appeals_api @department-of-veterans-affairs/backend-review-group @department-of-veterans-affairs/lighthouse-banana-peels
+
+# Disability Benefits Experience support
+lib/disability_compensation @department-of-veterans-affairs/backend-review-group @department-of-veterans-affairs/bdex

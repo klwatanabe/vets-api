@@ -1,8 +1,10 @@
 # frozen_string_literal: true
 
-require 'vba_documents/multipart_parser'
-require 'pdf_info'
 require 'central_mail/utilities'
+require 'pdf_info'
+require 'pdf_utilities/pdf_validator'
+require 'vba_documents/document_request_validator'
+require 'vba_documents/multipart_parser'
 
 module VBADocuments
   class PDFInspector
@@ -11,7 +13,6 @@ module VBADocuments
     attr_accessor :file, :pdf_data, :parts
 
     module Constants
-      DOC_TYPE_KEY = :doc_type
       SOURCE_KEY = :source
     end
     include Constants
@@ -43,9 +44,8 @@ module VBADocuments
     def inspect_pdf(add_file_key)
       parts_metadata = JSON.parse(@parts['metadata'])
 
-      # instantiate the data hash and set the source and doc_type
-      data = { SOURCE_KEY => parts_metadata['source'], DOC_TYPE_KEY => parts_metadata['docType'] || 'Unknown',
-               total_documents: 0, total_pages: 0, content: {} }
+      # instantiate the data hash and set the source
+      data = { SOURCE_KEY => parts_metadata['source'], total_documents: 0, total_pages: 0, content: {} }
 
       # read the PDF content
       data[:content].merge!(pdf_metadata(@parts['content']))
@@ -75,22 +75,25 @@ module VBADocuments
     def add_line_of_business(data, parts_metadata)
       if parts_metadata.key? 'businessLine'
         data['line_of_business'] = parts_metadata['businessLine'].to_s.upcase
-        data['submitted_line_of_business'] =
-          CentralMail::Utilities.valid_lob[parts_metadata['businessLine'].to_s.upcase]
+        data['submitted_line_of_business'] = VALID_LOB[parts_metadata['businessLine'].to_s.upcase]
       end
     end
 
     def pdf_metadata(pdf)
       metadata = PdfInfo::Metadata.read(pdf)
       dimensions = metadata.page_size_inches
+      max_width, max_height = VBADocuments::DocumentRequestValidator.pdf_validator_options.values_at(
+        :width_limit_in_inches, :height_limit_in_inches
+      )
 
       {
         page_count: metadata.pages,
         dimensions: {
           height: dimensions[:height].round(2),
           width: dimensions[:width].round(2),
-          oversized_pdf: dimensions[:height] > 21 || dimensions[:width] > 21
+          oversized_pdf: dimensions[:height] > max_height || dimensions[:width] > max_width
         },
+        file_size: metadata.file_size,
         sha256_checksum: Digest::SHA256.file(pdf).hexdigest
       }
     end

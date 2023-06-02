@@ -1,10 +1,9 @@
 # frozen_string_literal: true
 
-require_dependency 'vba_documents/pdf_inspector'
-
 require 'central_mail/utilities'
 require 'central_mail/service'
 require 'pdf_utilities/pdf_validator'
+require 'vba_documents/document_request_validator'
 
 # rubocop:disable Metrics/ModuleLength
 module VBADocuments
@@ -12,7 +11,7 @@ module VBADocuments
     include CentralMail::Utilities
     include PDFUtilities
 
-    VALID_VETERAN_NAME_REGEX = %r{^[a-zA-Z\-/\s]{1,50}$}.freeze
+    VALID_VETERAN_NAME_REGEX = %r{\A[a-zA-Z\-/\s]{1,50}\z}
 
     def validate_parts(model, parts)
       unless parts.key?(META_PART_NAME)
@@ -59,14 +58,14 @@ module VBADocuments
       raise VBADocuments::UploadError.new(code: 'DOC102', detail: 'Invalid JSON object')
     end
 
-    def validate_documents(parts)
+    def validate_documents(parts, pdf_validator_options = VBADocuments::DocumentRequestValidator.pdf_validator_options)
       # Validate 'content' document
-      validate_document(parts[DOC_PART_NAME], DOC_PART_NAME)
+      validate_document(parts[DOC_PART_NAME], DOC_PART_NAME, pdf_validator_options)
 
       # Validate attachments
       attachment_names = parts.keys.select { |key| key.match(/attachment\d+/) }
       attachment_names.each do |attachment_name|
-        validate_document(parts[attachment_name], attachment_name)
+        validate_document(parts[attachment_name], attachment_name, pdf_validator_options)
       end
     end
 
@@ -83,9 +82,7 @@ module VBADocuments
         metadata["ahash#{i + 1}"] = model.uploaded_pdf.dig('content', 'attachments', i, 'sha256_checksum')
         metadata["numberPages#{i + 1}"] = model.uploaded_pdf.dig('content', 'attachments', i, 'page_count')
       end
-      if metadata.key? 'businessLine'
-        metadata['businessLine'] = CentralMail::Utilities.valid_lob[metadata['businessLine'].to_s.upcase]
-      end
+      metadata['businessLine'] = VALID_LOB[metadata['businessLine'].to_s.upcase] if metadata.key? 'businessLine'
       metadata['businessLine'] = AppealsApi::LineOfBusiness.new(model).value if model.appeals_consumer?
       metadata
     end
@@ -104,40 +101,37 @@ module VBADocuments
       return if lob.to_s.empty? && !(submission_version && submission_version >= 2)
 
       if lob.to_s.blank? && submission_version >= 2
-        msg = "The businessLine metadata field is missing or empty. Valid values are: #{
-              CentralMail::Utilities.valid_lob.keys.join(',')}"
+        msg = "The businessLine metadata field is missing or empty. Valid values are: #{VALID_LOB.keys.join(',')}"
         raise VBADocuments::UploadError.new(code: 'DOC102', detail: msg)
       end
 
-      unless CentralMail::Utilities.valid_lob.keys.include?(lob.to_s.upcase)
-        msg = "Invalid businessLine provided - {#{lob}}, valid values are: #{
-              CentralMail::Utilities.valid_lob.keys.join(',')}"
-
+      unless VALID_LOB.keys.include?(lob.to_s.upcase)
+        msg = "Invalid businessLine provided - {#{lob}}, valid values are: #{VALID_LOB.keys.join(',')}"
         raise VBADocuments::UploadError.new(code: 'DOC102', detail: msg)
       end
     end
 
-    def validate_document(file_path, part_name)
-      validator = PDFValidator::Validator.new(file_path, { check_encryption: false })
-      result = validator.validate
+    def validate_document(file_path, part_name, pdf_validator_options = {})
+      validation_result = PDFValidator::Validator.new(file_path, pdf_validator_options).validate
 
-      unless result.valid_pdf?
-        errors = result.errors
+      unless validation_result.valid_pdf?
+        raise_validation_error(validation_result.errors, part_name, pdf_validator_options)
+      end
+    end
 
-        if errors.grep(/#{PDFValidator::FILE_SIZE_LIMIT_EXCEEDED_MSG}/).any?
-          raise VBADocuments::UploadError.new(code: 'DOC106',
-                                              detail: 'Maximum document size exceeded. Limit is 100MB per document')
-        end
-
-        if errors.grep(/#{PDFValidator::USER_PASSWORD_MSG}|#{PDFValidator::INVALID_PDF_MSG}/).any?
-          raise VBADocuments::UploadError.new(code: 'DOC103',
-                                              detail: "Invalid PDF content, part #{part_name}")
-        end
-
-        if errors.grep(/#{PDFValidator::PAGE_SIZE_LIMIT_EXCEEDED_MSG}/).any?
-          raise VBADocuments::UploadError.new(code: 'DOC108',
-                                              detail: VBADocuments::UploadError::DOC108)
-        end
+    def raise_validation_error(errors, part_name, pdf_validator_options)
+      if errors.grep(/#{PDFValidator::FILE_SIZE_LIMIT_EXCEEDED_MSG}/).any?
+        code = 'DOC106'
+        detail = CentralMail::UploadError.default_message(code, pdf_validator_options)
+        raise VBADocuments::UploadError.new(code:, detail:, pdf_validator_options:)
+      elsif errors.grep(/#{PDFValidator::PAGE_SIZE_LIMIT_EXCEEDED_MSG}/).any?
+        code = 'DOC108'
+        detail = CentralMail::UploadError.default_message(code, pdf_validator_options)
+        raise VBADocuments::UploadError.new(code:, detail:, pdf_validator_options:)
+      else
+        raise VBADocuments::UploadError.new(code: 'DOC103',
+                                            detail: "Invalid PDF content, part #{part_name}",
+                                            pdf_validator_options:)
       end
     end
 

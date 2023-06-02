@@ -2,11 +2,11 @@
 
 module VAOS
   module V2
-    class ClinicsController < VAOS::V0::BaseController
+    class ClinicsController < VAOS::BaseController
       CLINIC_KEY = 'Clinic'
 
       def index
-        response = systems_service.get_facility_clinics(location_id: location_id,
+        response = systems_service.get_facility_clinics(location_id:,
                                                         clinic_ids: params[:clinic_ids],
                                                         clinical_service: params[:clinical_service],
                                                         page_size: params[:page_size],

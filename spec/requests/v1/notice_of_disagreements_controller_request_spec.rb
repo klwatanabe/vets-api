@@ -4,7 +4,14 @@ require 'rails_helper'
 require 'support/controller_spec_helper'
 
 RSpec.describe V1::NoticeOfDisagreementsController do
-  let(:user) { build(:user, :loa3) }
+  let(:user) do
+    build(:user,
+          :loa3,
+          mhv_correlation_id: 'some-mhv_correlation_id',
+          birls_id: 'some-birls_id',
+          participant_id: 'some-participant_id',
+          vet360_id: 'some-vet360_id')
+  end
   let(:headers) { { 'CONTENT_TYPE' => 'application/json' } }
 
   before { sign_in_as(user) }
@@ -18,7 +25,7 @@ RSpec.describe V1::NoticeOfDisagreementsController do
     subject do
       post '/v1/notice_of_disagreements',
            params: VetsJsonSchema::EXAMPLES.fetch('NOD-CREATE-REQUEST-BODY_V1').to_json,
-           headers: headers
+           headers:
     end
 
     it 'creates an NOD' do

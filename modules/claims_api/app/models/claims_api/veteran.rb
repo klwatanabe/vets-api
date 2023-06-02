@@ -4,7 +4,7 @@ require 'common/exceptions'
 
 module ClaimsApi
   class Veteran
-    SSN_REGEX = /\d{3}-\d{2}-\d{4}|\d{9}/.freeze
+    SSN_REGEX = /\d{3}-\d{2}-\d{4}|\d{9}/
 
     include Virtus.model
 
@@ -69,7 +69,7 @@ module ClaimsApi
     end
 
     def mpi_record?(user_key: uuid)
-      mpi.mvi_response(user_key: user_key).ok?
+      mpi.mvi_response(user_key:).ok?
     end
 
     def ssn=(new_ssn)
@@ -109,7 +109,7 @@ module ClaimsApi
 
     def self.build_profile(birth_date)
       OpenStruct.new(
-        birth_date: birth_date
+        birth_date:
       )
     end
 

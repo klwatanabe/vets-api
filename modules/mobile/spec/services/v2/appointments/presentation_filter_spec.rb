@@ -9,16 +9,16 @@ describe Mobile::V2::Appointments::PresentationFilter do
   let(:cancelled) { mock_appointment(id: 'past', status: 'cancelled', start: 30.days.ago) }
   let(:request) do
     requested_periods = [{ start: 20.days.ago }]
-    mock_appointment(id: 'request', status: 'proposed', created: 30.days.ago, requested_periods: requested_periods)
+    mock_appointment(id: 'request', status: 'proposed', created: 30.days.ago, requested_periods:)
   end
 
   def mock_appointment(id: nil, created: nil, status: nil, start: nil, requested_periods: nil)
     OpenStruct.new(
-      id: id,
+      id:,
       created: created&.to_s,
-      status: status,
+      status:,
       start: start&.to_s,
-      requested_periods: requested_periods
+      requested_periods:
     )
   end
 
@@ -86,24 +86,12 @@ describe Mobile::V2::Appointments::PresentationFilter do
             expect(Rails.logger).not_to receive(:error)
             expect(filterer.user_facing?(cancelled)).to be false
           end
-
-          it 'logs an error and returns false when appointment has an invalid start date' do
-            upcoming[:start] = 'NOTADATE'
-            expect(Rails.logger).to receive(:error).with('Invalid appointment time received: NOTADATE', 'invalid date')
-            expect(filterer.user_facing?(upcoming)).to be false
-          end
         end
 
         context 'for appointment requests' do
           it 'returns false but does not raise an error if created date is empty' do
             request[:created] = nil
             expect(Rails.logger).not_to receive(:error)
-            expect(filterer.user_facing?(request)).to be false
-          end
-
-          it 'logs an error and returns false when appointment has an invalid created date' do
-            request[:created] = 'NOTADATE'
-            expect(Rails.logger).to receive(:error).with('Invalid appointment time received: NOTADATE', 'invalid date')
             expect(filterer.user_facing?(request)).to be false
           end
         end

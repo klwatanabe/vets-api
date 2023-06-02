@@ -19,7 +19,7 @@ module VAProfile
       # Returns a response object containing the user's preferred name, and gender-identity
       def get_demographics
         with_monitoring do
-          return build_response(401, nil) unless identifier_present?
+          return build_response(401, nil) unless DemographicsPolicy.new(@user).access_update?
 
           response = perform(:get, identity_path)
           build_response(response&.status, response&.body)
@@ -28,7 +28,7 @@ module VAProfile
         if e.status == 404
           log_exception_to_sentry(
             e,
-            { csp_id_with_aaid: csp_id_with_aaid },
+            { csp_id_with_aaid: },
             { va_profile: :demographics_not_found },
             :warning
           )
@@ -57,7 +57,7 @@ module VAProfile
 
       def post_or_put_data(method, model, path, response_class)
         with_monitoring do
-          raise 'User does not have a valid CSP ID' unless identifier_present?
+          raise 'User does not have a valid CSP ID' unless DemographicsPolicy.new(@user).access_update?
 
           model.set_defaults(@user)
           response = perform(method, identity_path(path), model.in_json)
@@ -83,8 +83,8 @@ module VAProfile
 
       def build_response(status, body)
         DemographicResponse.from(
-          status: status,
-          body: body,
+          status:,
+          body:,
           id: @user.account_id,
           type: 'mvi_models_mvi_profiles',
           gender: @user.gender_mpi,
@@ -93,10 +93,6 @@ module VAProfile
       end
 
       private
-
-      def identifier_present?
-        @user&.idme_uuid.present? || @user&.logingov_uuid.present?
-      end
 
       def csp_id_with_aaid
         "#{csp_id}#{aaid}"

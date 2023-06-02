@@ -13,14 +13,15 @@ module SignIn
       :code
     )
 
-    validates :code_challenge, :code, presence: true
+    validates :code, presence: true
     validates :acr, inclusion: Constants::Auth::ACR_VALUES
-    validates :client_id, inclusion: Constants::Auth::CLIENT_IDS
     validates :type, inclusion: Constants::Auth::CSP_TYPES
     validates :client_state, length: { minimum: Constants::Auth::CLIENT_STATE_MINIMUM_LENGTH }, allow_blank: true
 
+    validate :confirm_client_id
+
     # rubocop:disable Metrics/ParameterLists
-    def initialize(acr:, code_challenge:, client_id:, type:, code:, client_state: nil)
+    def initialize(acr:, client_id:, type:, code:, code_challenge: nil, client_state: nil)
       @acr = acr
       @client_id = client_id
       @type = type
@@ -34,6 +35,12 @@ module SignIn
 
     def persisted?
       false
+    end
+
+    private
+
+    def confirm_client_id
+      errors.add(:base, 'Client id must map to a configuration') unless ClientConfig.valid_client_id?(client_id:)
     end
   end
 end

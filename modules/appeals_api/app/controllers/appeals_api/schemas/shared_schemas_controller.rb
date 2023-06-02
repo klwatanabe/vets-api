@@ -33,7 +33,7 @@ class AppealsApi::Schemas::SharedSchemasController < AppealsApi::ApplicationCont
   end
 
   def appeal_type_with_version
-    "#{uri.path.split('/')[3]}_#{uri.path.split('/')[4]}"
+    "#{uri.path.split('/')[3]}_#{uri.path.split('/')[4]}".tr('-', '_')
   end
 
   def schema_version
@@ -66,7 +66,7 @@ class AppealsApi::Schemas::SharedSchemasController < AppealsApi::ApplicationCont
   def invalid_schema_type_error
     {
       title: 'not_found',
-      detail: I18n.t('appeals_api.errors.invalid_schema_type', schema_type: schema_type),
+      detail: I18n.t('appeals_api.errors.invalid_schema_type', schema_type:),
       code: 'InvalidSchemaType',
       status: '404',
       source: { parameter: schema_type },

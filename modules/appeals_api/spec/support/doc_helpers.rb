@@ -1,9 +1,5 @@
 # frozen_string_literal: true
 
-# These default values are used when running docs specs alongside other kinds of specs via rspec.
-# When generating docs via rake tasks instead, we get these values from the environment set up in the rake task.
-DEFAULT_CONFIG_VALUES = { api_name: 'decision_reviews', api_version: 'v2' }.freeze
-
 # rubocop:disable Metrics/ModuleLength
 module DocHelpers
   # Makes UUIDs and timestamps constant, to reduce cognitive overhead when working with rswag output files
@@ -35,33 +31,41 @@ module DocHelpers
 
   # NOTE: you must set `let(:Authorization) { 'Bearer <any-value-here>' }` in combination with this helper
   def with_rswag_auth(scopes = %w[], valid: true, &block)
-    if DocHelpers.decision_reviews?
-      block.call
-    else
-      with_openid_auth(scopes, valid: valid) do |auth_header|
+    if scopes.any?
+      with_openid_auth(scopes, valid:) do |auth_header|
         block.call(auth_header)
       end
+    else
+      block.call
     end
   end
 
-  def self.security_config(oauth_scopes = [])
-    config = [{ apikey: [] }]
-    return config if DocHelpers.decision_reviews?
+  def self.oauth_security_config(scopes = [])
+    [{ productionOauth: scopes }, { sandboxOauth: scopes }, { bearer_token: [] }]
+  end
 
-    config + [{ productionOauth: oauth_scopes }, { sandboxOauth: oauth_scopes }, { bearer_token: [] }]
+  def self.decision_reviews_security_config
+    [{ apikey: [] }]
   end
 
   # @param [Hash] opts
+  # @option opts [String] :cassette The name of the cassette to use, if any
   # @option opts [String] :desc The description of the test. Required.
-  # @option opts [Symbol] :response_wrapper Method name to wrap the response, to modify the output of the example
   # @option opts [Boolean] :extract_desc Whether to use the example name
-  # @option opts [Boolean] :skip_match Whether to skip the match metadata assertion
+  # @option opts [Symbol] :response_wrapper Method name to wrap the response, to modify the output of the example
   # @option opts [Array<String>] :scopes OAuth scopes to use when making the request, if any
+  # @option opts [Boolean] :skip_match Whether to skip the match metadata assertion
   # @option opts [Boolean] :token_valid Whether the OAuth token (if any) should be recognized as valid
   shared_examples 'rswag example' do |opts|
     before do |example|
-      with_rswag_auth(opts[:scopes], valid: opts.fetch(:token_valid, true)) do
-        submit_request(example.metadata)
+      scopes = opts.fetch(:scopes, [])
+      valid = opts.fetch(:token_valid, true)
+      if opts[:cassette]
+        VCR.use_cassette(opts[:cassette]) do
+          with_rswag_auth(scopes, valid:) { submit_request(example.metadata) }
+        end
+      else
+        with_rswag_auth(scopes, valid:) { submit_request(example.metadata) }
       end
     end
 
@@ -75,6 +79,18 @@ module DocHelpers
           else
             JSON.parse(response.body, symbolize_names: true)
           end
+
+      # Removes 'potentialPactAct' from example for production docs
+      unless wip_doc_enabled?(:sc_v2_potential_pact_act)
+        case r
+        when String
+          r = r.gsub(/"potentialPactAct":{"type":"boolean"},/, '')
+        when Hash
+          r.tap do |s|
+            s.dig(*%i[properties data properties attributes properties])&.delete(:potentialPactAct)
+          end
+        end
+      end
 
       example.metadata[:response][:content] = if opts[:extract_desc]
                                                 {
@@ -123,88 +139,8 @@ module DocHelpers
     DocHelpers.wip_doc_enabled?(sym)
   end
 
-  DECISION_REVIEWS_DOC_TITLES = {
-    higher_level_reviews: 'Higher-Level Reviews',
-    notice_of_disagreements: 'Notice of Disagreements',
-    supplemental_claims: 'Supplemental Claims',
-    contestable_issues: 'Contestable Issues',
-    legacy_appeals: 'Legacy Appeals'
-  }.freeze
-
-  ALL_DOC_TITLES = DECISION_REVIEWS_DOC_TITLES.merge(
-    {
-      appeals_status: 'Appeals Status',
-      decision_reviews: 'Decision Reviews'
-    }
-  ).freeze
-
-  def self.api_name
-    DocHelpers.running_rake_task? ? ENV['API_NAME'].presence : DEFAULT_CONFIG_VALUES[:api_name]
-  end
-
-  def self.decision_reviews?
-    DocHelpers.api_name == 'decision_reviews'
-  end
-
-  def self.use_shared_schemas?
-    !DocHelpers.decision_reviews?
-  end
-
-  def self.running_rake_task?
-    # SWAGGER_DRY_RUN is set in the appeals rake tasks: if it's not set, it means the spec is running as part of
-    # a normal rspec suite instead.
-    ENV['SWAGGER_DRY_RUN'].present?
-  end
-
-  def self.api_version
-    DocHelpers.running_rake_task? ? ENV['API_VERSION'].presence : DEFAULT_CONFIG_VALUES[:api_version]
-  end
-
-  def self.api_title
-    ALL_DOC_TITLES[DocHelpers.api_name&.to_sym]
-  end
-
-  def self.api_tags
-    if DocHelpers.decision_reviews?
-      DECISION_REVIEWS_DOC_TITLES.values.collect { |title| { name: title, description: '' } }
-    else
-      [{ name: ALL_DOC_TITLES[DocHelpers.api_name.to_sym], description: '' }]
-    end
-  end
-
-  def self.api_base_path_template
-    if DocHelpers.decision_reviews?
-      '/services/appeals/{version}/decision_reviews'
-    elsif DocHelpers.api_name == 'appeals_status'
-      '/services/appeals/{version}'
-    else
-      "/services/appeals/#{DocHelpers.api_name}/{version}"
-    end
-  end
-
-  def self.api_base_path
-    DocHelpers.api_base_path_template.gsub('{version}', DocHelpers.api_version)
-  end
-
   def self.doc_suffix
     ENV['RSWAG_ENV'] == 'dev' ? '_dev' : ''
-  end
-
-  def self.output_directory_file_path(file_name)
-    AppealsApi::Engine.root.join(
-      "app/swagger/#{DocHelpers.api_name}/#{DocHelpers.api_version}/#{file_name}"
-    ).to_s
-  end
-
-  def self.api_description_file_path
-    DocHelpers.output_directory_file_path("api_description#{DocHelpers.doc_suffix}.md")
-  end
-
-  def self.output_json_path
-    # Note that rswag expects this path to be relative to the working directory when running the specs
-    # rubocop:disable Layout/LineLength
-    "modules/appeals_api/app/swagger/#{DocHelpers.api_name}/#{DocHelpers.api_version}/swagger#{DocHelpers.doc_suffix}.json"
-    # rubocop:enable Layout/LineLength
   end
 end
 # rubocop:enable Metrics/ModuleLength

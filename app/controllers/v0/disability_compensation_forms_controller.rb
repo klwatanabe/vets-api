@@ -6,6 +6,7 @@ require 'evss/disability_compensation_form/form4142'
 require 'evss/disability_compensation_form/service'
 require 'evss/reference_data/service'
 require 'evss/reference_data/response_strategy'
+require 'disability_compensation/factories/api_provider_factory'
 
 module V0
   class DisabilityCompensationFormsController < ApplicationController
@@ -13,7 +14,16 @@ module V0
     before_action :validate_name_part, only: [:suggested_conditions]
 
     def rated_disabilities
-      response = service.get_rated_disabilities
+      # TODO: Hard-coding 'form526' as the application that consumes this for now
+      # need whichever app that consumes this endpoint to switch to their credentials for Lighthouse API consumption
+      application = params['application'] || 'form526'
+      settings = Settings.lighthouse.veteran_verification[application]
+      service = ApiProviderFactory.rated_disabilities_service_provider(
+        { icn: @current_user.icn.to_s, auth_headers: }
+      )
+
+      response = service.get_rated_disabilities(settings.access_token.client_id, settings.access_token.rsa_key)
+
       render json: response,
              serializer: RatedDisabilitiesSerializer
     end
@@ -97,10 +107,6 @@ module V0
 
     def validate_name_part
       raise Common::Exceptions::ParameterMissing, 'name_part' if params[:name_part].blank?
-    end
-
-    def service
-      EVSS::DisabilityCompensationForm::Service.new(auth_headers)
     end
 
     def auth_headers

@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'common/file_helpers'
+require 'pdf_fill/filler'
 
 module CentralMail
   class DatestampPdf
@@ -25,7 +26,7 @@ module CentralMail
       end
 
       Prawn::Document.generate(stamp_path, margin: [0, 0]) do |pdf|
-        pdf.draw_text text, at: [x, y], size: size
+        pdf.draw_text text, at: [x, y], size:
       end
     rescue => e
       Rails.logger.error "Failed to generate datestamp file: #{e.message}"

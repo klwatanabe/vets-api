@@ -7,6 +7,7 @@ common:
   - 'emily.goodrich@oddball.io'
   - 'melinda.cuerda@adhocteam.us'
   - 'heather.roy@adhocteam.us'
+  - 'matt.kelly@adhocteam.us'
 dev:
 staging:
 sandbox:
@@ -17,3 +18,6 @@ prod:
   - 'janet.coutinho@va.gov'
   - 'matthew.self2@va.gov'
   - 'zachary.goldfine@va.gov'
+  - 'lee.helmer@adhocteam.us'
+  - 'garrett.rabian@coforma.io' # Forms Modernization Team
+  - 'megan.siddle@oddball.io' # Forms Modernization Team

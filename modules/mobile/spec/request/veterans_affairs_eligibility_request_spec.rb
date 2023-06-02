@@ -1,20 +1,13 @@
 # frozen_string_literal: true
 
 require 'rails_helper'
-require_relative '../support/iam_session_helper'
+require_relative '../support/helpers/iam_session_helper'
 require_relative '../support/matchers/json_schema_matcher'
 
 RSpec.describe 'veterans Affairs Eligibility', type: :request do
   include JsonSchemaMatchers
 
   let(:rsa_key) { OpenSSL::PKey::RSA.generate(2048) }
-
-  before(:all) do
-    @original_cassette_dir = VCR.configure(&:cassette_library_dir)
-    VCR.configure { |c| c.cassette_library_dir = 'modules/mobile/spec/support/vcr_cassettes' }
-  end
-
-  after(:all) { VCR.configure { |c| c.cassette_library_dir = @original_cassette_dir } }
 
   before do
     allow_any_instance_of(IAMUser).to receive(:icn).and_return('9000682')
@@ -28,8 +21,9 @@ RSpec.describe 'veterans Affairs Eligibility', type: :request do
         let(:params) { { facilityIds: ['489'] } }
 
         before do
-          VCR.use_cassette('va_eligibility/get_scheduling_configurations_200', match_requests_on: %i[method uri]) do
-            get '/mobile/v0/appointments/va/eligibility', params: params, headers: iam_headers
+          VCR.use_cassette('mobile/va_eligibility/get_scheduling_configurations_200',
+                           match_requests_on: %i[method uri]) do
+            get '/mobile/v0/appointments/va/eligibility', params:, headers: iam_headers
           end
         end
 
@@ -101,8 +95,9 @@ RSpec.describe 'veterans Affairs Eligibility', type: :request do
         let(:params) { { facilityIds: %w[489 984] } }
 
         before do
-          VCR.use_cassette('va_eligibility/get_scheduling_configurations_200', match_requests_on: %i[method uri]) do
-            get '/mobile/v0/appointments/va/eligibility', params: params, headers: iam_headers
+          VCR.use_cassette('mobile/va_eligibility/get_scheduling_configurations_200',
+                           match_requests_on: %i[method uri]) do
+            get '/mobile/v0/appointments/va/eligibility', params:, headers: iam_headers
           end
         end
 
@@ -174,9 +169,9 @@ RSpec.describe 'veterans Affairs Eligibility', type: :request do
         let(:params) { { facilityIds: ['489'] } }
 
         before do
-          VCR.use_cassette('va_eligibility/get_scheduling_configurations_200_all_enabled',
+          VCR.use_cassette('mobile/va_eligibility/get_scheduling_configurations_200_all_enabled',
                            match_requests_on: %i[method uri]) do
-            get '/mobile/v0/appointments/va/eligibility', params: params, headers: iam_headers
+            get '/mobile/v0/appointments/va/eligibility', params:, headers: iam_headers
           end
         end
 
@@ -244,9 +239,9 @@ RSpec.describe 'veterans Affairs Eligibility', type: :request do
         let(:params) { { facilityIds: ['12345678'] } }
 
         before do
-          VCR.use_cassette('va_eligibility/get_scheduling_configurations_200_bad_facility',
+          VCR.use_cassette('mobile/va_eligibility/get_scheduling_configurations_200_bad_facility',
                            match_requests_on: %i[method uri]) do
-            get '/mobile/v0/appointments/va/eligibility', params: params, headers: iam_headers
+            get '/mobile/v0/appointments/va/eligibility', params:, headers: iam_headers
           end
         end
 

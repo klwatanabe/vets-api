@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require 'set'
-
 namespace :form526 do
   desc <<~HEREDOC
     Get all submissions within a date period:
@@ -39,48 +37,54 @@ namespace :form526 do
     # args[:second] = args[:first]
     #######################################
 
-    ROW = {
-      order: %i[created_at updated_at id c_id p_id complete version],
-      format_strings: {
-        created_at: '%-24s',
-        updated_at: '%-24s',
-        id: '%-15s',
-        c_id: '%-10s',
-        p_id: '%-15s',
-        complete: '%-18s',
-        version: '%s'
-      },
-      headers: {
-        created_at: 'created at:',
-        updated_at: 'updated at:',
-        id: 'submission id:',
-        c_id: 'claim id:',
-        p_id: 'participant id:',
-        complete: 'workflow complete:',
-        version: 'form version:'
-      }
-    }.freeze
-    OPTIONS_STRUCT = Struct.new(
-      :print_header,
-      :print_hr,
-      :print_row,
-      :print_total,
-      :ignore_submission,
-      :submissions,
-      :success_failure_totals_header_string,
-      keyword_init: true
-    )
+    unless defined? F526_ROW
+      F526_ROW = {
+        order: %i[created_at updated_at id c_id p_id complete version],
+        format_strings: {
+          created_at: '%-24s',
+          updated_at: '%-24s',
+          id: '%-15s',
+          c_id: '%-10s',
+          p_id: '%-15s',
+          complete: '%-18s',
+          version: '%s'
+        },
+        headers: {
+          created_at: 'created at:',
+          updated_at: 'updated at:',
+          id: 'submission id:',
+          c_id: 'claim id:',
+          p_id: 'participant id:',
+          complete: 'workflow complete:',
+          version: 'form version:'
+        }
+      }.freeze
+    end
+
+    unless defined? F526_OPTIONS_STRUCT
+      F526_OPTIONS_STRUCT = Struct.new(
+        :print_header,
+        :print_hr,
+        :print_row,
+        :print_total,
+        :ignore_submission,
+        :submissions,
+        :success_failure_totals_header_string,
+        keyword_init: true
+      )
+    end
+
     def date_range_mode(args_array)
       start_date = args_array.first&.to_date || 30.days.ago.utc
       end_date = args_array.second&.to_date || Time.zone.now.utc
       separator = ' '
-      printf_string = ROW[:order].map { |key| ROW[:format_strings][key] }.join(separator)
-      print_row = ->(**fields) { puts format(printf_string, *ROW[:order].map { |key| fields[key] }) }
+      printf_string = F526_ROW[:order].map { |key| F526_ROW[:format_strings][key] }.join(separator)
+      print_row = ->(**fields) { puts format(printf_string, *F526_ROW[:order].map { |key| fields[key] }) }
 
-      OPTIONS_STRUCT.new(
-        print_header: -> { print_row.call(**ROW[:headers]) },
+      F526_OPTIONS_STRUCT.new(
+        print_header: -> { print_row.call(**F526_ROW[:headers]) },
         print_hr: -> { puts '------------------------------------------------------------' },
-        print_row: print_row,
+        print_row:,
         print_total: ->(header, total) { puts format("%-20s#{separator}%s", "#{header}:", total) },
         ignore_submission: ->(_) { false },
         submissions: Form526Submission.where(created_at: [start_date.beginning_of_day..end_date.end_of_day]),
@@ -90,9 +94,11 @@ namespace :form526 do
 
     def bdd_stats_mode(args_array)
       dates = dates_from_array args_array
-      prnt = ->(**fields) { puts ROW[:order].map { |key| fields[key].try(:iso8601) || fields[key].inspect }.join(',') }
-      OPTIONS_STRUCT.new(
-        print_header: -> { puts ROW[:order].map { |key| ROW[:headers][key] }.join(',') },
+      # rubocop:disable Layout/LineLength
+      prnt = ->(**fields) { puts F526_ROW[:order].map { |key| fields[key].try(:iso8601) || fields[key].inspect }.join(',') }
+      # rubocop:enable Layout/LineLength
+      F526_OPTIONS_STRUCT.new(
+        print_header: -> { puts F526_ROW[:order].map { |key| F526_ROW[:headers][key] }.join(',') },
         print_hr: -> { puts },
         print_row: (
           if unredacted_flag_present?(args_array)
@@ -210,7 +216,7 @@ namespace :form526 do
         c_id: submission.submitted_claim_id,
         p_id: submission.auth_headers['va_eauth_pid'],
         complete: submission.workflow_complete,
-        version: version
+        version:
       )
     end
     options.submissions = options.submissions.where.not(id: ids_to_ignore) if ids_to_ignore.present?
@@ -474,7 +480,7 @@ namespace :form526 do
           edipis << edipi
         end
 
-        response = MPI::Service.new.find_profile_by_edipi(edipi: edipi).profile
+        response = MPI::Service.new.find_profile_by_edipi(edipi:).profile
         active_corp_ids = response.full_mvi_ids.select { |id| id.match?(/\d*\^PI\^200CORP\^USVBA\^A/) }
         vname = "#{fs.auth_headers['va_eauth_firstName']} #{fs.auth_headers['va_eauth_lastName']}"
         csv << [vname, edipi, active_corp_ids] if active_corp_ids.count > 1
@@ -509,8 +515,8 @@ namespace :form526 do
           puts "icn blank #{fs.id}"
           next
         end
-        user = OpenStruct.new(participant_id: fs.auth_headers['va_eauth_pid'], icn: icn, common_name: vname,
-                              ssn: ssn)
+        user = OpenStruct.new(participant_id: fs.auth_headers['va_eauth_pid'], icn:, common_name: vname,
+                              ssn:)
         award_response = BGS::AwardsService.new(user).get_awards
         if award_response
           soj = award_response[:award_stn_nbr]
@@ -673,7 +679,9 @@ namespace :form526 do
       ids[:edipi] = edipi submission.auth_headers
       ids[:icn] = icn ids[:edipi]
 
+      # rubocop:disable Lint/Debugger
       pp mpi_profile(user_identity(**ids)).as_json
+      # rubocop:enable Lint/Debugger
     end
 
     def mpi_profile(user_identity)
@@ -689,7 +697,7 @@ namespace :form526 do
     end
 
     def user_identity(icn:, edipi:)
-      OpenStruct.new mhv_icn: icn, edipi: edipi
+      OpenStruct.new mhv_icn: icn, edipi:
     end
 
     def edipi(auth_headers)
@@ -699,7 +707,7 @@ namespace :form526 do
     def icn(edipi)
       raise Error, 'no edipi' unless edipi
 
-      icns = Account.where(edipi: edipi).pluck :icn
+      icns = Account.where(edipi:).pluck :icn
       raise Error, 'multiple icns' if icns.uniq.length > 1
 
       icns.first

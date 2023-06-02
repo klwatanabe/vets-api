@@ -16,7 +16,7 @@ module ClaimsApi
         include ClaimsApi::EndpointDeprecation
 
         def schema
-          add_deprecation_headers_to_response(response: response, link: ClaimsApi::EndpointDeprecation::V1_DEV_DOCS)
+          add_deprecation_headers_to_response(response:, link: ClaimsApi::EndpointDeprecation::V1_DEV_DOCS)
           render json: { data: [ClaimsApi::FormSchemas.new.schemas[self.class::FORM_NUMBER]] }
         end
 
@@ -52,7 +52,7 @@ module ClaimsApi
           @documents ||= params.slice(*document_keys).values.map do |document|
             case document
             when String
-              decode_document(document)
+              document.blank? ? nil : decode_document(document)
             when ActionDispatch::Http::UploadedFile
               document.original_filename = create_unique_filename(doc: document)
               document
@@ -69,7 +69,7 @@ module ClaimsApi
           temp_file = Tempfile.new(filename, encoding: 'ASCII-8BIT')
           temp_file.write(decoded_data)
           temp_file.close
-          ActionDispatch::Http::UploadedFile.new(filename: filename,
+          ActionDispatch::Http::UploadedFile.new(filename:,
                                                  type: 'application/pdf',
                                                  tempfile: temp_file)
         end
@@ -94,12 +94,11 @@ module ClaimsApi
         end
 
         def local_bgs_service
-          bgs = ClaimsApi::LocalBGS::Services.new(
-            external_uid: target_veteran.participant_id,
-            external_key: target_veteran.participant_id
+          external_key = target_veteran.participant_id.to_s
+          @local_bgs_service ||= ClaimsApi::LocalBGS.new(
+            external_uid: external_key,
+            external_key:
           )
-          ClaimsApi::Logger.log('poa', detail: 'bgs-ext service built')
-          bgs
         end
 
         def received_date

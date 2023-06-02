@@ -43,7 +43,7 @@ describe AppealsApi::HigherLevelReview, type: :model do
     end
 
     context 'not all name fields used' do
-      let(:higher_level_review) { described_class.new(form_data: form_data, auth_headers: auth_headers) }
+      let(:higher_level_review) { described_class.new(form_data:, auth_headers:) }
 
       context 'only last name' do
         let(:auth_headers) { default_auth_headers.except('X-VA-Middle-Initial').merge('X-VA-First-Name' => ' ') }
@@ -157,6 +157,18 @@ describe AppealsApi::HigherLevelReview, type: :model do
     it('matches json') { is_expected.to eq form_data_attributes['benefitType'] }
   end
 
+  describe '#metadata_formdata_benefit_type' do
+    subject { higher_level_review.metadata['form_data']['benefit_type'] }
+
+    it('matches json') { is_expected.to eq form_data_attributes['benefitType'] }
+  end
+
+  describe '#metadata_central_mail_business_line' do
+    subject { higher_level_review.metadata['central_mail_business_line'] }
+
+    it('matches json') { is_expected.to eq higher_level_review.lob }
+  end
+
   describe '#informal_conference' do
     subject { higher_level_review.informal_conference }
 
@@ -188,7 +200,7 @@ describe AppealsApi::HigherLevelReview, type: :model do
       let(:example_instance) { higher_level_review }
       let(:instance_without_email) do
         described_class.create!(
-          auth_headers: auth_headers,
+          auth_headers:,
           api_version: 'V2',
           form_data: form_data.deep_merge(
             { 'data' => { 'attributes' => { 'veteran' => { 'email' => nil } } } }
@@ -201,7 +213,7 @@ describe AppealsApi::HigherLevelReview, type: :model do
   context 'validations' do
     # V1 has been deprecated, so no need to check validations of records we've effectively archived
     let(:appeal) do # appeal is used here since the shared example expects it
-      described_class.new(form_data: form_data, auth_headers: auth_headers, api_version: 'V2')
+      described_class.new(form_data:, auth_headers:, api_version: 'V2')
     end
     let(:auth_headers) { fixture_as_json 'valid_200996_headers_extra.json', version: 'v2' }
     let(:form_data) { fixture_as_json 'valid_200996_extra.json', version: 'v2' }
@@ -292,6 +304,42 @@ describe AppealsApi::HigherLevelReview, type: :model do
         end
       end
     end
+
+    describe '#soc_opt_in' do
+      let(:hlr_opted_in) { create(:higher_level_review_v2) }
+      let(:not_opted_in_form_data) do
+        form_data['data']['attributes']['socOptIn'] = false
+        form_data
+      end
+      let(:hlr_not_opted_in) { create(:higher_level_review_v2, form_data: not_opted_in_form_data) }
+
+      describe 'when pdf version is unset' do
+        it 'uses the value from the record' do
+          expect(hlr_opted_in.soc_opt_in).to eq(true)
+          expect(hlr_not_opted_in.soc_opt_in).to eq(false)
+        end
+      end
+
+      describe 'when pdf_version is v2' do
+        let(:hlr_opted_in) { create(:higher_level_review_v2, pdf_version: 'v2') }
+        let(:hlr_not_opted_in) { create(:higher_level_review_v2, form_data: not_opted_in_form_data, pdf_version: 'v2') }
+
+        it 'uses the value from the record' do
+          expect(hlr_opted_in.soc_opt_in).to be true
+          expect(hlr_not_opted_in.soc_opt_in).to be false
+        end
+      end
+
+      describe 'when pdf_version is v3' do
+        let(:hlr_opted_in) { create(:higher_level_review_v2, pdf_version: 'v3') }
+        let(:hlr_not_opted_in) { create(:higher_level_review_v2, form_data: not_opted_in_form_data, pdf_version: 'v3') }
+
+        it 'is always true' do
+          expect(hlr_opted_in.soc_opt_in).to be true
+          expect(hlr_not_opted_in.soc_opt_in).to be true
+        end
+      end
+    end
   end
 
   context 'PdfOutputPrep concern' do
@@ -319,6 +367,26 @@ describe AppealsApi::HigherLevelReview, type: :model do
         higher_level_review.pdf_output_prep
         expect(higher_level_review.contestable_issues[0].text.encoding.to_s).to eq 'US-ASCII'
         expect(higher_level_review.contestable_issues[1].text.encoding.to_s).to eq 'ISO-8859-14'
+      end
+    end
+  end
+
+  context 'HlrStatus concern' do
+    let(:hlr_v1) { create(:higher_level_review_v1) }
+    let(:hlr_v2) { create(:higher_level_review_v2) }
+    let(:hlr_v0) { create(:higher_level_review_v0) }
+
+    describe '#versioned_statuses' do
+      it 'returns the V1 statuses for V1 HLR records' do
+        expect(hlr_v1.versioned_statuses).to match_array(AppealsApi::HlrStatus::V1_STATUSES)
+      end
+
+      it 'returns the V2 statuses for V2 HLR records' do
+        expect(hlr_v2.versioned_statuses).to match_array(AppealsApi::HlrStatus::V2_STATUSES)
+      end
+
+      it 'returns the V0 statuses for V0 HLR records' do
+        expect(hlr_v0.versioned_statuses).to match_array(AppealsApi::HlrStatus::V0_STATUSES)
       end
     end
   end

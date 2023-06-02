@@ -22,6 +22,15 @@ RSpec.describe VBADocuments::DocumentRequestValidator do
       expect(result.dig(:data, :attributes, :status)).to eq('valid')
     end
 
+    describe 'given a document with oversized pages' do
+      let(:fixture_name) { '10x102.pdf' }
+
+      it 'errors' do
+        expect(result[:errors].length).to eq(1)
+        expect(result[:errors].first[:status]).to eq('422')
+      end
+    end
+
     describe 'given a PDF with an owner/permissions password' do
       let(:fixture_name) { 'encrypted.pdf' }
 

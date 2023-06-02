@@ -68,6 +68,7 @@ describe DecisionReviewV1::Service do
         SC-GET-CONTESTABLE-ISSUES-REQUEST-BENEFIT-TYPE_V1
         SC-CREATE-REQUEST-BODY_V1
         SC-CREATE-RESPONSE-200_V1
+        SC-CREATE-REQUEST-BODY-FOR-VA-GOV
         SC-SHOW-RESPONSE-200_V1
       ].each do |schema_name|
         it("#{schema_name} schema is present") { expect(VetsJsonSchema::SCHEMAS).to have_key schema_name }
@@ -98,8 +99,59 @@ describe DecisionReviewV1::Service do
     end
   end
 
+  describe '#file_upload_metadata' do
+    let(:backup_zip) { '12345' }
+    let(:zip_replacement_value) { '00000' }
+
+    context 'with all data present' do
+      it 'generates metadata' do
+        md = DecisionReviewV1::Service.file_upload_metadata(user)
+        expect(JSON.parse(md).symbolize_keys).to eq({
+                                                      veteranFirstName: 'abraham',
+                                                      veteranLastName: 'lincoln',
+                                                      zipCode: '20500',
+                                                      fileNumber: '212222112',
+                                                      source: 'va.gov',
+                                                      businessLine: 'BVA'
+                                                    })
+      end
+    end
+
+    context 'with a null postal code' do
+      it 'generates metadata, with replaced zip and no errors' do
+        allow_any_instance_of(User).to receive(:postal_code).and_return(nil)
+        md = DecisionReviewV1::Service.file_upload_metadata(user)
+        expect(JSON.parse(md)['zipCode']).to eq(zip_replacement_value)
+      end
+    end
+
+    context 'with invalid postal codes' do
+      ['', '1234', '12345-123', 123, '1' * 100].each do |invalid_zip|
+        it "generates metadata with invalid postal code (#{invalid_zip}) provided" do
+          allow_any_instance_of(User).to receive(:postal_code).and_return(invalid_zip)
+          md = DecisionReviewV1::Service.file_upload_metadata(user)
+          expect(JSON.parse(md)['zipCode']).to eq(zip_replacement_value)
+        end
+      end
+    end
+
+    context 'with backup postal codes' do
+      it 'generates metadata without using backup zip if postal code is valid' do
+        md = DecisionReviewV1::Service.file_upload_metadata(user, backup_zip)
+        expect(JSON.parse(md)['zipCode']).to eq('20500')
+      end
+
+      it 'generates metadata using backup zip if postal code is invalid' do
+        backup_zip = '12345'
+        allow_any_instance_of(User).to receive(:postal_code).and_return('1234')
+        md = DecisionReviewV1::Service.file_upload_metadata(user, backup_zip)
+        expect(JSON.parse(md)['zipCode']).to eq(backup_zip)
+      end
+    end
+  end
+
   describe '#create_higher_level_review' do
-    subject { described_class.new.create_higher_level_review(request_body: body.to_json, user: user) }
+    subject { described_class.new.create_higher_level_review(request_body: body.to_json, user:) }
 
     let(:body) { VetsJsonSchema::EXAMPLES['HLR-CREATE-REQUEST-BODY_V1'] }
 
@@ -168,7 +220,7 @@ describe DecisionReviewV1::Service do
 
   describe '#get_higher_level_review_contestable_issues' do
     subject do
-      described_class.new.get_higher_level_review_contestable_issues(benefit_type: benefit_type, user: user)
+      described_class.new.get_higher_level_review_contestable_issues(benefit_type:, user:)
     end
 
     let(:benefit_type) { 'compensation' }
@@ -227,7 +279,7 @@ describe DecisionReviewV1::Service do
   end
 
   describe '#create_notice_of_disagreement' do
-    subject { described_class.new.create_notice_of_disagreement(request_body: body.to_json, user: user) }
+    subject { described_class.new.create_notice_of_disagreement(request_body: body.to_json, user:) }
 
     let(:body) do
       full_body = VetsJsonSchema::EXAMPLES['NOD-CREATE-REQUEST-BODY_V1']
@@ -300,7 +352,7 @@ describe DecisionReviewV1::Service do
 
   describe '#get_notice_of_disagreement_contestable_issues' do
     subject do
-      described_class.new.get_notice_of_disagreement_contestable_issues(user: user)
+      described_class.new.get_notice_of_disagreement_contestable_issues(user:)
     end
 
     context '200 response' do
@@ -376,7 +428,7 @@ describe DecisionReviewV1::Service do
 
   describe '#put_notice_of_disagreement_upload' do
     subject do
-      described_class.new.put_notice_of_disagreement_upload(upload_url: path, file_upload: file_upload,
+      described_class.new.put_notice_of_disagreement_upload(upload_url: path, file_upload:,
                                                             metadata_string: metadata)
     end
 
@@ -402,7 +454,7 @@ describe DecisionReviewV1::Service do
 
   describe '#get_notice_of_disagreement_upload' do
     subject do
-      described_class.new.get_notice_of_disagreement_upload(guid: guid)
+      described_class.new.get_notice_of_disagreement_upload(guid:)
     end
 
     let(:guid) { '59cdb98f-f94b-4aaa-8952-4d1e59b6e40a' }
@@ -434,7 +486,7 @@ describe DecisionReviewV1::Service do
   end
 
   describe '#create_supplemental_claim' do
-    subject { described_class.new.create_supplemental_claim(request_body: body.to_json, user: user) }
+    subject { described_class.new.create_supplemental_claim(request_body: body.to_json, user:) }
 
     let(:body) { VetsJsonSchema::EXAMPLES['SC-CREATE-REQUEST-BODY_V1'] }
 
@@ -503,7 +555,7 @@ describe DecisionReviewV1::Service do
 
   describe '#get_supplemental_claim_contestable_issues' do
     subject do
-      described_class.new.get_supplemental_claim_contestable_issues(user: user, benefit_type: benefit_type)
+      described_class.new.get_supplemental_claim_contestable_issues(user:, benefit_type:)
     end
 
     let(:benefit_type) { 'compensation' }
@@ -593,7 +645,7 @@ describe DecisionReviewV1::Service do
 
   describe '#put_supplemental_claim_upload' do
     subject do
-      described_class.new.put_supplemental_claim_upload(upload_url: path, file_upload: file_upload,
+      described_class.new.put_supplemental_claim_upload(upload_url: path, file_upload:,
                                                         metadata_string: metadata)
     end
 
@@ -619,7 +671,7 @@ describe DecisionReviewV1::Service do
 
   describe '#get_supplemental_claim_upload' do
     subject do
-      described_class.new.get_supplemental_claim_upload(uuid: uuid)
+      described_class.new.get_supplemental_claim_upload(uuid:)
     end
 
     let(:uuid) { '59cdb98f-f94b-4aaa-8952-4d1e59b6e40a' }

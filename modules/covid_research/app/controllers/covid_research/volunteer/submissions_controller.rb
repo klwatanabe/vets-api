@@ -1,12 +1,9 @@
 # frozen_string_literal: true
 
-# Bypass auth requirements
-require_dependency 'covid_research/base_controller'
-
 module CovidResearch
   module Volunteer
     class SubmissionsController < BaseController
-      STATSD_KEY_PREFIX = "#{STATSD_KEY_PREFIX}.volunteer"
+      STATSD_KEY_PREFIX = "#{STATSD_KEY_PREFIX}.volunteer".freeze
       INTAKE_EMAIL_TEMPLATE_NAME = 'signup_confirmation.html.erb'
       UPDATE_EMAIL_TEMPLATE_NAME = 'update_confirmation.html.erb'
 

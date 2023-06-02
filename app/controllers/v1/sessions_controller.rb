@@ -102,7 +102,7 @@ module V1
     end
 
     def saml_settings(force_authn: true)
-      SAML::SSOeSettingsService.saml_settings(force_authn: force_authn)
+      SAML::SSOeSettingsService.saml_settings(force_authn:)
     end
 
     def raise_saml_error(form)
@@ -141,8 +141,11 @@ module V1
 
     def mhv_unverified_validation(user_session_form)
       if html_escaped_relay_state['type'] == 'mhv_verified' && user_session_form.user.loa[:current] < LOA::THREE
-        Rails.logger.warn('SessionsController version:v1 mhv basic account blocked for mhv_verified type')
-        raise SAML::UserAttributeError, SAML::UserAttributeError::ERRORS[:mhv_unverified_blocked]
+        mhv_unverified_error = SAML::UserAttributeError::ERRORS[:mhv_unverified_blocked]
+        Rails.logger.warn("SessionsController version:v1 #{mhv_unverified_error[:message]}")
+        raise SAML::UserAttributeError.new(message: mhv_unverified_error[:message],
+                                           code: mhv_unverified_error[:code],
+                                           tag: mhv_unverified_error[:tag])
       end
     end
 
@@ -272,7 +275,7 @@ module V1
 
     def new_stats(type, client_id)
       tags = ["context:#{type}", VERSION_TAG, "client_id:#{client_id}"]
-      StatsD.increment(STATSD_SSO_NEW_KEY, tags: tags)
+      StatsD.increment(STATSD_SSO_NEW_KEY, tags:)
       Rails.logger.info("SSO_NEW_KEY, tags: #{tags}")
     end
 
@@ -283,10 +286,10 @@ module V1
       case status
       when :success
         StatsD.increment(STATSD_LOGIN_NEW_USER_KEY, tags: [VERSION_TAG]) if type == 'signup'
-        StatsD.increment(STATSD_LOGIN_STATUS_SUCCESS, tags: tags)
+        StatsD.increment(STATSD_LOGIN_STATUS_SUCCESS, tags:)
         Rails.logger.info("LOGIN_STATUS_SUCCESS, tags: #{tags}")
         Rails.logger.info("SessionsController version:v1 login complete, user_uuid=#{@current_user&.uuid}")
-        StatsD.measure(STATSD_LOGIN_LATENCY, url_service.tracker.age, tags: tags)
+        StatsD.measure(STATSD_LOGIN_LATENCY, url_service.tracker.age, tags:)
       when :failure
         tags_and_error_code = tags << "error:#{error.try(:code) || SAML::Responses::Base::UNKNOWN_OR_BLANK_ERROR_CODE}"
         error_message = error.try(:message) || 'Unknown'
@@ -332,7 +335,7 @@ module V1
       Rails.logger.info("SessionsController version:v1 saml_callback failure, user_uuid=#{@current_user&.uuid}")
 
       unless performed?
-        redirect_to url_service.login_redirect_url(auth: 'fail', code: code,
+        redirect_to url_service.login_redirect_url(auth: 'fail', code:,
                                                    request_id: request.request_id)
       end
       login_stats(:failure, exc) unless response.nil?
@@ -385,16 +388,6 @@ module V1
     def log_persisted_session_and_warnings
       obscure_token = Session.obscure_token(@session_object.token)
       Rails.logger.info("Logged in user with id #{@session_object&.uuid}, token #{obscure_token}")
-      # We want to log when SSNs do not match between MVI and SAML Identity. And might take future
-      # action if this appears to be happening frequently.
-      if current_user.ssn_mismatch?
-        additional_context = StringHelpers.heuristics(current_user.identity.ssn, current_user.ssn_mpi)
-        log_message_to_sentry(
-          'SessionsController version:v1 message:SSN from MPI Lookup does not match UserIdentity cache',
-          :warn,
-          identity_compared_with_mpi: additional_context
-        )
-      end
     end
 
     def html_escaped_relay_state
@@ -408,10 +401,10 @@ module V1
     end
 
     def url_service(force_authn = true)
-      @url_service ||= SAML::PostURLService.new(saml_settings(force_authn: force_authn),
+      @url_service ||= SAML::PostURLService.new(saml_settings(force_authn:),
                                                 session: @session_object,
                                                 user: current_user,
-                                                params: params,
+                                                params:,
                                                 loa3_context: LOA::IDME_LOA3)
     end
   end

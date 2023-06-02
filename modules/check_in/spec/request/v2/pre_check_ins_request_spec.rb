@@ -176,7 +176,7 @@ RSpec.describe 'V2::PreCheckInsController', type: :request do
 
       it 'returns valid response' do
         VCR.use_cassette 'check_in/lorota/token/token_200' do
-          post '/check_in/v2/sessions', session_params
+          post '/check_in/v2/sessions', **session_params
           expect(response.status).to eq(200)
         end
 
@@ -215,11 +215,11 @@ RSpec.describe 'V2::PreCheckInsController', type: :request do
         }
       end
       let(:body) { { 'data' => 'Pre-checkin successful', 'status' => 200 } }
-      let(:success_resp) { Faraday::Response.new(body: body, status: 200) }
+      let(:success_resp) { Faraday::Response.new(body:, status: 200) }
 
       it 'returns successful response' do
         VCR.use_cassette 'check_in/lorota/token/token_200' do
-          post '/check_in/v2/sessions', session_params
+          post '/check_in/v2/sessions', **session_params
           expect(response.status).to eq(200)
         end
 
@@ -267,7 +267,7 @@ RSpec.describe 'V2::PreCheckInsController', type: :request do
 
       it 'returns 404 error response' do
         VCR.use_cassette 'check_in/lorota/token/token_200' do
-          post '/check_in/v2/sessions', session_params
+          post '/check_in/v2/sessions', **session_params
           expect(response.status).to eq(200)
         end
 
@@ -310,7 +310,7 @@ RSpec.describe 'V2::PreCheckInsController', type: :request do
 
       it 'returns 500 error response' do
         VCR.use_cassette 'check_in/lorota/token/token_200' do
-          post '/check_in/v2/sessions', session_params
+          post '/check_in/v2/sessions', **session_params
           expect(response.status).to eq(200)
         end
 
@@ -326,7 +326,7 @@ RSpec.describe 'V2::PreCheckInsController', type: :request do
 
     context 'when session is not authorized' do
       let(:body) { { 'permissions' => 'read.none', 'status' => 'success', 'uuid' => id } }
-      let(:unauth_response) { Faraday::Response.new(body: body, status: 401) }
+      let(:unauth_response) { Faraday::Response.new(body:, status: 401) }
 
       it 'returns unauthorized response' do
         post '/check_in/v2/pre_check_ins', params: post_params

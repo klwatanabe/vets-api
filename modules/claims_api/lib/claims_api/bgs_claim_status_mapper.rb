@@ -3,7 +3,7 @@
 module ClaimsApi
   class BGSClaimStatusMapper
     PHASE_STATUS_DICTIONARY = {
-      CANCELLED: %w[0 cancelled can],
+      CANCELED: %w[0 cancelled can canceled],
       CLAIM_RECEIVED: ['1', 'claim received', 'received', 'open'],
       INITIAL_REVIEW: ['2', 'initial review', 'review', 'under review'],
       PENDING: %w[pending pend],
@@ -48,6 +48,18 @@ module ClaimsApi
         status = key.to_s if value.include?(phase.to_s)
       end
       grouped_phase(status)
+    end
+
+    # Note that phase type values and claim status values are closely aligned.
+    # Specific differences for 2 of the phase type values are handled below.
+    def get_phase_type_from_dictionary(phase)
+      status = ''
+      PHASE_STATUS_DICTIONARY.each do |key, value|
+        status = key.to_s if value.include?(phase.to_s)
+      end
+      status = 'UNDER_REVIEW' if status == 'INITIAL_REVIEW'
+      status = 'GATHERING_OF_EVIDENCE' if status == 'EVIDENCE_GATHERING'
+      status
     end
 
     def get_phase_from_phase_type_ind(phase_type_ind)

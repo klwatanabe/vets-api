@@ -2,13 +2,12 @@
 
 require 'rails_helper'
 require 'rx/client' # used to stub Rx::Client in tests
-require 'lib/sentry_logging_spec_helper'
 
 RSpec.describe ApplicationController, type: :controller do
   controller do
     attr_reader :payload
 
-    skip_before_action :authenticate, except: :test_authentication
+    skip_before_action :authenticate, except: %i[test_authentication test_logging]
 
     JSON_ERROR = {
       'errorCode' => 139, 'developerMessage' => '', 'message' => 'Prescription is not Refillable'
@@ -28,6 +27,10 @@ RSpec.describe ApplicationController, type: :controller do
 
     def forbidden
       raise Common::Exceptions::Forbidden
+    end
+
+    def test_logging
+      Rails.logger.info sso_logging_info
     end
 
     def breakers_outage
@@ -65,6 +68,7 @@ RSpec.describe ApplicationController, type: :controller do
 
   before do
     routes.draw do
+      get 'test_logging' => 'anonymous#test_logging'
       get 'not_authorized' => 'anonymous#not_authorized'
       get 'unauthorized' => 'anonymous#unauthorized'
       get 'routing_error' => 'anonymous#routing_error'
@@ -79,7 +83,68 @@ RSpec.describe ApplicationController, type: :controller do
     end
   end
 
-  it_behaves_like 'a sentry logger'
+  describe 'a sentry logger' do
+    subject { class_instance }
+
+    let(:class_instance) { described_class.new }
+    let(:exception) { StandardError.new }
+
+    context 'with SENTRY_DSN set' do
+      before { allow(Settings.sentry).to receive(:dsn).and_return('asdf') }
+
+      describe '#log_message_to_sentry' do
+        it 'error logs to Rails logger' do
+          expect(Rails.logger).to receive(:error).with(/blah/).with(/context/)
+          subject.log_message_to_sentry('blah', :error, { extra: 'context' }, tags: 'tagging')
+        end
+
+        it 'logs to Sentry' do
+          expect(Raven).to receive(:tags_context)
+          expect(Raven).to receive(:extra_context)
+          expect(Raven).to receive(:capture_message)
+          subject.log_message_to_sentry('blah', :error, { extra: 'context' }, tags: 'tagging')
+        end
+      end
+
+      describe '#log_exception_to_sentry' do
+        it 'warn logs to Rails logger' do
+          expect(Rails.logger).to receive(:error).with("#{exception.message}.")
+          subject.log_exception_to_sentry(exception)
+        end
+
+        it 'logs to Sentry' do
+          expect(Raven).to receive(:capture_exception).with(exception, level: 'error').once
+          subject.log_exception_to_sentry(exception)
+        end
+      end
+    end
+
+    context 'without SENTRY_DSN set' do
+      describe '#log_message_to_sentry' do
+        it 'warn logs to Rails logger' do
+          expect(Rails.logger).to receive(:warn).with(/blah/).with(/context/)
+          subject.log_message_to_sentry('blah', :warn, { extra: 'context' }, tags: 'tagging')
+        end
+
+        it 'does not log to Sentry' do
+          expect(Raven).to receive(:capture_exception).exactly(0).times
+          subject.log_message_to_sentry('blah', :warn, { extra: 'context' }, tags: 'tagging')
+        end
+      end
+
+      describe '#log_exception_to_sentry' do
+        it 'error logs to Rails logger' do
+          expect(Rails.logger).to receive(:error).with("#{exception.message}.")
+          subject.log_exception_to_sentry(exception)
+        end
+
+        it 'does not log to Sentry' do
+          expect(Raven).to receive(:capture_exception).exactly(0).times
+          subject.log_exception_to_sentry(exception)
+        end
+      end
+    end
+  end
 
   describe 'Sentry Handling' do
     around do |example|
@@ -88,8 +153,8 @@ RSpec.describe ApplicationController, type: :controller do
       end
     end
 
-    it 'does log exceptions to sentry if Pundit::NotAuthorizedError' do
-      expect(Raven).to receive(:capture_exception).with(Pundit::NotAuthorizedError, { level: 'info' })
+    it 'does not log exceptions to sentry if Pundit::NotAuthorizedError' do
+      expect(Raven).not_to receive(:capture_exception).with(Pundit::NotAuthorizedError, { level: 'info' })
       expect(Raven).not_to receive(:capture_message)
       get :not_authorized
     end
@@ -227,24 +292,28 @@ RSpec.describe ApplicationController, type: :controller do
       allow_any_instance_of(Rx::Client)
         .to receive(:connection).and_raise(Faraday::ConnectionFailed, 'some message')
       expect(Raven).to receive(:extra_context).once.with(
-        request_uuid: nil
+        { request_uuid: nil }
       )
       expect(Raven).to receive(:extra_context).once.with(
-        va_exception_errors: [{
-          title: 'Service unavailable',
-          detail: 'Backend Service Outage',
-          code: '503',
-          status: '503'
-        }]
+        {
+          va_exception_errors: [{
+            title: 'Service unavailable',
+            detail: 'Backend Service Outage',
+            code: '503',
+            status: '503'
+          }]
+        }
       )
       # if current user is nil it means user is not signed in.
       expect(Raven).to receive(:tags_context).once.with(
-        controller_name: 'anonymous',
-        sign_in_method: 'not-signed-in',
-        source: 'my_testing'
+        {
+          controller_name: 'anonymous',
+          sign_in_method: 'not-signed-in',
+          source: 'my_testing'
+        }
       )
       expect(Raven).to receive(:tags_context).once.with(
-        error: 'mhv_session'
+        { error: 'mhv_session' }
       )
       # since user is not signed in this shouldnt get called.
       expect(Raven).not_to receive(:user_context)
@@ -268,30 +337,34 @@ RSpec.describe ApplicationController, type: :controller do
         allow_any_instance_of(Rx::Client)
           .to receive(:connection).and_raise(Faraday::ConnectionFailed, 'some message')
         expect(Raven).to receive(:extra_context).once.with(
-          request_uuid: nil
+          { request_uuid: nil }
         )
         expect(Raven).to receive(:extra_context).once.with(
-          va_exception_errors: [{
-            title: 'Service unavailable',
-            detail: 'Backend Service Outage',
-            code: '503',
-            status: '503'
-          }]
+          {
+            va_exception_errors: [{
+              title: 'Service unavailable',
+              detail: 'Backend Service Outage',
+              code: '503',
+              status: '503'
+            }]
+          }
         )
         # if authn_context is nil on current_user it means idme
-        expect(Raven).to receive(:tags_context).once.with(controller_name: 'anonymous',
-                                                          sign_in_method: SignIn::Constants::Auth::IDME,
-                                                          sign_in_acct_type: nil)
+        expect(Raven).to receive(:tags_context).once.with(
+          { controller_name: 'anonymous', sign_in_method: SignIn::Constants::Auth::IDME, sign_in_acct_type: nil }
+        )
 
         expect(Raven).to receive(:tags_context).once.with(
-          error: 'mhv_session'
+          { error: 'mhv_session' }
         )
         # since user IS signed in, this SHOULD get called
         expect(Raven).to receive(:user_context).with(
-          id: user.uuid,
-          authn_context: user.authn_context,
-          loa: user.loa,
-          mhv_icn: user.mhv_icn
+          {
+            id: user.uuid,
+            authn_context: user.authn_context,
+            loa: user.loa,
+            mhv_icn: user.mhv_icn
+          }
         )
         expect(Raven).to receive(:capture_exception).once.with(
           Faraday::ConnectionFailed,
@@ -318,12 +391,12 @@ RSpec.describe ApplicationController, type: :controller do
           expect(subject.keys).to eq(keys_for_all_env)
         end
 
-        it 'logs info level and extra context to Sentry' do
-          expect(Raven).to receive(:capture_exception).once.with(
+        it 'does not log info level and extra context to Sentry' do
+          expect(Raven).not_to receive(:capture_exception).with(
             Pundit::NotAuthorizedError,
             level: 'info'
           )
-          expect(Raven).to receive(:extra_context).once.with(
+          expect(Raven).not_to receive(:extra_context).with(
             va_exception_errors: [{
               title: 'Forbidden',
               detail: 'User does not have access to the requested resource',
@@ -367,7 +440,7 @@ RSpec.describe ApplicationController, type: :controller do
       let(:header_auth_value) { ActionController::HttpAuthentication::Token.encode_credentials(token) }
 
       before do
-        session_object = Session.create(uuid: user.uuid, token: token)
+        session_object = Session.create(uuid: user.uuid, token:)
         User.create(user)
 
         session_object.to_hash.each { |k, v| session[k] = v }
@@ -420,6 +493,50 @@ RSpec.describe ApplicationController, type: :controller do
           expect(JSON.parse(response.body)['errors'].first)
             .to eq('title' => 'Not authorized', 'detail' => 'Not authorized', 'code' => '401', 'status' => '401')
         end
+      end
+    end
+  end
+
+  describe '#sso_logging_info' do
+    subject { get :test_logging }
+
+    let(:user) { build(:user, :loa3) }
+    let(:token) { 'fa0f28d6-224a-4015-a3b0-81e77de269f2' }
+    let(:header_auth_value) { ActionController::HttpAuthentication::Token.encode_credentials(token) }
+    let(:request_host) { Settings.hostname }
+    let(:expiration_time) { Session.find(token).ttl_in_time.iso8601(0) }
+    let(:sso_cookie_content) do
+      {
+        'patientIcn' => '123498767V234859',
+        'signIn' => {
+          'serviceName' => 'idme',
+          'authBroker' => 'iam',
+          'clientId' => 'web'
+        },
+        'credential_used' => 'idme',
+        'session_uuid' => token,
+        'expirationTime' => expiration_time
+      }
+    end
+    let(:expected_result) do
+      {
+        user_uuid: user.uuid,
+        sso_cookie_contents: sso_cookie_content,
+        request_host:
+      }
+    end
+
+    before do
+      allow(Rails.logger).to receive(:info)
+      session_object = Session.create(uuid: user.uuid, token:)
+      User.create(user)
+      session_object.to_hash.each { |k, v| session[k] = v }
+    end
+
+    context 'when the current user and session object exist' do
+      it 'returns the current user session token' do
+        expect(Rails.logger).to receive(:info).with(expected_result)
+        subject
       end
     end
   end
