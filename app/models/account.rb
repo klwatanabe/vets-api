@@ -64,6 +64,14 @@ class Account < ApplicationRecord
     Account.where(icn: user_account.icn).first
   end
 
+  def mpi_profile
+    resp = MPI::Service.new.find_profile_by_identifier(
+      identifier: icn,
+      identifier_type: MPI::Constants::ICN
+    )
+    resp&.profile
+  end
+
   private
 
   def initialize_uuid

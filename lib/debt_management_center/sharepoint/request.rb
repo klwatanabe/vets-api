@@ -120,7 +120,8 @@ module DebtManagementCenter
         user = User.find(form_submission.user_uuid)
         first_name = user_params['first_name'] || user&.first_name
         last_name = user_params['last_name'] || user&.last_name
-        ssn = user_params['ssn'] || user&.ssn
+        user_account = Account.find(user_params['account_id'])
+        ssn = user&.ssn || user_account&.mpi_profile&.ssn
         with_monitoring do
           sharepoint_connection.post(path) do |req|
             req.headers['Content-Type'] = 'application/json;odata=verbose'

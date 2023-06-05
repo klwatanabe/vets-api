@@ -195,7 +195,7 @@ module DebtManagementCenter
     end
 
     def update_filenet_id(response, user_params = {})
-      user_uuid = user_params['uuid'] || @user&.uuid
+      user_uuid = @user&.uuid || user_params['uuid']
       fsr_params = { REDIS_CONFIG[:financial_status_report][:namespace] => user_uuid }
       fsr = DebtManagementCenter::FinancialStatusReport.new(fsr_params)
       fsr.update(filenet_id: response.filenet_id, uuid: user_uuid)
@@ -259,7 +259,7 @@ module DebtManagementCenter
     def send_confirmation_email(template_id, user_params = {})
       return unless Flipper.enabled?(:fsr_confirmation_email)
 
-      email = user_params['email'] || @user&.email&.downcase
+      email = @user&.email&.downcase || user_params['email']
       return if email.blank?
 
       DebtManagementCenter::VANotifyEmailJob.perform_async(email, template_id, email_personalization_info(user_params))
@@ -270,7 +270,7 @@ module DebtManagementCenter
     end
 
     def email_personalization_info(user_params = {})
-      name = user_params['first_name'] || @user&.first_name
+      name = @user&.first_name || user_params['first_name']
       { 'name' => name, 'time' => '48 hours', 'date' => Time.zone.now.strftime('%m/%d/%Y') }
     end
 

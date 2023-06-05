@@ -10,7 +10,8 @@ module Form5655
 
     def perform(submission_id, user_params)
       submission = Form5655Submission.find(submission_id)
-      DebtManagementCenter::FinancialStatusReportService.new(nil).submit_vha_fsr(submission, user_params)
+      user = User.find(user_params['uuid'])
+      DebtManagementCenter::FinancialStatusReportService.new(user).submit_vha_fsr(submission, user_params)
     end
   end
 end

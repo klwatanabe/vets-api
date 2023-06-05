@@ -427,7 +427,7 @@ class User < Common::RedisStore
       'first_name' => first_name,
       'last_name' => last_name,
       'email' => email,
-      'ssn' => ssn
+      'account_id' => account.id
     }
   end
 

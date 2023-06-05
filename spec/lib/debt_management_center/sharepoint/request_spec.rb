@@ -102,7 +102,11 @@ RSpec.describe DebtManagementCenter::Sharepoint::Request do
         client_stub = mock_faraday
         expect(client_stub).to receive(:post).twice
         expect(client_stub).to receive(:get).once
-        user_params = { 'first_name' => 'x', 'last_name' => 'y', 'ssn' => 'z' }
+        user_params = { 'uuid' => 'b2fab2b5-6af0-45e1-a9e2-394347af91ef',
+                        'first_name' => 'abraham',
+                        'last_name' => 'lincoln',
+                        'email' => 'abraham.lincoln@vets.gov',
+                        'account_id' => 147 }
         subject.upload(form_contents: form_content, form_submission:, station_id:, user_params:)
       end
     end
