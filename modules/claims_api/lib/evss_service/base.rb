@@ -24,7 +24,7 @@ module ClaimsApi
       private
 
       def client
-        base_name = Settings.dvp&.url
+        base_name = Settings.evss&.dvp&.url
         service_name = Settings.evss&.service_name
         raise StandardError, 'DVP URL missing' if base_name.blank?
 

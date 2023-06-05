@@ -36,7 +36,7 @@ module ClaimsApi
         @evss_claim[:veteran][:changeOfAddress].merge!({
                                                          addressLine1: @data[:changeOfAddress][:numberAndStreet],
                                                          addressLines2: @data[:changeOfAddress][:apartmentOrUnitNumber],
-                                                         type: 'DOMESTIC' # [MILITARY, INTERNATIONAL] # TODO, find this
+                                                         type: 'DOMESTIC'
                                                        })
         @evss_claim[:veteran][:changeOfAddress][:addressChangeType] = @data.dig(:changeOfAddress, :typeOfAddressChange)
         @evss_claim[:veteran][:changeOfAddress][:beginningDate] = @data.dig(:changeOfAddress, :dates, :beginningDate)
@@ -52,7 +52,7 @@ module ClaimsApi
         @evss_claim[:veteran][:currentMailingAddress].merge!({
                                                                addressLine1: addr[:numberAndStreet],
                                                                addressLines2: addr[:apartmentOrUnitNumber],
-                                                               type: 'DOMESTIC' # [MILITARY, INTERNATIONAL] # TODO, find this
+                                                               type: 'DOMESTIC'
                                                              })
         @evss_claim[:veteran][:currentMailingAddress].except!(:numberAndStreet, :apartmentOrUnitNumber)
       end
@@ -92,7 +92,7 @@ module ClaimsApi
       end
 
       def standard_claim
-        @evss_claim[:standardClaim] = @data[:claimProcessType] == 'STANDARD_CLAIM_PROCESS' # TODO: confirm this
+        @evss_claim[:standardClaim] = @data[:claimProcessType] == 'STANDARD_CLAIM_PROCESS'
       end
 
       def claim_meta
