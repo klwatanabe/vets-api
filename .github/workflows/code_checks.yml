@@ -72,7 +72,7 @@ jobs:
       - name: Setup Database
         run: |
           docker-compose run web bash \
-          -c "CI=true RAILS_ENV=test DISABLE_BOOTSNAP=true bundle exec parallel_test -n 13 -e 'bin/rails db:reset'"
+          -c "CI=true RAILS_ENV=test DISABLE_BOOTSNAP=true bundle exec parallel_test -n 8 -e 'bin/rails db:reset'"
 
       - name: Run Specs
         run: |
