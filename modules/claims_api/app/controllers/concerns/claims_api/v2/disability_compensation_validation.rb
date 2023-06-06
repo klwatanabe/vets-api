@@ -16,12 +16,55 @@ module ClaimsApi
         validate_form_526_disabilities!
         # ensure homeless information is valid
         validate_form_526_veteran_homelessness!
+        # ensure new address is valid
+        validate_form_526_change_of_address!
         # ensure military service pay information is valid
         validate_form_526_service_pay!
         # ensure treament centers information is valid
         validate_form_526_treatments!
         # ensure service information is valid
         validate_form_526_service_information!
+        # ensure direct deposit information is valid
+        validate_form_526_direct_deposit!
+      end
+
+      def validate_form_526_change_of_address!
+        return if form_attributes['changeOfAddress'].blank?
+
+        validate_form_526_change_of_address_beginning_date!
+        validate_form_526_change_of_address_ending_date!
+        validate_form_526_change_of_address_country!
+      end
+
+      def validate_form_526_change_of_address_beginning_date!
+        change_of_address = form_attributes['changeOfAddress']
+        date = change_of_address.dig('dates', 'beginningDate')
+        return unless 'TEMPORARY'.casecmp?(change_of_address['typeOfAddressChange'])
+
+        # If the date parse fails, then fall back to the InvalidFieldValue
+        begin
+          return if Date.parse(date) < Time.zone.now
+        rescue
+          raise ::Common::Exceptions::InvalidFieldValue.new('changeOfAddress.dates.beginningDate', date)
+        end
+
+        raise ::Common::Exceptions::InvalidFieldValue.new('changeOfAddress.dates.beginningDate', date)
+      end
+
+      def validate_form_526_change_of_address_ending_date!
+        change_of_address = form_attributes['changeOfAddress']
+        date = change_of_address.dig('dates', 'endingDate')
+        return unless 'TEMPORARY'.casecmp?(change_of_address['typeOfAddressChange'])
+        return if Date.parse(date) > Date.parse(change_of_address.dig('dates', 'beginningDate'))
+
+        raise ::Common::Exceptions::InvalidFieldValue.new('changeOfAddress.dates.endingDate', date)
+      end
+
+      def validate_form_526_change_of_address_country!
+        change_of_address = form_attributes['changeOfAddress']
+        return if valid_countries.include?(change_of_address['country'])
+
+        raise ::Common::Exceptions::InvalidFieldValue.new('changeOfAddress.country', change_of_address['country'])
       end
 
       def validate_form_526_submission_claim_date!
@@ -485,6 +528,53 @@ module ClaimsApi
             detail: 'Terms of service Start date must be before the terms of service end date.'
           )
         end
+      end
+
+      def validate_form_526_direct_deposit!
+        direct_deposit = form_attributes['directDeposit']
+        return if direct_deposit.blank?
+
+        account_check = direct_deposit&.dig('noAccount')
+
+        account_check.present? && account_check == true ? validate_no_account! : validate_account_values!
+      end
+
+      def validate_no_account!
+        acc_vals = form_attributes['directDeposit']
+
+        raise_exception_on_invalid_account_values('account type') if acc_vals['accountType'].present?
+        raise_exception_on_invalid_account_values('account number') if acc_vals['accountNumber'].present?
+        raise_exception_on_invalid_account_values('routing number') if acc_vals['routingNumber'].present?
+        if acc_vals['financialInstitutionName'].present?
+          raise_exception_on_invalid_account_values('financial institution name')
+        end
+      end
+
+      def raise_exception_on_invalid_account_values(account_detail)
+        raise ::Common::Exceptions::UnprocessableEntity.new(
+          detail: "If the claimant has no account the #{account_detail} field must be left empty."
+        )
+      end
+
+      def validate_account_values!
+        direct_deposit_account_vals = form_attributes['directDeposit']
+
+        valid_account_types = %w[CHECKING SAVINGS]
+        account_type = direct_deposit_account_vals&.dig('accountType')
+        account_number = direct_deposit_account_vals&.dig('accountNumber')
+        routing_number = direct_deposit_account_vals&.dig('routingNumber')
+
+        if account_type.blank? || valid_account_types.exclude?(account_type)
+          raise_exception_if_value_present('account type (CHECKING/SAVINGS)')
+        end
+        raise_exception_if_value_present('account number') if account_number.blank?
+        raise_exception_if_value_present('routing number') if routing_number.blank?
+      end
+
+      def raise_exception_if_value_present(val)
+        raise ::Common::Exceptions::UnprocessableEntity.new(
+          detail: "The #{val} is required for direct deposit."
+        )
       end
     end
   end

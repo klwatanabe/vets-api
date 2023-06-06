@@ -362,6 +362,10 @@ features:
     actor_type: user
     description: Enables form 1990 email submission confirmation (VaNotify)
     enable_in_development: true
+  form1995_confirmation_email:
+    actor_type: user
+    description: Enables form 1995 email submission confirmation (VaNotify)
+    enable_in_development: true
   form1990e_confirmation_email:
     actor_type: user
     description: Enables form 1990e email submission confirmation (VaNotify)
@@ -388,6 +392,9 @@ features:
     actor_type: user
     description: Enables secure messaging
     enable_in_development: true
+  injected_header_web_components:
+    actor_type: user
+    description: Enable/disable import of web components to the injected header
   in_progress_form_custom_expiration:
     actor_type: user
     description: Enable/disable custom expiration dates for forms
@@ -536,10 +543,6 @@ features:
     actor_type: user
   profile_use_info_card:
     description: "Use an accessible component for Profile application information card sections"
-    enable_in_development: true
-    actor_type: user
-  profile_use_vaos_v2_api:
-    description: "Use the new VAOS v2 API endpoints"
     enable_in_development: true
     actor_type: user
   profile_use_vafsc:
