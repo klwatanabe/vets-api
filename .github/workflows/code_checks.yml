@@ -64,11 +64,6 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Create Test Database
-        run: |
-          docker-compose run web bash \
-          -c "RAILS_ENV=test DISABLE_BOOTSNAP=true bundle exec rails db:create"
-
       - name: Setup Database
         run: |
           docker-compose run web bash \
