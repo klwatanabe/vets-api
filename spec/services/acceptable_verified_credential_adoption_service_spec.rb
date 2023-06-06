@@ -12,19 +12,109 @@ RSpec.describe AcceptableVerifiedCredentialAdoptionService do
   before { allow(StatsD).to receive(:increment) }
 
   describe '.perform' do
-    context 'when Flipper organic_conversion_experiment is enabled' do
-      context 'User is dslogon authenticated' do
+    context 'User is dslogon authenticated' do
+      it 'returns correct credential type - dslogon' do
+        expect(service.perform).to include(credential_type: SAML::User::DSLOGON_CSID)
+      end
+
+      context 'When user has avc' do
+        let!(:user_acceptable_verified_credential) do
+          create(:user_acceptable_verified_credential, :with_avc, user_account:)
+        end
+
+        it 'reactivation campaign is recommended' do
+          expect(service.perform).to include(campaign: 'reactivation')
+        end
+
+        it 'logs attempt' do
+          service.perform
+          expect(StatsD).to have_received(:increment).exactly(1).times
+          expect(StatsD).to have_received(:increment)
+            .with("#{statsd_key}.reactivation_campaign.dslogon").exactly(1).time
+        end
+      end
+
+      context 'When user has ivc' do
+        let!(:user_acceptable_verified_credential) do
+          create(:user_acceptable_verified_credential, :with_ivc, user_account:)
+        end
+
+        it 'reactivation campaign is recommended' do
+          expect(service.perform).to include(campaign: 'reactivation')
+        end
+
+        it 'logs attempt' do
+          service.perform
+          expect(StatsD).to have_received(:increment).exactly(1).times
+          expect(StatsD).to have_received(:increment)
+            .with("#{statsd_key}.reactivation_campaign.dslogon").exactly(1).time
+        end
+      end
+
+      context 'When user has no avc/ivc' do
+        let!(:user_acceptable_verified_credential) do
+          create(:user_acceptable_verified_credential, :without_avc_ivc, user_account:)
+        end
+
+        context 'When Flipper organic_conversion_experiment is enabled' do
+          it 'organic campaign is recommended' do
+            expect(service.perform).to include(campaign: 'organic')
+          end
+
+          it 'logs attempt' do
+            service.perform
+            expect(StatsD).to have_received(:increment).exactly(1).times
+            expect(StatsD).to have_received(:increment).with("#{statsd_key}.organic_campaign.dslogon").exactly(1).time
+          end
+        end
+
+        context 'When Flipper organic_conversion_experiment is disabled' do
+          before do
+            Flipper.disable(:organic_conversion_experiment)
+          end
+
+          it 'no campaign is recommended' do
+            expect(service.perform).not_to include(:campaign)
+          end
+
+          it 'does not logs attempt' do
+            service.perform
+            expect(StatsD).to have_received(:increment).exactly(0).times
+          end
+        end
+      end
+    end
+
+    context 'When user is login.gov authenticated' do
+      let(:user) { create(:user, :accountable_with_logingov_uuid, authn_context: IAL::LOGIN_GOV_IAL2) }
+      let(:user_verification) { create(:logingov_user_verification, logingov_uuid: user.logingov_uuid) }
+      let!(:user_acceptable_verified_credential) do
+        create(:user_acceptable_verified_credential, :with_avc, user_account:)
+      end
+
+      it 'returns correct credential type - login.gov' do
+        expect(service.perform).to include(credential_type: SAML::User::LOGINGOV_CSID)
+      end
+
+      context 'When Flipper organic_conversion_experiment is enabled' do
+        it 'no campaign is recommended' do
+          expect(service.perform).not_to include(:campaign)
+        end
+
+        it 'does not log attempt' do
+          service.perform
+          expect(StatsD).to have_received(:increment).exactly(0).times
+        end
+      end
+
+      context 'When Flipper organic_conversion_experiment is disabled' do
+        before do
+          Flipper.disable(:organic_conversion_experiment)
+        end
+
         context 'When user has avc' do
-          let!(:user_acceptable_verified_credential) do
-            create(:user_acceptable_verified_credential, :with_avc, user_account:)
-          end
-
-          it 'hash returns false' do
-            expect(service.perform).to include(organic_modal: false)
-          end
-
-          it 'hash returns correct credential type - dslogon' do
-            expect(service.perform).to include(credential_type: SAML::User::DSLOGON_CSID)
+          it 'no campaign is recommended' do
+            expect(service.perform).not_to include(:campaign)
           end
 
           it 'does not log attempt' do
@@ -38,12 +128,8 @@ RSpec.describe AcceptableVerifiedCredentialAdoptionService do
             create(:user_acceptable_verified_credential, :with_ivc, user_account:)
           end
 
-          it 'hash returns false' do
-            expect(service.perform).to include(organic_modal: false)
-          end
-
-          it 'hash returns correct credential type - dslogon' do
-            expect(service.perform).to include(credential_type: SAML::User::DSLOGON_CSID)
+          it 'no campaign is recommended' do
+            expect(service.perform).not_to include(:campaign)
           end
 
           it 'does not log attempt' do
@@ -57,189 +143,15 @@ RSpec.describe AcceptableVerifiedCredentialAdoptionService do
             create(:user_acceptable_verified_credential, :without_avc_ivc, user_account:)
           end
 
-          it 'hash returns true' do
-            expect(service.perform).to include(organic_modal: true)
-          end
-
-          it 'hash returns correct credential type - dslogon' do
-            expect(service.perform).to include(credential_type: SAML::User::DSLOGON_CSID)
+          it 'no campaign is recommended' do
+            expect(service.perform).not_to include(:campaign)
           end
 
           it 'logs attempt' do
             service.perform
-            expect(StatsD).to have_received(:increment).exactly(1).times
-            expect(StatsD).to have_received(:increment).with("#{statsd_key}.organic_modal.dslogon").exactly(1).time
-          end
-        end
-      end
-
-      context 'When user is login.gov authenticated' do
-        let(:user) { create(:user, :accountable_with_logingov_uuid, authn_context: IAL::LOGIN_GOV_IAL2) }
-        let(:user_verification) { create(:logingov_user_verification, logingov_uuid: user.logingov_uuid) }
-        let!(:user_acceptable_verified_credential) do
-          create(:user_acceptable_verified_credential, :with_avc, user_account:)
-        end
-
-        it 'hash returns false' do
-          expect(service.perform).to include(organic_modal: false)
-        end
-
-        it 'hash returns correct credential type - login.gov' do
-          expect(service.perform).to include(credential_type: SAML::User::LOGINGOV_CSID)
-        end
-
-        it 'does not log attempt' do
-          service.perform
-          expect(StatsD).to have_received(:increment).exactly(0).times
-        end
-      end
-
-      context 'When user is idme authenticated' do
-        let(:user) { create(:user, :accountable, authn_context: LOA::IDME_LOA3_VETS) }
-        let(:user_verification) { create(:idme_user_verification, idme_uuid: user.idme_uuid) }
-        let!(:user_acceptable_verified_credential) do
-          create(:user_acceptable_verified_credential, :with_ivc, user_account:)
-        end
-
-        it 'hash returns false' do
-          expect(service.perform).to include(organic_modal: false)
-        end
-
-        it 'hash returns correct credential type - idme' do
-          expect(service.perform).to include(credential_type: SAML::User::IDME_CSID)
-        end
-
-        it 'does not log attempt' do
-          service.perform
-          expect(StatsD).to have_received(:increment).exactly(0).times
-        end
-      end
-
-      context 'User is mhv authenticated' do
-        context 'When user has avc' do
-          let(:user) { create(:user, :mhv, authn_context: SAML::User::MHV_ORIGINAL_CSID) }
-          let(:user_verification) { create(:mhv_user_verification, mhv_uuid: user.mhv_correlation_id) }
-          let!(:user_acceptable_verified_credential) do
-            create(:user_acceptable_verified_credential, :with_avc, user_account:)
-          end
-
-          it 'hash returns false' do
-            expect(service.perform).to include(organic_modal: false)
-          end
-
-          it 'hash returns correct credential type - mhv' do
-            expect(service.perform).to include(credential_type: SAML::User::MHV_ORIGINAL_CSID)
-          end
-
-          it 'does not log attempt' do
-            service.perform
             expect(StatsD).to have_received(:increment).exactly(0).times
           end
         end
-      end
-
-      context 'When user has ivc' do
-        let(:user) { create(:user, :mhv, authn_context: SAML::User::MHV_ORIGINAL_CSID) }
-        let(:user_verification) { create(:mhv_user_verification, mhv_uuid: user.mhv_correlation_id) }
-        let!(:user_acceptable_verified_credential) do
-          create(:user_acceptable_verified_credential, :with_ivc, user_account:)
-        end
-
-        it 'hash returns false' do
-          expect(service.perform).to include(organic_modal: false)
-        end
-
-        it 'hash returns correct credential type - mhv' do
-          expect(service.perform).to include(credential_type: SAML::User::MHV_ORIGINAL_CSID)
-        end
-
-        it 'does not log attempt' do
-          service.perform
-          expect(StatsD).to have_received(:increment).exactly(0).times
-        end
-      end
-
-      context 'When user has no avc/ivc' do
-        let(:user) { create(:user, :mhv, authn_context: SAML::User::MHV_ORIGINAL_CSID) }
-        let(:user_verification) { create(:mhv_user_verification, mhv_uuid: user.mhv_correlation_id) }
-        let!(:user_acceptable_verified_credential) do
-          create(:user_acceptable_verified_credential, :without_avc_ivc, user_account:)
-        end
-
-        it 'hash returns true' do
-          expect(service.perform).to include(organic_modal: true)
-        end
-
-        it 'hash returns correct credential type - mhv' do
-          expect(service.perform).to include(credential_type: SAML::User::MHV_ORIGINAL_CSID)
-        end
-
-        it 'logs attempt' do
-          service.perform
-          expect(StatsD).to have_received(:increment).exactly(1).times
-          expect(StatsD).to have_received(:increment).with("#{statsd_key}.organic_modal.mhv").exactly(1).time
-        end
-      end
-    end
-
-    context 'When Flipper organic_conversion_experiment is disabled' do
-      before do
-        Flipper.disable(:organic_conversion_experiment)
-      end
-
-      it 'hash returns false' do
-        expect(service.perform).to include(organic_modal: false)
-      end
-
-      it 'does not log attempt' do
-        service.perform
-        expect(StatsD).to have_received(:increment).exactly(0).times
-      end
-    end
-  end
-
-  describe '.user_qualifies_for_reactivation?' do
-    context 'User is dslogon authenticated' do
-      context 'When user has avc' do
-        let!(:user_acceptable_verified_credential) do
-          create(:user_acceptable_verified_credential, :with_avc, user_account:)
-        end
-
-        it 'qualifies for reactivation' do
-          expect(service).to be_user_qualifies_for_reactivation
-        end
-      end
-
-      context 'When user has ivc' do
-        let!(:user_acceptable_verified_credential) do
-          create(:user_acceptable_verified_credential, :with_ivc, user_account:)
-        end
-
-        it 'qualifies for reactivation' do
-          expect(service).to be_user_qualifies_for_reactivation
-        end
-      end
-
-      context 'When user has no avc/ivc' do
-        let!(:user_acceptable_verified_credential) do
-          create(:user_acceptable_verified_credential, :without_avc_ivc, user_account:)
-        end
-
-        it 'does not qualify for reactivation' do
-          expect(service).not_to be_user_qualifies_for_reactivation
-        end
-      end
-    end
-
-    context 'When user is login.gov authenticated' do
-      let(:user) { create(:user, :accountable_with_logingov_uuid, authn_context: IAL::LOGIN_GOV_IAL2) }
-      let(:user_verification) { create(:logingov_user_verification, logingov_uuid: user.logingov_uuid) }
-      let!(:user_acceptable_verified_credential) do
-        create(:user_acceptable_verified_credential, :with_avc, user_account:)
-      end
-
-      it 'qualifies for reactivation' do
-        expect(service).not_to be_user_qualifies_for_reactivation
       end
     end
 
@@ -250,46 +162,126 @@ RSpec.describe AcceptableVerifiedCredentialAdoptionService do
         create(:user_acceptable_verified_credential, :with_ivc, user_account:)
       end
 
-      it 'does not qualifiy for reactivation' do
-        expect(service).not_to be_user_qualifies_for_reactivation
+      it 'returns correct credential type - idme' do
+        expect(service.perform).to include(credential_type: SAML::User::IDME_CSID)
       end
-    end
 
-    context 'User is mhv authenticated' do
-      context 'When user has avc' do
-        let(:user) { create(:user, :mhv, authn_context: SAML::User::MHV_ORIGINAL_CSID) }
-        let(:user_verification) { create(:mhv_user_verification, mhv_uuid: user.mhv_correlation_id) }
-        let!(:user_acceptable_verified_credential) do
-          create(:user_acceptable_verified_credential, :with_avc, user_account:)
+      context 'When Flipper organic_conversion_experiment is enabled' do
+        it 'no campaign is recommended' do
+          expect(service.perform).not_to include(:campaign)
         end
 
-        it 'qualifies for reactivation' do
-          expect(service).to be_user_qualifies_for_reactivation
+        it 'does not log attempt' do
+          service.perform
+          expect(StatsD).to have_received(:increment).exactly(0).times
         end
       end
     end
 
-    context 'When user has ivc' do
+    context 'When user is mhv authenticated' do
       let(:user) { create(:user, :mhv, authn_context: SAML::User::MHV_ORIGINAL_CSID) }
       let(:user_verification) { create(:mhv_user_verification, mhv_uuid: user.mhv_correlation_id) }
       let!(:user_acceptable_verified_credential) do
-        create(:user_acceptable_verified_credential, :with_ivc, user_account:)
+        create(:user_acceptable_verified_credential, :with_avc, user_account:)
       end
 
-      it 'qualifies for reactivation' do
-        expect(service).to be_user_qualifies_for_reactivation
-      end
-    end
-
-    context 'When user has no avc/ivc' do
-      let(:user) { create(:user, :mhv, authn_context: SAML::User::MHV_ORIGINAL_CSID) }
-      let(:user_verification) { create(:mhv_user_verification, mhv_uuid: user.mhv_correlation_id) }
-      let!(:user_acceptable_verified_credential) do
-        create(:user_acceptable_verified_credential, :without_avc_ivc, user_account:)
+      it 'returns correct credential type - mhv' do
+        expect(service.perform).to include(credential_type: SAML::User::MHV_ORIGINAL_CSID)
       end
 
-      it 'does not qualify for reactivation' do
-        expect(service).not_to be_user_qualifies_for_reactivation
+      context 'When Flipper organic_conversion_experiment is enabled' do
+        context 'When user has avc' do
+          it 'reactivation campaign is recommended' do
+            expect(service.perform).to include(campaign: 'reactivation')
+          end
+
+          it 'logs attempt' do
+            service.perform
+            expect(StatsD).to have_received(:increment).exactly(1).times
+            expect(StatsD).to have_received(:increment).with("#{statsd_key}.reactivation_campaign.mhv").exactly(1).time
+          end
+        end
+
+        context 'When user has ivc' do
+          let!(:user_acceptable_verified_credential) do
+            create(:user_acceptable_verified_credential, :with_ivc, user_account:)
+          end
+
+          it 'reactivation campaign is recommended' do
+            expect(service.perform).to include(campaign: 'reactivation')
+          end
+
+          it 'logs attempt' do
+            service.perform
+            expect(StatsD).to have_received(:increment).exactly(1).times
+            expect(StatsD).to have_received(:increment).with("#{statsd_key}.reactivation_campaign.mhv").exactly(1).time
+          end
+        end
+
+        context 'When user has no avc/ivc' do
+          let!(:user_acceptable_verified_credential) do
+            create(:user_acceptable_verified_credential, :without_avc_ivc, user_account:)
+          end
+
+          it 'organic campaign is recommended' do
+            expect(service.perform).to include(campaign: 'organic')
+          end
+
+          it 'logs attempt' do
+            service.perform
+            expect(StatsD).to have_received(:increment).exactly(1).times
+            expect(StatsD).to have_received(:increment).with("#{statsd_key}.organic_campaign.mhv").exactly(1).time
+          end
+        end
+      end
+
+      context 'When Flipper organic_conversion_experiment is disabled' do
+        before do
+          Flipper.disable(:organic_conversion_experiment)
+        end
+
+        context 'When user has avc' do
+          it 'reactivation campaign is recommended' do
+            expect(service.perform).to include(campaign: 'reactivation')
+          end
+
+          it 'does not log attempt' do
+            service.perform
+            expect(StatsD).to have_received(:increment).exactly(1).times
+            expect(StatsD).to have_received(:increment).with("#{statsd_key}.reactivation_campaign.mhv").exactly(1).time
+          end
+        end
+
+        context 'When user has ivc' do
+          let!(:user_acceptable_verified_credential) do
+            create(:user_acceptable_verified_credential, :with_ivc, user_account:)
+          end
+
+          it 'reactivation campaign is recommended' do
+            expect(service.perform).to include(campaign: 'reactivation')
+          end
+
+          it 'does not log attempt' do
+            service.perform
+            expect(StatsD).to have_received(:increment).exactly(1).times
+            expect(StatsD).to have_received(:increment).with("#{statsd_key}.reactivation_campaign.mhv").exactly(1).time
+          end
+        end
+
+        context 'When user has no avc/ivc' do
+          let!(:user_acceptable_verified_credential) do
+            create(:user_acceptable_verified_credential, :without_avc_ivc, user_account:)
+          end
+
+          it 'no campaign is recommended' do
+            expect(service.perform).not_to include(:campaign)
+          end
+
+          it 'logs attempt' do
+            service.perform
+            expect(StatsD).to have_received(:increment).exactly(0).times
+          end
+        end
       end
     end
   end
