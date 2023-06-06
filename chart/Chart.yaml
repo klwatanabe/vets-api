@@ -59,8 +59,7 @@ type: application
 # 0.11.49 - Sidekiq Alive unique queue names
 # 0.11.50 - Sidekiq Alive unique queue names for server pods
 # 0.11.51 - Set startupProbe to false
-# 0.11.52 - Annotation to manually roll pods
-version: 0.11.52
+version: 0.11.51
 
 # This is the version number of the application being deployed. This version number should be
 # incremented each time you make changes to the application. Versions are not expected to
