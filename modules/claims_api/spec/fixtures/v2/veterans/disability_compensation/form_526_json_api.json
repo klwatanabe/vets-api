@@ -19,8 +19,8 @@
                     "agreeToEmailRelatedToClaim": true
                 },
                 "veteranNumber": {
-                    "telephone": "1234567890",
-                    "internationalTelephone": "1234567890"
+                    "telephone": "5555555555",
+                    "internationalTelephone": "5555555555"
                 },
                 "vaFileNumber": "AB123CDEF"
             },
@@ -34,24 +34,31 @@
                         "separationLocationCode": "ABCDEFGHIJKLMN"
                     }
                 ],
-                "confinements": {
-                    "approximateBeginDate": "8349-11-06",
-                    "approximateEndDate": "2884-12-09"
-                },
+                "confinements": [
+                    {
+                        "approximateBeginDate": "2018-06-04",
+                        "approximateEndDate": "2018-07-04"
+                    } ,
+                    {
+                        "approximateBeginDate": "2020-06-04",
+                        "approximateEndDate": "2020-07-04"
+                    } 
+                ],
                 "reservesNationalGuardService": {
                     "obligationTermsOfService": {
-                        "startDate":"3995-11-24",
-                        "endDate":"8502-11-17"
+                        "startDate":"2019-06-04",
+                        "endDate":"2020-06-04"
                     },
-                    "unitName": "''c'5'l'#l#2z",
+                    "unitName": "National Guard Unit Name",
+                    "unitAddress": "1243 pine court",
                     "component": "Active",
                     "title10Activation": {
                         "anticipatedSeparationDate": "6705-10-03",
                         "title10ActivationDate": "3619-02-11"
                     },
                     "unitPhone": {
-                        "areaCode": "123",
-                        "phoneNumber": "1234567"
+                        "areaCode": "555",
+                        "phoneNumber": "5555555"
                     },
                     "receivingInactiveDutyTrainingPay": true
                 },
@@ -64,18 +71,18 @@
                 {
                     "disabilityActionType": "REOPEN",
                     "name": "PTSD (post traumatic stress disorder)",
-                    "classificationCode": "ABCDEFGHIJ",
+                    "classificationCode": "5420",
                     "serviceRelevance": "ABCDEFG",
-                    "approximateDate": "4592-11-04",
+                    "approximateDate": "2018-03-02",
                     "ratedDisabilityId": "ABCDEFGHIJKLMNOPQRSTUVWX",
-                    "diagnosticCode": 0,
+                    "diagnosticCode": 9999,
                     "secondaryDisabilities": [
                         {
-                            "name": "ABCDEF",
+                            "name": "Cancer - Musculoskeletal - Elbow",
                             "disabilityActionType": "SECONDARY",
                             "serviceRelevance": "ABCDEFGHIJKLMNOPQ",
-                            "classificationCode": "ABCDEFGHIJKLMNO",
-                            "approximateDate": "9904-01-03",
+                            "classificationCode": "249470",
+                            "approximateDate": "2018-03-02",
                             "exposureOrEventOrInjury": "EXPOSURE"
                         }
                     ],
@@ -84,19 +91,19 @@
                 },
                 {
                     "disabilityActionType": "REOPEN",
-                    "name": "Trauma",
-                    "classificationCode": "ABCDEFGHIJ",
+                    "name": "Traumatic Brain Injury",
+                    "classificationCode": "9020",
                     "serviceRelevance": "ABCDEFG",
-                    "approximateDate": "4592-11-04",
+                    "approximateDate": "2018-03-02",
                     "ratedDisabilityId": "ABCDEFGHIJKLMNOPQRSTUVWX",
                     "diagnosticCode": 0,
                     "secondaryDisabilities": [
                         {
-                            "name": "GHIJKLM",
+                            "name": "Cancer - Musculoskeletal - Elbow",
                             "disabilityActionType": "SECONDARY",
                             "serviceRelevance": "ABCDEFGHIJKLMNOPQ",
-                            "classificationCode": "ABCDEFGHIJKLMNO",
-                            "approximateDate": "9904-01-03",
+                            "classificationCode": "249470",
+                            "approximateDate": "2018-03-02",
                             "exposureOrEventOrInjury": "EXPOSURE"
                         }
                     ],
@@ -109,12 +116,12 @@
             "claimDate": "2023-02-18",
             "changeOfAddress": {
                 "dates": {
-                    "beginningDate": "2012-11-31",
+                    "beginningDate": "2012-11-30",
                     "endingDate": "2013-10-11"
                   },
                   "typeOfAddressChange": "TEMPORARY",
                   "numberAndStreet": "10 Peach St",
-                  "apartmentOrUnitNumber": "Apt 1",
+                  "apartmentOrUnitNumber": "22",
                   "city": "Atlanta",
                   "zipFirstFive": "42220",
                   "zipLastFour": "9897",
@@ -124,8 +131,8 @@
             "homeless": {
                 "pointOfContact": "john stewart",
                 "pointOfContactNumber": {
-                    "telephone": "7028901212",
-                    "internationalTelephone": "1234567890"
+                    "telephone": "5555555555",
+                    "internationalTelephone": "5555555555"
                 },
                 "currentlyHomeless": {
                     "homelessSituationOptions": "FLEEING_CURRENT_RESIDENCE",
@@ -150,7 +157,7 @@
                 },
                 "additionalHazardExposures": {
                     "additionalExposures": ["ASBESTOS", "SHAD"],
-                    "specifyOtherExposures": "ABCD",
+                    "specifyOtherExposures": "Other exposure details",
                     "exposureDates": {
                         "startDate": "4520-07-30",
                         "endDate": "3405-10-03"
@@ -167,16 +174,7 @@
             },
             "treatments": [
                 {
-                    "treatedDisabilityNames": ["PTSD (post traumatic stress disorder)", "Trauma"],
-                    "center": {
-                        "name": "Center One",
-                        "state": "GA",
-                        "city": "Decatur"
-                    },
-                    "startDate": "03-1985"
-                },
-                {
-                    "treatedDisabilityNames": ["Trauma"],
+                    "treatedDisabilityNames": ["PTSD (post traumatic stress disorder)"],
                     "center": {
                         "name": "Center One",
                         "state": "GA",
@@ -195,10 +193,10 @@
                     "branchOfService": "Army",
                     "monthlyAmount": 840.75
                 },
-                "retiredStatus": "RETIRED",
+                "retiredStatus": "PERMANENT_DISABILITY_RETIRED_LIST",
                 "receivedSeparationOrSeverancePay": false,
                 "separationSeverancePay": {
-                    "datePaymentReceived": "7169-07-31",
+                    "datePaymentReceived": "2022-03-01",
                     "branchOfService": "Naval Academy",
                     "preTaxAmountReceived": 379.25
                 }
@@ -207,7 +205,7 @@
                 "accountType": "CHECKING",
                 "accountNumber": "ABCDEF",
                 "routingNumber": "123123123",
-                "financialInstitutionName": "Some Bank",
+                "financialInstitutionName": "Chase",
                 "noAccount": false
             }
         }

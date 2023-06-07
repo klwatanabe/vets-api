@@ -4,6 +4,8 @@ require 'lighthouse/benefits_claims/service'
 
 module V0
   class BenefitsClaimsController < ApplicationController
+    before_action { authorize :lighthouse, :access? }
+
     def index
       claims = service.get_claims
 
@@ -14,6 +16,12 @@ module V0
       claim = service.get_claim(params[:id])
 
       render json: claim
+    end
+
+    def submit5103
+      res = service.submit5103(params[:id])
+
+      render json: res
     end
 
     private

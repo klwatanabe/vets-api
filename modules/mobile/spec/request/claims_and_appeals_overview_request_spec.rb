@@ -1,18 +1,18 @@
 # frozen_string_literal: true
 
 require 'rails_helper'
-require_relative '../support/iam_session_helper'
+require_relative '../support/helpers/iam_session_helper'
 require_relative '../support/matchers/json_schema_matcher'
 require 'lighthouse/benefits_claims/configuration'
 require 'lighthouse/benefits_claims/service'
 
 RSpec.shared_examples 'claims and appeals overview' do |lighthouse_flag|
   let(:good_claims_response_vcr_path) do
-    lighthouse_flag ? 'lighthouse_claims/index/200_response' : 'claims/claims'
+    lighthouse_flag ? 'mobile/lighthouse_claims/index/200_response' : 'mobile/claims/claims'
   end
 
   let(:error_claims_response_vcr_path) do
-    lighthouse_flag ? 'lighthouse_claims/index/404_response' : 'claims/claims_with_errors'
+    lighthouse_flag ? 'mobile/lighthouse_claims/index/404_response' : 'mobile/claims/claims_with_errors'
   end
 
   before do
@@ -40,19 +40,22 @@ RSpec.shared_examples 'claims and appeals overview' do |lighthouse_flag|
     describe '#index (all user claims) is polled' do
       it 'and a result that matches our schema is successfully returned with the 200 status ' do
         VCR.use_cassette(good_claims_response_vcr_path) do
-          VCR.use_cassette('appeals/appeals') do
+          VCR.use_cassette('mobile/appeals/appeals') do
             get('/mobile/v0/claims-and-appeals-overview', headers: iam_headers, params:)
             expect(response).to have_http_status(:ok)
             # check a couple entries to make sure the data is correct
             parsed_response_contents = response.parsed_body['data']
             if lighthouse_flag
-              expect(parsed_response_contents.length).to eq(10)
+              expect(parsed_response_contents.length).to eq(11)
               expect(response.parsed_body.dig('meta', 'pagination', 'totalPages')).to eq(1)
               open_claim = parsed_response_contents.select { |entry| entry['id'] == '600383363' }[0]
               closed_claim = parsed_response_contents.select { |entry| entry['id'] == '600229968' }[0]
               decision_letter_sent_claim = parsed_response_contents.select { |entry| entry['id'] == '600323434' }[0]
+              nil_dates_claim = parsed_response_contents.last
               expect(open_claim.dig('attributes', 'updatedAt')).to eq('2022-09-30')
               expect(closed_claim.dig('attributes', 'updatedAt')).to eq('2021-03-22')
+              expect(nil_dates_claim.dig('attributes', 'updatedAt')).to eq(nil)
+              expect(nil_dates_claim.dig('attributes', 'dateFiled')).to eq(nil)
             else
               expect(parsed_response_contents.length).to eq(60)
               expect(response.parsed_body.dig('meta', 'pagination', 'totalPages')).to eq(3)
@@ -84,7 +87,7 @@ RSpec.shared_examples 'claims and appeals overview' do |lighthouse_flag|
 
       it 'and invalid headers return a 401 status' do
         VCR.use_cassette(good_claims_response_vcr_path) do
-          VCR.use_cassette('appeals/appeals') do
+          VCR.use_cassette('mobile/appeals/appeals') do
             get '/mobile/v0/claims-and-appeals-overview'
             expect(response).to have_http_status(:unauthorized)
             expect(response.body).to match_json_schema('evss_errors')
@@ -102,7 +105,7 @@ RSpec.shared_examples 'claims and appeals overview' do |lighthouse_flag|
 
       it 'and the results are for page 2 of a 12 item pages which only has 10 entries' do
         VCR.use_cassette(good_claims_response_vcr_path) do
-          VCR.use_cassette('appeals/appeals') do
+          VCR.use_cassette('mobile/appeals/appeals') do
             get('/mobile/v0/claims-and-appeals-overview', headers: iam_headers, params:)
             expect(response).to have_http_status(:ok)
 
@@ -124,7 +127,7 @@ RSpec.shared_examples 'claims and appeals overview' do |lighthouse_flag|
 
       it 'and the results contain only closed records' do
         VCR.use_cassette(good_claims_response_vcr_path) do
-          VCR.use_cassette('appeals/appeals') do
+          VCR.use_cassette('mobile/appeals/appeals') do
             get('/mobile/v0/claims-and-appeals-overview', headers: iam_headers, params:)
             expect(response).to have_http_status(:ok)
             # check a couple entries to make sure the data is correct
@@ -147,7 +150,7 @@ RSpec.shared_examples 'claims and appeals overview' do |lighthouse_flag|
 
       it 'and the results contain only open records' do
         VCR.use_cassette(good_claims_response_vcr_path) do
-          VCR.use_cassette('appeals/appeals') do
+          VCR.use_cassette('mobile/appeals/appeals') do
             get('/mobile/v0/claims-and-appeals-overview', headers: iam_headers, params:)
             expect(response).to have_http_status(:ok)
             # check a couple entries to make sure the data is correct
@@ -166,7 +169,7 @@ RSpec.shared_examples 'claims and appeals overview' do |lighthouse_flag|
 
       it 'and claims service fails, but appeals succeeds' do
         VCR.use_cassette(error_claims_response_vcr_path) do
-          VCR.use_cassette('appeals/appeals') do
+          VCR.use_cassette('mobile/appeals/appeals') do
             get('/mobile/v0/claims-and-appeals-overview', headers: iam_headers, params:)
 
             parsed_response_contents = response.parsed_body['data']
@@ -190,7 +193,7 @@ RSpec.shared_examples 'claims and appeals overview' do |lighthouse_flag|
 
       it 'and appeals service fails, but claims succeeds' do
         VCR.use_cassette(good_claims_response_vcr_path) do
-          VCR.use_cassette('appeals/server_error') do
+          VCR.use_cassette('mobile/appeals/server_error') do
             get('/mobile/v0/claims-and-appeals-overview', headers: iam_headers, params:)
             expect(response).to have_http_status(:multi_status)
             parsed_response_contents = response.parsed_body['data']
@@ -216,7 +219,7 @@ RSpec.shared_examples 'claims and appeals overview' do |lighthouse_flag|
 
       it 'both fail in upstream service' do
         VCR.use_cassette(error_claims_response_vcr_path) do
-          VCR.use_cassette('appeals/server_error') do
+          VCR.use_cassette('mobile/appeals/server_error') do
             get('/mobile/v0/claims-and-appeals-overview', headers: iam_headers, params:)
             expect(response).to have_http_status(:bad_gateway)
             expect(response.parsed_body.dig('meta', 'errors').length).to eq(2)
@@ -236,7 +239,7 @@ RSpec.shared_examples 'claims and appeals overview' do |lighthouse_flag|
           allow_any_instance_of(IAMUser).to receive(:loa).and_raise(NoMethodError)
         end
         VCR.use_cassette(good_claims_response_vcr_path) do
-          VCR.use_cassette('appeals/appeals') do
+          VCR.use_cassette('mobile/appeals/appeals') do
             get('/mobile/v0/claims-and-appeals-overview', headers: iam_headers, params:)
 
             expect(response.parsed_body['data'].size).to eq(
@@ -278,13 +281,6 @@ end
 
 RSpec.describe 'claims and appeals overview', type: :request do
   include JsonSchemaMatchers
-
-  before(:all) do
-    @original_cassette_dir = VCR.configure(&:cassette_library_dir)
-    VCR.configure { |c| c.cassette_library_dir = 'modules/mobile/spec/support/vcr_cassettes' }
-  end
-
-  after(:all) { VCR.configure { |c| c.cassette_library_dir = @original_cassette_dir } }
 
   it_behaves_like 'claims and appeals overview', false
   it_behaves_like 'claims and appeals overview', true

@@ -362,6 +362,10 @@ features:
     actor_type: user
     description: Enables form 1990 email submission confirmation (VaNotify)
     enable_in_development: true
+  form1995_confirmation_email:
+    actor_type: user
+    description: Enables form 1995 email submission confirmation (VaNotify)
+    enable_in_development: true
   form1990e_confirmation_email:
     actor_type: user
     description: Enables form 1990e email submission confirmation (VaNotify)
@@ -370,6 +374,12 @@ features:
     actor_type: user
     description: Enables form 5490 email submission confirmation (VaNotify)
     enable_in_development: true
+  form214142:
+    actor_type: user
+    description: If enabled shows the digital form experience for form 21-4142
+  form2110210:
+    actor_type: user
+    description: If enabled shows the digital form experience for form 21-10210
   form264555:
     actor_type: user
     description: If enabled shows the digital form experience for form 26-4555
@@ -385,6 +395,9 @@ features:
     actor_type: user
     description: Enables secure messaging
     enable_in_development: true
+  injected_header_web_components:
+    actor_type: user
+    description: Enable/disable import of web components to the injected header
   in_progress_form_custom_expiration:
     actor_type: user
     description: Enable/disable custom expiration dates for forms
@@ -497,13 +510,6 @@ features:
       Toggle for the entire pre-entry covid 19 self-screener available at /covid19screener and to be used by visitors
       to VHA facilities in lieu of manual screening with a VHA employee.
       This toggle is owned by Patrick B. and the rest of the CTO Health Products team.
-  profile_email_specify_change:
-    actor_type: user
-    description: >
-      When enabled, if a user changes a phone number, the notification email will specify whether the home or mobile
-      phone was changed.  For an address change, the notification email will specify whether the residential or correspondence
-      address was changed.
-    enable_in_development: true
   profile_lighthouse_direct_deposit:
     actor_type: user
     description: When enabled, will request direct deposit data from lighthouse API.
@@ -540,10 +546,6 @@ features:
     actor_type: user
   profile_use_info_card:
     description: "Use an accessible component for Profile application information card sections"
-    enable_in_development: true
-    actor_type: user
-  profile_use_vaos_v2_api:
-    description: "Use the new VAOS v2 API endpoints"
     enable_in_development: true
     actor_type: user
   profile_use_vafsc:
@@ -681,9 +683,6 @@ features:
     actor_type: user
     description: Enable showing Supplemental Claim form 0995
     enable_in_development: true
-  va_home_preview_modal:
-    actor_type: user
-    description: Allows user testing for Homepage redesign soft launch modal
   va_online_scheduling:
     actor_type: user
     description: Allows veterans to view their VA and Community Care appointments
@@ -764,16 +763,9 @@ features:
     actor_type: user
     enable_in_development: true
     description: Toggle for proof of concept to help Veteran contact a facility when the type of care is not available
-  va_online_scheduling_convert_utc_to_local:
-    actor_type: user
-    enable_in_development: true
-    description: Toggle for converting from UTC to localtime in API vs. frontend application code
   va_view_dependents_access:
     actor_type: user
     description: Allows us to gate the View/ Modify dependents content in a progressive rollout
-  vba_documents_larger_page_size_limit:
-    actor_type: user
-    description: Allows Benefits Intake to accept PDFs up to 78x101 inches (instead of the default 21x21)
   yellow_ribbon_mvp_enhancement:
     actor_type: user
     description: Enhances Yellow Ribbon MVP.
@@ -831,6 +823,9 @@ features:
   show_meb_enhancements_06:
     actor_type: user
     description: Provides a flag wrapper for minor code changes to be gated from Prod.
+  show_meb_enhancements_08:
+    actor_type: user
+    description: Provides a flag wrapper for minor code changes to be gated from Prod.
     enable_in_development: true
   move_form_back_button:
     actor_type: user
@@ -862,6 +857,9 @@ features:
   disability_compensation_lighthouse_intent_to_file_provider:
     actor_type: user
     description: If enabled uses the lighthouse intent to file endpoint
+  virtual_agent_fetch_jwt_token:
+    actor_type: user
+    description: Enable the fetching of a JWT token to access MAP environment
   income_limits_new:
     actor_type: user
     description: If enabled, shows the newly designed income limits application

@@ -15,10 +15,32 @@ describe VAOS::V2::AppointmentsService do
   let(:id) { '202006031600983000030800000000000000' }
   let(:appointment_id) { 123 }
 
+  let(:appt_med) do
+    { kind: 'clinic', service_category: [{ coding:
+                 [{ system: 'http://www.va.gov/terminology/vistadefinedterms/409_1', code: 'REGULAR' }] }] }
+  end
+  let(:appt_non) do
+    { kind: 'clinic', service_category: [{ coding:
+                 [{ system: 'http://www.va.gov/terminology/vistadefinedterms/409_1', code: 'SERVICE CONNECTED' }] }],
+      service_type: 'SERVICE CONNECTED', service_types: [{ coding: [{ system: 'http://www.va.gov/terminology/vistadefinedterms/409_1', code: 'SERVICE CONNECTED' }] }] }
+  end
+  let(:appt_cnp) do
+    { kind: 'clinic', service_category: [{ coding:
+                 [{ system: 'http://www.va.gov/terminology/vistadefinedterms/409_1', code: 'COMPENSATION & PENSION' }] }] }
+  end
+  let(:appt_no_service_cat) { { kind: 'clinic' } }
+
   mock_facility = {
     test: 'test',
     timezone: {
-      zone_id: 'America/New_York'
+      time_zone_id: 'America/New_York'
+    }
+  }
+
+  mock_facility2 = {
+    test: 'test',
+    timezone: {
+      time_zone_id: 'America/Denver'
     }
   }
 
@@ -129,6 +151,16 @@ describe VAOS::V2::AppointmentsService do
         end
       end
 
+      it 'returns with list of appointments and appends local start time' do
+        allow_any_instance_of(VAOS::V2::AppointmentsService).to receive(:get_facility).and_return(mock_facility2)
+        VCR.use_cassette('vaos/v2/appointments/get_appointments_200_with_facilities_200',
+                         match_requests_on: %i[method path query], allow_playback_repeats: true, tag: :force_utf8) do
+          response = subject.get_appointments(start_date2, end_date2)
+          expect(response[:data][0][:local_start_time]).to eq('Thu, 02 Sep 2021 08:00:00 -0600')
+          expect(response[:data][6][:requested_periods][0][:local_start_time]).to eq('Wed, 08 Sep 2021 06:00:00 -0600')
+        end
+      end
+
       it 'logs the VAOS telehealth atlas details of the returned appointments' do
         VCR.use_cassette('vaos/v2/appointments/get_appointments_200_with_facilities_200_and_log_data',
                          allow_playback_repeats: true, match_requests_on: %i[method path query], tag: :force_utf8) do
@@ -182,6 +214,19 @@ describe VAOS::V2::AppointmentsService do
       end
     end
 
+    context 'when requesting a list of appointments containing a non-Med non-CnP non-CC appointment' do
+      it 'removes the service type(s) from only the non-med non-cnp non-covid appointment' do
+        VCR.use_cassette('vaos/v2/appointments/get_appointments_non_med',
+                         allow_playback_repeats: true, match_requests_on: %i[method path query], tag: :force_utf8) do
+          response = subject.get_appointments(start_date2, end_date2)
+          expect(response[:data][0][:service_type]).to be_nil
+          expect(response[:data][0][:service_types]).to be_nil
+          expect(response[:data][1][:service_type]).not_to be_nil
+          expect(response[:data][1][:service_types]).not_to be_nil
+        end
+      end
+    end
+
     context '400' do
       it 'raises a 400 error' do
         VCR.use_cassette('vaos/v2/appointments/get_appointments_400', match_requests_on: %i[method path query]) do
@@ -227,12 +272,14 @@ describe VAOS::V2::AppointmentsService do
     context 'with an appointment' do
       context 'with Jacqueline Morgan' do
         it 'returns a proposed appointment' do
+          allow_any_instance_of(VAOS::V2::AppointmentsService).to receive(:get_facility).and_return(mock_facility)
           VCR.use_cassette('vaos/v2/appointments/get_appointment_200_with_facility_200',
                            match_requests_on: %i[method path query]) do
             response = subject.get_appointment('70060')
             expect(response[:id]).to eq('70060')
             expect(response[:kind]).to eq('clinic')
             expect(response[:status]).to eq('proposed')
+            expect(response[:requested_periods][0][:local_start_time]).to eq('Sun, 19 Dec 2021 19:00:00 -0500')
           end
         end
       end
@@ -246,6 +293,19 @@ describe VAOS::V2::AppointmentsService do
                          match_requests_on: %i[method path query]) do
           response = subject.get_appointment('159472')
           expect(response[:cancellable]).to eq(false)
+        end
+      end
+    end
+
+    context 'when requesting a non-Med non-CnP appointment' do
+      let(:user) { build(:user, :vaos) }
+
+      it 'removes the appointments service type and service types attributes' do
+        VCR.use_cassette('vaos/v2/appointments/get_appointment_200_non_med',
+                         match_requests_on: %i[method path query]) do
+          response = subject.get_appointment('159472')
+          expect(response[:service_type]).to be_nil
+          expect(response[:service_types]).to be_nil
         end
       end
     end
@@ -328,9 +388,9 @@ describe VAOS::V2::AppointmentsService do
     end
 
     context 'with a date and no timezone' do
-      it 'does not convert UTC to local time' do
+      it 'returns warning message' do
         local_time = subject.send(:convert_utc_to_local_time, start_datetime, nil)
-        expect(local_time.to_s).to eq(start_datetime.to_s)
+        expect(local_time.to_s).to eq('Unable to convert UTC to local time')
       end
     end
 
@@ -383,6 +443,60 @@ describe VAOS::V2::AppointmentsService do
                text: 'TELEHEALTH' }]
         expect(subject.send(:codes, x)).to eq(%w[REGULAR TELEHEALTH])
       end
+    end
+  end
+
+  describe '#medical?' do
+    it 'raises an ArgumentError if appt is nil' do
+      expect { subject.send(:medical?, nil) }.to raise_error(ArgumentError, 'Appointment cannot be nil')
+    end
+
+    it 'returns true for medical appointments' do
+      expect(subject.send(:medical?, appt_med)).to eq(true)
+    end
+
+    it 'returns false for non-medical appointments' do
+      expect(subject.send(:medical?, appt_non)).to eq(false)
+    end
+  end
+
+  describe '#no_service_cat?' do
+    it 'raises an ArgumentError if appt is nil' do
+      expect { subject.send(:no_service_cat?, nil) }.to raise_error(ArgumentError, 'Appointment cannot be nil')
+    end
+
+    it 'returns true for appointments without a service category' do
+      expect(subject.send(:no_service_cat?, appt_no_service_cat)).to eq(true)
+    end
+
+    it 'returns false for appointments with a service category' do
+      expect(subject.send(:no_service_cat?, appt_non)).to eq(false)
+    end
+  end
+
+  describe '#cnp?' do
+    it 'raises an ArgumentError if appt is nil' do
+      expect { subject.send(:cnp?, nil) }.to raise_error(ArgumentError, 'Appointment cannot be nil')
+    end
+
+    it 'returns true for compensation and pension appointments' do
+      expect(subject.send(:cnp?, appt_cnp)).to eq(true)
+    end
+
+    it 'returns false for non compensation and pension appointments' do
+      expect(subject.send(:cnp?, appt_non)).to eq(false)
+    end
+  end
+
+  describe '#remove_service_type' do
+    it 'raises an ArgumentError if appt is nil' do
+      expect { subject.send(:remove_service_type, nil) }.to raise_error(ArgumentError, 'Appointment cannot be nil')
+    end
+
+    it 'Modifies the appointment with service type(s) removed from appointment' do
+      expect { subject.send(:remove_service_type, appt_non) }.to change(appt_non, :keys)
+        .from(%i[kind service_category service_type service_types])
+        .to(%i[kind service_category])
     end
   end
 end

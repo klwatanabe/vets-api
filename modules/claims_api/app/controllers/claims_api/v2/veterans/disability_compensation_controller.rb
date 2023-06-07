@@ -4,6 +4,7 @@ require 'common/exceptions'
 require 'jsonapi/parser'
 require 'claims_api/v2/disability_compensation_validation'
 require 'claims_api/v2/disability_compensation_pdf_mapper'
+require 'evss_service/base'
 
 module ClaimsApi
   module V2
@@ -12,6 +13,8 @@ module ClaimsApi
         include ClaimsApi::V2::DisabilityCompensationValidation
 
         FORM_NUMBER = '526'
+
+        before_action :verify_access!
 
         def submit
           validate_json_schema
@@ -24,7 +27,9 @@ module ClaimsApi
             veteran_icn: target_veteran.mpi.icn
           )
           pdf_data = get_pdf_data
-          pdf_mapper_service(form_attributes, pdf_data).map_claim
+          pdf_mapper_service(form_attributes, pdf_data, target_veteran).map_claim
+
+          # evss_service.submit(auto_claim)
 
           render json: auto_claim
         end
@@ -35,8 +40,8 @@ module ClaimsApi
 
         private
 
-        def pdf_mapper_service(auto_claim, pdf_data)
-          ClaimsApi::V2::DisabilityCompensationPdfMapper.new(auto_claim, pdf_data)
+        def pdf_mapper_service(auto_claim, pdf_data, target_veteran)
+          ClaimsApi::V2::DisabilityCompensationPdfMapper.new(auto_claim, pdf_data, target_veteran)
         end
 
         def get_pdf_data
@@ -46,6 +51,10 @@ module ClaimsApi
                 {}
             }
           }
+        end
+
+        def evss_service
+          ClaimsApi::EVSSService::Base.new(request)
         end
       end
     end

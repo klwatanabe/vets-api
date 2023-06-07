@@ -43,12 +43,12 @@
             "veteranIdentification": {
                 "type": "object",
                 "additionalProperties": false,
-                "required": ["mailingAddress", "currentlyVaEmployee"],
+                "required": ["mailingAddress"],
                 "properties": {
                   "currentlyVaEmployee": {
                     "type": "boolean",
                     "description": "Set to true if Veteran is a VA employee.",
-                    "example": false
+                    "default": false
                   },
                   "serviceNumber": {
                     "type": "string",
@@ -290,13 +290,13 @@
                             "telephone": {
                                 "description": "Primary phone of Point of Contact.",
                                 "type": "string",
-                                "example": "1231234",
+                                "example": "5555555555",
                                 "maxLength": 10
                             },
                             "internationalTelephone": {
                                 "description": "international phone of Point of Contact.",
                                 "type": "string",
-                                "example": "1231234",
+                                "example": "5555555555",
                                 "maxLength": 10   
                             }
                         }
@@ -332,14 +332,14 @@
                         "properties": {
                             "livingSituationOptions": {
                             "type": "string",
-                            "default": "other",
-                            "enum": ["losingHousing", "leavingShelter", "other"]
+                            "default": "OTHER",
+                            "enum": ["HOUSING_WILL_BE_LOST_IN_30_DAYS", "LEAVING_PUBLICLY_FUNDED_SYSTEM_OF_CARE", "OTHER"]
                             },
                             "otherDescription": {
                             "description": "For a 'livingSituationOptions' of value 'other', please provide additional comments on the living situation.",
                             "type": "string",
                             "maxLength": 500,
-                            "example": "other living situation"
+                            "example": "OTHER"
                             }
                         }
                     }
@@ -431,9 +431,10 @@
                                     ]
                                 }
                             },
-                            "specifiyOtherExposures": {
+                            "specifyOtherExposures": {
                                 "type": "string",
-                                "description": "Other exposure incidents."
+                                "description": "Other exposure details.",
+                                "example": "Exposure to asbestos"
                             },
                             "exposureDates": {
                                 "type": "object",
@@ -658,9 +659,7 @@
                             "items": {
                                 "type": "string",
                                 "additionalProperties": false,
-                                "properties": {
-                                    "type": "string",
-                                    "example": ["PTSD (post traumatic stress disorder)","Trauma"]
+                                "examples": ["PTSD (post traumatic stress disorder)","Trauma"]
                                 }
                             }
                         },
@@ -693,7 +692,6 @@
                             }
                         }
                     }
-                }
             },
             "serviceInformation": {
                 "type": "object",
@@ -785,21 +783,30 @@
                         }
                     },
                     "confinements": {
-                        "type": "object",
+                        "type": "array",
                         "description": "",
-                        "properties": {
-                            "approximateBeginDate": {
-                                "pattern": "^(\\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$",
-                                "type": "string",
-                                "example": "2018-06-04"
-                            },
-                            "approximateEndDate": {
-                                "pattern": "^(\\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$",
-                                "type": "string",
-                                "example": "2018-06-04"
+                        "uniqueItems": true,
+                        "items": {
+                            "additionalProperties": false,
+                            "type": "object",
+                            "required": [
+                                "approximateBeginDate",
+                                "approximateEndDate"
+                            ],
+                            "properties": {
+                                "approximateBeginDate": {
+                                    "pattern": "^(\\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$",
+                                    "type": "string",
+                                    "example": "2018-06-04"
+                                },
+                                "approximateEndDate": {
+                                    "pattern": "^(\\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$",
+                                    "type": "string",
+                                    "example": "2018-08-04"
+                                }
                             }
-                        }
-                    },
+                          }
+                        },
                     "reservesNationalGuardService": {
                         "type": "object",
                         "additionalProperties": false,
@@ -853,7 +860,12 @@
                               },
                               "unitName": {
                                 "type": "string",
-                                "pattern": "([a-zA-Z0-9\\-'.,# ][a-zA-Z0-9\\-'.,# ]?)*$"
+                                "pattern": "([a-zA-Z0-9\\-'.,# ][a-zA-Z0-9\\-'.,# ]?)*$",
+                                "example": "National Guard Unit Name"
+                              },
+                              "unitAddress": {
+                                  "type": "string",
+                                  "pattern": "^([-a-zA-Z0-9'.,&#]([-a-zA-Z0-9'.,&# ])?)+$"
                               },
                               "unitPhone": {
                                 "type": "object",
@@ -862,11 +874,15 @@
                                 "properties": {
                                   "areaCode": {
                                     "type": "string",
-                                    "maxLength": 3
+                                    "maxLength": 3,
+                                    "pattern": "^\\d{3}?$",
+                                    "example": "555"
                                   },
                                   "phoneNumber": {
                                     "type": "string",
-                                    "maxLength": 7
+                                    "maxLength": 7,
+                                    "pattern": "^\\d{7}$",
+                                    "example": "5555555"
                                   }
                                 }
                               },
@@ -975,7 +991,8 @@
                             "RETIRED", 
                             "TEMPORARY_DISABILITY_RETIRED_LIST", 
                             "PERMANENT_DISABILITY_RETIRED_LIST"
-                        ]
+                        ],
+                        "example": "PERMANENT_DISABILITY_RETIRED_LIST"
                     },
                     "receivedSeparationOrSeverancePay": {
                         "description": "Has the Veteran ever received separation pay, disability severance pay, or any other lump sum payment from their branch of service?",
@@ -1039,32 +1056,44 @@
             "directDeposit": {
                 "type": "object",
                 "additionalProperties": false,
-                "required": ["accountType", "accountNumber", "routingNumber"],
                 "properties": {
                     "accountType": {
                         "description": "Account type for the direct deposit.",
                         "type": "string",
                         "enum": ["CHECKING", "SAVINGS"],
-                        "example": "CHECKING"
+                        "example": "CHECKING",
+                        "properties": {
+                            "result": {
+                                "anyOf": [
+                                    {
+                                        "type": "string",
+                                        "enum": ["CHECKING", "SAVINGS"]
+                                    },
+                                    {
+                                        "type": "string",
+                                        "enum": [""]
+                                    }
+                                ]
+                            }
+                        }
                     },
                     "accountNumber": {
                         "description": "Account number for the direct deposit.",
-                        "minLength": 4,
-                        "maxLength": 17,
+                        "pattern": "^(?:[a-zA-Z0-9]{4,17})?$",
                         "type": "string",
                         "example": "123123123123"
                     },
                     "routingNumber": {
                         "description": "Routing number for the direct deposit.",
                         "type": "string",
-                        "pattern": "^\\d{9}$",
+                        "pattern": "^(?:\\d{9})?$",
                         "example": "123123123"
                     },
                     "financialInstitutionName": {
                         "description": "Provide the name of the financial institution where the Veteran wants the direct deposit.",
                         "maxLength": 35,
                         "type": "string",
-                        "example": "Some Bank"
+                        "example": "Chase"
                     },
                     "noAccount": {
                         "type": "boolean",

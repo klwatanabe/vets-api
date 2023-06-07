@@ -3,12 +3,12 @@
 require 'rails_helper'
 
 RSpec.describe V0::BenefitsClaimsController, type: :controller do
-  let(:user) { create(:user, :loa3, :accountable, icn: '1008709396V637156') }
+  let(:user) { create(:user, :loa3, :accountable, icn: '123498767V234859') }
 
   before do
     sign_in_as(user)
 
-    token = 'abcdefghijklmnop'
+    token = 'fake_access_token'
 
     allow_any_instance_of(BenefitsClaims::Configuration).to receive(:access_token).and_return(token)
   end
@@ -74,6 +74,24 @@ RSpec.describe V0::BenefitsClaimsController, type: :controller do
 
         expect(response).to have_http_status(:not_found)
       end
+    end
+  end
+
+  describe '#submit5103' do
+    it 'returns a status of 200' do
+      VCR.use_cassette('lighthouse/benefits_claims/submit5103/200_response') do
+        post(:submit5103, params: { id: '600397108' })
+      end
+
+      expect(response).to have_http_status(:ok)
+    end
+
+    it 'returns a status of 404' do
+      VCR.use_cassette('lighthouse/benefits_claims/submit5103/404_response') do
+        post(:submit5103, params: { id: '600397108' })
+      end
+
+      expect(response).to have_http_status(:not_found)
     end
   end
 end
