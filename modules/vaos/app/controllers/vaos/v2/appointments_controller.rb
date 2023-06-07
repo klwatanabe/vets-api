@@ -6,6 +6,13 @@ module VAOS
   module V2
     class AppointmentsController < VAOS::BaseController
       STATSD_KEY = 'api.vaos.va_mobile.response.partial'
+      NPI_NOT_FOUND_MSG = "We're sorry, we can't display your provider's information right now."
+      PAP_COMPLIANCE_TELE = 'PAP COMPLIANCE/TELE'
+      PAP_COMPLIANCE_TELE_KEY = 'PAP COMPLIANCE/TELE Appointment Details'
+      FACILITY_ERROR_MSG = 'Error fetching facility details'
+      APPT_INDEX = 'Appointment Index'
+      APPT_SHOW = 'Appointment Show'
+      APPT_CREATE = 'Appointment Create'
 
       # cache utilized by the controller to store key/value pairs of provider name and npi
       # in order to prevent duplicate service call lookups during index/show/create
@@ -23,6 +30,10 @@ module VAOS
 
         _include&.include?('clinics') && merge_clinics(appointments[:data])
         _include&.include?('facilities') && merge_facilities(appointments[:data])
+
+        appointments[:data].each do |appt|
+          log_pap_compliance_appt_data(appt, APPT_INDEX) if appt&.[](:reason)&.include? PAP_COMPLIANCE_TELE
+        end
 
         serializer = VAOS::V2::VAOSSerializer.new
         serialized = serializer.serialize(appointments[:data], 'appointments')
@@ -46,10 +57,14 @@ module VAOS
           clinic = get_clinic(appointment[:location_id], appointment[:clinic])
           appointment[:service_name] = clinic&.[](:service_name)
           appointment[:physical_location] = clinic&.[](:physical_location) if clinic&.[](:physical_location)
-          appointment[:friendly_name] = clinic&.[](:friendly_name) if clinic&.[](:friendly_name)
+          appointment[:friendly_name] = clinic&.[](:service_name) if clinic&.[](:service_name)
         end
 
         appointment[:location] = get_facility(appointment[:location_id]) unless appointment[:location_id].nil?
+
+        if appointment&.[](:reason_code)&.[](:text)&.include? PAP_COMPLIANCE_TELE
+          log_pap_compliance_appt_data(appointment, APPT_SHOW)
+        end
 
         serializer = VAOS::V2::VAOSSerializer.new
         serialized = serializer.serialize(appointment, 'appointments')
@@ -66,12 +81,17 @@ module VAOS
           clinic = get_clinic(new_appointment[:location_id], new_appointment[:clinic])
           new_appointment[:service_name] = clinic&.[](:service_name)
           new_appointment[:physical_location] = clinic&.[](:physical_location) if clinic&.[](:physical_location)
-          new_appointment[:friendly_name] = clinic&.[](:friendly_name) if clinic&.[](:friendly_name)
+          new_appointment[:friendly_name] = clinic&.[](:service_name) if clinic&.[](:service_name)
         end
 
         unless new_appointment[:location_id].nil?
           new_appointment[:location] = get_facility(new_appointment[:location_id])
         end
+
+        if new_appointment&.[](:reason_code)&.[](:text)&.include? PAP_COMPLIANCE_TELE
+          log_pap_compliance_appt_data(new_appointment, APPT_CREATE)
+        end
+
         serializer = VAOS::V2::VAOSSerializer.new
         serialized = serializer.serialize(new_appointment, 'appointments')
         render json: { data: serialized }, status: :created
@@ -83,7 +103,7 @@ module VAOS
           clinic = get_clinic(updated_appointment[:location_id], updated_appointment[:clinic])
           updated_appointment[:service_name] = clinic&.[](:service_name)
           updated_appointment[:physical_location] = clinic&.[](:physical_location) if clinic&.[](:physical_location)
-          updated_appointment[:friendly_name] = clinic&.[](:friendly_name) if clinic&.[](:friendly_name)
+          updated_appointment[:friendly_name] = clinic&.[](:service_name) if clinic&.[](:service_name)
         end
 
         unless updated_appointment[:location_id].nil?
@@ -141,8 +161,6 @@ module VAOS
       #
       # will cache at the class level the key value pair of npi and provider name to avoid
       # duplicate get_provider_with_cache calls
-
-      NPI_NOT_FOUND_MSG = "We're sorry, we can't display your provider's information right now."
 
       def find_and_merge_provider_name(appt)
         found_npi = find_npi(appt)
@@ -225,8 +243,6 @@ module VAOS
         utc_date.change(offset: timezone_offset).to_datetime
       end
 
-      FACILITY_ERROR_MSG = 'Error fetching facility details'
-
       # Returns the facility timezone id (eg. 'America/New_York') associated with facility id (location_id)
       def get_facility_timezone(facility_location_id)
         facility_info = get_facility(facility_location_id)
@@ -247,12 +263,13 @@ module VAOS
             end
             if cached_clinics[appt[:clinic]]&.[](:service_name)
               appt[:service_name] = cached_clinics[appt[:clinic]][:service_name]
+              # In VAOS Service there is no dedicated clinic friendlyName field.
+              # If the clinic is configured with a patient-friendly name then that will be the value
+              # in the clinic service name; otherwise it will be the internal clinic name.
+              appt[:friendly_name] = cached_clinics[appt[:clinic]][:service_name]
             end
             if cached_clinics[appt[:clinic]]&.[](:physical_location)
               appt[:physical_location] = cached_clinics[appt[:clinic]][:physical_location]
-            end
-            if cached_clinics[appt[:clinic]]&.[](:friendly_name)
-              appt[:friendly_name] = cached_clinics[appt[:clinic]][:friendly_name]
             end
           end
         end
@@ -292,6 +309,20 @@ module VAOS
           location_id:
         )
         FACILITY_ERROR_MSG
+      end
+
+      def log_pap_compliance_appt_data(appt, appt_method)
+        pap_compliance_entry = { PAP_COMPLIANCE_TELE_KEY => pap_compliance_details(appt[:location_id], appt[:clinic],
+                                                                                   appt_method) }
+        Rails.logger.info('Details for PAP COMPLIANCE/TELE appointment', pap_compliance_entry.to_json)
+      end
+
+      def pap_compliance_details(location_id, clinic, appt_method)
+        {
+          endpoint_method: appt_method,
+          location_id:,
+          clinic:
+        }
       end
 
       def update_appt_id
