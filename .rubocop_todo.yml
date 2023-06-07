@@ -876,6 +876,7 @@ RSpec/SubjectDeclaration:
     - 'spec/jobs/kms_encryption_verification_job_spec.rb'
     - 'spec/jobs/pager_duty/cache_global_downtime_spec.rb'
     - 'spec/jobs/sidekiq_alive/cleanup_queues_spec.rb'
+    - 'spec/lib/okta/directory_service_spec.rb'
     - 'spec/lib/pagerduty/external_services/service_spec.rb'
     - 'spec/lib/pagerduty/maintenance_client_spec.rb'
     - 'spec/lib/preneeds/service_spec.rb'
