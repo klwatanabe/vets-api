@@ -16,7 +16,7 @@ they would be when running rails directly.
 
 ### Running tests
 
-- `bundle exec rake spec` - Run the test suite in the spec directory  ( for `rspec spec`). Test coverage statistics are in `coverage/index.html`.
+- `bundle exec rake spec` - Run the entire test suite ( for `rspec spec`). Test coverage statistics are in `coverage/index.html`.
 - `bundle exec parallel_rspec spec modules` - Run the test suites in the spec directory and the modules directory.
 - `make guard` - Run the guard test server that reruns your tests after files are saved. Useful for TDD!
 
