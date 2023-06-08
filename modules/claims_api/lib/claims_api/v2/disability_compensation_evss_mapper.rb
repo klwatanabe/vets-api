@@ -19,7 +19,8 @@ module ClaimsApi
       private
 
       def claim_attributes
-        change_of_address
+        # commented out as it's not actually needed for a minimal payload
+        # change_of_address
         current_mailing_address
         direct_deposit
         disabilities
@@ -73,7 +74,7 @@ module ClaimsApi
             secondary.except(:exposureOrEventOrInjury, :approximateDate)
           end
 
-          disability[:specialIssues] = 'PACT' if disability[:isRelatedToToxicExposure]
+          disability[:specialIssues] = ['PACT'] if disability[:isRelatedToToxicExposure]
 
           disability.except(:approximateDate, :isRelatedToToxicExposure)
         end
