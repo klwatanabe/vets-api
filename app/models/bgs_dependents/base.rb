@@ -90,10 +90,19 @@ module BGSDependents
     end
 
     def generate_address(address)
-      # BGS will throw an error if we pass in a military postal code in for state
+      # If the veteran selects the 'I live on a United States military base outside of the U.S.' checkbox, the front-end
+      # replaces the City dropdown with a "APO/FPO/DPO" dropdown, and replaces the State dropdown (which normally shows
+      # US states and territories) with a dropdown of US military states (AE, AA, or AP). The values for the city and
+      # state dropdowns are represented as `city` and `state_code`, respectively. When a veteran provides a military
+      # base address, BGS requires us to provide a `military_postal_code` and``military_post_office_type_code`, instead
+      # of a `city` and `state_code`.
       if MILITARY_POST_OFFICE_TYPE_CODES.include?(address['city'])
-        address['military_postal_code'] = address.delete('state_code')
+        # Although US military bases are US addresses, veterans sometimes mistakenly provide the country that the US is
+        # situated within (e.g. KWT), instead of USA, and provide a `province` rather than a `state_code`. In cases
+        # like this, we need to capture the `province` and amend `country_name` to 'USA'.
+        address['military_postal_code'] = address.delete('state_code') || address.delete('province')
         address['military_post_office_type_code'] = address.delete('city')
+        address['country_name'] = 'USA'
       end
 
       adjust_address_lines_for!(address: address['veteran_address']) if address['veteran_address']
