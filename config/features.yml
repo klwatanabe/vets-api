@@ -362,6 +362,14 @@ features:
     actor_type: user
     description: Enables form 1990 email submission confirmation (VaNotify)
     enable_in_development: true
+  form1990_auth_confirmation_email:
+    actor_type: user
+    description: Enables form 1990 email submission confirmation for authenticated users (VaNotify)
+    enable_in_development: true
+  form1995_confirmation_email:
+    actor_type: user
+    description: Enables form 1995 email submission confirmation (VaNotify)
+    enable_in_development: true
   form1990e_confirmation_email:
     actor_type: user
     description: Enables form 1990e email submission confirmation (VaNotify)
@@ -370,6 +378,12 @@ features:
     actor_type: user
     description: Enables form 5490 email submission confirmation (VaNotify)
     enable_in_development: true
+  form214142:
+    actor_type: user
+    description: If enabled shows the digital form experience for form 21-4142
+  form2110210:
+    actor_type: user
+    description: If enabled shows the digital form experience for form 21-10210
   form264555:
     actor_type: user
     description: If enabled shows the digital form experience for form 26-4555
@@ -385,6 +399,9 @@ features:
     actor_type: user
     description: Enables secure messaging
     enable_in_development: true
+  injected_header_web_components:
+    actor_type: user
+    description: Enable/disable import of web components to the injected header
   in_progress_form_custom_expiration:
     actor_type: user
     description: Enable/disable custom expiration dates for forms
@@ -535,10 +552,6 @@ features:
     description: "Use an accessible component for Profile application information card sections"
     enable_in_development: true
     actor_type: user
-  profile_use_vaos_v2_api:
-    description: "Use the new VAOS v2 API endpoints"
-    enable_in_development: true
-    actor_type: user
   profile_use_vafsc:
     description: "Use VA Forms System Core for forms instead of schema based forms"
     actor_type: user
@@ -674,9 +687,6 @@ features:
     actor_type: user
     description: Enable showing Supplemental Claim form 0995
     enable_in_development: true
-  va_home_preview_modal:
-    actor_type: user
-    description: Allows user testing for Homepage redesign soft launch modal
   va_online_scheduling:
     actor_type: user
     description: Allows veterans to view their VA and Community Care appointments
@@ -757,10 +767,6 @@ features:
     actor_type: user
     enable_in_development: true
     description: Toggle for proof of concept to help Veteran contact a facility when the type of care is not available
-  va_online_scheduling_convert_utc_to_local:
-    actor_type: user
-    enable_in_development: true
-    description: Toggle for converting from UTC to localtime in API vs. frontend application code
   va_view_dependents_access:
     actor_type: user
     description: Allows us to gate the View/ Modify dependents content in a progressive rollout
@@ -775,9 +781,6 @@ features:
   rated_disabilities_sort_ab_test:
     actor_type: user
     description: Allows us to set up AB test of sorting on rated disabilities app
-  show_payment_and_debt_section:
-    actor_type: user
-    description: Enables payment and debt section
   show_dashboard_notifications:
     actor_type: user
     description: Enables on-site notifications
@@ -819,6 +822,9 @@ features:
     description: Provides a flag wrapper for minor code changes to be gated from Prod.
     enable_in_development: true
   show_meb_enhancements_06:
+    actor_type: user
+    description: Provides a flag wrapper for minor code changes to be gated from Prod.
+  show_meb_enhancements_08:
     actor_type: user
     description: Provides a flag wrapper for minor code changes to be gated from Prod.
     enable_in_development: true

@@ -6,83 +6,80 @@
       "claimProcessType": "STANDARD_CLAIM_PROCESS",
       "claimDate": "2020-12-18",
       "veteranIdentification": {
-          "mailingAddress": {
+        "currentlyVaEmployee": false,
+        "mailingAddress": {
             "numberAndStreet": "1234 Couch Street",
-            "apartmentOrUnitNumber": "Apt. 22",
+            "apartmentOrUnitNumber": "22",
             "city": "Portland",
             "country": "USA",
-            "zipFirstFive": "12345",
-            "zipLastFour": "6789",
+            "zipFirstFive": "41726",
+            "zipLastFour": "1234",
             "state": "OR"
-          },
-          "currentlyVAEmployee": false,
-          "serviceNumber": "123456789",
-          "emailAddress": {
-              "email": "claimant@example.com",
-              "agreeToEmailRelatedToClaim": true
-          },
-          "veteranNumber": {
-              "telephone": "555-5555",
-              "internationalTelephone": "555-5555"
-          },
-          "vaFileNumber": "12345678"
-      },
-      "changeOfAddress": {
-          "country": "USA",
-          "type": "INTERNATIONAL",
-          "addressLine1": "1234 Couch Street",
-          "dates": {
-            "beginningDate": "2018-11-31",
-            "endingDate": "2019-07-11"
-          },
-          "typeOfAddressChange": "Permanent",
-          "numberAndStreet": "1234 Couch Street",
-          "apartmentOrUnitNumber": "Apt. 22",
-          "city": "Portland",
-          "zipFirstFive": "12345",
-          "zipLastFour": "1234",
-          "state": "OR"
-      },
-      "homeless": {
-        "pointOfContact": "Jane Doe",
-        "pointOfContactNumber": "123-456-7890",
-        "currentlyHomeless": {
-          "homelessSituationOptions": "FLEEING_CURRENT_RESIDENCE",
-          "otherDescription": ""
         },
-        "riskOfBecomingHomeless": {
-          "livingSituationOptions": "other living situation",
-          "otherDescription": ""
+        "serviceNumber": "123456789",
+        "emailAddress": {
+            "email": "valid@somedomain.com",
+            "agreeToEmailRelatedToClaim": true
+        },
+        "veteranNumber": {
+            "telephone": "5555555555",
+            "internationalTelephone": "5555555555"
+        },
+        "vaFileNumber": "AB123CDEF"
+    },
+    "changeOfAddress": {
+      "dates": {
+          "beginningDate": "2012-11-31",
+          "endingDate": "2013-10-11"
+        },
+        "typeOfAddressChange": "TEMPORARY",
+        "numberAndStreet": "10 Peach St",
+        "apartmentOrUnitNumber": "22",
+        "city": "Atlanta",
+        "zipFirstFive": "42220",
+        "zipLastFour": "9897",
+        "state": "GA",
+        "country": "USA"
+  },
+      "homeless": {
+        "pointOfContact": "john stewart",
+        "pointOfContactNumber": {
+            "telephone": "5555555555",
+            "internationalTelephone": "5555555555"
+        },
+        "currentlyHomeless": {
+            "homelessSituationOptions": "FLEEING_CURRENT_RESIDENCE",
+            "otherDescription": "ABCDEFGHIJKLM"
         }
-      },
+    },
       "toxicExposure": {
           "gulfWarHazard": {
               "servedInGulfWarHazardLocations": true,
               "serviceDates": {
-                  "startDate": "1999-07-21",
-                  "endDate": "2005-01-21"
+                  "startDate": "07-1999",
+                  "endDate": "01-2005"
               }
           },
           "herbicideHazardService": {
               "servedInHerbicideHazardLocations": true,
               "otherLocationsServed": "Guam",
               "serviceDates": {
-                  "startDate": "2002-03-07",
-                  "endDate": "2004-10-31"
+                  "startDate": "03-2002",
+                  "endDate": "10-2004"
               }
           },
           "additionalHazardExposures": {
               "additionalExposures": ["ASBESTOS","SHAD"],
-              "specifiyOtherExposures": "",
+              "specifyOtherExposures": "Other exposure details",
               "exposureDates": {
-                  "startDate": "2011-07-30",
-                  "endDate": "2013-10-03"
+                  "startDate": "07-2011",
+                  "endDate": "10-2013"
               }
           },
           "multipleExposures": {
               "exposureDates": {
-                  "startDate": "2012-12-09",
-                  "endDate": "2013-07-27"
+                  "startDate": "12-2012",
+                  "endDate": "07-2013"
               },
               "exposureLocation": "Guam",
               "hazardExposedTo": "RADIATION"
@@ -94,7 +91,7 @@
           "name": "PTSD (post traumatic stress disorder)",
           "classificationCode": "249470",
           "serviceRelevance": "Heavy equipment operator in service.",
-          "approximateDate": "2019-11-04",
+          "approximateDate": "04-11-2019",
           "ratedDisabilityId": "1100583",
           "diagnosticCode": 9999,
           "secondaryDisabilities": [
@@ -103,11 +100,11 @@
               "disabilityActionType": "SECONDARY",
               "serviceRelevance": "Caused by a service-connected disability\\nLengthy description",
               "classificationCode": "249470",
-              "approximateDate": "2018-01-03",
+              "approximateDate": "03-01-2018",
               "exposureOrEventOrInjury": ""
             }
           ],
-          "isRelatedToToxicExposure": false,
+          "isRelatedToToxicExposure": true,
           "exposureOrEventOrInjury": ""
         }
       ],
@@ -118,19 +115,51 @@
             "state": "CO",
             "city": "Pueblo"
           },
-          "startDate": "2014-03-07",
+          "startDate": "03-2014",
           "treatedDisabilityNames": ["PTSD (post traumatic stress disorder)"]
         },
         {
-          "center": {
-            "name": "Private Facility 3",
-            "state": "WA",
-            "city": "Seattle"
-          },
-          "startDate": null,
-          "treatedDisabilityNames": ["PTSD (post traumatic stress disorder)", "Trauma"]
+            "disabilityActionType": "REOPEN",
+            "name": "Trauma",
+            "classificationCode": "ABCDEFGHIJ",
+            "serviceRelevance": "ABCDEFG",
+            "approximateDate": "4592-11-04",
+            "ratedDisabilityId": "ABCDEFGHIJKLMNOPQRSTUVWX",
+            "diagnosticCode": 0,
+            "secondaryDisabilities": [
+                {
+                    "name": "GHIJKLM",
+                    "disabilityActionType": "SECONDARY",
+                    "serviceRelevance": "ABCDEFGHIJKLMNOPQ",
+                    "classificationCode": "ABCDEFGHIJKLMNO",
+                    "approximateDate": "9904-01-03",
+                    "exposureOrEventOrInjury": "EXPOSURE"
+                }
+            ],
+            "isRelatedToToxicExposure": true,
+            "exposureOrEventOrInjury": "EXPOSURE"
         }
-      ],
+    ],
+      "treatments": [
+        {
+            "treatedDisabilityNames": ["PTSD (post traumatic stress disorder)", "Trauma"],
+            "center": {
+                "name": "Center One",
+                "state": "GA",
+                "city": "Decatur"
+            },
+            "startDate": "03-1985"
+        },
+        {
+            "treatedDisabilityNames": ["Trauma"],
+            "center": {
+                "name": "Center One",
+                "state": "GA",
+                "city": "Decatur"
+            },
+            "startDate": "03-1985"
+        }
+    ],
       "serviceInformation": {
           "servicePeriods": [
               {
@@ -143,12 +172,12 @@
           ],
           "confinements": [
             {
-              "approximateBeginDate": "2016-11-06",
-              "approximateEndDate": "2016-11-09"
+              "approximateBeginDate": "06-11-2016",
+              "approximateEndDate": "09-11-2016"
             },
             {
-              "approximateBeginDate": "2019-11-06",
-              "approximateEndDate": "2019-11-09"
+              "approximateBeginDate": "06-2019",
+              "approximateEndDate": "07-2019"
             }
           ],
           "reservesNationalGuardService": {
@@ -156,15 +185,16 @@
                 "startDate":"2016-11-24",
                 "endDate":"2017-11-17"
               },
-              "unitName": "DonkeyPants",
+              "unitName": "National Guard Unit Name",
+              "unitAddress": "1243 pine court",
               "component": "National Guard",
               "title10Activation": {
                   "anticipatedSeparationDate": "2017-10-03",
                   "title10ActivationDate": "2018-02-11"
               },
               "unitPhone": {
-                  "areaCode": "123",
-                  "phoneNumber": "456-7890"
+                  "areaCode": "555",
+                  "phoneNumber": "5555555"
               },
               "receivingInactiveDutyTrainingPay": true
           },
@@ -184,7 +214,7 @@
             "branchOfService": "Army",
             "monthlyAmount": 840.75
         },
-        "retiredStatus": "RETIRED",
+        "retiredStatus": "PERMANENT_DISABILITY_RETIRED_LIST",
         "receivedSeparationOrSeverancePay": false,
         "separationSeverancePay": {
           "datePaymentReceived": "2018-07-31",
@@ -194,9 +224,9 @@
       },
       "directDeposit": {
         "accountType": "CHECKING",
-        "accountNumber": "123456789",
+        "accountNumber": "123123123123",
         "routingNumber": "123456789",
-        "financialInstituteName": "Chase",
+        "financialInstitutionName": "Chase",
         "noAccount": false
       }
     }
