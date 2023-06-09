@@ -8,8 +8,9 @@ module AppealsApi
     include Sidekiq::Worker
     include Sidekiq::MonitoredWorker
 
-    # retry up to 10 times over ~4.5 hours
-    sidekiq_options retry: 11
+    # retry up to 11 times over ~4.5 hours
+    SIDEKIQ_RETRIES = 11
+    sidekiq_options retry: SIDEKIQ_RETRIES
 
     STATSD_KEY = 'api.appeals.icn.lookup.ssn'
 
@@ -38,8 +39,8 @@ module AppealsApi
     end
 
     def retry_limits_for_notification
-      # Notify at last attempt failuer
-      [11]
+      # Notify at last attempt failure
+      [SIDEKIQ_RETRIES]
     end
 
     def notify(retry_params)
@@ -47,8 +48,3 @@ module AppealsApi
     end
   end
 end
-
-# mpi = MPI::Service.new
-# icn = '1012667122V019349'
-# profile = mpi.find_profile_by_identifier(identifier: icn, identifier_type: 'ICN')&.profile
-# profile.ssn
