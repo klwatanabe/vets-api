@@ -21,10 +21,10 @@ module ClaimsApi
       def claim_attributes
         # commented out as it's not actually needed for a minimal payload
         # change_of_address
+        # service_information
         current_mailing_address
         direct_deposit
         disabilities
-        service_information
         standard_claim
         veteran_meta
       end
@@ -74,7 +74,8 @@ module ClaimsApi
             secondary.except(:exposureOrEventOrInjury, :approximateDate)
           end
 
-          disability[:specialIssues] = ['PACT'] if disability[:isRelatedToToxicExposure]
+          # TODO: uncomment this when doing https://jira.devops.va.gov/browse/API-27320
+          # disability[:specialIssues] = ['PACT'] if disability[:isRelatedToToxicExposure]
 
           disability.except(:approximateDate, :isRelatedToToxicExposure)
         end
