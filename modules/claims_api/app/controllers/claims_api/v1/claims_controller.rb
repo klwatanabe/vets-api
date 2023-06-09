@@ -7,10 +7,11 @@ module ClaimsApi
     class ClaimsController < ApplicationController
       include ClaimsApi::PoaVerification
       before_action { permit_scopes %w[claim.read] }
-      before_action :verify_power_of_attorney!, if: :header_request?
+      # before_action :verify_power_of_attorney!, if: :header_request?
 
       def index
-        claims = claims_service.all
+        claims = evss_bgs_services_index
+        debugger
         render json: claims,
                serializer: ActiveModel::Serializer::CollectionSerializer,
                each_serializer: ClaimsApi::ClaimListSerializer
@@ -29,12 +30,12 @@ module ClaimsApi
         elsif claim && claim.evss_id.blank?
           render json: claim, serializer: ClaimsApi::AutoEstablishedClaimSerializer
         elsif claim && claim.evss_id.present?
-          evss_claim = claims_service.update_from_remote(claim.evss_id)
-          render json: evss_claim, serializer: ClaimsApi::ClaimDetailSerializer, uuid: claim.id
+          evss_bgs_claim = evss_bgs_services_show(claim.id, claim.evss.id)
+          render json: evss_bgs_claim, serializer: ClaimsApi::ClaimDetailSerializer, uuid: claim.id
         elsif /^\d{2,20}$/.match?(params[:id])
-          evss_claim = claims_service.update_from_remote(params[:id])
-          # NOTE: source doesn't seem to be accessible within a remote evss_claim
-          render json: evss_claim, serializer: ClaimsApi::ClaimDetailSerializer
+          evss_bgs_claim = evss_bgs_services_show(params[:id])
+          # NOTE: source doesn't seem to be accessible within a remote evss_bgs_claim
+          render json: evss_bgs_claim, serializer: ClaimsApi::ClaimDetailSerializer
         else
           raise ::Common::Exceptions::ResourceNotFound.new(detail: 'Claim not found')
         end
@@ -66,6 +67,57 @@ module ClaimsApi
           formatted = error['key'] ? error['key'].gsub('.', '/') : error['key']
           { status: 422, detail: "#{error['severity']} #{error['detail'] || error['text']}".squish, source: formatted }
         end
+      end
+
+      def evss_bgs_services_index
+        claims = BGS_FLIPPER ? find_bgs_claims! : claims_service.all
+        BGS_FLIPPER ? transform(claims) : claims
+      end
+
+      def evss_bgs_services_show(claim_id, evss_claim_id = nil)
+        debugger
+        BGS_FLIPPER ? claims_service.update_from_remote(evss_claim_id) : find_bgs_claim!(claim_id:)
+      end
+
+      def find_bgs_claim!(claim_id:)
+        return if claim_id.blank?
+
+        local_bgs_service.find_benefit_claim_details_by_benefit_claim_id(
+          claim_id
+        )
+      end
+
+      def find_bgs_claims!
+        local_bgs_service.find_benefit_claims_status_by_ptcpnt_id(
+          target_veteran.participant_id
+        )
+      end
+
+      def transform(claims)
+        evss_like_claims = claims[:benefit_claims_dto][:benefit_claim].map do |claim|
+          new_claim = ClaimsApi::V1::EvssLikeClaim.new
+          new_claim.add_claim(claim)
+          new_claim
+        end
+        evss_like_claims
+      end
+    end
+  end
+end
+
+module ClaimsApi
+  module V1
+    class EvssLikeClaim
+      attr_reader :evss_id, :list_data, :read_attribute_for_serialization
+
+      def initialize(claim = {} )
+        @evss_id = nil
+        @list_data = add_claim(claim)
+      end
+
+      def add_claim(claim)
+        @list_data = {}
+        @list_data.merge!(claim)
       end
     end
   end

@@ -17,6 +17,8 @@ module ClaimsApi
       before_action :validate_json_format, if: -> { request.post? }
       before_action :validate_veteran_identifiers
 
+      BGS_FLIPPER = false
+
       # fetch_audience: defines the audience used for oauth
       # NOTE: required for oauth through claims_api to function
       def fetch_aud
@@ -110,10 +112,21 @@ module ClaimsApi
 
       private
 
+      def evss_bgs_service_flipper
+        BGS_FLIPPER ? local_bgs_service : claims_service
+      end
+
       def claims_service
         edipi_check
 
         ClaimsApi::UnsynchronizedEVSSClaimService.new(target_veteran)
+      end
+
+      def local_bgs_service
+        @local_bgs_service ||= ClaimsApi::LocalBGS.new(
+          external_uid: target_veteran.participant_id,
+          external_key: target_veteran.participant_id
+        )
       end
 
       def header(key)
