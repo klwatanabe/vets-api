@@ -3,7 +3,7 @@
 require 'rails_helper'
 
 RSpec.describe LoginAdoptionEmailJob do
-  let(:job) { described_class.new }
+  let(:job) { described_class.new(user) }
   let(:reactivation_template) { Settings.vanotify.services.va_gov.template_id.login_reactivation_email }
   let(:user_account) { user_verification.user_account }
 
@@ -25,7 +25,7 @@ RSpec.describe LoginAdoptionEmailJob do
               {}
             )
 
-            job.perform(user)
+            job.perform
           end
         end
 
@@ -41,7 +41,7 @@ RSpec.describe LoginAdoptionEmailJob do
               {}
             )
 
-            job.perform(user)
+            job.perform
           end
         end
 
@@ -57,7 +57,7 @@ RSpec.describe LoginAdoptionEmailJob do
               {}
             )
 
-            job.perform(user)
+            job.perform
           end
         end
       end
@@ -78,7 +78,7 @@ RSpec.describe LoginAdoptionEmailJob do
               {}
             )
 
-            job.perform(user)
+            job.perform
           end
         end
 
@@ -94,7 +94,7 @@ RSpec.describe LoginAdoptionEmailJob do
               {}
             )
 
-            job.perform(user)
+            job.perform
           end
         end
 
@@ -110,7 +110,7 @@ RSpec.describe LoginAdoptionEmailJob do
               {}
             )
 
-            job.perform(user)
+            job.perform
           end
         end
       end
@@ -131,7 +131,7 @@ RSpec.describe LoginAdoptionEmailJob do
               {}
             )
 
-            job.perform(user)
+            job.perform
           end
         end
 
@@ -147,7 +147,7 @@ RSpec.describe LoginAdoptionEmailJob do
               {}
             )
 
-            job.perform(user)
+            job.perform
           end
         end
 
@@ -163,7 +163,7 @@ RSpec.describe LoginAdoptionEmailJob do
               {}
             )
 
-            job.perform(user)
+            job.perform
           end
         end
       end
@@ -184,7 +184,7 @@ RSpec.describe LoginAdoptionEmailJob do
               {}
             )
 
-            job.perform(user)
+            job.perform
           end
         end
 
@@ -200,7 +200,7 @@ RSpec.describe LoginAdoptionEmailJob do
               {}
             )
 
-            job.perform(user)
+            job.perform
           end
         end
 
@@ -216,7 +216,7 @@ RSpec.describe LoginAdoptionEmailJob do
               {}
             )
 
-            job.perform(user)
+            job.perform
           end
         end
       end
@@ -243,7 +243,7 @@ RSpec.describe LoginAdoptionEmailJob do
               {}
             )
 
-            job.perform(user)
+            job.perform
           end
         end
       end

@@ -5,13 +5,17 @@ class LoginAdoptionEmailJob
 
   sidekiq_options retry: false
 
+  attr_accessor :user
+
   REACTIVATION_TEMPLATE = Settings.vanotify.services.va_gov.template_id.login_reactivation_email
 
-  def perform(user)
+  def initialize(user)
     @user = user
+  end
 
+  def perform
     return unless signed_in_with_legacy_credential?
-    return unless Flipper.enabled?(:reactivation_experiment, user)
+    return unless Flipper.enabled?(:reactivation_experiment, @user)
 
     send_email if user_qualifies_for_reactivation?
   end
