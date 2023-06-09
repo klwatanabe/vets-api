@@ -85,6 +85,20 @@ RSpec.describe 'letters', type: :request do
     Flipper.enable(:mobile_lighthouse_letters, user)
   end
 
+  describe 'GET /mobile/v0/letters/:type' do
+    context 'with a valid lighthouse response' do
+      it 'matches the letters schema' do
+        VCR.use_cassette('mobile/lighthouse_letters/proof_of_service', match_requests_on: %i[method uri]) do
+          get '/mobile/v0/letters/proof_of_service', headers: iam_headers
+
+          expect(response).to have_http_status(:ok)
+          # expect(JSON.parse(response.body)).to eq(letters_body)
+          # expect(response.body).to match_json_schema('letters')
+        end
+      end
+    end
+  end
+
   describe 'GET /mobile/v0/letters' do
     context 'with a valid lighthouse response' do
       it 'matches the letters schema' do

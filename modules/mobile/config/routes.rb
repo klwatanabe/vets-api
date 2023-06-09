@@ -27,6 +27,7 @@ Mobile::Engine.routes.draw do
     get '/facilities-info/:sort', to: 'facilities_info#index'
     get '/health/immunizations', to: 'immunizations#index'
     get '/health/locations/:id', to: 'locations#show'
+    get '/letters/:type', to: 'letters#show'
     get '/letters', to: 'letters#index'
     get '/letters/beneficiary', to: 'letters#beneficiary'
     post '/letters/:type/download', to: 'letters#download'

@@ -80,6 +80,25 @@ module Lighthouse
         ).except(:chapter35EligibilityDateTime)
       end
 
+      def get_letter(icn, type)
+        endpoint = "letter-contents/#{type}"
+
+        begin
+          log = "Retrieving letter from #{config.generator_url}/#{endpoint}"
+          response = Lighthouse::LettersGenerator.measure_time(log) do
+            config.connection.get(endpoint, { icn: }, { Authorization: "Bearer #{config.get_access_token}" })
+          end
+        rescue Faraday::ClientError, Faraday::ServerError => e
+          Raven.tags_context(
+            team: 'benefits-claim-appeal-status',
+            feature: 'letters-generator'
+          )
+          raise Lighthouse::LettersGenerator::ServiceError.new(e.response[:body]), 'Lighthouse error'
+        end
+
+        response.body
+      end
+
       def get_eligible_letter_types(icn)
         endpoint = 'eligible-letters'
 
