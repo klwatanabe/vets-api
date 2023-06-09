@@ -362,6 +362,10 @@ features:
     actor_type: user
     description: Enables form 1990 email submission confirmation (VaNotify)
     enable_in_development: true
+  form1990_auth_confirmation_email:
+    actor_type: user
+    description: Enables form 1990 email submission confirmation for authenticated users (VaNotify)
+    enable_in_development: true
   form1995_confirmation_email:
     actor_type: user
     description: Enables form 1995 email submission confirmation (VaNotify)
@@ -377,6 +381,9 @@ features:
   form214142:
     actor_type: user
     description: If enabled shows the digital form experience for form 21-4142
+  form2110210:
+    actor_type: user
+    description: If enabled shows the digital form experience for form 21-10210
   form264555:
     actor_type: user
     description: If enabled shows the digital form experience for form 26-4555
@@ -680,9 +687,6 @@ features:
     actor_type: user
     description: Enable showing Supplemental Claim form 0995
     enable_in_development: true
-  va_home_preview_modal:
-    actor_type: user
-    description: Allows user testing for Homepage redesign soft launch modal
   va_online_scheduling:
     actor_type: user
     description: Allows veterans to view their VA and Community Care appointments
@@ -763,10 +767,6 @@ features:
     actor_type: user
     enable_in_development: true
     description: Toggle for proof of concept to help Veteran contact a facility when the type of care is not available
-  va_online_scheduling_convert_utc_to_local:
-    actor_type: user
-    enable_in_development: true
-    description: Toggle for converting from UTC to localtime in API vs. frontend application code
   va_view_dependents_access:
     actor_type: user
     description: Allows us to gate the View/ Modify dependents content in a progressive rollout
@@ -781,9 +781,6 @@ features:
   rated_disabilities_sort_ab_test:
     actor_type: user
     description: Allows us to set up AB test of sorting on rated disabilities app
-  show_payment_and_debt_section:
-    actor_type: user
-    description: Enables payment and debt section
   show_dashboard_notifications:
     actor_type: user
     description: Enables on-site notifications
