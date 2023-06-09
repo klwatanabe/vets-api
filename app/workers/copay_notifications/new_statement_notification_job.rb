@@ -17,13 +17,6 @@ module CopayNotifications
 
     sidekiq_options retry: false
 
-    def self.throttle
-      return Sidekiq::Limiter.unlimited if Rails.env.test?
-
-      Sidekiq::Limiter.concurrent('new-copay-statements', 4, wait_timeout: 259_200, lock_timeout: 120)
-    end
-
-    LIMITER = throttle
     MCP_NOTIFICATION_TEMPLATE = Settings.vanotify.services.dmc.template_id.vha_new_copay_statement_email
     STATSD_KEY_PREFIX = 'api.copay_notifications.new_statement'
 
