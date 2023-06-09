@@ -33,55 +33,13 @@ module Lighthouse
 
       configuration Lighthouse::LettersGenerator::Configuration
 
-      def transform_letters(letters)
-        letters.map do |letter|
-          {
-            letterType: letter['letterType'].downcase,
-            name: letter['letterName']
-          }
-        end
-      end
-
-      def transform_military_services(services_info)
-        # transform
-        services_info.map do |service|
-          service[:enteredDate] = service.delete 'enteredDateTime'
-          service[:releasedDate] = service.delete 'releasedDateTime'
-
-          service.transform_keys(&:to_sym)
-        end
-      end
-
-      def transform_benefit_information(info)
-        transform_targets = {
-          awardEffectiveDateTime: :awardEffectiveDate,
-          chapter35Eligibility: :hasChapter35Eligibility,
-          nonServiceConnectedPension: :hasNonServiceConnectedPension,
-          serviceConnectedDisabilities: :hasServiceConnectedDisabilities,
-          adaptedHousing: :hasAdaptedHousing,
-          individualUnemployabilityGranted: :hasIndividualUnemployabilityGranted,
-          specialMonthlyCompensation: :hasSpecialMonthlyCompensation
-        }
-
-        symbolized_info = info.deep_transform_keys(&:to_sym)
-
-        transformed_info = symbolized_info.reduce({}) do |acc, (k, v)|
-          if transform_targets.key? k
-            acc.merge({ transform_targets[k] => v })
-          else
-            acc.merge({ k => v })
-          end
+      def get_letter(icn, letter_type)
+        unless LETTER_TYPES.include? letter_type.downcase
+          error = create_invalid_type_error(letter_type.downcase)
+          raise error
         end
 
-        # Don't return chapter35EligibilityDateTime
-        # It's not used on the frontend, and in fact causes problems
-        transformed_info.merge(
-          { monthlyAwardAmount: symbolized_info[:monthlyAwardAmount][:value] }
-        ).except(:chapter35EligibilityDateTime)
-      end
-
-      def get_letter(icn, type)
-        endpoint = "letter-contents/#{type}"
+        endpoint = "letter-contents/#{letter_type}"
 
         begin
           log = "Retrieving letter from #{config.generator_url}/#{endpoint}"
@@ -167,6 +125,55 @@ module Lighthouse
         end
 
         response.body
+      end
+
+      private
+
+      def transform_letters(letters)
+        letters.map do |letter|
+          {
+            letterType: letter['letterType'].downcase,
+            name: letter['letterName']
+          }
+        end
+      end
+
+      def transform_military_services(services_info)
+        # transform
+        services_info.map do |service|
+          service[:enteredDate] = service.delete 'enteredDateTime'
+          service[:releasedDate] = service.delete 'releasedDateTime'
+
+          service.transform_keys(&:to_sym)
+        end
+      end
+
+      def transform_benefit_information(info)
+        transform_targets = {
+          awardEffectiveDateTime: :awardEffectiveDate,
+          chapter35Eligibility: :hasChapter35Eligibility,
+          nonServiceConnectedPension: :hasNonServiceConnectedPension,
+          serviceConnectedDisabilities: :hasServiceConnectedDisabilities,
+          adaptedHousing: :hasAdaptedHousing,
+          individualUnemployabilityGranted: :hasIndividualUnemployabilityGranted,
+          specialMonthlyCompensation: :hasSpecialMonthlyCompensation
+        }
+
+        symbolized_info = info.deep_transform_keys(&:to_sym)
+
+        transformed_info = symbolized_info.reduce({}) do |acc, (k, v)|
+          if transform_targets.key? k
+            acc.merge({ transform_targets[k] => v })
+          else
+            acc.merge({ k => v })
+          end
+        end
+
+        # Don't return chapter35EligibilityDateTime
+        # It's not used on the frontend, and in fact causes problems
+        transformed_info.merge(
+          { monthlyAwardAmount: symbolized_info[:monthlyAwardAmount][:value] }
+        ).except(:chapter35EligibilityDateTime)
       end
 
       def create_invalid_type_error(letter_type)

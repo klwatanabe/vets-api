@@ -97,6 +97,28 @@ RSpec.describe 'letters', type: :request do
         end
       end
     end
+
+    context 'with an invalid letter type' do
+      it 'matches the letters schema' do
+        get '/mobile/v0/letters/not_real', headers: iam_headers
+
+        expect(response).to have_http_status(:internal_server_error)
+        expect(response.parsed_body).to eq(
+          {
+            "errors" => [
+              {
+                "title" => 'Invalid letter type',
+                "detail" => 'Invalid letter type',
+                "code" => "500",
+                "source" => "Lighthouse::LettersGenerator::Service",
+                "status" => "500",
+                "meta" => {"message" => 'Letter type of not_real is not one of the expected options'}
+              }
+            ]
+          }
+        )
+      end
+    end
   end
 
   describe 'GET /mobile/v0/letters' do
