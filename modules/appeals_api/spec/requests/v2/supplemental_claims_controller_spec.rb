@@ -107,9 +107,11 @@ describe AppealsApi::V2::DecisionReviews::SupplementalClaimsController, type: :r
       before do
         allow(AppealsApi::AddIcnUpdater).to receive(:new).and_return(icn_updater_sidekiq_worker)
         allow(icn_updater_sidekiq_worker).to receive(:perform_async)
+
+        allow(AppealsApi::IcnSsnLookupStats).to receive(:perform_async)
       end
 
-      it 'adds header ICN' do
+      it 'adds header ICN and calls expected workers' do
         post(path, params: extra_data, headers: max_headers)
         sc_guid = JSON.parse(response.body)['data']['id']
         sc = AppealsApi::SupplementalClaim.find(sc_guid)
@@ -118,6 +120,9 @@ describe AppealsApi::V2::DecisionReviews::SupplementalClaimsController, type: :r
         expect(sc.veteran_icn).to eq('1013062086V794840')
         # since icn is already provided in header, the icn updater sidekiq worker is redundant and skipped
         expect(icn_updater_sidekiq_worker).not_to have_received(:perform_async)
+        # since icn is provided, icn statsd worker is called
+        expect(AppealsApi::IcnSsnLookupStats).to have_received(:perform_async)
+          .with(sc.id, 'AppealsApi::SupplementalClaim')
       end
     end
 
@@ -395,6 +400,7 @@ describe AppealsApi::V2::DecisionReviews::SupplementalClaimsController, type: :r
       allow(CentralMail::Service).to receive(:new) { client_stub }
       allow(client_stub).to receive(:upload).and_return(faraday_response)
       allow(faraday_response).to receive(:success?).and_return(true)
+      allow(AppealsApi::IcnSsnLookupStats).to receive(:perform_async)
 
       with_settings(Settings.vanotify.services.lighthouse.template_id,
                     supplemental_claim_received: 'veteran_template',

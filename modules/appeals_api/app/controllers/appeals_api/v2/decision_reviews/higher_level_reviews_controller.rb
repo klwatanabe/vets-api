@@ -43,6 +43,11 @@ class AppealsApi::V2::DecisionReviews::HigherLevelReviewsController < AppealsApi
     AppealsApi::PdfSubmitJob.perform_async(@higher_level_review.id, 'AppealsApi::HigherLevelReview', pdf_version)
     if @higher_level_review.veteran_icn.blank?
       AppealsApi::AddIcnUpdater.perform_async(@higher_level_review.id, 'AppealsApi::HigherLevelReview')
+    else
+      # Client provided icn, generate statds log on searching mpi by icn and comparing mpi ssn
+      # with provided ssn.  We are gathering stats on eventually removing ssn from our API, internally we will
+      # need to lookup ssn via mpi icn search to provide to our upstream systems
+      AppealsApi::IcnSsnLookupStats.perform_async(@higher_level_review.id, 'AppealsApi::HigherLevelReview')
     end
 
     render_higher_level_review

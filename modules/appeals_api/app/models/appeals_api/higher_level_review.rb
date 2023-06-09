@@ -120,6 +120,10 @@ module AppealsApi
       auth_headers['X-VA-SSN']
     end
 
+    def icn
+      auth_headers['X-VA-ICN']
+    end
+
     def file_number
       auth_headers['X-VA-File-Number']
     end

@@ -122,6 +122,14 @@ module AppealsApi
       signing_appellant.zip_code_5 || '00000'
     end
 
+    def ssn
+      auth_headers['X-VA-SSN']
+    end
+
+    def icn
+      auth_headers['X-VA-ICN']
+    end
+
     def consumer_name
       auth_headers['X-Consumer-Username']
     end

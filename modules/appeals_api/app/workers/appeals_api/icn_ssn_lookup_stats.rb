@@ -13,9 +13,15 @@ module AppealsApi
 
     STATSD_KEY = 'api.appeals.icn.lookup.ssn'
 
-    def perform(icn, ssn)
+    def perform(appeal_id, appeal_class_str)
+
+      # fetch the appeal
+      appeal_class = Object.const_get(appeal_class_str)
+      appeal = appeal_class.find_by(id: appeal_id)
+      return if appeal&.icn.blank?
+
       mpi = MPI::Service.new
-      profile = mpi.find_profile_by_identifier(identifier: icn, identifier_type: 'ICN')&.profile
+      profile = mpi.find_profile_by_identifier(identifier: appeal.icn, identifier_type: 'ICN')&.profile
 
       if profile.nil?
         # could not lookup user by icn
@@ -23,7 +29,7 @@ module AppealsApi
       elsif profile&.ssn.blank?
         # found profile, but ssn missing
         StatsD.increment STATSD_KEY, tags: ['profile_found:true', 'ssn_matched:na']
-      elsif profile.ssn.strip != ssn.strip
+      elsif profile.ssn.strip != appeal.ssn.strip
         # found profile, but profile ssn does not match provided ssn
         StatsD.increment STATSD_KEY, tags: ['profile_found:true', 'ssn_matched:false']
       else

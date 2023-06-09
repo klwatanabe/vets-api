@@ -50,7 +50,15 @@ class AppealsApi::V2::DecisionReviews::SupplementalClaimsController < AppealsApi
 
     pdf_version = Flipper.enabled?(:decision_review_supplemental_claim_pdf_v3) ? 'v3' : 'v2'
     AppealsApi::PdfSubmitJob.perform_async(sc.id, 'AppealsApi::SupplementalClaim', pdf_version)
-    AppealsApi::AddIcnUpdater.perform_async(sc.id, 'AppealsApi::SupplementalClaim') if sc.veteran_icn.blank?
+
+    if sc.veteran_icn.blank?
+      AppealsApi::AddIcnUpdater.perform_async(sc.id, 'AppealsApi::SupplementalClaim')
+    else
+      # Client provided icn, generate statds log on searching mpi by icn and comparing mpi ssn
+      # with provided ssn.  We are gathering stats on eventually removing ssn from our API, internally we will
+      # need to lookup ssn via mpi icn search to provide to our upstream systems
+      AppealsApi::IcnSsnLookupStats.perform_async(sc.id, 'AppealsApi::SupplementalClaim')
+    end
 
     render json: AppealsApi::SupplementalClaimSerializer.new(sc).serializable_hash
   end
