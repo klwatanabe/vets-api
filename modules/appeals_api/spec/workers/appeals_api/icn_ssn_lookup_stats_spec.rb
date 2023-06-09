@@ -58,6 +58,5 @@ describe AppealsApi::IcnSsnLookupStats, type: :job do
                                        tags: ['profile_found:true', 'ssn_matched:true'], times: 1)
       end
     end
-
   end
 end

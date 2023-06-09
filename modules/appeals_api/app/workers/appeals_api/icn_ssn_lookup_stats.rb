@@ -14,7 +14,6 @@ module AppealsApi
     STATSD_KEY = 'api.appeals.icn.lookup.ssn'
 
     def perform(appeal_id, appeal_class_str)
-
       # fetch the appeal
       appeal_class = Object.const_get(appeal_class_str)
       appeal = appeal_class.find_by(id: appeal_id)
