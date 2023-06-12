@@ -34,10 +34,7 @@ module Lighthouse
       configuration Lighthouse::LettersGenerator::Configuration
 
       def get_letter(icn, letter_type)
-        unless LETTER_TYPES.include? letter_type.downcase
-          error = create_invalid_type_error(letter_type.downcase)
-          raise error
-        end
+        validate_letter_type(letter_type)
 
         endpoint = "letter-contents/#{letter_type}"
 
@@ -103,10 +100,7 @@ module Lighthouse
       end
 
       def download_letter(icn, letter_type, options = {})
-        unless LETTER_TYPES.include? letter_type.downcase
-          error = create_invalid_type_error(letter_type.downcase)
-          raise error
-        end
+        validate_letter_type(letter_type)
 
         endpoint = "letters/#{letter_type}/letter"
 
@@ -183,6 +177,13 @@ module Lighthouse
         error.status = 400
 
         error
+      end
+
+      def validate_letter_type(letter_type)
+        unless LETTER_TYPES.include? letter_type.downcase
+          error = create_invalid_type_error(letter_type.downcase)
+          raise error
+        end
       end
     end
   end

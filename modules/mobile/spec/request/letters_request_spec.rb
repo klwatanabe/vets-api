@@ -105,14 +105,14 @@ RSpec.describe 'letters', type: :request do
         expect(response).to have_http_status(:internal_server_error)
         expect(response.parsed_body).to eq(
           {
-            "errors" => [
+            'errors' => [
               {
-                "title" => 'Invalid letter type',
-                "detail" => 'Invalid letter type',
-                "code" => "500",
-                "source" => "Lighthouse::LettersGenerator::Service",
-                "status" => "500",
-                "meta" => {"message" => 'Letter type of not_real is not one of the expected options'}
+                'title' => 'Invalid letter type',
+                'detail' => 'Invalid letter type',
+                'code' => '500',
+                'source' => 'Lighthouse::LettersGenerator::Service',
+                'status' => '500',
+                'meta' => { 'message' => 'Letter type of not_real is not one of the expected options' }
               }
             ]
           }
