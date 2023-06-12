@@ -35,7 +35,7 @@ RSpec.describe Lighthouse::LettersGenerator::Service do
   end
 
   describe '#get_letter' do
-    it 'returns a list of eligible letter types' do
+    it 'returns a full json representation of a letter' do
       expect_any_instance_of(Lighthouse::LettersGenerator::Configuration)
         .to receive(:get_access_token)
         .once
@@ -54,6 +54,10 @@ RSpec.describe Lighthouse::LettersGenerator::Service do
 
       expect(response).to have_key('letterDescription')
       expect(response).to have_key('letterContent')
+      expect(response['letterContent'].length).to eq(3)
+      response['letterContent'].each do |content|
+        expect(content.keys).to match_array(%w[contentKey contentTitle content])
+      end
     end
 
     context 'Error handling' do
