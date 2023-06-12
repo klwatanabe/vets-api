@@ -33,15 +33,17 @@ module ClaimsApi
           validate_id_with_icn(bgs_claim, lighthouse_claim, params[:veteranId])
 
           output = generate_show_output(bgs_claim:, lighthouse_claim:)
+          blueprint_options = { base_url: request.base_url, veteran_id: params[:veteranId], view: :show, root: :data }
+          render json: ClaimsApi::V2::Blueprints::ClaimBlueprint.render(output, blueprint_options)
         rescue => e
           unless e.is_a?(::Common::Exceptions::ResourceNotFound)
             log_message_to_sentry('Error in claims show',
                                   :warning,
                                   body: e.message)
           end
-          blueprint_options = { base_url: request.base_url, veteran_id: params[:veteranId], view: :show, root: :data }
+          raise if e.is_a?(::Common::Exceptions::UnprocessableEntity)
 
-          render json: ClaimsApi::V2::Blueprints::ClaimBlueprint.render(output, blueprint_options)
+          raise ::Common::Exceptions::ResourceNotFound.new(detail: e.message)
         end
 
         private
