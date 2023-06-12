@@ -16,10 +16,10 @@ module Mobile
         end
       end
 
-      # add comment explaining
+      # returns a json representation of a letter
       def show
         letter = lighthouse_service.get_letter(icn, params[:type])
-        render json: Mobile::V0::LetterSerializer.new(current_user, letter)
+        render json: Mobile::V0::LetterSerializer.new(current_user.uuid, letter)
       end
 
       # returns list of letters available for a given user. List includes letter display name and letter type

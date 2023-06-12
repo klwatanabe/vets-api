@@ -8,8 +8,8 @@ module Mobile
       set_type :letter
       attributes :letter
 
-      def initialize(user, letter)
-        resource = LetterStruct.new(user.uuid, letter)
+      def initialize(user_uuid, letter)
+        resource = LetterStruct.new(user_uuid, letter)
         super(resource)
       end
     end
