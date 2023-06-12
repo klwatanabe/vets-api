@@ -94,7 +94,7 @@ RSpec.describe 'letters', type: :request do
 
           expect(response).to have_http_status(:ok)
           # expect(JSON.parse(response.body)).to eq(letters_body)
-          # expect(response.body).to match_json_schema('letters')
+          expect(response.body).to match_json_schema('letter')
         end
       end
     end
