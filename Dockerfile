@@ -20,7 +20,7 @@ ARG userid=993
 SHELL ["/bin/bash", "-c"]
 RUN groupadd -g $userid -r vets-api && \
     useradd -u $userid -r -m -d /srv/vets-api -g vets-api vets-api
-RUN echo 'APT::Default-Release "stable";' >> /etc/apt/apt.conf.d/99defaultrelease
+RUN echo 'APT::Default-Release "bookworm";' >> /etc/apt/apt.conf.d/99defaultrelease
 RUN mv /etc/apt/sources.list /etc/apt/sources.list.d/stable.list
 RUN echo "deb http://ftp.debian.org/debian testing main contrib non-free" >> /etc/apt/sources.list.d/testing.list
 RUN echo "deb http://deb.debian.org/debian unstable main" >> /etc/apt/sources.list.d/unstable.list
