@@ -16,7 +16,6 @@ module Mobile
         end
       end
 
-      # merge in flipper change
       # add comment explaining
       def show
         letter = lighthouse_service.get_letter(icn, params[:type])
