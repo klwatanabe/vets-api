@@ -8,7 +8,13 @@ require 'lighthouse/letters_generator/service'
 module Mobile
   module V0
     class LettersController < ApplicationController
-      before_action { authorize :evss, :access? unless Flipper.enabled?(:mobile_lighthouse_letters, @current_user) }
+      before_action do
+        if Flipper.enabled?(:mobile_lighthouse_letters, @current_user)
+          authorize :lighthouse, :access?
+        else
+          authorize :evss, :access?
+        end
+      end
 
       # merge in flipper change
       # add comment explaining
