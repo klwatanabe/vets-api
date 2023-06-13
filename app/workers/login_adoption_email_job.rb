@@ -15,13 +15,12 @@ class LoginAdoptionEmailJob
 
   def perform
     return unless signed_in_with_legacy_credential?
-    return unless Flipper.enabled?(:reactivation_experiment, @user)
 
     send_email if user_qualifies_for_reactivation?
   end
 
   def send_email
-    email = @user.email
+    email = user.email
 
     return if email.blank?
 
@@ -37,7 +36,7 @@ class LoginAdoptionEmailJob
   private
 
   def credential_type
-    @credential_type ||= @user.identity.sign_in[:service_name]
+    @credential_type ||= user.identity.sign_in[:service_name]
   end
 
   def logged_in_with_dsl?
@@ -53,7 +52,7 @@ class LoginAdoptionEmailJob
   end
 
   def verified_credential_at?
-    user_avc = UserAcceptableVerifiedCredential.find_by(user_account: @user.user_account)
+    user_avc = UserAcceptableVerifiedCredential.find_by(user_account: user.user_account)
     user_avc&.acceptable_verified_credential_at || user_avc&.idme_verified_credential_at
   end
 
