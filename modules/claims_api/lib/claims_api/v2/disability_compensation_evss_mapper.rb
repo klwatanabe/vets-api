@@ -19,31 +19,12 @@ module ClaimsApi
       private
 
       def claim_attributes
-        # commented out as it's not actually needed for a minimal payload
-        # change_of_address
-        # service_information
+        service_information
         current_mailing_address
         direct_deposit
         disabilities
         standard_claim
         veteran_meta
-      end
-
-      def change_of_address
-        return if @data[:changeOfAddress].blank?
-
-        @evss_claim[:veteran] ||= {}
-        @evss_claim[:veteran][:changeOfAddress] = @data[:changeOfAddress]
-        @evss_claim[:veteran][:changeOfAddress].merge!({
-                                                         addressLine1: @data[:changeOfAddress][:numberAndStreet],
-                                                         addressLines2: @data[:changeOfAddress][:apartmentOrUnitNumber],
-                                                         type: 'DOMESTIC'
-                                                       })
-        @evss_claim[:veteran][:changeOfAddress][:addressChangeType] = @data.dig(:changeOfAddress, :typeOfAddressChange)
-        @evss_claim[:veteran][:changeOfAddress][:beginningDate] = @data.dig(:changeOfAddress, :dates, :beginningDate)
-        @evss_claim[:veteran][:changeOfAddress][:endingDate] = @data.dig(:changeOfAddress, :dates, :endingDate)
-        @evss_claim[:veteran][:changeOfAddress].except!(:numberAndStreet, :apartmentOrUnitNumber, :typeOfAddressChange,
-                                                        :dates)
       end
 
       def current_mailing_address
