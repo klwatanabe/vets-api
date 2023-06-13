@@ -47,28 +47,6 @@ describe ClaimsApi::V2::DisabilityCompensationEvssMapper do
       end
     end
 
-    # context '526 section 2, change of address' do
-    #   it 'maps the dates' do
-    #     addr = evss_data[:veteran][:changeOfAddress]
-    #     expect(addr[:beginningDate]).to eq('2012-11-31')
-    #     expect(addr[:endingDate]).to eq('2013-10-11')
-    #     expect(addr[:addressChangeType]).to eq('TEMPORARY')
-    #     expect(addr[:addressLine1]).to eq('10 Peach St')
-    #     expect(addr[:addressLines2]).to eq('Apt 1')
-    #     expect(addr[:city]).to eq('Atlanta')
-    #     expect(addr[:country]).to eq('USA')
-    #     expect(addr[:zipFirstFive]).to eq('42220')
-    #     expect(addr[:state]).to eq('GA')
-    #   end
-    # end
-
-    # TODO: uncomment this when doing https://jira.devops.va.gov/browse/API-27320
-    # context '526 section 4, toxic exposure' do
-    #   it 'maps the attributes correctly' do
-    #     expect(evss_data[:disabilities][0][:specialIssues]).to eq('PACT')
-    #   end
-    # end
-
     context '526 section 5, claim info: disabilities' do
       it 'maps the attributes correctly' do
         disability = evss_data[:disabilities][0]

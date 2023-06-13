@@ -55,9 +55,6 @@ module ClaimsApi
             secondary.except(:exposureOrEventOrInjury, :approximateDate)
           end
 
-          # TODO: uncomment this when doing https://jira.devops.va.gov/browse/API-27320
-          # disability[:specialIssues] = ['PACT'] if disability[:isRelatedToToxicExposure]
-
           disability.except(:approximateDate, :isRelatedToToxicExposure)
         end
       end
