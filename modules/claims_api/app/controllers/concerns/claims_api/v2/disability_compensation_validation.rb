@@ -622,8 +622,7 @@ module ClaimsApi
       # making date approximate to compare
       def remove_chars(str)
         indices = [2, 3, 4] # MM| -DD |-YYYY
-        sz = str.size
-        indices.map { |i| i >= 0 ? i : sz + i }.sort.reverse_each { |i| str[i] = '' }
+        indices.reverse_each { |i| str[i] = '' }
         str
       end
     end
