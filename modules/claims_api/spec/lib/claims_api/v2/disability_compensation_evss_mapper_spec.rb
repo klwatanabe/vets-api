@@ -47,6 +47,12 @@ describe ClaimsApi::V2::DisabilityCompensationEvssMapper do
       end
     end
 
+    context '526 section 4, toxic exposure' do
+      it 'maps the attributes correctly' do
+        expect(evss_data[:disabilities][0][:specialIssues][0]).to eq('PACT')
+      end
+    end
+
     context '526 section 5, claim info: disabilities' do
       it 'maps the attributes correctly' do
         disability = evss_data[:disabilities][0]

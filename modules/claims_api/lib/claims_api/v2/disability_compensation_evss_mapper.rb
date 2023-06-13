@@ -55,6 +55,7 @@ module ClaimsApi
             secondary.except(:exposureOrEventOrInjury, :approximateDate)
           end
 
+          disability[:specialIssues] = ['PACT'] if disability[:isRelatedToToxicExposure]
           disability.except(:approximateDate, :isRelatedToToxicExposure)
         end
       end
