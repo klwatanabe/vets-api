@@ -8,6 +8,46 @@ require 'lighthouse/letters_generator/configuration'
 RSpec.describe 'letters', type: :request do
   include JsonSchemaMatchers
 
+  let(:letter_json) do
+    {
+      'data' =>
+        {
+          'id' => '3097e489-ad75-5746-ab1a-e0aabc1b426a',
+          'type' => 'letter',
+          'attributes' => {
+            'letter' =>
+            {
+              'letterDescription' => 'This card verifies that you served honorably in the Armed Forces.',
+              'letterContent' => [
+                { 'contentKey' => 'front-of-card',
+                  'contentTitle' => '<front of card>',
+                  'content' =>
+                  "This card is to serve as proof the individual listed below served honorably in the Uniformed \
+Services of the United States. Jesse Gray 1708 Tiburon Blvd Tiburon, CA 94921 Effective as of: June 08, 2023 DoD \
+ID Number: 1293307390 Date of Birth: December 15, 1954 Branch Of Service: Army"},
+                {
+                  'contentKey' => 'back-of-card',
+                  'contentTitle' => '<back of card>',
+                  'content' =>
+                  "United States of America Department of Veterans Affairs General Benefit Information 1-800-827-1000 \
+Health Care Information 1-877-222-VETS (8387) This card does not reflect entitlement to any benefits administered by \
+the Department of Veterans Affairs or serve as proof of receiving such benefits."
+                },
+                {
+                  'contentKey' => 'contact-us',
+                  'contentTitle' => 'How You Can Contact Us',
+                  'content' =>
+                  "If you need general information about benefits and eligibility, please visit us at \
+https://www.va.gov. Call us at 1-800-827-1000. Contact us using Telecommunications Relay Services (TTY) at 711 24/7. \
+Send electronic inquiries through the Internet at https://www.va.gov/contact-us."
+                }
+              ]
+            }
+          }
+        }
+    }
+  end
+
   let(:letters_body) do
     {
       'data' => {
@@ -93,7 +133,7 @@ RSpec.describe 'letters', type: :request do
           get '/mobile/v0/letters/proof_of_service', headers: iam_headers
 
           expect(response).to have_http_status(:ok)
-          # expect(JSON.parse(response.body)).to eq(letters_body)
+          expect(JSON.parse(response.body)).to eq(letter_json)
           expect(response.body).to match_json_schema('letter')
         end
       end
