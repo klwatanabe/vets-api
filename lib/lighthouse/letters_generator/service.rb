@@ -37,62 +37,31 @@ module Lighthouse
         validate_downloadable_letter_type(letter_type)
 
         endpoint = "letter-contents/#{letter_type}"
+        log = "Retrieving letter from #{config.generator_url}/#{endpoint}"
+        params = { icn: }
 
-        begin
-          log = "Retrieving letter from #{config.generator_url}/#{endpoint}"
-          response = Lighthouse::LettersGenerator.measure_time(log) do
-            config.connection.get(endpoint, { icn: }, { Authorization: "Bearer #{config.get_access_token}" })
-          end
-        rescue Faraday::ClientError, Faraday::ServerError => e
-          Raven.tags_context(
-            team: 'benefits-claim-appeal-status',
-            feature: 'letters-generator'
-          )
-          raise Lighthouse::LettersGenerator::ServiceError.new(e.response[:body]), 'Lighthouse error'
-        end
-
+        response = get_from_lighthouse(endpoint, params, log)
         response.body
       end
 
       def get_eligible_letter_types(icn)
         endpoint = 'eligible-letters'
+        log = "Retrieving eligible letter types and destination from #{config.generator_url}/#{endpoint}"
+        params = { icn: }
 
-        begin
-          log = "Retrieving eligible letter types and destination from #{config.generator_url}/#{endpoint}"
-          response = Lighthouse::LettersGenerator.measure_time(log) do
-            config.connection.get(endpoint, { icn: }, { Authorization: "Bearer #{config.get_access_token}" })
-          end
-        rescue Faraday::ClientError, Faraday::ServerError => e
-          Raven.tags_context(
-            team: 'benefits-claim-appeal-status',
-            feature: 'letters-generator'
-          )
-          raise Lighthouse::LettersGenerator::ServiceError.new(e.response[:body]), 'Lighthouse error'
-        end
-
+        response = get_from_lighthouse(endpoint, params, log)
         {
           letters: transform_letters(response.body['letters']),
           letter_destination: response.body['letterDestination']
         }
       end
 
-      # TODO: repeated code #get_eligible_letter_types
       def get_benefit_information(icn)
         endpoint = 'eligible-letters'
+        log = "Retrieving benefit information from #{config.generator_url}/#{endpoint}"
+        params = { icn: }
 
-        begin
-          log = "Retrieving benefit information from #{config.generator_url}/#{endpoint}"
-          response = Lighthouse::LettersGenerator.measure_time(log) do
-            config.connection.get(endpoint, { icn: }, { Authorization: "Bearer #{config.get_access_token}" })
-          end
-        rescue Faraday::ClientError, Faraday::ServerError => e
-          Raven.tags_context(
-            team: 'benefits-claim-appeal-status',
-            feature: 'letters-generator'
-          )
-          raise Lighthouse::LettersGenerator::ServiceError.new(e.response[:body]), 'Lighthouse error'
-        end
-
+        response = get_from_lighthouse(endpoint, params, log)
         {
           benefitInformation: transform_benefit_information(response.body['benefitInformation']),
           militaryService: transform_military_services(response.body['militaryServices'])
@@ -103,25 +72,30 @@ module Lighthouse
         validate_downloadable_letter_type(letter_type)
 
         endpoint = "letters/#{letter_type}/letter"
+        log = "Retrieving benefit information from #{config.generator_url}/#{endpoint}"
+        params = { icn: }.merge(options)
 
-        begin
-          log = "Retrieving benefit information from #{config.generator_url}/#{endpoint}"
-          response = Lighthouse::LettersGenerator.measure_time(log) do
-            config.connection.get(
-              endpoint,
-              { icn: }.merge(options),
-              { Authorization: "Bearer #{config.get_access_token}" }
-            )
-          end
-        rescue Faraday::ClientError, Faraday::ServerError => e
-          Raven.tags_context(team: 'benefits-claim-appeal-status', feature: 'letters-generator')
-          raise Lighthouse::LettersGenerator::ServiceError.new(e.response[:body]), 'Lighthouse error'
-        end
-
+        response = get_from_lighthouse(endpoint, params, log)
         response.body
       end
 
       private
+
+      def get_from_lighthouse(endpoint, params, log)
+        Lighthouse::LettersGenerator.measure_time(log) do
+          config.connection.get(
+            endpoint,
+            params,
+            { Authorization: "Bearer #{config.get_access_token}" }
+          )
+        end
+      rescue Faraday::ClientError, Faraday::ServerError => e
+        Raven.tags_context(
+          team: 'benefits-claim-appeal-status',
+          feature: 'letters-generator'
+        )
+        raise Lighthouse::LettersGenerator::ServiceError.new(e.response[:body]), 'Lighthouse error'
+      end
 
       def transform_letters(letters)
         letters.map do |letter|
@@ -133,7 +107,6 @@ module Lighthouse
       end
 
       def transform_military_services(services_info)
-        # transform
         services_info.map do |service|
           service[:enteredDate] = service.delete 'enteredDateTime'
           service[:releasedDate] = service.delete 'releasedDateTime'
