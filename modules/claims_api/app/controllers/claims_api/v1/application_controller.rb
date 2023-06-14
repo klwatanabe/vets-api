@@ -113,7 +113,9 @@ module ClaimsApi
       private
 
       def evss_bgs_service_flipper
-        BGS_FLIPPER ? local_bgs_service : claims_service
+        # if evss_bgs_service_flipper is true, we are switching over to use BGS, rather than EVSS
+        user = User.find(target_veteran&.mpi_icn)
+        user && Flipper.enabled?(:claims_status_v1_bgs_enabled, user) ? local_bgs_service : claims_service
       end
 
       def claims_service

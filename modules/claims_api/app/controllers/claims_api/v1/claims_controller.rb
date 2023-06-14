@@ -11,7 +11,6 @@ module ClaimsApi
 
       def index
         claims = evss_bgs_services_index
-        debugger
         render json: claims,
                serializer: ActiveModel::Serializer::CollectionSerializer,
                each_serializer: ClaimsApi::ClaimListSerializer
@@ -70,13 +69,13 @@ module ClaimsApi
       end
 
       def evss_bgs_services_index
-        claims = BGS_FLIPPER ? find_bgs_claims! : claims_service.all
-        BGS_FLIPPER ? transform(claims) : claims
+        # if evss_bgs_service_flipper is true, we are switching over to use BGS, rather than EVSS
+        claims = evss_bgs_service_flipper ? find_bgs_claims! : claims_service.all
+        evss_bgs_service_flipper ? transform(claims) : claims
       end
 
       def evss_bgs_services_show(claim_id, evss_claim_id = nil)
-        debugger
-        BGS_FLIPPER ? claims_service.update_from_remote(evss_claim_id) : find_bgs_claim!(claim_id:)
+        evss_bgs_service_flipper ? claims_service.update_from_remote(evss_claim_id) : find_bgs_claim!(claim_id:)
       end
 
       def find_bgs_claim!(claim_id:)
@@ -110,7 +109,7 @@ module ClaimsApi
     class EvssLikeClaim
       attr_reader :evss_id, :list_data, :read_attribute_for_serialization
 
-      def initialize(claim = {} )
+      def initialize(claim = {})
         @evss_id = nil
         @list_data = add_claim(claim)
       end
