@@ -131,7 +131,7 @@ module ClaimsApi
           disability.delete('ratedDisabilityId')
           disability.delete('diagnosticCode')
           disability.delete('disabilityActionType')
-          sec_dis = disability['secondaryDisabilities'].map do |secondary_disability|
+          sec_dis = disability['secondaryDisabilities']&.map do |secondary_disability|
             secondary_disability['disability'] = secondary_disability['name']
             secondary_disability
           end
@@ -176,11 +176,11 @@ module ClaimsApi
           name = tx['treatedDisabilityNames'].join(', ')
           details = "#{name} - #{center}"
           tx['treatmentDetails'] = details
-          tx['dateOfTreatment'] = tx['startDate']
-          tx['doNotHaveDate'] = tx['startDate'].nil?
+          tx['dateOfTreatment'] = tx['beginDate']
+          tx['doNotHaveDate'] = tx['beginDate'].nil?
           tx.delete('center')
           tx.delete('treatedDisabilityNames')
-          tx.delete('startDate')
+          tx.delete('beginDate')
           tx
         end
       end
@@ -255,7 +255,7 @@ module ClaimsApi
       def national_guard
         si = {}
         reserves = @pdf_data[:data][:attributes][:serviceInformation][:reservesNationalGuardService]
-        si[:servedInReservesOrNationalGuard] = true if reserves[:obligationTermsOfService][:startDate]
+        si[:servedInReservesOrNationalGuard] = true if reserves[:obligationTermsOfService][:beginDate]
         @pdf_data[:data][:attributes][:serviceInformation].merge!(si)
 
         @pdf_data
