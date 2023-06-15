@@ -43,7 +43,7 @@ class EVSSClaimBaseSerializer < ActiveModel::Serializer
   # Our IDs are not stable due to 24 hour expiration, use EVSS IDs for consistency
   # This can be removed if our IDs become stable
   def id
-    object.evss_id.present? ? object&.evss_id : Random.rand(6) + 1
+    object.evss_id.present? ? object&.evss_id : Random.rand(1..6)
   end
 
   date_attr 'date', override_name: 'date_filed'

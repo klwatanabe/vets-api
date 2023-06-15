@@ -93,12 +93,12 @@ module ClaimsApi
       end
 
       def transform(claims)
-        evss_like_claims = claims[:benefit_claims_dto][:benefit_claim].map do |claim|
+        claims[:benefit_claims_dto][:benefit_claim].map do |claim|
           new_claim = ClaimsApi::V1::EvssLikeClaim.new
           new_claim.add_claim(claim)
+          new_claim.list_data
           new_claim
         end
-        evss_like_claims
       end
     end
   end
@@ -117,6 +117,7 @@ module ClaimsApi
       def add_claim(claim)
         @list_data = {}
         @list_data.merge!(claim)
+        @list_data.deep_stringify_keys
       end
     end
   end
