@@ -36,16 +36,16 @@ module Mobile
         render json: Mobile::V0::LettersBeneficiarySerializer.new(@current_user, response)
       end
 
-      # returns a pdf of the requested letter type given the user has that letter type available
+      # returns a pdf or json representation of the requested letter type given the user has that letter type available
       def download
-        # let's not forget the logging
         if params[:format] == 'json'
-          letter = lighthouse_service.get_letter(icn, params[:type])
+          letter = lighthouse_service.get_letter(icn, params[:type], download_options_hash)
+          increment_download_counter
           return render json: Mobile::V0::LetterSerializer.new(current_user.uuid, letter)
         end
 
         response = if Flipper.enabled?(:mobile_lighthouse_letters, @current_user)
-                     lighthouse_service.download_letter(icn, params[:type])
+                     lighthouse_service.download_letter(icn, params[:type], download_options_hash)
                    else
                      unless EVSS::Letters::Letter::LETTER_TYPES.include? params[:type]
                        Raven.tags_context(team: 'va-mobile-app') # tag sentry logs with team name
@@ -53,17 +53,39 @@ module Mobile
                              "#{params[:type]} is not a valid letter type"
                      end
 
-                     download_service.download_letter(params[:type], request.body.string)
+                     download_service.download_letter(params[:type], download_options)
                    end
-        StatsD.increment('mobile.letters.download.type', tags: ["type:#{params[:type]}"], sample_rate: 1.0)
+        increment_download_counter
         send_data response,
                   filename: "#{params[:type]}.pdf",
                   type: 'application/pdf',
                   disposition: 'attachment'
       end
 
+      private
+
       def icn
         @current_user.icn
+      end
+
+      def increment_download_counter
+        file_format = params[:format] || 'pdf'
+        StatsD.increment(
+          'mobile.letters.download.type',
+          tags: ["type:#{params[:type]}", "format:#{file_format}"],
+          sample_rate: 1.0
+        )
+      end
+
+      def download_options
+        request.body.string
+      end
+
+      def download_options_hash
+        return {} if download_options.blank?
+
+        # surely there's a better way
+        download_options.split('&').to_h { |pair| pair.split('=') }
       end
 
       def letter_info_adapter
