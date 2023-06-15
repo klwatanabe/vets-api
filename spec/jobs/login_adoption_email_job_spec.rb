@@ -24,7 +24,7 @@ RSpec.describe LoginAdoptionEmailJob do
             {}
           )
 
-          job.perform
+          job.perform_async
         end
       end
 
@@ -40,7 +40,7 @@ RSpec.describe LoginAdoptionEmailJob do
             {}
           )
 
-          job.perform
+          job.perform_async
         end
       end
 
@@ -56,7 +56,7 @@ RSpec.describe LoginAdoptionEmailJob do
             {}
           )
 
-          job.perform
+          job.perform_async
         end
       end
     end
@@ -77,7 +77,7 @@ RSpec.describe LoginAdoptionEmailJob do
             {}
           )
 
-          job.perform
+          job.perform_async
         end
       end
 
@@ -93,7 +93,7 @@ RSpec.describe LoginAdoptionEmailJob do
             {}
           )
 
-          job.perform
+          job.perform_async
         end
       end
 
@@ -109,7 +109,7 @@ RSpec.describe LoginAdoptionEmailJob do
             {}
           )
 
-          job.perform
+          job.perform_async
         end
       end
     end
@@ -130,7 +130,7 @@ RSpec.describe LoginAdoptionEmailJob do
             {}
           )
 
-          job.perform
+          job.perform_async
         end
       end
 
@@ -146,7 +146,7 @@ RSpec.describe LoginAdoptionEmailJob do
             {}
           )
 
-          job.perform
+          job.perform_async
         end
       end
 
@@ -162,7 +162,7 @@ RSpec.describe LoginAdoptionEmailJob do
             {}
           )
 
-          job.perform
+          job.perform_async
         end
       end
     end
@@ -183,7 +183,7 @@ RSpec.describe LoginAdoptionEmailJob do
             {}
           )
 
-          job.perform
+          job.perform_async
         end
       end
 
@@ -199,7 +199,7 @@ RSpec.describe LoginAdoptionEmailJob do
             {}
           )
 
-          job.perform
+          job.perform_async
         end
       end
 
@@ -215,7 +215,7 @@ RSpec.describe LoginAdoptionEmailJob do
             {}
           )
 
-          job.perform
+          job.perform_async
         end
       end
     end

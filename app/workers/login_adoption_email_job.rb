@@ -13,7 +13,7 @@ class LoginAdoptionEmailJob
     @user = user
   end
 
-  def perform
+  def perform_async
     return unless signed_in_with_legacy_credential?
 
     send_email if user_qualifies_for_reactivation?
