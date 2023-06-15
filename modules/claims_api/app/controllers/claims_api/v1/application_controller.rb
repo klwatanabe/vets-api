@@ -17,8 +17,6 @@ module ClaimsApi
       before_action :validate_json_format, if: -> { request.post? }
       before_action :validate_veteran_identifiers
 
-      BGS_FLIPPER = false
-
       # fetch_audience: defines the audience used for oauth
       # NOTE: required for oauth through claims_api to function
       def fetch_aud
