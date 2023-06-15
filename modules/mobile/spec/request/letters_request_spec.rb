@@ -93,6 +93,7 @@ Send electronic inquiries through the Internet at https://www.va.gov/contact-us.
       }
     }
   end
+
   let(:beneficiary_body) do
     { 'data' =>
        { 'id' => '3097e489-ad75-5746-ab1a-e0aabc1b426a',
@@ -124,42 +125,6 @@ Send electronic inquiries through the Internet at https://www.va.gov/contact-us.
     allow_any_instance_of(IAMUser).to receive(:icn).and_return('24811694708759028')
     iam_sign_in(user)
     Flipper.enable(:mobile_lighthouse_letters, user)
-  end
-
-  describe 'GET /mobile/v0/letters/:type' do
-    context 'with a valid lighthouse response' do
-      it 'matches the letters schema' do
-        VCR.use_cassette('mobile/lighthouse_letters/proof_of_service', match_requests_on: %i[method uri]) do
-          get '/mobile/v0/letters/proof_of_service', headers: iam_headers
-
-          expect(response).to have_http_status(:ok)
-          expect(JSON.parse(response.body)).to eq(letter_json)
-          expect(response.body).to match_json_schema('letter')
-        end
-      end
-    end
-
-    context 'with an invalid letter type' do
-      it 'matches the letters schema' do
-        get '/mobile/v0/letters/not_real', headers: iam_headers
-
-        expect(response).to have_http_status(:internal_server_error)
-        expect(response.parsed_body).to eq(
-          {
-            'errors' => [
-              {
-                'title' => 'Invalid letter type',
-                'detail' => 'Invalid letter type',
-                'code' => '500',
-                'source' => 'Lighthouse::LettersGenerator::Service',
-                'status' => '500',
-                'meta' => { 'message' => 'Letter type of not_real is not one of the expected options' }
-              }
-            ]
-          }
-        )
-      end
-    end
   end
 
   describe 'GET /mobile/v0/letters' do
@@ -229,6 +194,42 @@ Send electronic inquiries through the Internet at https://www.va.gov/contact-us.
           post '/mobile/v0/letters/benefit_summary/download', headers: iam_headers
           expect(response).to have_http_status(:unprocessable_entity)
         end
+      end
+    end
+  end
+
+  describe 'POST /mobile/v0/letters/:type' do
+    context 'with a valid lighthouse response' do
+      it 'matches the letters schema' do
+        VCR.use_cassette('mobile/lighthouse_letters/proof_of_service', match_requests_on: %i[method uri]) do
+          post '/mobile/v0/letters/proof_of_service', headers: iam_headers
+
+          expect(response).to have_http_status(:ok)
+          expect(JSON.parse(response.body)).to eq(letter_json)
+          expect(response.body).to match_json_schema('letter')
+        end
+      end
+    end
+
+    context 'with an invalid letter type' do
+      it 'matches the letters schema' do
+        post '/mobile/v0/letters/not_real', headers: iam_headers
+
+        expect(response).to have_http_status(:internal_server_error)
+        expect(response.parsed_body).to eq(
+          {
+            'errors' => [
+              {
+                'title' => 'Invalid letter type',
+                'detail' => 'Invalid letter type',
+                'code' => '500',
+                'source' => 'Lighthouse::LettersGenerator::Service',
+                'status' => '500',
+                'meta' => { 'message' => 'Letter type of not_real is not one of the expected options' }
+              }
+            ]
+          }
+        )
       end
     end
   end

@@ -30,7 +30,7 @@ Mobile::Engine.routes.draw do
     get '/letters', to: 'letters#index'
     get '/letters/beneficiary', to: 'letters#beneficiary'
     post '/letters/:type/download', to: 'letters#download'
-    get '/letters/:type', to: 'letters#show' # need to rethink the path, since it conflicts with other paths
+    post '/letters/:type', to: 'letters#show' # ugh. not ideal naming
     get '/maintenance_windows', to: 'maintenance_windows#index'
     get '/messaging/health/messages/signature', to: 'messages#signature'
     get '/military-service-history', to: 'military_information#get_service_history'
