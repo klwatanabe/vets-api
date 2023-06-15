@@ -196,40 +196,40 @@ Send electronic inquiries through the Internet at https://www.va.gov/contact-us.
         end
       end
     end
-  end
 
-  describe 'POST /mobile/v0/letters/:type' do
-    context 'with a valid lighthouse response' do
-      it 'matches the letters schema' do
-        VCR.use_cassette('mobile/lighthouse_letters/proof_of_service', match_requests_on: %i[method uri]) do
-          post '/mobile/v0/letters/proof_of_service', headers: iam_headers
+    context 'with format=json' do
+      context 'with a valid lighthouse response' do
+        it 'matches the letters schema' do
+          VCR.use_cassette('mobile/lighthouse_letters/proof_of_service', match_requests_on: %i[method uri]) do
+            post '/mobile/v0/letters/proof_of_service/download', headers: iam_headers, params: { format: 'json' }
 
-          expect(response).to have_http_status(:ok)
-          expect(JSON.parse(response.body)).to eq(letter_json)
-          expect(response.body).to match_json_schema('letter')
+            expect(response).to have_http_status(:ok)
+            expect(JSON.parse(response.body)).to eq(letter_json)
+            expect(response.body).to match_json_schema('letter')
+          end
         end
       end
-    end
 
-    context 'with an invalid letter type' do
-      it 'matches the letters schema' do
-        post '/mobile/v0/letters/not_real', headers: iam_headers
+      context 'with an invalid letter type' do
+        it 'matches the letters schema' do
+          post '/mobile/v0/letters/not_real/download', headers: iam_headers, params: { format: 'json' }
 
-        expect(response).to have_http_status(:internal_server_error)
-        expect(response.parsed_body).to eq(
-          {
-            'errors' => [
-              {
-                'title' => 'Invalid letter type',
-                'detail' => 'Invalid letter type',
-                'code' => '500',
-                'source' => 'Lighthouse::LettersGenerator::Service',
-                'status' => '500',
-                'meta' => { 'message' => 'Letter type of not_real is not one of the expected options' }
-              }
-            ]
-          }
-        )
+          expect(response).to have_http_status(:internal_server_error)
+          expect(response.parsed_body).to eq(
+            {
+              'errors' => [
+                {
+                  'title' => 'Invalid letter type',
+                  'detail' => 'Invalid letter type',
+                  'code' => '500',
+                  'source' => 'Lighthouse::LettersGenerator::Service',
+                  'status' => '500',
+                  'meta' => { 'message' => 'Letter type of not_real is not one of the expected options' }
+                }
+              ]
+            }
+          )
+        end
       end
     end
   end

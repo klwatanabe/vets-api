@@ -16,12 +16,6 @@ module Mobile
         end
       end
 
-      # returns a json representation of a letter
-      def show
-        letter = lighthouse_service.get_letter(icn, params[:type])
-        render json: Mobile::V0::LetterSerializer.new(current_user.uuid, letter)
-      end
-
       # returns list of letters available for a given user. List includes letter display name and letter type
       def index
         response = if Flipper.enabled?(:mobile_lighthouse_letters, @current_user)
@@ -44,6 +38,12 @@ module Mobile
 
       # returns a pdf of the requested letter type given the user has that letter type available
       def download
+        # let's not forget the logging
+        if params[:format] == 'json'
+          letter = lighthouse_service.get_letter(icn, params[:type])
+          return render json: Mobile::V0::LetterSerializer.new(current_user.uuid, letter)
+        end
+
         response = if Flipper.enabled?(:mobile_lighthouse_letters, @current_user)
                      lighthouse_service.download_letter(icn, params[:type])
                    else
