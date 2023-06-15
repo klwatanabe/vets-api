@@ -125,7 +125,7 @@ module DecisionReview
     #
     def get_notice_of_disagreement_contestable_issues(user:)
       with_monitoring_and_error_handling do
-        path = 'notice_of_disagreements/contestable_issues'
+        path = 'contestable_issues/notice_of_disagreements?benefit_type=compensation'
         headers = get_contestable_issues_headers(user)
         response = perform :get, path, nil, headers
         raise_schema_error_unless_200_status response.status
