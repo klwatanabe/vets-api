@@ -33,12 +33,12 @@ module Lighthouse
 
       configuration Lighthouse::LettersGenerator::Configuration
 
-      def get_letter(icn, letter_type)
+      def get_letter(icn, letter_type, options = {})
         validate_downloadable_letter_type(letter_type)
 
         endpoint = "letter-contents/#{letter_type}"
         log = "Retrieving letter from #{config.generator_url}/#{endpoint}"
-        params = { icn: }
+        params = { icn: }.merge(options)
 
         response = get_from_lighthouse(endpoint, params, log)
         response.body

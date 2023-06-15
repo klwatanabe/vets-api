@@ -35,7 +35,7 @@ RSpec.describe Lighthouse::LettersGenerator::Service do
   end
 
   describe '#get_letter' do
-    it 'returns a full json representation of a letter' do
+    it 'returns a full json representation of a letter without letter options' do
       expect_any_instance_of(Lighthouse::LettersGenerator::Configuration)
         .to receive(:get_access_token)
         .once
@@ -52,6 +52,31 @@ RSpec.describe Lighthouse::LettersGenerator::Service do
 
       response = client.get_letter('DOLLYPARTON', 'proof_of_service')
 
+      expect(response).to have_key('letterDescription')
+      expect(response).to have_key('letterContent')
+      expect(response['letterContent'].length).to eq(3)
+      response['letterContent'].each do |content|
+        expect(content.keys).to match_array(%w[contentKey contentTitle content])
+      end
+    end
+
+    it 'returns a full json representation of a letter with options' do
+      expect_any_instance_of(Lighthouse::LettersGenerator::Configuration)
+        .to receive(:get_access_token)
+        .once
+        .and_return('faketoken')
+
+      fake_response_json = File.read("#{FAKE_RESPONSES_PATH}/fakeProofOfServiceLetterResponse.json")
+      fake_response_body = JSON.parse(fake_response_json)
+      query_params = 'icn=DOLLYPARTON&serviceConnectedDisabilities=true'
+
+      @stubs.get("/letter-contents/proof_of_service?#{query_params}") do
+        [200, {}, fake_response_body]
+      end
+
+      client = Lighthouse::LettersGenerator::Service.new
+
+      response = client.get_letter('DOLLYPARTON', 'proof_of_service', { serviceConnectedDisabilities: true })
       expect(response).to have_key('letterDescription')
       expect(response).to have_key('letterContent')
       expect(response['letterContent'].length).to eq(3)
