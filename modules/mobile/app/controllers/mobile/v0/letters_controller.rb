@@ -8,7 +8,6 @@ require 'lighthouse/letters_generator/service'
 module Mobile
   module V0
     class LettersController < ApplicationController
-      # militaryService not included in all parts of the docs
       DOWNLOAD_PARAMS = %i[
         militaryService
         serviceConnectedDisabilities
@@ -22,8 +21,7 @@ module Mobile
         deathResultOfDisability
         survivorsAward
       ].freeze
-
-
+      DOWNLOAD_FORMATS = %w[json pdf].freeze
 
       before_action do
         if Flipper.enabled?(:mobile_lighthouse_letters, @current_user)
@@ -32,7 +30,7 @@ module Mobile
           authorize :evss, :access?
         end
       end
-
+      before_action :validate_format!, only: %i[download]
       after_action :increment_download_counter, only: %i[download], if: -> { response.successful? }
 
       # returns list of letters available for a given user. List includes letter display name and letter type
@@ -83,6 +81,15 @@ module Mobile
 
       def icn
         @current_user.icn
+      end
+
+      def validate_format!
+        if params[:format].present? && !params[:format].in?(DOWNLOAD_FORMATS)
+          raise Common::Exceptions::UnprocessableEntity.new(
+            detail: "Format #{params[:format]} not in #{DOWNLOAD_FORMATS}",
+            source: 'Mobile::V0::LettersController'
+          )
+        end
       end
 
       def increment_download_counter
