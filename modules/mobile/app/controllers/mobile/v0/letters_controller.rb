@@ -84,8 +84,7 @@ module Mobile
       def download_options_hash
         return {} if download_options.blank?
 
-        # surely there's a better way
-        download_options.split('&').to_h { |pair| pair.split('=') }
+        download_options.split('&').to_h { |pair| pair.split('=') }.except('format')
       end
 
       def letter_info_adapter
