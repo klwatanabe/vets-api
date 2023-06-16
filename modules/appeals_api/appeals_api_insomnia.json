@@ -1,8 +1,8 @@
 {
   "_type": "export",
   "__export_format": 4,
-  "__export_date": "2023-05-17T00:12:30.554Z",
-  "__export_source": "insomnia.desktop.app:v2023.2.1",
+  "__export_date": "2023-06-16T16:51:02.551Z",
+  "__export_source": "insomnia.desktop.app:v2023.2.2",
   "resources": [
     {
       "_id": "req_wrk_d89a54f45e11429abb2af16aa95af1eda7b2e307",
@@ -483,15 +483,15 @@
         },
         {
           "name": "X-Consumer-Username",
-          "value": "",
+          "value": "{{_.consumer_username}}",
           "id": "pair_c1a1b78c0b5e40c1815b48274ab4289e",
-          "disabled": true
+          "disabled": false
         },
         {
           "name": "X-Consumer-ID",
-          "value": "",
+          "value": "{{_.consumer_id}}",
           "id": "pair_848de2f8306341acae611316edaba4ce",
-          "disabled": true
+          "disabled": false
         },
         {
           "name": "Content-Type",
@@ -598,15 +598,15 @@
         },
         {
           "name": "X-Consumer-Username",
-          "value": "",
+          "value": "{{ _.consumer_username }}",
           "id": "pair_0585ac51255b4dd395017a326c9a135d",
-          "disabled": true
+          "disabled": false
         },
         {
           "name": "X-Consumer-ID",
-          "value": "",
+          "value": "{{ _.consumer_id }}",
           "id": "pair_aa940772e5744dc385079ef8d725338c",
-          "disabled": true
+          "disabled": false
         },
         {
           "name": "Content-Type",
@@ -642,6 +642,39 @@
       "headers": [],
       "authentication": {},
       "metaSortKey": -1680213384045,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_a9b4e9a6fb7e49e1a64b71aa5fc23c91",
+      "parentId": "fld_ce39bb5090c8448a83aebfcd0db0515c",
+      "modified": 1685658505803,
+      "created": 1685658505803,
+      "url": "{{ _.base_uri }}/services/appeals/higher-level-reviews/v0/forms/200996/{% prompt 'UUID required', 'UUID of higher-level review', '', '', false, true %}/download",
+      "name": "Download HLR PDF",
+      "description": "",
+      "method": "GET",
+      "body": {},
+      "parameters": [],
+      "headers": [
+        {
+          "id": "pair_566b6cebbb6d443caf9cc8bef0ad4762",
+          "name": "X-VA-ICN",
+          "value": "{{_.veteran_icn}}",
+          "description": ""
+        }
+      ],
+      "authentication": {
+        "type": "bearer",
+        "token": "{{_.bearer_token}}"
+      },
+      "metaSortKey": -1679619739926,
       "isPrivate": false,
       "settingStoreCookies": true,
       "settingSendCookies": true,
@@ -858,12 +891,14 @@
         {
           "name": "X-VA-SSN",
           "value": "{{ _.veteran_ssn }}",
-          "id": "pair_aedc1a4989774621910ed8391a1df3c6"
+          "id": "pair_aedc1a4989774621910ed8391a1df3c6",
+          "disabled": true
         },
         {
           "name": "X-VA-ICN",
           "value": "{{ _.veteran_icn }}",
-          "id": "pair_ff10891ccb9b4e80b8697aa23a88ad09"
+          "id": "pair_ff10891ccb9b4e80b8697aa23a88ad09",
+          "disabled": true
         },
         {
           "name": "X-VA-First-Name",
@@ -893,15 +928,15 @@
         },
         {
           "name": "X-Consumer-Username",
-          "value": "",
+          "value": "{{ _.consumer_username }}",
           "id": "pair_d5a98337028b48098ebe942d9048019d",
-          "disabled": true
+          "disabled": false
         },
         {
           "name": "X-Consumer-ID",
-          "value": "",
+          "value": "{{ _.consumer_id }}",
           "id": "pair_1026884347dd4d1c8cfb53c708c8e900",
-          "disabled": true
+          "disabled": false
         },
         {
           "name": "X-Alternate-Signer-First-Name",
@@ -1010,15 +1045,15 @@
         },
         {
           "name": "X-Consumer-Username",
-          "value": "",
+          "value": "{{ _.consumer_username }}",
           "id": "pair_1e60b10fbb94458d9d4f40a3d4f8da2e",
-          "disabled": true
+          "disabled": false
         },
         {
           "name": "X-Consumer-ID",
-          "value": "",
+          "value": "{{ _.consumer_id }}",
           "id": "pair_3b5530d4635b4ce884f9c3ae68e789e7",
-          "disabled": true
+          "disabled": false
         },
         {
           "name": "X-Alternate-Signer-First-Name",
@@ -1072,6 +1107,39 @@
       "headers": [],
       "authentication": {},
       "metaSortKey": -1680213003911,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_664bedf7abf04d6399797eddb4c4d331",
+      "parentId": "fld_2f4f283c783c4fac950ee603488d78b7",
+      "modified": 1686094917931,
+      "created": 1686094917931,
+      "url": "{{ _.base_uri }}/services/appeals/supplemental-claims/v0/forms/200995/{% prompt 'UUID required', 'UUID of supplemental claim', '', '', false, true %}/download",
+      "name": "Download SC PDF",
+      "description": "",
+      "method": "GET",
+      "body": {},
+      "parameters": [],
+      "headers": [
+        {
+          "id": "pair_82b47efd6c754484a2659089865a35ca",
+          "name": "X-VA-ICN",
+          "value": "{{_.veteran_icn}}",
+          "description": ""
+        }
+      ],
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.bearer_token }}"
+      },
+      "metaSortKey": -1679619804134,
       "isPrivate": false,
       "settingStoreCookies": true,
       "settingSendCookies": true,
@@ -1382,14 +1450,14 @@
         },
         {
           "name": "X-Consumer-Username",
-          "disabled": true,
-          "value": "string",
+          "disabled": false,
+          "value": "{{ _.consumer_username }}",
           "id": "pair_1915e6085aa94c0bb61eea6503d8d994"
         },
         {
           "name": "X-Consumer-ID",
-          "disabled": true,
-          "value": "string",
+          "disabled": false,
+          "value": "{{ _.consumer_id }}",
           "id": "pair_30dfbce0e8d44a2e9d3d02743b6715c3"
         },
         {
@@ -1429,43 +1497,65 @@
       "headers": [
         {
           "name": "X-VA-File-Number",
-          "value": "{{ _.veteran_file_number }}"
+          "value": "{{ _.veteran_file_number }}",
+          "id": "pair_d92d6622e5cd4db9b74335c579e2408d"
         },
         {
           "name": "X-VA-ICN",
-          "value": "{{ _.veteran_icn }}"
+          "value": "{{ _.veteran_icn }}",
+          "id": "pair_bc04ce96cd3b4bb69ffab901f3cc0c59"
         },
         {
           "name": "X-VA-First-Name",
-          "value": "{{ _.veteran_first_name }}"
+          "value": "{{ _.veteran_first_name }}",
+          "id": "pair_9a8239984b124f0a9485eaad1cd877a8"
         },
         {
           "name": "X-VA-Last-Name",
-          "value": "{{ _.veteran_last_name }}"
+          "value": "{{ _.veteran_last_name }}",
+          "id": "pair_f5997c9937e3465981f5bb92623e91b4"
         },
         {
           "name": "X-VA-Birth-Date",
-          "value": "{{ _.veteran_birth_date }}"
+          "value": "{{ _.veteran_birth_date }}",
+          "id": "pair_cf2fe42b214b4105aa9e352884133023"
         },
         {
           "name": "X-VA-NonVeteranClaimant-First-Name",
-          "value": "{{ _.nvc_first_name }}"
+          "value": "{{ _.nvc_first_name }}",
+          "id": "pair_53a407c49ba7435d9caf967e843839e2"
         },
         {
           "name": "X-VA-NonVeteranClaimant-Last-Name",
-          "value": "{{ _.nvc_last_name }}"
+          "value": "{{ _.nvc_last_name }}",
+          "id": "pair_d612236ed95140e4a2531c912443ef3b"
         },
         {
           "name": "X-VA-NonVeteranClaimant-SSN",
-          "value": "{{ _.nvc_ssn }}"
+          "value": "{{ _.nvc_ssn }}",
+          "id": "pair_c466e11965d84ea289018a1c9cf2cda5"
         },
         {
           "name": "X-VA-NonVeteranClaimant-Birth-Date",
-          "value": "{{ _.nvc_birth_date }}"
+          "value": "{{ _.nvc_birth_date }}",
+          "id": "pair_ce70b862b34d42e7b7bd11573f5e962f"
         },
         {
           "name": "Content-Type",
-          "value": "application/json"
+          "value": "application/json",
+          "id": "pair_8ca4ad689e83409b9dc7856ba16e93c2"
+        },
+        {
+          "id": "pair_71b620b55d534d74ad69a4357300e239",
+          "name": "X-Consumer-Username",
+          "value": "{{ _.consumer_username }}",
+          "description": ""
+        },
+        {
+          "id": "pair_8c438038b16d43e390fc4ebaa8ff48a9",
+          "name": "X-Consumer-ID",
+          "value": "{{ _.consumer_id }}",
+          "description": ""
         }
       ],
       "authentication": {
@@ -1496,6 +1586,32 @@
       "headers": [],
       "authentication": {},
       "metaSortKey": -1680213337410,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_2fd61a7fe1fd469d91a2b13e631ed665",
+      "parentId": "fld_f6f7f3ed27a14344912e09633e3a4f10",
+      "modified": 1686094081314,
+      "created": 1686094081314,
+      "url": "{{ _.base_uri }}/services/appeals/notice-of-disagreements/v0/forms/10182/{% prompt 'UUID required', 'UUID of higher-level review', '', '', false, true %}/download",
+      "name": "Download NOD PDF",
+      "description": "",
+      "method": "GET",
+      "body": {},
+      "parameters": [],
+      "headers": [],
+      "authentication": {
+        "type": "bearer",
+        "token": "{{_.bearer_token}}"
+      },
+      "metaSortKey": -1679615865320,
       "isPrivate": false,
       "settingStoreCookies": true,
       "settingSendCookies": true,
@@ -2316,6 +2432,36 @@
         "addTo": "header"
       },
       "metaSortKey": -1679619739977.5,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_641fc7e03e6e473aa3d927c524599f50",
+      "parentId": "fld_wrk_d89a54f45e11429abb2af16aa95af1edea9eece3",
+      "modified": 1686774226133,
+      "created": 1686774226133,
+      "url": "{{ _.base_uri }}/services/appeals/v2/decision_reviews/higher_level_reviews",
+      "name": "Download HLR PDF",
+      "description": "",
+      "method": "GET",
+      "body": {},
+      "parameters": [],
+      "headers": [
+        {
+          "id": "pair_962283bcf6854dffb17d220f2bb11166",
+          "name": "X-VA-ICN",
+          "value": "1234567890V987654",
+          "description": ""
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -1679619739951,
       "isPrivate": false,
       "settingStoreCookies": true,
       "settingSendCookies": true,
@@ -3597,6 +3743,8 @@
         "vets_api_dir": "",
         "adhoc_email_name": "",
         "base_uri": "http://localhost:3000",
+        "consumer_id": "11111111-1111-1111-1111-111111111111",
+        "consumer_username": "banana.peels",
         "veteran_email": "{{ _.adhoc_email_name }}+veteran_email@adhocteam.us",
         "veteran_ssn": "000000000",
         "veteran_icn": "0123456789V543210",
@@ -3623,6 +3771,8 @@
           "vets_api_dir",
           "adhoc_email_name",
           "base_uri",
+          "consumer_id",
+          "consumer_username",
           "veteran_email",
           "veteran_ssn",
           "veteran_icn",
@@ -3664,22 +3814,22 @@
           "hostOnly": true,
           "creation": "2023-03-30T22:06:44.708Z",
           "lastAccessed": "2023-04-12T23:38:23.875Z",
-          "id": "3068559789773466"
+          "id": "5722376026992395"
         },
         {
           "key": "TS01de8f7b",
-          "value": "01c8917e48018ddbd0082b6136d1e1e8802cbd164d31ccb90d593c1e3b4bd1f1f2dfa514fc5393cdffc112fc27a46c4050ebeaa822",
+          "value": "0119a2687f1e18b1532960dd9ac08feeec2c1b29b6014a0106d8449c230d3a845149da1c2ab6c7c92d34c78071cc9c870025b95460",
           "maxAge": 900,
           "domain": "dev-api.va.gov",
           "path": "/",
           "hostOnly": true,
           "creation": "2023-04-03T20:19:19.325Z",
-          "lastAccessed": "2023-04-17T20:07:37.027Z",
-          "id": "5049284172909403"
+          "lastAccessed": "2023-06-06T22:41:06.411Z",
+          "id": "9676593706960284"
         },
         {
           "key": "api_session",
-          "value": "%2BzL9cK4QwTHTW8rib%2FCtacWeZRAVbNzwWf3HAjRouQR4se%2FHe4xBStzvHx9GKXHdei9BZmOi01T1Z6wa%2FCpgX5lCQilZotnmxK9Ruim2ryrUUr70ReYQ6wbay%2BOj%2FzClzRuh06iwcyBFZAyCEahnTvbKCmfSSJQvksfZL9hfv5W%2FitOp9viEv9IrOrea49USgavRlbR7Dwqek51U1Fc2DMaXSXsgSNxNVZ1E3gM4zdBhUQ625NKCwcoYjoTnd118YNEhiNMcjYwe50Wan9O9Jft3zBnia2h0dkJLDso7%2FVmNklxZkoFZQPByyPaMHpE%3D--p51IqHx8WlYgKRZb--c96HMMY61da6DkhMPrbVUA%3D%3D",
+          "value": "qPGz1%2FmKoGmJMnxiZn%2F8oEOzau5We5zoGXNpdSJqkI%2BvdEXUBQFjKAWDraXUIf6RxqD4%2BXI%2Fj%2BZnfq7xdE24bkwSnlHdqM6ZDuqAJMRBeDk%2BBPzcsmiGAILbbDOTNO17YgyUNhKJwmkm%2B9%2BCL20io8K9eeVqJJNZG3QlHXI4etohQAU%2FwamFS9h6BGUxX%2FZ%2FhV9RGcm8rW9pyjLFZSNKjuEGbvcKYZ2pNeS%2B6un%2B5E4JPc7Lye5Y0ZCG9Mij8g4OqMnntBjKUKT%2Bhx4K%2FiYVbKyJLEhfIzKIzWb8IMJdaHOZ28FbovyX5mcV5GXCy5U%3D--%2FuQw1yXvxwSF9f5q--k54mB7obNSMFvKNIf6%2F0rA%3D%3D",
           "domain": "localhost",
           "path": "/",
           "httpOnly": true,
@@ -3688,30 +3838,30 @@
           ],
           "hostOnly": true,
           "creation": "2023-04-03T23:19:41.913Z",
-          "lastAccessed": "2023-05-16T21:13:43.099Z",
-          "id": "8970803219918473"
+          "lastAccessed": "2023-06-16T16:38:35.318Z",
+          "id": "641940683855216"
         },
         {
           "key": "TS013da938",
-          "value": "01c8917e48438b66ac4421a666132b9e49f5b86dc1387f76572f159ac6d75ec91b9d86c0e6897ce4311f0d776136ce18e803b3015a",
+          "value": "01c8917e4834edaca9f8e69272acb4bec36a2b7b3e116460b31d770f9c5293842dbdb3a83658e5d31f999d2b27bec0d94f880ba938",
           "maxAge": 900,
           "domain": "staging-api.va.gov",
           "path": "/",
           "hostOnly": true,
           "creation": "2023-04-04T00:18:24.093Z",
-          "lastAccessed": "2023-05-04T20:47:50.897Z",
-          "id": "2490518517517848"
+          "lastAccessed": "2023-06-13T23:55:25.658Z",
+          "id": "9750201303768142"
         },
         {
           "key": "TS01de8f7b",
-          "value": "0119a2687f5b16a2989ba98689cd2cab2f71ac4c5bd115b4c544e17e00c09498eaf239466b78742e0c5be320f48999b157e7a7650c",
+          "value": "0119a2687fc09c366881571e3b2f5bbcd446a2f02e1aaa35e2fa31f5405d703a86d87dd2061a6f49669d7a97ce4dc697ffd3835b60",
           "maxAge": 900,
           "domain": "staging-api.va.gov",
           "path": "/",
           "hostOnly": true,
           "creation": "2023-04-04T00:24:37.578Z",
-          "lastAccessed": "2023-05-16T20:23:37.449Z",
-          "id": "12793588389257704"
+          "lastAccessed": "2023-06-16T16:33:36.058Z",
+          "id": "8196026739270157"
         }
       ],
       "_type": "cookie_jar"
