@@ -21,20 +21,13 @@ module ClaimsApi
         raise ::Common::Exceptions::ResourceNotFound.new(detail: 'Claims not found')
       end
 
-      def show # rubocop:disable Metrics/MethodLength
+      def show
         claim = ClaimsApi::AutoEstablishedClaim.find_by(id: params[:id])
 
         if claim && claim.status == 'errored'
           fetch_errored(claim)
-        elsif claim && claim.evss_id.blank?
-          render json: claim, serializer: ClaimsApi::AutoEstablishedClaimSerializer
-        elsif claim && claim.evss_id.present?
-          evss_bgs_claim = evss_bgs_services_show(claim.id, claim.evss.id)
-          render json: evss_bgs_claim, serializer: ClaimsApi::ClaimDetailSerializer, uuid: claim.id
-        elsif /^\d{2,20}$/.match?(params[:id])
-          evss_bgs_claim = evss_bgs_services_show(params[:id])
-          # NOTE: source doesn't seem to be accessible within a remote evss_bgs_claim
-          render json: evss_bgs_claim, serializer: ClaimsApi::ClaimDetailSerializer
+        elsif (claim && (claim.evss_id.blank? || claim.evss_id.present?)) || /^\d{2,20}$/.match?(params[:id])
+          evss_bgs_services_show(claim)
         else
           raise ::Common::Exceptions::ResourceNotFound.new(detail: 'Claim not found')
         end
@@ -75,9 +68,21 @@ module ClaimsApi
         @bgs_enabled ? transform(claims) : claims
       end
 
-      def evss_bgs_services_show(claim_id, evss_claim_id = nil)
+      def evss_bgs_services_show(claim)
         evss_bgs_service_flipper
-        @bgs_enabled ? find_bgs_claim!(claim_id:) : claims_service.update_from_remote(evss_claim_id)
+        if @bgs_enabled
+          claim = find_bgs_claim!(claim_id:)
+          render json: claim, serializer: ClaimsApi::AutoEstablishedClaimSerializer
+        elsif claim && claim.evss_id.blank?
+          render json: claim, serializer: ClaimsApi::AutoEstablishedClaimSerializer
+        elsif claim && claim.evss_id.present?
+          evss_claim = claims_service.update_from_remote(claim.evss_id)
+          render json: evss_claim, serializer: ClaimsApi::ClaimDetailSerializer, uuid: claim.id
+        elsif /^\d{2,20}$/.match?(params[:id])
+          evss_claim = claims_service.update_from_remote(params[:id])
+          # NOTE: source doesn't seem to be accessible within a remote evss_claim
+          render json: evss_claim, serializer: ClaimsApi::ClaimDetailSerializer
+        end
       end
 
       def find_bgs_claim!(claim_id:)
