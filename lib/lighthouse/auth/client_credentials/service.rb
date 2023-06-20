@@ -2,6 +2,7 @@
 
 require 'common/client/base'
 require 'lighthouse/auth/client_credentials/configuration'
+require 'lighthouse/auth/client_credentials/access_token_tracker'
 require 'lighthouse/auth/client_credentials/jwt_generator'
 
 module Auth
@@ -16,12 +17,15 @@ module Auth
       # @param [String] client_id - ID used to identify the application
       # @param [String] aud_claim_url - The claim URL used as the 'aud' portion of the JWT
       # @param [String] rsa_key - RSA key used to encode the authentication JWT
-      def initialize(token_url, api_scopes, client_id, aud_claim_url, rsa_key)
+      def initialize(token_url, api_scopes, client_id, aud_claim_url, rsa_key, service_name = nil)
         @url = token_url
         @scopes = api_scopes
         @client_id = client_id
         @aud = aud_claim_url
         @rsa_key = rsa_key
+        @service_name = service_name
+
+        @tracker = AccessTokenTracker
         super()
       end
 
@@ -31,14 +35,31 @@ module Auth
       # @return [String] the access token needed to make requests
       #
       def get_token(auth_params = {})
-        assertion = build_assertion
-        request_body = build_request_body(assertion, @scopes, auth_params)
-        res = config.get_access_token(@url, request_body)
+        if @service_name == nil
+            res = get_new_token(auth_params)
+            return res.body['access_token']
+        end
 
-        res.body['access_token']
+        access_token = @tracker.get_access_token(@service_name)
+
+        if access_token == nil
+            res = get_new_token(auth_params)
+            access_token = res.body['access_token']
+            ttl = res.body['expires_in']
+            @tracker.set_access_token(@service_name, access_token, ttl)
+        end
+
+        access_token
       end
 
       private
+
+      def get_new_token(auth_params = {})
+          puts "GETTING NEW TOKEN"
+          assertion = build_assertion
+          request_body = build_request_body(assertion, @scopes, auth_params)
+          config.get_access_token(@url, request_body)
+      end
 
       ##
       # @return [String] new JWT token
