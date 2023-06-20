@@ -35,18 +35,18 @@ module Auth
       # @return [String] the access token needed to make requests
       #
       def get_token(auth_params = {})
-        if @service_name == nil
-            res = get_new_token(auth_params)
-            return res.body['access_token']
+        if @service_name.nil?
+          res = get_new_token(auth_params)
+          return res.body['access_token']
         end
 
         access_token = @tracker.get_access_token(@service_name)
 
-        if access_token == nil
-            res = get_new_token(auth_params)
-            access_token = res.body['access_token']
-            ttl = res.body['expires_in']
-            @tracker.set_access_token(@service_name, access_token, ttl)
+        if access_token.nil?
+          res = get_new_token(auth_params)
+          access_token = res.body['access_token']
+          ttl = res.body['expires_in']
+          @tracker.set_access_token(@service_name, access_token, ttl)
         end
 
         access_token
@@ -55,10 +55,9 @@ module Auth
       private
 
       def get_new_token(auth_params = {})
-          puts "GETTING NEW TOKEN"
-          assertion = build_assertion
-          request_body = build_request_body(assertion, @scopes, auth_params)
-          config.get_access_token(@url, request_body)
+        assertion = build_assertion
+        request_body = build_request_body(assertion, @scopes, auth_params)
+        config.get_access_token(@url, request_body)
       end
 
       ##
