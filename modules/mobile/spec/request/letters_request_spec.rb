@@ -176,7 +176,7 @@ Send electronic inquiries through the Internet at https://www.va.gov/contact-us.
       end
 
       context 'when format is json' do
-        it 'matches the letters schema' do
+        it 'returns json that matches the letter schema' do
           VCR.use_cassette('mobile/lighthouse_letters/download_as_json', match_requests_on: %i[method uri]) do
             post '/mobile/v0/letters/proof_of_service/download', headers: iam_headers, params: { format: 'json' }
 
@@ -270,7 +270,7 @@ Send electronic inquiries through the Internet at https://www.va.gov/contact-us.
   end
 
   describe 'Error Handling' do
-    context 'when user is not authorized authorized to use lighthouse' do
+    context 'when user is not authorized to use lighthouse' do
       it 'returns 403 forbidden' do
         allow_any_instance_of(IAMUser).to receive(:participant_id).and_return(nil)
         get '/mobile/v0/letters', headers: iam_headers

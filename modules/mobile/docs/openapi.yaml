@@ -2305,7 +2305,7 @@ paths:
       summary: /v0/letters/beneficiary
   /v0/letters/{type}/download:
     post:
-      description: Returns requested letter for download. Downloads as PDF by default or as json when format=json param is included.
+      description: Returns requested letter for download. Downloads as either PDF or JSON, dependent upon format param. Defaults to PDF when format is not specified.
       operationId: download
       parameters:
         - description: letter type
@@ -2334,6 +2334,9 @@ paths:
               schema:
                 format: binary
                 type: string
+            application/json:
+              schema:
+                $ref: ./schemas/Letter.yml
           description: OK
         '401':
           content:

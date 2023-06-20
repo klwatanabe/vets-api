@@ -69,7 +69,7 @@ module Mobile
                              "#{params[:type]} is not a valid letter type"
                      end
 
-                     download_service.download_letter(params[:type], download_options)
+                     download_service.download_letter(params[:type], request.body.string)
                    end
         send_data response,
                   filename: "#{params[:type]}.pdf",
@@ -99,10 +99,6 @@ module Mobile
           tags: ["type:#{params[:type]}", "format:#{file_format}"],
           sample_rate: 1.0
         )
-      end
-
-      def download_options
-        request.body.string
       end
 
       def download_options_hash
