@@ -27,7 +27,7 @@ module Auth
 
       def self.get_access_token(service_name)
         service = find(service_name)
-        service.access_token unless service.nil?
+        service&.access_token
       end
     end
   end
