@@ -69,13 +69,15 @@ module ClaimsApi
       end
 
       def evss_bgs_services_index
+        evss_bgs_service_flipper
         # if evss_bgs_service_flipper is true, we are switching over to use BGS, rather than EVSS
-        claims = evss_bgs_service_flipper ? find_bgs_claims! : claims_service.all
-        evss_bgs_service_flipper ? transform(claims) : claims
+        claims = @bgs_enabled ? find_bgs_claims! : claims_service.all
+        @bgs_enabled ? transform(claims) : claims
       end
 
       def evss_bgs_services_show(claim_id, evss_claim_id = nil)
-        evss_bgs_service_flipper ? claims_service.update_from_remote(evss_claim_id) : find_bgs_claim!(claim_id:)
+        evss_bgs_service_flipper
+        @bgs_enabled ? find_bgs_claim!(claim_id:) : claims_service.update_from_remote(evss_claim_id)
       end
 
       def find_bgs_claim!(claim_id:)
