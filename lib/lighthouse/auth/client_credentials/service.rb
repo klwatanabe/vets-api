@@ -46,10 +46,16 @@ module Auth
         access_token = @tracker.get_access_token(@service_name)
 
         if access_token.nil?
+          uuid = SecureRandom.uuid
+          log_info(message: 'Access token expired. Fetching new token', service_name: @service_name, uuid:)
+
           res = get_new_token(auth_params)
           access_token = res.body['access_token']
           ttl = res.body['expires_in']
           @tracker.set_access_token(@service_name, access_token, ttl)
+
+          log_info(message: "New access token deposited in Redis store with TTL: #{ttl}",
+                   service_name: @service_name, uuid:)
         end
 
         access_token
@@ -61,6 +67,10 @@ module Auth
         assertion = build_assertion
         request_body = build_request_body(assertion, @scopes, auth_params)
         config.get_access_token(@url, request_body)
+      end
+
+      def log_info(message:, service_name:)
+        ::Rails.logger.info({ message_type: 'Lighthouse CCG access token', message:, service_name:, uuid: })
       end
 
       ##
