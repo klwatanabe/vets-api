@@ -169,7 +169,6 @@ PATH
     debts_api (0.1.0)
     dhp_connected_devices (0.1.0)
     facilities_api (0.1.0)
-    forms_api (0.1.0)
     health_quest (0.1.0)
     income_limits (0.1.0)
     meb_api (0.1.0)
@@ -180,6 +179,7 @@ PATH
     my_health (0.1.0)
       rails (~> 6.1.4, >= 6.1.4.7)
     openid_auth (0.0.1)
+    simple_forms_api (0.1.0)
     test_user_dashboard (0.1.0)
       rails (~> 6.1.5)
     va_forms (0.0.1)
@@ -294,7 +294,7 @@ GEM
       matrix
       ruby-rc4 (>= 0.1.5)
     concurrent-ruby (1.2.2)
-    config (4.1.0)
+    config (4.2.1)
       deep_merge (~> 1.2, >= 1.2.1)
       dry-validation (~> 1.0, >= 1.0.0)
     connection_pool (2.4.1)
@@ -360,12 +360,12 @@ GEM
       concurrent-ruby (~> 1.0)
       dry-core (~> 1.0, < 2)
       zeitwerk (~> 2.6)
-    dry-schema (1.13.0)
+    dry-schema (1.13.2)
       concurrent-ruby (~> 1.0)
       dry-configurable (~> 1.0, >= 1.0.1)
       dry-core (~> 1.0, < 2)
       dry-initializer (~> 3.0)
-      dry-logic (>= 1.5, < 2)
+      dry-logic (>= 1.4, < 2)
       dry-types (>= 1.7, < 2)
       zeitwerk (~> 2.6)
     dry-struct (1.6.0)
@@ -544,7 +544,7 @@ GEM
     json (2.6.3-java)
     json-schema (2.8.1)
       addressable (>= 2.4)
-    json_schemer (1.0.2)
+    json_schemer (1.0.3)
       hana (~> 1.3)
       regexp_parser (~> 2.0)
       simpleidn (~> 0.2)
@@ -682,7 +682,7 @@ GEM
     prawn (2.4.0)
       pdf-core (~> 0.9.0)
       ttfunk (~> 1.7)
-    prawn-markup (0.3.7)
+    prawn-markup (1.0.0)
       nokogiri
       prawn
       prawn-table
@@ -706,8 +706,8 @@ GEM
     pundit (2.3.0)
       activesupport (>= 3.0.0)
     raabro (1.4.0)
-    racc (1.7.0)
-    racc (1.7.0-java)
+    racc (1.7.1)
+    racc (1.7.1-java)
     rack (2.2.7)
     rack-attack (6.6.1)
       rack (>= 1.0, < 3)
@@ -920,7 +920,7 @@ GEM
       sprockets (>= 3.0.0)
     ssrf_filter (1.1.1)
     staccato (0.5.3)
-    statsd-instrument (3.5.9)
+    statsd-instrument (3.5.10)
     strong_migrations (1.4.4)
       activerecord (>= 5.2)
     super_diff (0.10.0)
@@ -948,9 +948,7 @@ GEM
     unf (0.1.4)
       unf_ext
     unf (0.1.4-java)
-    unf_ext (0.0.8)
-    unf_ext (0.0.8-x64-mingw32)
-    unf_ext (0.0.8-x86-mingw32)
+    unf_ext (0.0.8.2)
     unicode-display_width (2.4.2)
     utf8-cleaner (1.0.0)
       activesupport
@@ -1065,7 +1063,6 @@ DEPENDENCIES
   flipper-active_support_cache_store
   flipper-ui (= 0.22.0)
   foreman
-  forms_api!
   fuubar
   google-api-client
   google-apis-core
@@ -1164,6 +1161,7 @@ DEPENDENCIES
   sidekiq-pro!
   sidekiq-scheduler
   sidekiq_alive
+  simple_forms_api!
   simplecov
   slack-notify
   staccato
