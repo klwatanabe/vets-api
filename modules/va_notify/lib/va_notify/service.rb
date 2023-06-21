@@ -57,7 +57,7 @@ module VaNotify
     end
 
     def client_url
-      config.base_path
+      'https://staging-api.va.gov/vanotify'
     end
 
     def handle_error(error)
