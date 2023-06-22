@@ -217,9 +217,9 @@ module ClaimsApi
     end
 
     def validate_service_dates
-      service_periods = form_data.dig('serviceInformation', 'servicePeriods')
+      service_periods = form_data&.dig('serviceInformation', 'servicePeriods')
 
-      service_periods.each do |service_period|
+      service_periods&.each do |service_period|
         start_date = Date.parse(service_period['activeDutyBeginDate']) if service_period['activeDutyBeginDate'].present?
         end_date = Date.parse(service_period['activeDutyEndDate']) if service_period['activeDutyEndDate'].present?
 

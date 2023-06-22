@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'evss/error_middleware'
+require 'claims_api/evss_to_bgs_mapper'
 
 module ClaimsApi
   module V1
@@ -100,31 +101,11 @@ module ClaimsApi
       end
 
       def transform(claims)
-        claims[:benefit_claims_dto][:benefit_claim].map do |claim|
-          new_claim = ClaimsApi::V1::EvssLikeClaim.new
-          new_claim.add_claim(claim)
-          new_claim.list_data
-          new_claim
+        tcs = claims[:benefit_claims_dto][:benefit_claim].map do |claim|
+          bgs_claim = ClaimsApi::EvssBgsMapper.new(claim)
+          bgs_claim.map_and_build_object
         end
-      end
-    end
-  end
-end
-
-module ClaimsApi
-  module V1
-    class EvssLikeClaim
-      attr_reader :evss_id, :list_data, :read_attribute_for_serialization
-
-      def initialize(claim = {})
-        @evss_id = nil
-        @list_data = add_claim(claim)
-      end
-
-      def add_claim(claim)
-        @list_data = {}
-        @list_data.merge!(claim)
-        @list_data.deep_stringify_keys
+        tcs
       end
     end
   end
