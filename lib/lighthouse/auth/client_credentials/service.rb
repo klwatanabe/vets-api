@@ -38,10 +38,14 @@ module Auth
       # @return [String] the access token needed to make requests
       #
       def get_token(auth_params = {})
+        p "@service_name: #{@service_name}"
         if @service_name.nil?
+          p "DIVERTING CACHE"
           res = get_new_token(auth_params)
           return res.body['access_token']
         end
+
+        p 'USING CACHE'
 
         access_token = @tracker.get_access_token(@service_name)
 

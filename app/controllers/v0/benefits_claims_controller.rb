@@ -7,13 +7,13 @@ module V0
     before_action { authorize :lighthouse, :access? }
 
     def index
-      claims = service.get_claims
+      claims = service.get_claims(nil, nil, { use_cache: true })
 
       render json: claims
     end
 
     def show
-      claim = service.get_claim(params[:id])
+      claim = service.get_claim(params[:id], nil, nil, { use_cache: true })
 
       render json: claim
     end

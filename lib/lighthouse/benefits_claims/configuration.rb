@@ -107,7 +107,8 @@ module BenefitsClaims
           lighthouse_client_id,
           lighthouse_rsa_key_path,
           options[:aud_claim_url],
-          options[:host]
+          options[:host],
+          use_cache: options[:use_cache] || false
         ).get_token(options[:auth_params])
       end
     end
@@ -115,15 +116,17 @@ module BenefitsClaims
     ##
     # @return [BenefitsClaims::AccessToken::Service] Service used to generate access tokens.
     #
-    def token_service(lighthouse_client_id, lighthouse_rsa_key_path, aud_claim_url = nil, host = nil)
+    def token_service(lighthouse_client_id, lighthouse_rsa_key_path, aud_claim_url = nil, host = nil, use_cache: false)
       lighthouse_client_id = settings.access_token.client_id if lighthouse_client_id.nil?
       lighthouse_rsa_key_path = settings.access_token.rsa_key if lighthouse_rsa_key_path.nil?
       host ||= base_path(host)
       url = "#{host}/#{TOKEN_PATH}"
       aud_claim_url ||= settings.access_token.aud_claim_url
+      service_name = use_cache ? 'benefits_claims' : nil
+      p "use_cache: #{use_cache}, #{service_name}"
 
-      @token_service ||= Auth::ClientCredentials::Service.new(
-        url, API_SCOPES, lighthouse_client_id, aud_claim_url, lighthouse_rsa_key_path, 'benefits-claims'
+      Auth::ClientCredentials::Service.new(
+        url, API_SCOPES, lighthouse_client_id, aud_claim_url, lighthouse_rsa_key_path, service_name
       )
     end
   end

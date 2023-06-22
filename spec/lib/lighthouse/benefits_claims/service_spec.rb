@@ -9,6 +9,45 @@ RSpec.describe BenefitsClaims::Service do
   end
 
   describe 'making requests' do
+    context 'using cached access tokens' do
+      before do
+        token = 'fresh.access_token'
+        mock_token_response = OpenStruct.new({ body: { 'access_token' => token, 'expires_in' => 300 } })
+
+        allow_any_instance_of(Auth::ClientCredentials::Service).to receive(:get_new_token)
+          .and_return(mock_token_response)
+        allow(Auth::ClientCredentials::AccessTokenTracker).to receive(:get_access_token)
+          .and_return('cached.access_token')
+      end
+
+      it 'attempts to get the cached access token when options[:use_cache] is true' do
+        VCR.use_cassette('lighthouse/benefits_claims/index/200_response') do
+          expect_any_instance_of(Auth::ClientCredentials::Service).not_to receive(:get_new_token)
+          expect(Auth::ClientCredentials::AccessTokenTracker).to receive(:get_access_token)
+
+          @service.get_claims(nil, nil, { use_cache: true })
+        end
+      end
+
+      it 'doesn\'t attempt to get the cached access token when options[:use_cache] is false' do
+        VCR.use_cassette('lighthouse/benefits_claims/index/200_response') do
+          expect_any_instance_of(Auth::ClientCredentials::Service).to receive(:get_new_token)
+          expect(Auth::ClientCredentials::AccessTokenTracker).not_to receive(:get_access_token)
+
+          @service.get_claims(nil, nil, { use_cache: false })
+        end
+      end
+
+      it 'doesn\'t attempt to get the cached access token when options[:use_cache] is not specified' do
+        VCR.use_cassette('lighthouse/benefits_claims/index/200_response') do
+          expect_any_instance_of(Auth::ClientCredentials::Service).to receive(:get_new_token)
+          expect(Auth::ClientCredentials::AccessTokenTracker).not_to receive(:get_access_token)
+
+          @service.get_claims
+        end
+      end
+    end
+
     context 'valid requests' do
       before do
         allow_any_instance_of(Auth::ClientCredentials::Service).to receive(:get_token).and_return('fake_access_token')

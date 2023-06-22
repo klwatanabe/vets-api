@@ -17,6 +17,7 @@ module Auth
       def self.set_access_token(service_name, access_token, ttl = redis_namespace_ttl)
         service = new(service_name:)
         service.access_token = access_token
+        p "Service: #{access_token}, #{ttl}"
         service.save!
 
         # We want to set the TTL dynamically
