@@ -101,11 +101,10 @@ module ClaimsApi
       end
 
       def transform(claims)
-        tcs = claims[:benefit_claims_dto][:benefit_claim].map do |claim|
+        claims[:benefit_claims_dto][:benefit_claim].map do |claim|
           bgs_claim = ClaimsApi::EvssBgsMapper.new(claim)
           bgs_claim.map_and_build_object
         end
-        tcs
       end
     end
   end
