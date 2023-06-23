@@ -1419,6 +1419,7 @@ veteran_readiness_and_employment:
       - VRE.VBAANC@va.gov
       - VRE.VBAPIT@va.gov
       - VRE-CMS.VBAVACO@va.gov
+      - rachal.cassity@oddball.io
 
 # Settings for connecting to the va.gov Google Analytics for the Cypress Viewport Updater
 google_analytics_cvu:
