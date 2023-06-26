@@ -3,14 +3,16 @@
 module Flipper
   class AdminUserConstraint
     def self.matches?(request)
-      puts request.path
+      
+      puts 'request_path: ' + request.method + ' ' + request.path
       require 'pry'; binding.pry
-      return true if request.method == 'GET'
+      # return true if request.method == 'GET'
+      return true if request.method == 'GET' && !request.path.include?('callback')
 
       # return true if Rails.env.development? || request.method == 'GET'
 
       warden = request.env['warden']
-      request.session[:flipper_user] ||= warden.user
+      # request.session[:flipper_user] ||= warden.user
 
       if request.session[:flipper_user].blank?
         warden.authenticate!(scope: :flipper)
