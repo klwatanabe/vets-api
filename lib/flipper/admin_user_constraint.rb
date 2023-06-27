@@ -4,22 +4,14 @@ module Flipper
   class AdminUserConstraint
     def self.matches?(request)
       puts 'request_path: ' + request.method + ' ' + request.path
-      require 'pry'
-      binding.pry
 
       return true if request.method == 'GET' && request.session[:flipper_user].present?
 
       if request.session[:flipper_user].blank?
-        require 'pry'
-        binding.pry
         warden = request.env['warden']
         warden.authenticate!(scope: :flipper)
-        require 'pry'; binding.pry;
       end
-
-      require 'pry'
-      binding.pry
-
+      require 'pry'; binding.pry;
       github_organization_authenticate!(request.session[:flipper_user], Settings.flipper.github_organization)
       github_team_authenticate!(request.session[:flipper_user], Settings.flipper.github_team)
 
@@ -28,7 +20,6 @@ module Flipper
       ## ______
 
       # puts 'request_path: ' + request.method + ' ' + request.path
-      # require 'pry'; binding.pry
       # # return true if request.method == 'GET'
 
       # return true if request.method == 'GET' && !request.path.include?('callback')
