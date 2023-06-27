@@ -124,6 +124,7 @@ describe HCA::Service do
 
     it 'f' do
       result = HCA::Service.new.submit_form(get_fixture('hca/short_form'))
+      binding.pry; fail
     end
 
     context 'submitting short form' do
