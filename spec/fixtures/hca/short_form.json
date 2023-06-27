@@ -5,23 +5,11 @@
     "last": "ZZTEST",
     "suffix": "Jr."
   },
-  "mothersMaidenName": "Maiden",
   "veteranSocialSecurityNumber": "111-11-1234",
   "gender": "F",
-  "vaCompensationType": "highDisability",
-  "cityOfBirth": "Springfield",
-  "stateOfBirth": "AK",
   "veteranDateOfBirth": "1923-01-02",
-  "isEssentialAcaCoverage": false,
-  "facilityState": "CT",
-  "vaMedicalFacility": "608",
-  "wantsInitialVaContact": true,
-  "isSpanishHispanicLatino": true,
-  "isAmericanIndianOrAlaskanNative": true,
-  "isBlackOrAfricanAmerican": true,
-  "isNativeHawaiianOrOtherPacificIslander": true,
-  "isAsian": true,
-  "isWhite": true,
+  "veteranGrossIncome": 1000,
+  "isSpanishHispanicLatino": false,
   "veteranAddress": {
     "street": "123 NW 5th St",
     "street2": "",
@@ -32,26 +20,8 @@
     "provinceCode": "ProvinceName",
     "postalCode": "21231"
   },
-  "email": "foo@example.com",
-  "homePhone": "1231241234",
-  "mobilePhone": "1235551234",
-  "isCoveredByHealthInsurance": true,
-  "providers": [
-    {
-      "insuranceName": "MyInsruance",
-      "insurancePolicyHolderName": "FirstName ZZTEST",
-      "insurancePolicyNumber": "P1234",
-      "insuranceGroupCode": "G1234"
-    }
-  ],
-  "purpleHeartRecipient": false,
-  "isFormerPow": true,
-  "postNov111998Combat": true,
-  "disabledInLineOfDuty": true,
-  "swAsiaCombat": true,
-  "vietnamService": true,
-  "exposedToRadiation": true,
-  "radiumTreatments": true,
-  "campLejeune": true,
+  "discloseFinancialInformation": true,
+  "isMedicaidEligible": false,
+  "isEssentialAcaCoverage": false,
   "privacyAgreementAccepted": true
 }
