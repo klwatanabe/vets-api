@@ -123,6 +123,9 @@ describe HCA::Service do
     end
 
     it 'f' do
+      VCR.config do |c|
+        c.allow_http_connections_when_no_cassette = true
+      end
       result = HCA::Service.new.submit_form(get_fixture('hca/short_form'))
       binding.pry; fail
     end
