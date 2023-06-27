@@ -122,6 +122,10 @@ describe HCA::Service do
       end
     end
 
+    it 'f' do
+      result = HCA::Service.new.submit_form(get_fixture('hca/short_form'))
+    end
+
     context 'submitting short form' do
       it 'works', run_at: 'Wed, 16 Mar 2022 20:01:14 GMT' do
         VCR.use_cassette(
