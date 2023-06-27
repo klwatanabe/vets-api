@@ -8,7 +8,8 @@ module ClaimsApi
       '0oa66qzxiq37neilh297' => "ETK Veterans' Benefits",
       '0oadnb0o063rsPupH297' => 'VA Connect Pro',
       '0oadnb1x4blVaQ5iY297' => 'Disability Law Pro',
-      '0oadnavva9u5F6vRz297' => 'Vet Claim Pro'
+      '0oadnavva9u5F6vRz297' => 'Vet Claim Pro',
+      '0oaipea00nThAznKB297' => 'VA Claims Insider'
     }.freeze
 
     def initialize(cid:)
