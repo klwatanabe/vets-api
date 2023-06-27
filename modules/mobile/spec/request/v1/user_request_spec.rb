@@ -11,6 +11,7 @@ RSpec.describe 'user', type: :request do
   describe 'GET /mobile/v1/user' do
     before do
       iam_sign_in(build(:iam_user))
+      allow_any_instance_of(IAMUser).to receive(:idme_uuid).and_return('b2fab2b5-6af0-45e1-a9e2-394347af91ef')
     end
 
     context 'with no upstream errors' do
@@ -286,6 +287,8 @@ RSpec.describe 'user', type: :request do
               paymentHistory
               userProfileUpdate
               scheduleAppointments
+              preferredName
+              genderIdentity
             ]
           )
         end
@@ -299,7 +302,7 @@ RSpec.describe 'user', type: :request do
           VCR.use_cassette('mobile/payment_information/payment_information') do
             VCR.use_cassette('mobile/user/get_facilities') do
               VCR.use_cassette('mobile/va_profile/demographics/demographics') do
-                get '/mobile/v0/user', headers: iam_headers
+                get '/mobile/v1/user', headers: iam_headers
               end
             end
           end
@@ -318,6 +321,8 @@ RSpec.describe 'user', type: :request do
               userProfileUpdate
               scheduleAppointments
               prescriptions
+              preferredName
+              genderIdentity
             ]
           )
         end
@@ -357,7 +362,7 @@ RSpec.describe 'user', type: :request do
             VCR.use_cassette('mobile/payment_information/payment_information') do
               VCR.use_cassette('mobile/user/get_facilities_no_ids', match_requests_on: %i[method uri]) do
                 VCR.use_cassette('mobile/va_profile/demographics/demographics') do
-                  get '/mobile/v0/user', headers: iam_headers
+                  get '/mobile/v1/user', headers: iam_headers
                 end
               end
             end
@@ -381,7 +386,7 @@ RSpec.describe 'user', type: :request do
             VCR.use_cassette('mobile/payment_information/payment_information') do
               VCR.use_cassette('mobile/user/get_facilities_no_ids', match_requests_on: %i[method uri]) do
                 VCR.use_cassette('mobile/va_profile/demographics/demographics') do
-                  get '/mobile/v0/user', headers: iam_headers
+                  get '/mobile/v1/user', headers: iam_headers
                 end
               end
             end
@@ -405,7 +410,7 @@ RSpec.describe 'user', type: :request do
           VCR.use_cassette('mobile/payment_information/payment_information') do
             VCR.use_cassette('mobile/user/get_facilities', match_requests_on: %i[method uri]) do
               VCR.use_cassette('mobile/va_profile/demographics/demographics') do
-                get '/mobile/v0/user', headers: iam_headers
+                get '/mobile/v1/user', headers: iam_headers
               end
             end
           end
@@ -679,6 +684,8 @@ RSpec.describe 'user', type: :request do
     context 'no idme_uuid or logingov_uuid' do
       before do
         iam_sign_in(FactoryBot.build(:iam_user, :no_multifactor))
+        allow_any_instance_of(IAMUser).to receive(:idme_uuid).and_return(nil)
+        allow_any_instance_of(IAMUser).to receive(:logingov_uuid).and_return(nil)
 
         VCR.use_cassette('mobile/payment_information/payment_information') do
           VCR.use_cassette('mobile/user/get_facilities') do
@@ -703,6 +710,42 @@ RSpec.describe 'user', type: :request do
             scheduleAppointments
           ]
         )
+      end
+    end
+
+    describe 'vet360 linking' do
+      context 'when user has a vet360_id' do
+        before { iam_sign_in(FactoryBot.build(:iam_user)) }
+
+        it 'does not enqueue vet360 linking job' do
+          expect(Mobile::V0::Vet360LinkingJob).not_to receive(:perform_async)
+
+          VCR.use_cassette('mobile/payment_information/payment_information') do
+            VCR.use_cassette('mobile/user/get_facilities') do
+              VCR.use_cassette('mobile/va_profile/demographics/demographics') do
+                get '/mobile/v1/user', headers: iam_headers
+              end
+            end
+          end
+          expect(response).to have_http_status(:ok)
+        end
+      end
+
+      context 'when user does not have a vet360_id' do
+        before { iam_sign_in(FactoryBot.build(:iam_user, :no_vet360_id)) }
+
+        it 'enqueues vet360 linking job' do
+          expect(Mobile::V0::Vet360LinkingJob).to receive(:perform_async)
+
+          VCR.use_cassette('mobile/payment_information/payment_information') do
+            VCR.use_cassette('mobile/user/get_facilities_no_ids') do
+              VCR.use_cassette('mobile/va_profile/demographics/demographics') do
+                get '/mobile/v1/user', headers: iam_headers
+              end
+            end
+          end
+          expect(response).to have_http_status(:ok)
+        end
       end
     end
   end

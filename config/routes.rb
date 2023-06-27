@@ -69,7 +69,7 @@ Rails.application.routes.draw do
     resources :letters_generator, only: [:index] do
       collection do
         get 'beneficiary', to: 'letters_generator#beneficiary'
-        get 'download/:id', to: 'letters_generator#download'
+        post 'download/:id', to: 'letters_generator#download'
       end
     end
 
@@ -135,7 +135,9 @@ Rails.application.routes.draw do
       resources :burial_claims, only: %i[create show]
     end
 
-    resources :benefits_claims, only: %i[index show]
+    resources :benefits_claims, only: %i[index show] do
+      post :submit5103, on: :member
+    end
 
     get 'claim_letters', to: 'claim_letters#index'
     get 'claim_letters/:document_id', to: 'claim_letters#show'
@@ -430,7 +432,7 @@ Rails.application.routes.draw do
   mount DebtsApi::Engine, at: '/debts_api'
   mount DhpConnectedDevices::Engine, at: '/dhp_connected_devices'
   mount FacilitiesApi::Engine, at: '/facilities_api'
-  mount FormsApi::Engine, at: '/forms_api'
+  mount SimpleFormsApi::Engine, at: '/simple_forms_api'
   mount HealthQuest::Engine, at: '/health_quest'
   mount IncomeLimits::Engine, at: '/income_limits'
   mount MebApi::Engine, at: '/meb_api'

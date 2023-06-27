@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2023_05_12_221434) do
+ActiveRecord::Schema.define(version: 2023_06_14_144145) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "btree_gin"
@@ -831,6 +831,18 @@ ActiveRecord::Schema.define(version: 2023_05_12_221434) do
     t.index ["id", "type"], name: "index_saved_claims_on_id_and_type"
   end
 
+  create_table "service_account_configs", force: :cascade do |t|
+    t.string "service_account_id", null: false
+    t.text "description", null: false
+    t.text "scopes", null: false, array: true
+    t.string "access_token_audience", null: false
+    t.interval "access_token_duration", null: false
+    t.string "certificates", array: true
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["service_account_id"], name: "index_service_account_configs_on_service_account_id", unique: true
+  end
+
   create_table "spool_file_events", force: :cascade do |t|
     t.integer "rpo"
     t.integer "number_of_submissions"
@@ -899,7 +911,7 @@ ActiveRecord::Schema.define(version: 2023_05_12_221434) do
   end
 
   create_table "std_zipcodes", force: :cascade do |t|
-    t.integer "zip_code", null: false
+    t.string "zip_code", null: false
     t.integer "zip_classification_id"
     t.integer "preferred_zip_place_id"
     t.integer "state_id", null: false

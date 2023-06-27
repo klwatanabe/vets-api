@@ -19,10 +19,12 @@ module CopayNotifications
       email_address = person_resp.person&.emails&.first&.email_address || backup_email
 
       if email_address
+        StatsD.increment('api.copay_notifications.new_statement.vet_360.success')
         send_email(email_address, template_id, personalisation)
       else
+        StatsD.increment('api.copay_notifications.new_statement.vet_360.failure')
         log_exception_to_sentry(CopayNotifications::ProfileMissingEmail.new(vet360_id), {},
-                                { error: :mcp_notification_email_job })
+                                { error: :mcp_notification_email_job }, 'info')
       end
     rescue Common::Exceptions::BackendServiceException => e
       if e.status_code == 400

@@ -57,8 +57,10 @@ module Form526RapidReadyForDecisionConcern
     read_metadata(:pdf_guid).present?
   end
 
-  Uploader = RapidReadyForDecision::FastTrackPdfUploadManager
-  PDF_FILENAME_REGEX = /#{Uploader::DOCUMENT_NAME_PREFIX}.*#{Uploader::DOCUMENT_NAME_SUFFIX}/
+  DOCUMENT_NAME_PREFIX = 'VAMC'
+  DOCUMENT_NAME_SUFFIX = 'Rapid_Decision_Evidence'
+  PDF_FILENAME_REGEX = /#{DOCUMENT_NAME_PREFIX}.*#{DOCUMENT_NAME_SUFFIX}/
+  RRD_CODE = 'RRD'
 
   # @return if an RRD pdf has been included as a file to upload
   def rrd_pdf_added_for_uploading?
@@ -70,7 +72,7 @@ module Form526RapidReadyForDecisionConcern
   def rrd_special_issue_set?
     disabilities = form.dig('form526', 'form526', 'disabilities')
     disabilities.any? do |disability|
-      disability['specialIssues']&.include?(RapidReadyForDecision::RrdSpecialIssueManager::RRD_CODE)
+      disability['specialIssues']&.include?(RRD_CODE)
     end
   end
 
@@ -112,22 +114,28 @@ module Form526RapidReadyForDecisionConcern
     }
 
     classification = classify_by_diagnostic_code(params)
-    update_form_with_classification(classification['classification_code']) if classification.present?
+    Rails.logger.info('CLassified 526Submission', id:, saved_claim_id:, classification:)
+    update_form_with_classification_code(classification['classification_code']) if classification.present?
   end
 
-  # check claims
   def classify_by_diagnostic_code(params)
     vro_client = VirtualRegionalOffice::Client.new
     response = vro_client.classify_contention_by_diagnostic_code(params)
     response.body
   end
 
-  def update_form_with_classification(_classification_code)
-    # TODO: update form[FORM_526] to include the classification code
+  def update_form_with_classification_code(classification_code)
+    form[Form526Submission::FORM_526]['form526']['disabilities'].each do |disability|
+      disability['classificationCode'] = classification_code
+    end
+
+    update!(form_json: form.to_json)
+    invalidate_form_hash
   end
 
   def send_post_evss_notifications!
     conditionally_notify_mas
+    Rails.logger.info('Submitted 526Submission to eVSS', id:, saved_claim_id:, submitted_claim_id:)
   end
 
   # return whether all disabilities on this form are rated as not service-connected
