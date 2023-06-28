@@ -9,7 +9,7 @@ class ClaimDocumentation::Uploader < VetsShrine
   plugin :storage_from_config, settings: Settings.shrine.claims
   plugin :activerecord, callbacks: false
   plugin :validate_unlocked_pdf
-  plugin :store_dimensions
+  plugin :store_dimensions, analyzer: :mini_magick
 
   Attacher.validate do
     validate_virus_free
