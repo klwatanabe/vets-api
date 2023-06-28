@@ -243,7 +243,7 @@ module Swagger
         end
       end
 
-      swagger_path '/v0/medical_copays/send_new_statements_notifications' do
+      swagger_path '/v0/medical_copays/send_statement_notifications' do
         operation :post do
           key :description, 'Endpoint to trigger notifications from new statements'
           key :operationId, 'sendNewStatementsNotifications'
@@ -271,7 +271,7 @@ module Swagger
               key :type, :object
 
               property :status, type: :integer, example: 200
-              property :message, type: :string, example: 'Successfully sent notifications'
+              property :message, type: :string, example: 'Parsing and sending notifications'
             end
           end
         end

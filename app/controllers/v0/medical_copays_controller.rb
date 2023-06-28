@@ -2,11 +2,14 @@
 
 module V0
   class MedicalCopaysController < ApplicationController
-    before_action(except: :send_new_statements_notifications) { authorize :medical_copays, :access? }
+    before_action(except: :send_statement_notifications) { authorize :medical_copays, :access? }
+    before_action(only: :send_statement_notifications) { authorize :medical_copays, :access_notifications? }
 
-    skip_before_action :verify_authenticity_token, only: [:send_new_statements_notifications]
-    skip_before_action :authenticate, only: [:send_new_statements_notifications]
-    skip_after_action :set_csrf_header, only: [:send_new_statements_notifications]
+    before_action :authorize_vbs_api, only: [:send_statement_notifications]
+
+    skip_before_action :verify_authenticity_token, only: [:send_statement_notifications]
+    skip_before_action :authenticate, only: [:send_statement_notifications]
+    skip_after_action :set_csrf_header, only: [:send_statement_notifications]
 
     rescue_from ::MedicalCopays::VBS::Service::StatementNotFound, with: :render_not_found
 
@@ -27,11 +30,24 @@ module V0
       )
     end
 
-    def send_new_statements_notifications
-      render json: vbs_service.send_new_statements_notifications(params[:statements])
+    def send_statement_notifications
+      vbs_service.send_statement_notifications(params[:statements])
+
+      render json: { message: 'Parsing and sending notifications' }, status: :ok
     end
 
     private
+
+    def authorization_error
+      Common::Exceptions::Unauthorized.new(detail: 'Invalid API key')
+    end
+
+    def authorize_vbs_api
+      request_key = request.headers['apiKey']
+      raise authorization_error if request_key.blank?
+
+      raise authorization_error unless request_key == Settings.mcp.vbs_client_key
+    end
 
     def statement_params
       params.permit(:file_name)

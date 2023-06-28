@@ -64,7 +64,7 @@ module Swagger
                       routing_number
                     ]
                     property :name, type: :string, example: 'WELLS FARGO BANK', description: 'Bank name'
-                    property :account_type, type: :string, enum: %w[CHECKING SAVINGS], example: 'CHECKING', description: 'Bank account type'
+                    property :account_type, type: :string, enum: %w[Checking Savings], example: 'Checking', description: 'Bank account type'
                     property :account_number, type: :string, example: '******7890', description: 'Bank account number (masked)'
                     property :routing_number, type: :string, example: '*****0503', description: 'Bank routing number (masked)'
                   end
@@ -74,14 +74,14 @@ module Swagger
           end
 
           response 400 do
-            key :description, ' Bad Request'
+            key :description, 'Bad Request'
             schema do
               key :required, [:errors]
 
               property :errors do
                 key :type, :array
                 items do
-                  key :required, %i[title detail code status source]
+                  key :required, %i[title detail code source]
                   property :title, type: :string,
                                    example: 'Invalid field value',
                                    description: 'Error title'
@@ -89,14 +89,11 @@ module Swagger
                                     example: 'getDirectDeposit.icn size must be between 17 and 17, getDirectDeposit.icn must match \"^\\d{10}V\\d{6}$\"',
                                     description: 'Description of error (optional)'
                   property :code, type: :string,
-                                  example: 'LIGHTHOUSE_DIRECT_DEPOSIT400',
+                                  example: 'cnp.payment.icn.invalid',
                                   description: 'Service name with code appended'
                   property :source, type: %i[string object],
                                     example: 'Lighthouse Direct Deposit',
                                     description: 'Service name'
-                  property :status, type: :integer,
-                                    example: 400,
-                                    description: 'http status code'
                 end
               end
             end
@@ -110,69 +107,13 @@ module Swagger
               property :errors do
                 key :type, :array
                 items do
-                  key :required, %i[title detail code status source]
+                  key :required, %i[title detail code source]
                   property :title, type: :string, example: 'Invalid token.', description: 'Error title'
                   property :detail, type: %i[string null], description: 'Description of error (optional)'
-                  property :code, type: :string, example: 'LIGHTHOUSE_DIRECT_DEPOSIT401',
-                                  description: 'Service name with code appended'
+                  property :code, type: :string, example: 'cnp.payment.invalid.token',
+                                  description: 'Error code'
                   property :source, type: %i[string object], example: 'Lighthouse Direct Deposit',
                                     description: 'Service name'
-                  property :status, type: :integer, example: 401, description: 'http status code'
-                end
-              end
-            end
-          end
-
-          response 403 do
-            key :description, 'Forbidden'
-            schema do
-              key :type, :object
-              property(:data) do
-                key :type, :object
-                property :id, type: :string
-                property :type, type: :string
-                property :attributes do
-                  key :type, :object
-
-                  property :control_information do
-                    key :required, %i[
-                      can_update_direct_deposit
-                      is_corp_available
-                      is_corp_rec_found
-                      has_no_bdn_payments
-                      has_identity
-                      has_index
-                      is_competent
-                      has_mailing_address
-                      has_no_fiduciary_assigned
-                      is_not_deceased
-                      has_payment_address
-                    ]
-                    property :can_update_direct_deposit, type: :boolean, example: false, description: ''
-                    property :is_corp_available, type: :boolean, example: false, description: ''
-                    property :is_corp_rec_found, type: :boolean, example: false, description: ''
-                    property :has_no_bdn_payments, type: :boolean, example: false, description: ''
-                    property :has_identity, type: :boolean, example: false, description: ''
-                    property :has_index, type: :boolean, example: false, description: ''
-                    property :is_competent, type: :boolean, example: false, description: ''
-                    property :has_mailing_addres, type: :boolean, example: false, description: ''
-                    property :has_no_fiduciary_assigne, type: :boolean, example: false, description: ''
-                    property :is_not_decease, type: :boolean, example: false, description: ''
-                    property :has_payment_address, type: :boolean, example: false, description: ''
-                  end
-
-                  property :payment_account do
-                    key :required, %i[
-                      name
-                      account_type
-                      account_number
-                      routing_number
-                    ]
-                    property :name, type: :string, example: 'WELLS FARGO BANK', description: 'Bank name'
-                    property :account_type, type: :string, enum: %w[CHECKING SAVINGS], example: 'CHECKING', description: 'Bank account type'
-                    property :account_number, type: :string, example: '******7890', description: 'Bank account number (masked)'
-                    property :routing_number, type: :string, example: '*****0503', description: 'Bank routing number (masked)'
-                  end
                 end
               end
             end
@@ -186,35 +127,13 @@ module Swagger
               property :errors do
                 key :type, :array
                 items do
-                  key :required, %i[title detail code status source]
+                  key :required, %i[title detail code source]
                   property :title, type: :string, example: 'Person for ICN not found', description: 'Error title'
                   property :detail, type: :string, example: 'No data found for ICN', description: 'Description of error (optional)'
-                  property :code, type: :string, example: 'LIGHTHOUSE_DIRECT_DEPOSIT404',
+                  property :code, type: :string, example: 'cnp.payment.icn.not.found',
                                   description: 'Service name with code appended'
                   property :source, type: %i[string object], example: 'Lighthouse Direct Deposit',
                                     description: 'Service name'
-                  property :status, type: :integer, example: 404, description: 'http status code'
-                end
-              end
-            end
-          end
-
-          response 502 do
-            key :description, 'Bad Gateway'
-            schema do
-              key :required, [:errors]
-
-              property :errors do
-                key :type, :array
-                items do
-                  key :required, %i[title detail code status source]
-                  property :title, type: :string, example: 'Required Backend Connection Error', description: 'Error title'
-                  property :detail, type: :string, example: 'e9e04329-b211-11ed-9449-732003342465', description: 'Description of error (optional)'
-                  property :code, type: :string, example: 'LIGHTHOUSE_DIRECT_DEPOSIT502',
-                                  description: 'Service name with code appended'
-                  property :source, type: %i[string object], example: 'Lighthouse Direct Deposit',
-                                    description: 'Service name'
-                  property :status, type: :integer, example: 502, description: 'http status code'
                 end
               end
             end
@@ -290,7 +209,7 @@ module Swagger
                       routing_number
                     ]
                     property :name, type: :string, example: 'WELLS FARGO BANK', description: 'Bank name'
-                    property :account_type, type: :string, enum: %w[CHECKING SAVINGS], example: 'CHECKING', description: 'Bank account type'
+                    property :account_type, type: :string, enum: %w[Checking Savings], example: 'Checking', description: 'Bank account type'
                     property :account_number, type: :string, example: '******7890', description: 'Bank account number (masked)'
                     property :routing_number, type: :string, example: '*****0503', description: 'Bank routing number (masked)'
                   end
@@ -307,12 +226,11 @@ module Swagger
               property :errors do
                 key :type, :array
                 items do
-                  key :required, %i[title detail code status source]
+                  key :required, %i[title detail code source]
                   property :title, type: :string, example: 'Bad Request', description: 'Error title'
                   property :detail, type: :string, example: 'Routing number related to potential fraud', description: 'Description of error (optional)'
                   property :code, type: :string, example: 'cnp.payment.routing.number.fraud.message', description: 'Service name with code appended'
                   property :source, type: %i[string object], example: 'Lighthouse Direct Deposit', description: 'Service name'
-                  property :status, type: :integer, example: 400, description: 'http status code'
                 end
               end
             end

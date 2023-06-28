@@ -7,6 +7,7 @@ class AppealsApi::V2::DecisionReviews::SupplementalClaimsController < AppealsApi
   include AppealsApi::StatusSimulation
   include AppealsApi::CharacterUtilities
   include AppealsApi::MPIVeteran
+  include AppealsApi::Schemas
 
   skip_before_action :authenticate
   before_action :validate_index_headers, only: %i[index]
@@ -14,13 +15,9 @@ class AppealsApi::V2::DecisionReviews::SupplementalClaimsController < AppealsApi
   before_action :validate_json_schema, only: %i[create validate]
 
   FORM_NUMBER = '200995'
+  API_VERSION = 'V2'
   MODEL_ERROR_STATUS = 422
-  HEADERS = JSON.parse(
-    File.read(
-      AppealsApi::Engine.root.join('config/schemas/v2/200995_headers.json')
-    )
-  )['definitions']['scCreateParameters']['properties'].keys
-  SCHEMA_ERROR_TYPE = Common::Exceptions::DetailedSchemaErrors
+  SCHEMA_OPTIONS = { schema_version: 'v2', api_name: 'decision_reviews' }.freeze
   ALLOWED_COLUMNS = %i[id status code detail created_at updated_at].freeze
   ICN_HEADER = 'X-VA-ICN'
   ICN_REGEX = /^[0-9]{10}V[0-9]{6}$/
@@ -38,7 +35,7 @@ class AppealsApi::V2::DecisionReviews::SupplementalClaimsController < AppealsApi
       form_data: @json_body,
       source: request_headers['X-Consumer-Username'].presence&.strip,
       evidence_submission_indicated: evidence_submission_indicated?,
-      api_version: 'V2',
+      api_version: self.class::API_VERSION,
       veteran_icn: request_headers['X-VA-ICN']
     )
 
@@ -58,12 +55,7 @@ class AppealsApi::V2::DecisionReviews::SupplementalClaimsController < AppealsApi
   end
 
   def schema
-    response = AppealsApi::JsonSchemaToSwaggerConverter.remove_comments(
-      AppealsApi::FormSchemas.new(
-        SCHEMA_ERROR_TYPE,
-        schema_version: 'v2'
-      ).schema(self.class::FORM_NUMBER)
-    )
+    response = AppealsApi::JsonSchemaToSwaggerConverter.remove_comments(form_schema)
 
     unless Flipper.enabled?(:decision_review_sc_pact_act_boolean)
       response.tap do |s|
@@ -86,6 +78,8 @@ class AppealsApi::V2::DecisionReviews::SupplementalClaimsController < AppealsApi
 
   private
 
+  def header_names = headers_schema['definitions']['scCreateParameters']['properties'].keys
+
   def validate_index_headers
     validation_errors = []
 
@@ -99,22 +93,8 @@ class AppealsApi::V2::DecisionReviews::SupplementalClaimsController < AppealsApi
   end
 
   def validate_json_schema
-    validate_json_schema_for_headers
-    validate_json_schema_for_body
-  end
-
-  def validate_json_schema_for_headers
-    AppealsApi::FormSchemas.new(
-      SCHEMA_ERROR_TYPE,
-      schema_version: 'v2'
-    ).validate!("#{self.class::FORM_NUMBER}_HEADERS", request_headers)
-  end
-
-  def validate_json_schema_for_body
-    AppealsApi::FormSchemas.new(
-      SCHEMA_ERROR_TYPE,
-      schema_version: 'v2'
-    ).validate!(self.class::FORM_NUMBER, @json_body)
+    validate_headers(request_headers)
+    validate_form_data(@json_body)
   end
 
   def validation_success
@@ -129,7 +109,7 @@ class AppealsApi::V2::DecisionReviews::SupplementalClaimsController < AppealsApi
   end
 
   def request_headers
-    self.class::HEADERS.index_with { |key| request.headers[key] }.compact
+    header_names.index_with { |key| request.headers[key] }.compact
   end
 
   def render_model_errors(model)

@@ -6,12 +6,8 @@ module AppealsApi::NoticeOfDisagreements::V0
   class NoticeOfDisagreementsController < AppealsApi::V2::DecisionReviews::NoticeOfDisagreementsController
     include AppealsApi::OpenidAuth
 
-    FORM_NUMBER = '10182_WITH_SHARED_REFS'
-    HEADERS = JSON.parse(
-      File.read(
-        AppealsApi::Engine.root.join('config/schemas/v2/10182_with_shared_refs_headers.json')
-      )
-    )['definitions']['nodCreateParameters']['properties'].keys
+    API_VERSION = 'V0'
+    SCHEMA_OPTIONS = { schema_version: 'v0', api_name: 'notice_of_disagreements' }.freeze
 
     OAUTH_SCOPES = {
       GET: %w[
@@ -32,14 +28,7 @@ module AppealsApi::NoticeOfDisagreements::V0
     }.freeze
 
     def schema
-      response = AppealsApi::JsonSchemaToSwaggerConverter.remove_comments(
-        AppealsApi::FormSchemas.new(
-          SCHEMA_ERROR_TYPE,
-          schema_version: 'v2'
-        ).schema(self.class::FORM_NUMBER)
-      )
-
-      render json: response
+      render json: AppealsApi::JsonSchemaToSwaggerConverter.remove_comments(form_schema)
     end
 
     private

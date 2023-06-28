@@ -6,8 +6,8 @@ module Mobile
       class LetterInfo
         def parse(letter_info)
           Mobile::V0::LetterInfo.new(
-            benefit_information: benefit_information(letter_info[:benefit_information]),
-            military_service: military_service(letter_info[:military_services])
+            benefit_information: benefit_information(letter_info[:benefitInformation]),
+            military_service: military_service(letter_info[:militaryService])
           )
         end
 
@@ -15,18 +15,18 @@ module Mobile
 
         def benefit_information(benefits)
           BenefitInformation.new(
-            award_effective_date: benefits[:award_effective_date_time],
-            has_chapter_35_eligibility: benefits[:chapter35_eligibility],
-            monthly_award_amount: benefits.dig(:monthly_award_amount, :value).to_f,
-            service_connected_percentage: benefits[:service_connected_percentage],
-            has_death_result_of_disability: benefits[:has_death_result_of_disability],
-            has_survivors_indemnity_compensation_award: benefits[:has_survivors_indemnity_compensation_award],
-            has_survivors_pension_award: benefits[:has_survivors_pension_award],
-            has_adapted_housing: benefits[:adapted_housing],
-            has_individual_unemployability_granted: benefits[:individual_unemployability_granted],
-            has_non_service_connected_pension: benefits[:non_service_connected_pension],
-            has_service_connected_disabilities: benefits[:service_connected_disabilities],
-            has_special_monthly_compensation: benefits[:special_monthly_compensation]
+            award_effective_date: benefits[:awardEffectiveDate],
+            has_chapter35_eligibility: benefits[:hasChapter35Eligibility],
+            monthly_award_amount: benefits[:monthlyAwardAmount].to_f,
+            service_connected_percentage: benefits[:serviceConnectedPercentage],
+            has_death_result_of_disability: benefits[:hasDeathResultOfDisability],
+            has_survivors_indemnity_compensation_award: benefits[:hasSurvivorsIndemnityCompensationAward],
+            has_survivors_pension_award: benefits[:hasSurvivorsPensionAward],
+            has_adapted_housing: benefits[:hasAdaptedHousing],
+            has_individual_unemployability_granted: benefits[:hasIndividualUnemployabilityGranted],
+            has_non_service_connected_pension: benefits[:hasNonServiceConnectedPension],
+            has_service_connected_disabilities: benefits[:hasServiceConnectedDisabilities],
+            has_special_monthly_compensation: benefits[:hasSpecialMonthlyCompensation]
           )
         end
 
@@ -34,9 +34,9 @@ module Mobile
           military_services.map do |military_service|
             {
               branch: military_service[:branch],
-              characterOfService: military_service[:character_of_service],
-              enteredDate: military_service[:entered_date_time],
-              releasedDate: military_service[:released_date_time]
+              character_of_service: military_service[:characterOfService],
+              entered_date: military_service[:enteredDate],
+              released_date: military_service[:releasedDate]
             }
           end
         end

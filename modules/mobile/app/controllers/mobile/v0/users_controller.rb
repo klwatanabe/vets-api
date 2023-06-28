@@ -1,11 +1,10 @@
 # frozen_string_literal: true
 
-require_dependency 'mobile/application_controller'
-
 module Mobile
   module V0
     class UsersController < ApplicationController
       after_action :pre_cache_resources, only: :show
+      after_action :link_user_with_vet360, only: :show, if: -> { @current_user.vet360_id.blank? }
 
       def show
         map_logingov_to_idme
@@ -39,9 +38,12 @@ module Mobile
       # solution so old app versions will still treat LOGINGOV accounts as multifactor
       def map_logingov_to_idme
         if @current_user.identity.sign_in[:service_name].include? 'LOGINGOV'
-          Rails.logger.info('LOGINGOV getting remapped!!') # REMOVE THIS ONCE LOGINGOV IS CONFIRMED WORKING CORRECTLY
           @current_user.identity.sign_in[:service_name] = 'oauth_IDME'
         end
+      end
+
+      def link_user_with_vet360
+        Mobile::V0::Vet360LinkingJob.perform_async(@current_user.uuid)
       end
     end
   end

@@ -36,7 +36,13 @@ module Common
       undefined = REQ_CLASS_INSTANCE_VARS.select { |class_var| send(class_var).nil? }
       raise NoMethodError, "Required class methods #{undefined.join(', ')} are not defined" if undefined.any?
 
-      super(attributes)
+      begin
+        super(attributes)
+      rescue NoMethodError
+        Rails.logger.error('attributes failure: attributes')
+        raise
+      end
+
       @persisted = persisted
       run_callbacks :initialize
     end
@@ -47,6 +53,13 @@ module Common
 
       attributes = Oj.load(response)
       return nil if attributes.blank?
+
+      unless attributes.is_a?(Hash)
+        Rails.logger.info("redis_namespace: #{redis_namespace.inspect} - response: #{response}
+                            - oj parsed attributes: #{attributes} redis_key: #{redis_key}")
+
+        nil if redis_key.empty? # Case where session[:token] is empty and response returns 1
+      end
 
       object = new(attributes, true)
       if object.valid?
@@ -67,7 +80,7 @@ module Common
     end
 
     def self.exists?(redis_key = nil)
-      redis_namespace.exists(redis_key)
+      redis_namespace.exists?(redis_key)
     end
 
     def self.create(attributes)

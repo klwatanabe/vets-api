@@ -6,24 +6,21 @@ module Mobile
       @now = DateTime.now.utc
     end
 
-    def fetch_appointments(user:, start_date: nil, end_date: nil, fetch_cache: true)
+    def fetch_appointments(user:, start_date: nil, end_date: nil, fetch_cache: true, cache_on_failures: true)
       appointments = nil
       search_start_date = [start_date, latest_allowable_cache_start_date].compact.min
       search_end_date = [end_date, earliest_allowable_cache_end_date].compact.max
 
       if fetch_cache?(search_start_date, search_end_date, fetch_cache)
         appointments = Mobile::V0::Appointment.get_cached(user)
-        if appointments
-          Rails.logger.info('mobile appointments cache fetch', user_uuid: user.uuid)
-          return appointments
-        end
+        return [appointments, nil] if appointments
       end
 
-      appointments = fetch_from_external_service(user, search_start_date, search_end_date)
-      Mobile::V0::Appointment.set_cached(user, appointments)
+      appointments, failures = fetch_from_external_service(user, search_start_date, search_end_date)
 
-      Rails.logger.info('mobile appointments service fetch', user_uuid: user.uuid)
-      appointments
+      Mobile::V0::Appointment.set_cached(user, appointments) if cache_on_failures == true || failures.blank?
+
+      [appointments, failures]
     end
 
     # the mobile client can request appointments for as far back as the beginning of last year.
@@ -54,19 +51,8 @@ module Mobile
     end
 
     def dates_within_cache_range?(start_date, end_date)
-      within_range = start_date.to_date >= latest_allowable_cache_start_date.to_date &&
-                     end_date.to_date <= earliest_allowable_cache_end_date.to_date
-      # this should not be possible from the mobile app.
-      unless within_range
-        dates = {
-          requested_start_date: start_date,
-          requested_end_date: end_date,
-          latest_allowable_cache_start_date:,
-          earliest_allowable_cache_end_date:
-        }
-        Rails.logger.error('Appointments fetch request outside of allowable cache range', dates)
-      end
-      within_range
+      start_date.to_date >= latest_allowable_cache_start_date.to_date &&
+        end_date.to_date <= earliest_allowable_cache_end_date.to_date
     end
 
     def appointments_proxy(user)

@@ -6,8 +6,8 @@ require AppealsApi::Engine.root.join('spec', 'spec_helper.rb')
 describe AppealsApi::NoticeOfDisagreement, type: :model do
   include FixtureHelpers
 
-  let(:auth_headers) { fixture_as_json 'valid_10182_headers.json', version: 'v1' }
-  let(:form_data) { fixture_as_json 'valid_10182.json', version: 'v1' }
+  let(:auth_headers) { fixture_as_json 'decision_reviews/v1/valid_10182_headers.json' }
+  let(:form_data) { fixture_as_json 'decision_reviews/v1/valid_10182.json' }
   let(:notice_of_disagreement) do
     review_option = form_data['data']['attributes']['boardReviewOption']
     build(:notice_of_disagreement, form_data:, auth_headers:, board_review_option: review_option)
@@ -18,6 +18,17 @@ describe AppealsApi::NoticeOfDisagreement, type: :model do
 
     it('has no errors') do
       expect(notice_of_disagreement.errors).to be_empty
+    end
+  end
+
+  describe '#create' do
+    let(:nod) do
+      bro = form_data['data']['attributes']['boardReviewOption']
+      create(:notice_of_disagreement, form_data:, auth_headers:, board_review_option: bro)
+    end
+
+    it 'saves consumer benefit type to metadata' do
+      expect(nod.metadata['central_mail_business_line']).to eq 'BVA'
     end
   end
 
@@ -51,7 +62,7 @@ describe AppealsApi::NoticeOfDisagreement, type: :model do
     end
 
     context "when board review option 'direct_review' or 'evidence_submission' is selected" do
-      let(:form_data) { fixture_as_json 'valid_10182_minimum.json', version: 'v1' }
+      let(:form_data) { fixture_as_json 'decision_reviews/v1/valid_10182_minimum.json' }
 
       context 'when hearing type provided' do
         before do
@@ -238,8 +249,8 @@ describe AppealsApi::NoticeOfDisagreement, type: :model do
       end
 
       describe '#validate_requesting_extension' do
-        let(:auth_headers) { fixture_as_json 'valid_10182_headers.json', version: 'v2' }
-        let(:form_data) { fixture_as_json 'valid_10182_minimum.json', version: 'v2' }
+        let(:auth_headers) { fixture_as_json 'decision_reviews/v2/valid_10182_headers.json' }
+        let(:form_data) { fixture_as_json 'decision_reviews/v2/valid_10182_minimum.json' }
         let(:invalid_notice_of_disagreement) do
           build(:minimal_notice_of_disagreement_v2, form_data:, auth_headers:, api_version: 'v2')
         end

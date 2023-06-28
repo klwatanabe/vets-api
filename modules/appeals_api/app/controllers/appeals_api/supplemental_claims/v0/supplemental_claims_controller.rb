@@ -6,12 +6,8 @@ module AppealsApi::SupplementalClaims::V0
   class SupplementalClaimsController < AppealsApi::V2::DecisionReviews::SupplementalClaimsController
     include AppealsApi::OpenidAuth
 
-    FORM_NUMBER = '200995_WITH_SHARED_REFS'
-    HEADERS = JSON.parse(
-      File.read(
-        AppealsApi::Engine.root.join('config/schemas/v2/200995_with_shared_refs_headers.json')
-      )
-    )['definitions']['scCreateParameters']['properties'].keys
+    API_VERSION = 'V0'
+    SCHEMA_OPTIONS = { schema_version: 'v0', api_name: 'supplemental_claims' }.freeze
 
     OAUTH_SCOPES = {
       GET: %w[veteran/SupplementalClaims.read representative/SupplementalClaims.read system/SupplementalClaims.read],

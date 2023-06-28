@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require_dependency 'mobile/application_controller'
-
 module Mobile
   module V1
     class ImmunizationsController < ApplicationController
@@ -33,12 +31,9 @@ module Mobile
       def immunizations
         immunizations = Mobile::V0::Immunization.get_cached(@current_user) if pagination_params[:use_cache]
 
-        if immunizations
-          Rails.logger.info('mobile immunizations cache fetch', user_uuid: @current_user.uuid)
-        else
+        unless immunizations
           immunizations = immunizations_adapter.parse(service.get_immunizations)
           Mobile::V0::Immunization.set_cached(@current_user, immunizations)
-          Rails.logger.info('mobile immunizations service fetch', user_uuid: @current_user.uuid)
         end
 
         immunizations

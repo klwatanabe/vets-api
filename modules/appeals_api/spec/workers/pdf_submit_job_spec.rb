@@ -158,8 +158,8 @@ RSpec.describe AppealsApi::PdfSubmitJob, type: :job do
 
   it 'sets error status for upstream server error' do
     allow(CentralMail::Service).to receive(:new) { client_stub }
-    allow(faraday_response).to receive(:status).and_return(422)
-    allow(faraday_response).to receive(:body).and_return('')
+    allow(faraday_response).to receive(:status).and_return(500)
+    allow(faraday_response).to receive(:body).and_return('Server Down')
     allow(faraday_response).to receive(:success?).and_return(false)
     capture_body = nil
     expect(client_stub).to receive(:upload) { |arg|
@@ -167,9 +167,14 @@ RSpec.describe AppealsApi::PdfSubmitJob, type: :job do
       faraday_response
     }
 
-    expect do
-      described_class.new.perform(notice_of_disagreement.id, 'AppealsApi::NoticeOfDisagreement')
-    end.to raise_error(AppealsApi::UploadError)
+    expect { described_class.new.perform(notice_of_disagreement.id, 'AppealsApi::NoticeOfDisagreement') }
+      .to(raise_error do |ue|
+        expect(ue).to be_a(AppealsApi::UploadError)
+        expect(ue.code).to eq 'DOC201'
+        expect(ue.upstream_http_resp_status).to eq 500
+        expect(ue.detail).to eq 'Downstream status: 500 - Server Down'
+      end)
+
     expect(capture_body).to be_a(Hash)
     expect(capture_body).to have_key('metadata')
     expect(capture_body).to have_key('document')
@@ -177,13 +182,13 @@ RSpec.describe AppealsApi::PdfSubmitJob, type: :job do
     expect(metadata['uuid']).to eq(notice_of_disagreement.id)
     updated = AppealsApi::NoticeOfDisagreement.find(notice_of_disagreement.id)
     expect(updated.status).to eq('error')
-    expect(updated.code).to eq('DOC104')
+    expect(updated.code).to eq('DOC201')
   end
 
   context 'with a downstream error' do
     before do
       allow(CentralMail::Service).to receive(:new) { client_stub }
-      allow(faraday_response).to receive(:status).and_return(500)
+      allow(faraday_response).to receive(:status).and_return(501)
       allow(faraday_response).to receive(:body).and_return('')
       allow(faraday_response).to receive(:success?).and_return(false)
     end
@@ -208,7 +213,7 @@ RSpec.describe AppealsApi::PdfSubmitJob, type: :job do
             'args' => [notice_of_disagreement.id, 'AppealsApi::NodPdfSubmitWrapper',
                        notice_of_disagreement.created_at.iso8601],
             'error_class' => 'DOC201',
-            'error_message' => 'Downstream status: 500 - ',
+            'error_message' => 'Downstream status: 501 - ',
             'failed_at' => Time.zone.now
           }, notification_type: :error_retry
         ).and_return(messager_instance)
@@ -218,6 +223,36 @@ RSpec.describe AppealsApi::PdfSubmitJob, type: :job do
 
         expect(messager_instance).to have_received(:notify!)
       end
+    end
+  end
+
+  context 'with a duplicate UUID response from Central Mail' do
+    before do
+      allow(CentralMail::Service).to receive(:new) { client_stub }
+      allow(faraday_response).to receive(:status).and_return(400)
+      allow(faraday_response).to receive(:body)
+        .and_return("Document already uploaded with uuid [uuid: #{higher_level_review.id}]")
+      allow(faraday_response).to receive(:success?).and_return(false)
+      expect(client_stub).to receive(:upload).and_return(faraday_response)
+      allow(StatsD).to receive(:increment)
+      allow(Rails.logger).to receive(:warn)
+    end
+
+    it 'sets the appeal status to submitted' do
+      described_class.new.perform(higher_level_review.id, 'AppealsApi::HigherLevelReview', 'V2')
+      expect(higher_level_review.reload.status).to eq('submitted')
+    end
+
+    it 'increments the StatsD duplicate UUID counter' do
+      described_class.new.perform(higher_level_review.id, 'AppealsApi::HigherLevelReview', 'V2')
+      expect(StatsD).to have_received(:increment).with(described_class::STATSD_DUPLICATE_UUID_KEY)
+    end
+
+    it 'logs a duplicate UUID warning' do
+      described_class.new.perform(higher_level_review.id, 'AppealsApi::HigherLevelReview', 'V2')
+      expect(Rails.logger).to have_received(:warn)
+        .with('AppealsApi HlrPdfSubmitWrapper: Duplicate UUID submitted to Central Mail',
+              'uuid' => higher_level_review.id)
     end
   end
 

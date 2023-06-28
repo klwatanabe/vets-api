@@ -17,23 +17,22 @@ module AppealsApi
     attr_readonly :auth_headers
     attr_readonly :form_data
 
+    before_create :assign_metadata
+
     scope :pii_expunge_policy, lambda {
       timeframe = 7.days.ago
       v1.where('updated_at < ? AND status IN (?)', timeframe, COMPLETE_STATUSES + ['success'])
-        .or(v2.where('updated_at < ? AND status IN (?)', timeframe, COMPLETE_STATUSES))
-    }
-
-    scope :v1, lambda {
-      where(api_version: 'V1')
-    }
-
-    scope :v2, lambda {
-      where(api_version: 'V2')
+        .or(v2_or_v0.where('updated_at < ? AND status IN (?)', timeframe, COMPLETE_STATUSES))
     }
 
     scope :stuck_unsubmitted, lambda {
       where('created_at < ? AND status IN (?)', 2.hours.ago, %w[pending submitting])
     }
+
+    scope :v1, -> { where(api_version: 'V1') }
+    scope :v2, -> { where(api_version: 'V2') }
+    scope :v0, -> { where(api_version: 'V0') }
+    scope :v2_or_v0, -> { where(api_version: %w[V2 V0]) }
 
     def self.past?(date)
       date < Time.zone.today
@@ -208,8 +207,10 @@ module AppealsApi
     end
 
     def soc_opt_in
-      # This is no longer optional as of v3 of the PDF
-      pdf_version&.downcase == 'v3' || data_attributes&.dig('socOptIn')
+      # This was removed from the form in PDF version v3 - it is no longer optional.
+      # - In Decision Reviews APIs, it can only be false if the pdf version is older than v3
+      # - In the Higher-Level Reviews API v0, it is no longer part of the schema
+      pdf_version&.downcase == 'v3' || api_version&.downcase == 'v0' || data_attributes&.dig('socOptIn')
     end
 
     def contestable_issues
@@ -317,6 +318,13 @@ module AppealsApi
         'education' => 'EDU',
         'nationalCemeteryAdministration' => 'NCA'
       }[benefit_type]
+    end
+
+    def assign_metadata
+      # retain original incoming non-pii form_data in metadata since this model's form_data is eventually removed
+      self.metadata = { form_data: { benefit_type: } }
+
+      metadata['central_mail_business_line'] = lob
     end
 
     private

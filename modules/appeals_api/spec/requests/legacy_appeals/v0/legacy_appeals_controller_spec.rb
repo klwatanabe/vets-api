@@ -5,7 +5,7 @@ require AppealsApi::Engine.root.join('spec', 'spec_helper.rb')
 
 describe AppealsApi::LegacyAppeals::V0::LegacyAppealsController, type: :request do
   describe('#schema') do
-    let(:path) { '/services/appeals/legacy_appeals/v0/schemas/headers' }
+    let(:path) { '/services/appeals/legacy-appeals/v0/schemas/headers' }
 
     it 'renders the json schema for request headers with shared refs' do
       with_openid_auth(described_class::OAUTH_SCOPES[:GET]) do |auth_header|
@@ -16,7 +16,7 @@ describe AppealsApi::LegacyAppeals::V0::LegacyAppealsController, type: :request 
       expect(JSON.parse(response.body)['description']).to eq(
         'JSON Schema for Legacy Appeals endpoint headers (Decision Reviews API)'
       )
-      expect(response.body).to include('{"$ref":"non_blank_string.json"}')
+      expect(response.body).to include('{"$ref":"nonBlankString.json"}')
     end
 
     it_behaves_like('an endpoint with OpenID auth', scopes: described_class::OAUTH_SCOPES[:GET]) do
@@ -27,7 +27,7 @@ describe AppealsApi::LegacyAppeals::V0::LegacyAppealsController, type: :request 
   end
 
   describe '#index' do
-    let(:path) { '/services/appeals/legacy_appeals/v0/legacy_appeals' }
+    let(:path) { '/services/appeals/legacy-appeals/v0/legacy-appeals' }
     let(:headers) { {} }
     let(:ssn) { '502628285' }
     let(:icn) { '1234567890V012345' }

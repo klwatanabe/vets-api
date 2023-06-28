@@ -12,7 +12,7 @@ module CentralMail
     FILE_NUMBER_REGEX = /^\d{8,9}$/
     INVALID_ZIP_CODE_ERROR_REGEX = /Invalid zipCode/
     MISSING_ZIP_CODE_ERROR_REGEX = /Missing zipCode/
-    NON_FAILING_ERROR_REGEX = /Document already uploaded with uuid/
+    DUPLICATE_UUID_REGEX = /Document already uploaded with uuid/
     INVALID_ZIP_CODE_ERROR_MSG = 'Invalid ZIP Code. ZIP Code must be 5 digits, ' \
                                  'or 9 digits in XXXXX-XXXX format. Specify \'00000\' for non-US addresses.'
     MISSING_ZIP_CODE_ERROR_MSG = 'Missing ZIP Code. ZIP Code must be 5 digits, ' \
@@ -79,11 +79,14 @@ module CentralMail
                  else
                    body
                  end
-        raise error_class.new(code: 'DOC104', detail: "Upstream status: #{status} - #{detail}")
+        raise error_class.new(code: 'DOC104',
+                              detail: "Upstream status: #{status} - #{detail}",
+                              upstream_http_resp_status: status)
       # Defined values: 500
       elsif status.between?(500, 599)
         raise error_class.new(code: 'DOC201',
-                              detail: "Downstream status: #{status} - #{body}")
+                              detail: "Downstream status: #{status} - #{body}",
+                              upstream_http_resp_status: status)
       end
     end
   end

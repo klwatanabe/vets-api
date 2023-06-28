@@ -4,6 +4,7 @@ require 'json_schema/json_api_missing_attribute'
 require 'appeals_api/form_schemas'
 
 class AppealsApi::V2::DecisionReviews::NoticeOfDisagreementsController < AppealsApi::ApplicationController
+  include AppealsApi::Schemas
   include AppealsApi::JsonFormatValidation
   include AppealsApi::StatusSimulation
   include AppealsApi::CharacterUtilities
@@ -16,14 +17,9 @@ class AppealsApi::V2::DecisionReviews::NoticeOfDisagreementsController < Appeals
   before_action :find_notice_of_disagreement, only: %i[show]
 
   FORM_NUMBER = '10182'
-  API_VERSION = 'v2'
+  API_VERSION = 'V2'
   MODEL_ERROR_STATUS = 422
-  HEADERS = JSON.parse(
-    File.read(
-      AppealsApi::Engine.root.join('config/schemas/v2/10182_headers.json')
-    )
-  )['definitions']['nodCreateParameters']['properties'].keys
-  SCHEMA_ERROR_TYPE = Common::Exceptions::DetailedSchemaErrors
+  SCHEMA_OPTIONS = { schema_version: 'v2', api_name: 'decision_reviews' }.freeze
   ALLOWED_COLUMNS = %i[id status code detail created_at updated_at].freeze
   ICN_HEADER = 'X-VA-ICN'
   ICN_REGEX = /^[0-9]{10}V[0-9]{6}$/
@@ -56,12 +52,7 @@ class AppealsApi::V2::DecisionReviews::NoticeOfDisagreementsController < Appeals
 
   def schema
     # TODO: Return full schema after we've validated all Non-Veteran Claimant functionality
-    response = AppealsApi::JsonSchemaToSwaggerConverter.remove_comments(
-      AppealsApi::FormSchemas.new(
-        SCHEMA_ERROR_TYPE,
-        schema_version: 'v2'
-      ).schema(self.class::FORM_NUMBER)
-    )
+    response = AppealsApi::JsonSchemaToSwaggerConverter.remove_comments(form_schema)
     response.tap do |s|
       s.dig(*%w[definitions nodCreate properties data properties attributes properties]).delete('claimant')
     end
@@ -70,6 +61,8 @@ class AppealsApi::V2::DecisionReviews::NoticeOfDisagreementsController < Appeals
   end
 
   private
+
+  def header_names = headers_schema['definitions']['nodCreateParameters']['properties'].keys
 
   def validate_index_headers
     validation_errors = []
@@ -84,22 +77,10 @@ class AppealsApi::V2::DecisionReviews::NoticeOfDisagreementsController < Appeals
   end
 
   def validate_json_schema
-    validate_json_schema_for_headers
-    validate_json_schema_for_body
-  rescue SCHEMA_ERROR_TYPE => e
+    validate_headers(request_headers)
+    validate_form_data(@json_body)
+  rescue Common::Exceptions::DetailedSchemaErrors => e
     render json: { errors: e.errors }, status: :unprocessable_entity
-  end
-
-  def validate_json_schema_for_headers
-    AppealsApi::FormSchemas.new(
-      SCHEMA_ERROR_TYPE,
-      schema_version: API_VERSION
-    ).validate!("#{self.class::FORM_NUMBER}_HEADERS", request_headers)
-  end
-
-  def validate_json_schema_for_body
-    schema = AppealsApi::FormSchemas.new(SCHEMA_ERROR_TYPE, schema_version: API_VERSION)
-    schema.validate!(self.class::FORM_NUMBER, @json_body)
   end
 
   def validation_success
@@ -114,7 +95,7 @@ class AppealsApi::V2::DecisionReviews::NoticeOfDisagreementsController < Appeals
   end
 
   def request_headers
-    self.class::HEADERS.index_with { |key| request.headers[key] }.compact
+    header_names.index_with { |key| request.headers[key] }.compact
   end
 
   def new_notice_of_disagreement
@@ -123,7 +104,7 @@ class AppealsApi::V2::DecisionReviews::NoticeOfDisagreementsController < Appeals
       form_data: @json_body,
       source: request_headers['X-Consumer-Username'].presence&.strip,
       board_review_option: @json_body['data']['attributes']['boardReviewOption'],
-      api_version: API_VERSION,
+      api_version: self.class::API_VERSION,
       veteran_icn: request_headers['X-VA-ICN']
     )
     render_model_errors unless @notice_of_disagreement.validate

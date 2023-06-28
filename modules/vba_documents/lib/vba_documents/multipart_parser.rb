@@ -25,9 +25,8 @@ module VBADocuments
                 else
                   infile
                 end
-        validate_size(input)
         lines = input.each_line(LINE_BREAK).lazy.each_with_index
-        separator = lines.next[0].chomp(LINE_BREAK)
+        separator = consume_first_line(lines)
         loop do
           headers = consume_headers(lines, separator)
           partname = get_partname(headers)
@@ -42,6 +41,13 @@ module VBADocuments
       parts
     end
     # rubocop:enable Metrics/MethodLength
+
+    def self.consume_first_line(lines)
+      lines.next[0].chomp(LINE_BREAK)
+    rescue StopIteration
+      Rails.logger.error('Tempfile was found empty')
+      raise
+    end
 
     def self.base64_encoded?(infile)
       if infile.is_a? StringIO
@@ -78,17 +84,10 @@ module VBADocuments
       parse(decoded_file)
     end
 
-    def self.validate_size(infile)
-      unless infile.size.positive?
-        raise VBADocuments::UploadError.new(code: 'DOC107',
-                                            detail: VBADocuments::UploadError::DOC107)
-      end
-    end
-
     def self.get_partname(headers)
       headers.each do |header|
         name, _, value = header.partition(':')
-        if name == 'Content-Disposition'
+        if name.downcase == 'content-disposition'
           value.split(';').each do |param|
             k, _, v = param.strip.partition('=')
             return v.tr('"', '') if k == 'name'
@@ -102,7 +101,7 @@ module VBADocuments
     def self.get_content_type(headers)
       headers.each do |header|
         name, _, value = header.partition(':')
-        return value.split(';')[0].strip if name == 'Content-Type'
+        return value.split(';')[0].strip if name.downcase == 'content-type'
       end
       raise VBADocuments::UploadError.new(code: 'DOC101',
                                           detail: 'Missing content-type header')

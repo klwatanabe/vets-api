@@ -65,6 +65,7 @@ Mobile::Engine.routes.draw do
 
         resources :folders, only: %i[index show create destroy], defaults: { format: :json } do
           resources :messages, only: [:index], defaults: { format: :json }
+          resources :threads, only: %i[index]
         end
 
         resources :messages, only: %i[show create destroy], defaults: { format: :json } do
@@ -86,5 +87,13 @@ Mobile::Engine.routes.draw do
   namespace :v1 do
     get '/health/immunizations', to: 'immunizations#index'
     get '/user', to: 'users#show'
+
+    scope :messaging do
+      scope :health do
+        resources :messages, only: %i[], defaults: { format: :json } do
+          get :thread, on: :member
+        end
+      end
+    end
   end
 end

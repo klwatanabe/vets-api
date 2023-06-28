@@ -1,18 +1,19 @@
 # frozen_string_literal: true
 
-require_dependency 'vba_documents/upload_validator'
-require_dependency 'vba_documents/payload_manager'
-require_dependency 'vba_documents/multipart_parser'
-
 require 'sidekiq'
 require 'vba_documents/object_store'
+require 'vba_documents/payload_manager'
+require 'vba_documents/pdf_inspector'
 require 'vba_documents/upload_error'
 require 'central_mail/utilities'
+require 'vba_documents/upload_validator'
 
 module VBADocuments
   class UploadProcessor
     include Sidekiq::Worker
     include VBADocuments::UploadValidations
+
+    STATSD_DUPLICATE_UUID_KEY = 'api.vba.document_upload.duplicate_uuid'
 
     # Ensure that multiple jobs for the same GUID aren't spawned,
     # to avoid race condition when parsing the multipart file
@@ -61,6 +62,8 @@ module VBADocuments
       begin
         @upload.update(metadata: @upload.metadata.merge(original_file_metadata(tempfile)))
 
+        validate_payload_size(tempfile)
+
         parts = VBADocuments::MultipartParser.parse(tempfile.path)
         inspector = VBADocuments::PDFInspector.new(pdf: parts)
         @upload.update(uploaded_pdf: inspector.pdf_data)
@@ -70,7 +73,7 @@ module VBADocuments
         validate_metadata(parts[META_PART_NAME], submission_version: @upload.metadata['version'].to_i)
         metadata = perfect_metadata(@upload, parts, timestamp)
 
-        pdf_validator_options = metadata['skipDimensionCheck'] ? { check_page_dimensions: false } : {}
+        pdf_validator_options = VBADocuments::DocumentRequestValidator.pdf_validator_options
         validate_documents(parts, pdf_validator_options)
 
         response = submit(metadata, parts)
@@ -97,6 +100,12 @@ module VBADocuments
         'sha256_checksum' => Digest::SHA256.file(tempfile).hexdigest,
         'md5_checksum' => Digest::MD5.file(tempfile).hexdigest
       }
+    end
+
+    def validate_payload_size(tempfile)
+      unless tempfile.size.positive?
+        raise VBADocuments::UploadError.new(code: 'DOC107', detail: VBADocuments::UploadError::DOC107)
+      end
     end
 
     def handle_gateway_timeout(error)
@@ -136,15 +145,25 @@ module VBADocuments
 
     def process_response(response)
       # record submission attempt, record time and success status to an array
-      if response.success? || response.body.match?(NON_FAILING_ERROR_REGEX) # TODO: GovCIO needs to return this...
-        @upload.update(status: 'received')
-        @upload.track_uploaded_received(:cause, @cause)
+      if response.success?
+        handle_successful_submission
+      elsif response.status == 400 && response.body.match?(DUPLICATE_UUID_REGEX)
+        StatsD.increment(STATSD_DUPLICATE_UUID_KEY)
+        Rails.logger.warn("#{self.class.name}: Duplicate UUID submitted to Central Mail", 'uuid' => @upload.guid)
+        # Treating these as a 'success' is intentional; we have confirmed that when we receive the 'duplicate UUID'
+        # response from Central Mail, this indicates that there was an earlier submission that was successful
+        handle_successful_submission
       elsif response.status == 429 && response.body =~ /UUID already in cache/
         @upload.track_uploaded_received(:uuid_already_in_cache_cause, @cause)
         @upload.track_concurrent_duplicate
       else
         map_error(response.status, response.body, VBADocuments::UploadError)
       end
+    end
+
+    def handle_successful_submission
+      @upload.update(status: 'received')
+      @upload.track_uploaded_received(:cause, @cause)
     end
   end
 end

@@ -40,16 +40,15 @@ Rails.application.reloader.to_prepare do
         # history is captured every 30 seconds by default
         config.retain_history(30)
       end
+
+      if defined?(Sidekiq::Enterprise)
+        require 'periodic_jobs'
+        config.periodic(&PERIODIC_JOBS)
+      end
     end
 
     config.client_middleware do |chain|
       chain.add SidekiqStatsInstrumentation::ClientMiddleware
-    end
-
-    if defined?(Sidekiq::Enterprise)
-      config.periodic do |mgr|
-        mgr.register('0 5 * * 1', 'AppealsApi::WeeklyErrorReport')
-      end
     end
   end
 

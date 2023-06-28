@@ -22,25 +22,12 @@ RSpec.describe VBADocuments::DocumentRequestValidator do
       expect(result.dig(:data, :attributes, :status)).to eq('valid')
     end
 
-    describe 'given a document with large pages' do
-      let(:fixture_name) { '18x22.pdf' }
+    describe 'given a document with oversized pages' do
+      let(:fixture_name) { '10x102.pdf' }
 
-      context 'when vba_documents_skip_dimension_check flag is off' do
-        before { Flipper.disable(:vba_documents_skip_dimension_check) }
-
-        it 'considers the PDF invalid' do
-          errors = result[:errors]
-          expect(errors.length).to eq(1)
-          expect(errors.first[:status]).to eq('422')
-        end
-      end
-
-      context 'when vba_documents_skip_dimension_check flag is on' do
-        before { Flipper.enable(:vba_documents_skip_dimension_check) }
-
-        it 'considers the PDF valid' do
-          expect(result.dig(:data, :attributes, :status)).to eq('valid')
-        end
+      it 'errors' do
+        expect(result[:errors].length).to eq(1)
+        expect(result[:errors].first[:status]).to eq('422')
       end
     end
 

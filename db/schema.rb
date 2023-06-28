@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2023_04_12_000222) do
+ActiveRecord::Schema.define(version: 2023_06_16_145330) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "btree_gin"
@@ -270,6 +270,15 @@ ActiveRecord::Schema.define(version: 2023_04_12_000222) do
     t.index ["source"], name: "index_claims_api_auto_established_claims_on_source"
   end
 
+  create_table "claims_api_claim_submissions", force: :cascade do |t|
+    t.uuid "claim_id", null: false
+    t.string "claim_type", null: false
+    t.string "consumer_label", null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["claim_id"], name: "index_claims_api_claim_submissions_on_claim_id"
+  end
+
   create_table "claims_api_evidence_waiver_submissions", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.text "auth_headers_ciphertext"
     t.text "encrypted_kms_key"
@@ -333,6 +342,8 @@ ActiveRecord::Schema.define(version: 2023_04_12_000222) do
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
     t.text "logout_redirect_uri"
+    t.boolean "pkce"
+    t.string "certificates", array: true
     t.index ["client_id"], name: "index_client_configs_on_client_id", unique: true
   end
 
@@ -620,6 +631,28 @@ ActiveRecord::Schema.define(version: 2023_04_12_000222) do
     t.index ["edipi"], name: "index_gibs_not_found_users_on_edipi"
   end
 
+  create_table "gmt_thresholds", force: :cascade do |t|
+    t.integer "effective_year", null: false
+    t.string "state_name", null: false
+    t.string "county_name", null: false
+    t.integer "fips", null: false
+    t.integer "trhd1", null: false
+    t.integer "trhd2", null: false
+    t.integer "trhd3", null: false
+    t.integer "trhd4", null: false
+    t.integer "trhd5", null: false
+    t.integer "trhd6", null: false
+    t.integer "trhd7", null: false
+    t.integer "trhd8", null: false
+    t.integer "msa", null: false
+    t.string "msa_name"
+    t.integer "version", null: false
+    t.datetime "created", null: false
+    t.datetime "updated"
+    t.string "created_by"
+    t.string "updated_by"
+  end
+
   create_table "health_care_applications", id: :serial, force: :cascade do |t|
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
@@ -807,6 +840,18 @@ ActiveRecord::Schema.define(version: 2023_04_12_000222) do
     t.index ["id", "type"], name: "index_saved_claims_on_id_and_type"
   end
 
+  create_table "service_account_configs", force: :cascade do |t|
+    t.string "service_account_id", null: false
+    t.text "description", null: false
+    t.text "scopes", null: false, array: true
+    t.string "access_token_audience", null: false
+    t.interval "access_token_duration", null: false
+    t.string "certificates", array: true
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["service_account_id"], name: "index_service_account_configs_on_service_account_id", unique: true
+  end
+
   create_table "spool_file_events", force: :cascade do |t|
     t.integer "rpo"
     t.integer "number_of_submissions"
@@ -816,6 +861,75 @@ ActiveRecord::Schema.define(version: 2023_04_12_000222) do
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
     t.index ["rpo", "filename"], name: "index_spool_file_events_uniqueness", unique: true
+  end
+
+  create_table "std_counties", force: :cascade do |t|
+    t.string "name", null: false
+    t.integer "county_number", null: false
+    t.string "description", null: false
+    t.integer "state_id", null: false
+    t.integer "version", null: false
+    t.datetime "created", null: false
+    t.datetime "updated"
+    t.string "created_by"
+    t.string "updated_by"
+  end
+
+  create_table "std_incomethresholds", force: :cascade do |t|
+    t.integer "income_threshold_year", null: false
+    t.integer "exempt_amount", null: false
+    t.integer "medical_expense_deductible", null: false
+    t.integer "child_income_exclusion", null: false
+    t.integer "dependent", null: false
+    t.integer "add_dependent_threshold", null: false
+    t.integer "property_threshold", null: false
+    t.integer "pension_threshold"
+    t.integer "pension_1_dependent"
+    t.integer "add_dependent_pension"
+    t.integer "ninety_day_hospital_copay"
+    t.integer "add_ninety_day_hospital_copay"
+    t.integer "outpatient_basic_care_copay"
+    t.integer "outpatient_specialty_copay"
+    t.datetime "threshold_effective_date"
+    t.integer "aid_and_attendance_threshold"
+    t.integer "outpatient_preventive_copay"
+    t.integer "medication_copay"
+    t.integer "medication_copay_annual_cap"
+    t.integer "ltc_inpatient_copay"
+    t.integer "ltc_outpatient_copay"
+    t.integer "ltc_domiciliary_copay"
+    t.integer "inpatient_per_diem"
+    t.string "description"
+    t.integer "version", null: false
+    t.datetime "created", null: false
+    t.datetime "updated"
+    t.string "created_by"
+    t.string "updated_by"
+  end
+
+  create_table "std_states", force: :cascade do |t|
+    t.string "name", null: false
+    t.string "postal_name", null: false
+    t.integer "fips_code", null: false
+    t.integer "country_id", null: false
+    t.integer "version", null: false
+    t.datetime "created", null: false
+    t.datetime "updated"
+    t.string "created_by"
+    t.string "updated_by"
+  end
+
+  create_table "std_zipcodes", force: :cascade do |t|
+    t.string "zip_code", null: false
+    t.integer "zip_classification_id"
+    t.integer "preferred_zip_place_id"
+    t.integer "state_id", null: false
+    t.integer "county_number", null: false
+    t.integer "version", null: false
+    t.datetime "created", null: false
+    t.datetime "updated"
+    t.string "created_by"
+    t.string "updated_by"
   end
 
   create_table "terms_and_conditions", id: :serial, force: :cascade do |t|
@@ -1094,6 +1208,7 @@ ActiveRecord::Schema.define(version: 2023_04_12_000222) do
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "appeal_submissions", "user_accounts"
   add_foreign_key "async_transactions", "user_accounts"
+  add_foreign_key "claims_api_claim_submissions", "claims_api_auto_established_claims", column: "claim_id"
   add_foreign_key "deprecated_user_accounts", "user_accounts"
   add_foreign_key "deprecated_user_accounts", "user_verifications"
   add_foreign_key "education_stem_automated_decisions", "user_accounts"

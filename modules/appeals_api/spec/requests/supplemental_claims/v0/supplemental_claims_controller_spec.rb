@@ -5,11 +5,12 @@ require AppealsApi::Engine.root.join('spec', 'spec_helper.rb')
 
 describe AppealsApi::SupplementalClaims::V0::SupplementalClaimsController, type: :request do
   def base_path(path)
-    "/services/appeals/supplemental_claims/v0/#{path}"
+    "/services/appeals/supplemental-claims/v0/#{path}"
   end
 
-  let(:data) { fixture_to_s 'valid_200995.json', version: 'v2' }
-  let(:max_headers) { fixture_as_json 'valid_200995_headers_extra.json', version: 'v2' }
+  let(:data) { fixture_to_s 'supplemental_claims/v0/valid_200995.json' }
+  let(:headers) { fixture_as_json 'supplemental_claims/v0/valid_200995_headers.json' }
+  let(:max_headers) { fixture_as_json 'supplemental_claims/v0/valid_200995_headers_extra.json' }
   let(:parsed_response) { JSON.parse(response.body) }
 
   describe '#schema' do
@@ -36,6 +37,23 @@ describe AppealsApi::SupplementalClaims::V0::SupplementalClaimsController, type:
   describe '#create' do
     let(:path) { base_path 'forms/200995' }
 
+    it_behaves_like('an endpoint with OpenID auth', scopes: described_class::OAUTH_SCOPES[:POST]) do
+      def make_request(auth_header)
+        post(path, params: data, headers: headers.merge(auth_header))
+      end
+    end
+
+    it 'creates an SC record having api_version: "V0"' do
+      with_openid_auth(described_class::OAUTH_SCOPES[:POST]) do |auth_header|
+        post(path, params: data, headers: headers.merge(auth_header))
+      end
+
+      sc_guid = JSON.parse(response.body)['data']['id']
+      sc = AppealsApi::SupplementalClaim.find(sc_guid)
+
+      expect(sc.api_version).to eq('V0')
+    end
+
     context 'when icn header is not provided' do
       it 'returns a 422 error with details' do
         with_openid_auth(described_class::OAUTH_SCOPES[:POST]) do |auth_header|
@@ -52,6 +70,12 @@ describe AppealsApi::SupplementalClaims::V0::SupplementalClaimsController, type:
   describe '#validate' do
     let(:path) { base_path 'forms/200995/validate' }
 
+    it_behaves_like('an endpoint with OpenID auth', scopes: described_class::OAUTH_SCOPES[:POST]) do
+      def make_request(auth_header)
+        post(path, params: data, headers: headers.merge(auth_header))
+      end
+    end
+
     context 'when icn header is not provided' do
       it 'returns a 422 error with details' do
         with_openid_auth(described_class::OAUTH_SCOPES[:POST]) do |auth_header|
@@ -61,6 +85,17 @@ describe AppealsApi::SupplementalClaims::V0::SupplementalClaimsController, type:
         expect(response).to have_http_status(:unprocessable_entity)
         expect(parsed_response['errors'][0]['detail']).to include('One or more expected fields were not found')
         expect(parsed_response['errors'][0]['meta']['missing_fields']).to include('X-VA-ICN')
+      end
+    end
+  end
+
+  describe '#show' do
+    let(:uuid) { create(:supplemental_claim_v0).id }
+    let(:path) { base_path "forms/200995/#{uuid}" }
+
+    it_behaves_like('an endpoint with OpenID auth', scopes: described_class::OAUTH_SCOPES[:GET]) do
+      def make_request(auth_header)
+        get(path, headers: auth_header)
       end
     end
   end

@@ -5,13 +5,13 @@ require 'common/client/middleware/response/raise_error'
 
 module VirtualRegionalOffice
   class Configuration < Common::Client::Configuration::REST
-    API_VERSION = 'v1'
+    API_VERSION = 'v3'
 
     self.open_timeout = Settings.virtual_regional_office&.open_timeout || 15
     self.read_timeout = Settings.virtual_regional_office&.read_timeout || 60
 
     def base_path
-      "#{Settings.virtual_regional_office.url}/#{API_VERSION}"
+      Settings.virtual_regional_office.url.to_s
     end
 
     def service_name

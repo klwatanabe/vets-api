@@ -6,6 +6,7 @@ require 'token_validation/v2/client'
 require 'claims_api/error/error_handler'
 require 'claims_api/claim_logger'
 require 'bgs_service/local_bgs'
+require 'claims_api/form_schemas'
 
 module ClaimsApi
   module V2
@@ -13,11 +14,17 @@ module ClaimsApi
       include ClaimsApi::Error::ErrorHandler
       include ClaimsApi::CcgTokenValidation
 
+      skip_before_action :authenticate, only: %i[schema]
+
       # fetch_audience: defines the audience used for oauth
       # Overrides the default value defined in OpenidApplicationController
       # NOTE: required for Client Credential Grant (CCG) flow
       def fetch_aud
         Settings.oidc.isolated_audience.claims
+      end
+
+      def schema
+        render json: { data: [ClaimsApi::FormSchemas.new(schema_version: 'v2').schemas[self.class::FORM_NUMBER]] }
       end
 
       protected
@@ -149,6 +156,8 @@ module ClaimsApi
         found_record = target_veteran.mpi_record?(user_key: veteran_id)
 
         unless found_record
+          log_message_to_sentry("Claims v2 Veteran record not found - Veteran ICN: #{veteran_id}",
+                                :warning)
           raise ::Common::Exceptions::ResourceNotFound.new(detail:
             "Unable to locate Veteran's ID/ICN in Master Person Index (MPI). " \
             'Please submit an issue at ask.va.gov or call 1-800-MyVA411 (800-698-2411) for assistance.')
@@ -157,6 +166,8 @@ module ClaimsApi
         mpi_profile = target_veteran&.mpi&.mvi_response&.profile || {}
 
         if mpi_profile[:participant_id].blank?
+          log_message_to_sentry("Claims v2 Veteran PID not found - Veteran ICN: #{veteran_id}",
+                                :warning)
           raise ::Common::Exceptions::UnprocessableEntity.new(detail:
             "Unable to locate Veteran's Participant ID in Master Person Index (MPI). " \
             'Please submit an issue at ask.va.gov or call 1-800-MyVA411 (800-698-2411) for assistance.')
@@ -164,6 +175,8 @@ module ClaimsApi
 
         target_veteran[:first_name] = mpi_profile[:given_names]&.first
         if target_veteran[:first_name].nil?
+          log_message_to_sentry("Claims v2 Veteran First Name not found - Veteran ICN: #{veteran_id}",
+                                :warning)
           raise ::Common::Exceptions::UnprocessableEntity.new(detail: 'Missing first name')
         end
 

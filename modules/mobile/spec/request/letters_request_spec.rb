@@ -1,14 +1,51 @@
 # frozen_string_literal: true
 
 require 'rails_helper'
-require_relative '../support/iam_session_helper'
+require_relative '../support/helpers/iam_session_helper'
 require_relative '../support/matchers/json_schema_matcher'
+require 'lighthouse/letters_generator/configuration'
 
 RSpec.describe 'letters', type: :request do
   include JsonSchemaMatchers
-  before do
-    Flipper.disable(:mobile_lighthouse_letters)
-    iam_sign_in
+
+  let(:letter_json) do
+    {
+      'data' =>
+        {
+          'id' => '3097e489-ad75-5746-ab1a-e0aabc1b426a',
+          'type' => 'letter',
+          'attributes' => {
+            'letter' =>
+            {
+              'letterDescription' => 'This card verifies that you served honorably in the Armed Forces.',
+              'letterContent' => [
+                { 'contentKey' => 'front-of-card',
+                  'contentTitle' => '<front of card>',
+                  'content' =>
+                  "This card is to serve as proof the individual listed below served honorably in the Uniformed \
+Services of the United States. Jesse Gray 1708 Tiburon Blvd Tiburon, CA 94921 Effective as of: June 08, 2023 DoD \
+ID Number: 1293307390 Date of Birth: December 15, 1954 Branch Of Service: Army"},
+                {
+                  'contentKey' => 'back-of-card',
+                  'contentTitle' => '<back of card>',
+                  'content' =>
+                  "United States of America Department of Veterans Affairs General Benefit Information 1-800-827-1000 \
+Health Care Information 1-877-222-VETS (8387) This card does not reflect entitlement to any benefits administered by \
+the Department of Veterans Affairs or serve as proof of receiving such benefits."
+                },
+                {
+                  'contentKey' => 'contact-us',
+                  'contentTitle' => 'How You Can Contact Us',
+                  'content' =>
+                  "If you need general information about benefits and eligibility, please visit us at \
+https://www.va.gov. Call us at 1-800-827-1000. Contact us using Telecommunications Relay Services (TTY) at 711 24/7. \
+Send electronic inquiries through the Internet at https://www.va.gov/contact-us."
+                }
+              ]
+            }
+          }
+        }
+    }
   end
 
   let(:letters_body) do
@@ -18,49 +55,92 @@ RSpec.describe 'letters', type: :request do
         'type' => 'letters',
         'attributes' => {
           'letters' =>
-                  [
-                    {
-                      'name' => 'Commissary Letter',
-                      'letterType' => 'commissary'
-                    },
-                    {
-                      'name' => 'Proof of Service Letter',
-                      'letterType' => 'proof_of_service'
-                    },
-                    {
-                      'name' => 'Proof of Creditable Prescription Drug Coverage Letter',
-                      'letterType' => 'medicare_partd'
-                    },
-                    {
-                      'name' => 'Proof of Minimum Essential Coverage Letter',
-                      'letterType' => 'minimum_essential_coverage'
-                    },
-                    {
-                      'name' => 'Service Verification Letter',
-                      'letterType' => 'service_verification'
-                    },
-                    {
-                      'name' => 'Civil Service Preference Letter',
-                      'letterType' => 'civil_service'
-                    },
-                    {
-                      'name' => 'Benefit Summary and Service Verification Letter',
-                      'letterType' => 'benefit_summary'
-                    },
-                    {
-                      'name' => 'Benefit Verification Letter',
-                      'letterType' => 'benefit_verification'
-                    }
-                  ]
+            [
+              {
+                'name' => 'Commissary Letter',
+                'letterType' => 'commissary'
+              },
+              {
+                'name' => 'Proof of Service Letter',
+                'letterType' => 'proof_of_service'
+              },
+              {
+                'name' => 'Proof of Creditable Prescription Drug Coverage Letter',
+                'letterType' => 'medicare_partd'
+              },
+              {
+                'name' => 'Proof of Minimum Essential Coverage Letter',
+                'letterType' => 'minimum_essential_coverage'
+              },
+              {
+                'name' => 'Service Verification Letter',
+                'letterType' => 'service_verification'
+              },
+              {
+                'name' => 'Civil Service Preference Letter',
+                'letterType' => 'civil_service'
+              },
+              {
+                'name' => 'Benefit Summary and Service Verification Letter',
+                'letterType' => 'benefit_summary'
+              },
+              {
+                'name' => 'Benefit Verification Letter',
+                'letterType' => 'benefit_verification'
+              }
+            ]
         }
       }
     }
   end
 
+  let(:beneficiary_body) do
+    { 'data' =>
+       { 'id' => '3097e489-ad75-5746-ab1a-e0aabc1b426a',
+         'type' => 'LettersBeneficiaryResponses',
+         'attributes' =>
+          { 'benefitInformation' =>
+             { 'awardEffectiveDate' => '2016-02-04T17:51:56Z',
+               'hasChapter35Eligibility' => true,
+               'monthlyAwardAmount' => 2673.0,
+               'serviceConnectedPercentage' => 2,
+               'hasDeathResultOfDisability' => false,
+               'hasSurvivorsIndemnityCompensationAward' => false,
+               'hasSurvivorsPensionAward' => false,
+               'hasAdaptedHousing' => false,
+               'hasIndividualUnemployabilityGranted' => false,
+               'hasNonServiceConnectedPension' => false,
+               'hasServiceConnectedDisabilities' => true,
+               'hasSpecialMonthlyCompensation' => false },
+            'militaryService' =>
+              [{ 'branch' => 'Army', 'characterOfService' => 'HONORABLE',
+                 'enteredDate' => '2016-02-04T17:51:56Z', 'releasedDate' => '2016-02-04T17:51:56Z' }] } } }
+  end
+
+  let(:user) { build(:iam_user) }
+
+  before do
+    token = 'abcdefghijklmnop'
+    allow_any_instance_of(Lighthouse::LettersGenerator::Configuration).to receive(:get_access_token).and_return(token)
+    allow_any_instance_of(IAMUser).to receive(:icn).and_return('24811694708759028')
+    iam_sign_in(user)
+    Flipper.enable(:mobile_lighthouse_letters, user)
+  end
+
   describe 'GET /mobile/v0/letters' do
-    context 'with a valid evss response' do
+    context 'with a valid lighthouse response' do
       it 'matches the letters schema' do
-        VCR.use_cassette('evss/letters/letters') do
+        VCR.use_cassette('mobile/lighthouse_letters/letters_200', match_requests_on: %i[method uri]) do
+          get '/mobile/v0/letters', headers: iam_headers
+          expect(response).to have_http_status(:ok)
+          expect(JSON.parse(response.body)).to eq(letters_body)
+          expect(response.body).to match_json_schema('letters')
+        end
+      end
+
+      it 'filters unlisted letter types' do
+        VCR.use_cassette('mobile/lighthouse_letters/letters_with_extra_types_200',
+                         match_requests_on: %i[method uri]) do
           get '/mobile/v0/letters', headers: iam_headers
           expect(response).to have_http_status(:ok)
           expect(JSON.parse(response.body)).to eq(letters_body)
@@ -68,85 +148,65 @@ RSpec.describe 'letters', type: :request do
         end
       end
     end
-
-    unauthorized_five_hundred = { cassette_name: 'evss/letters/unauthorized' }
-    context 'with an 500 unauthorized response', vcr: unauthorized_five_hundred do
-      it 'returns a bad gateway response' do
-        get '/mobile/v0/letters', headers: iam_headers
-        expect(response).to have_http_status(:bad_gateway)
-        expect(response.body).to match_json_schema('evss_errors')
-      end
-    end
-
-    context 'with a 403 response' do
-      it 'returns a not authorized response' do
-        VCR.use_cassette('evss/letters/letters_403') do
-          get '/mobile/v0/letters', headers: iam_headers
-          expect(response).to have_http_status(:forbidden)
-          expect(response.body).to match_json_schema('evss_errors')
-        end
-      end
-    end
-
-    context 'with a generic 500 response' do
-      it 'returns a not found response' do
-        VCR.use_cassette('evss/letters/letters_500') do
-          get '/mobile/v0/letters', headers: iam_headers
-          expect(response).to have_http_status(:internal_server_error)
-          expect(response.body).to match_json_schema('evss_errors')
-        end
-      end
-    end
   end
 
   describe 'GET /mobile/v0/letters/beneficiary' do
-    context 'with a valid veteran response' do
-      it 'matches the letter beneficiary schema' do
-        VCR.use_cassette('evss/letters/beneficiary_veteran') do
+    context 'with a valid lighthouse response' do
+      it 'matches the letters beneficiary schema' do
+        VCR.use_cassette('mobile/lighthouse_letters/letters_200', match_requests_on: %i[method uri]) do
           get '/mobile/v0/letters/beneficiary', headers: iam_headers
           expect(response).to have_http_status(:ok)
-          expect(response.body).to match_json_schema('letter_beneficiary', strict: true)
-        end
-      end
-    end
-
-    context 'with a valid dependent response' do
-      it 'does not include those properties' do
-        VCR.use_cassette('evss/letters/beneficiary_dependent') do
-          get '/mobile/v0/letters/beneficiary', headers: iam_headers
-          expect(response).to have_http_status(:ok)
-          expect(response.body).to match_json_schema('letter_beneficiary', strict: true)
-        end
-      end
-    end
-
-    context 'with a 403 response' do
-      it 'returns a not authorized response' do
-        VCR.use_cassette('evss/letters/beneficiary_403') do
-          get '/mobile/v0/letters/beneficiary', headers: iam_headers
-          expect(response).to have_http_status(:forbidden)
-          expect(response.body).to match_json_schema('evss_errors')
-        end
-      end
-    end
-
-    context 'with a 500 response' do
-      it 'returns a not found response' do
-        VCR.use_cassette('evss/letters/beneficiary_500') do
-          get '/mobile/v0/letters/beneficiary', headers: iam_headers
-          expect(response).to have_http_status(:internal_server_error)
-          expect(response.body).to match_json_schema('evss_errors')
+          expect(JSON.parse(response.body)).to eq(beneficiary_body)
+          expect(response.body).to match_json_schema('letter_beneficiary')
         end
       end
     end
   end
 
   describe 'POST /mobile/v0/letters/:type/download' do
-    context 'with no options' do
-      it 'downloads a PDF' do
-        VCR.use_cassette('evss/letters/download') do
-          post '/mobile/v0/letters/commissary/download', headers: iam_headers
-          expect(response).to have_http_status(:ok)
+    describe 'formats' do
+      context 'when format is unspecified' do
+        it 'downloads a PDF' do
+          VCR.use_cassette('mobile/lighthouse_letters/download') do
+            post '/mobile/v0/letters/benefit_summary/download', headers: iam_headers
+            expect(response).to have_http_status(:ok)
+            expect(response.media_type).to eq('application/pdf')
+          end
+        end
+      end
+
+      context 'when format is pdf' do
+        it 'downloads a PDF' do
+          VCR.use_cassette('mobile/lighthouse_letters/download') do
+            post '/mobile/v0/letters/benefit_summary/download', headers: iam_headers, params: { format: 'pdf' },
+                                                                as: :json
+            expect(response).to have_http_status(:ok)
+            expect(response.media_type).to eq('application/pdf')
+          end
+        end
+      end
+
+      context 'when format is json' do
+        it 'returns json that matches the letter schema' do
+          VCR.use_cassette('mobile/lighthouse_letters/download_as_json', match_requests_on: %i[method uri]) do
+            post '/mobile/v0/letters/proof_of_service/download', headers: iam_headers, params: { format: 'json' },
+                                                                 as: :json
+
+            expect(response).to have_http_status(:ok)
+            expect(response.media_type).to eq('application/json')
+            expect(JSON.parse(response.body)).to eq(letter_json)
+            expect(response.body).to match_json_schema('letter')
+          end
+        end
+      end
+
+      context 'when format is something else' do
+        it 'returns unprocessable entity' do
+          VCR.use_cassette('mobile/lighthouse_letters/download') do
+            post '/mobile/v0/letters/benefit_summary/download', headers: iam_headers, params: { format: 'floormat' },
+                                                                as: :json
+            expect(response).to have_http_status(:unprocessable_entity)
+          end
         end
       end
     end
@@ -169,159 +229,113 @@ RSpec.describe 'letters', type: :request do
       end
 
       it 'downloads a PDF' do
-        VCR.use_cassette('evss/letters/download_options') do
-          post '/mobile/v0/letters/commissary/download', params: options, headers: iam_headers
+        VCR.use_cassette('mobile/lighthouse_letters/download_with_options') do
+          post '/mobile/v0/letters/benefit_summary/download', params: options, headers: iam_headers, as: :json
           expect(response).to have_http_status(:ok)
+          expect(response.media_type).to eq('application/pdf')
+        end
+      end
+
+      it 'downloads json' do
+        VCR.use_cassette('mobile/lighthouse_letters/download_as_json_with_options',
+                         match_requests_on: %i[method uri]) do
+          post '/mobile/v0/letters/proof_of_service/download', headers: iam_headers,
+                                                               params: options.merge({ format: 'json' }),
+                                                               as: :json
+
+          expect(response).to have_http_status(:ok)
+          expect(response.media_type).to eq('application/json')
+          expect(JSON.parse(response.body)).to eq(letter_json)
+          expect(response.body).to match_json_schema('letter')
         end
       end
     end
 
-    context 'with a 404 evss response' do
-      it 'returns a 404' do
-        VCR.use_cassette('evss/letters/download_404') do
-          post '/mobile/v0/letters/commissary/download', headers: iam_headers
-          expect(response).to have_http_status(:not_found)
+    context 'when an error occurs' do
+      it 'raises lighthouse service error' do
+        VCR.use_cassette('mobile/lighthouse_letters/download_error') do
+          post '/mobile/v0/letters/benefit_summary/download', headers: iam_headers
+          expect(response).to have_http_status(:unprocessable_entity)
         end
       end
     end
 
-    context 'when evss returns lettergenerator.notEligible' do
-      it 'raises a 502' do
-        VCR.use_cassette('evss/letters/download_not_eligible') do
-          post '/mobile/v0/letters/civil_service/download', headers: iam_headers
-          expect(response).to have_http_status(:bad_gateway)
-        end
-      end
-    end
+    context 'with an invalid letter type' do
+      it 'matches the letters schema' do
+        post '/mobile/v0/letters/not_real/download', headers: iam_headers
 
-    context 'when evss returns Unexpected Error' do
-      let(:options) do
-        {
-          'militaryService' => true,
-          'serviceConnectedDisabilities' => false,
-          'serviceConnectedEvaluation' => true,
-          'nonServiceConnectedPension' => false,
-          'monthlyAward' => true,
-          'unemployable' => false,
-          'specialMonthlyCompensation' => false,
-          'adaptedHousing' => false,
-          'chapter35Eligibility' => false,
-          'deathResultOfDisability' => false,
-          'survivorsAward' => false
-        }
-      end
-
-      it 'returns a 502' do
-        VCR.use_cassette('evss/letters/download_unexpected') do
-          post '/mobile/v0/letters/benefit_summary/download', params: options, headers: iam_headers
-          expect(response).to have_http_status(:bad_gateway)
-        end
+        expect(response).to have_http_status(:internal_server_error)
+        expect(response.parsed_body).to eq(
+          {
+            'errors' => [
+              {
+                'title' => 'Invalid letter type',
+                'detail' => 'Invalid letter type',
+                'code' => '500',
+                'source' => 'Lighthouse::LettersGenerator::Service',
+                'status' => '500',
+                'meta' => { 'message' => 'Letter type of not_real is not one of the expected options' }
+              }
+            ]
+          }
+        )
       end
     end
   end
 
-  describe 'error handling' do
-    # EVSS is working on getting users that throw these errors in their CI env
-    # until then these VCR cassettes have had their status and bodies
-    # manually created and should not be refreshed
-    context 'with a letter generator service error' do
-      it 'returns a not found response' do
-        VCR.use_cassette('evss/letters/letters_letter_generator_service_error') do
+  describe 'Error Handling' do
+    context 'when user is not authorized to use lighthouse' do
+      it 'returns 403 forbidden' do
+        allow_any_instance_of(IAMUser).to receive(:participant_id).and_return(nil)
+        get '/mobile/v0/letters', headers: iam_headers
+        expect(response).to have_http_status(:forbidden)
+      end
+    end
+
+    context 'when upstream is unavailable' do
+      it 'returns internal service error' do
+        VCR.use_cassette('mobile/lighthouse_letters/letters_503', match_requests_on: %i[method uri]) do
           get '/mobile/v0/letters', headers: iam_headers
-          expect(response).to have_http_status(:service_unavailable)
-          expect(response.body).to match_json_schema('evss_errors')
+          expect(response).to have_http_status(:internal_server_error)
+          expect(response.parsed_body).to eq({ 'errors' =>
+                                                 [{ 'code' => '500',
+                                                    'source' => 'Lighthouse::LettersGenerator::Service',
+                                                    'status' => '500',
+                                                    'meta' => { 'message' => nil } }] })
         end
       end
     end
 
-    context 'with one or more letter destination errors' do
-      it 'returns a not found response' do
-        VCR.use_cassette('evss/letters/letters_letter_destination_error') do
-          get '/mobile/v0/letters', headers: iam_headers
-          expect(response).to have_http_status(:unprocessable_entity)
-          expect(response.body).to match_json_schema('evss_errors')
+    context 'with upstream service error' do
+      it 'returns a internal server error response' do
+        VCR.use_cassette('mobile/lighthouse_letters/letters_500_error_bgs', match_requests_on: %i[method uri]) do
+          get '/mobile/v0/letters/beneficiary', headers: iam_headers
+          expect(response).to have_http_status(:internal_server_error)
+          error = response.parsed_body['errors']
+          expect(error).to eq([{ 'title' => 'Required Backend Connection Error',
+                                 'detail' => 'Required Backend Connection Error',
+                                 'code' => '500',
+                                 'source' => 'Lighthouse::LettersGenerator::Service',
+                                 'status' => '500',
+                                 'meta' => { 'message' => 'Backend Service Error BGS' } }])
         end
       end
     end
 
-    context 'with an invalid address error' do
-      context 'when the user has not been logged' do
-        it 'logs the user edipi' do
-          VCR.use_cassette('evss/letters/letters_invalid_address') do
-            expect { get '/mobile/v0/letters', headers: iam_headers }.to change(InvalidLetterAddressEdipi, :count).by(1)
-            expect(response).to have_http_status(:unprocessable_entity)
-          end
-        end
-      end
-
-      context 'when log record insertion fails' do
-        it 'stills return unprocessable_entity' do
-          VCR.use_cassette('evss/letters/letters_invalid_address') do
-            allow(InvalidLetterAddressEdipi).to receive(:find_or_create_by).and_raise(ActiveRecord::ActiveRecordError)
-            expect { get '/mobile/v0/letters', headers: iam_headers }.to change(InvalidLetterAddressEdipi, :count).by(0)
-            expect(response).to have_http_status(:unprocessable_entity)
-          end
-        end
-      end
-    end
-
-    context 'with a not eligible error' do
+    context 'when user is not found' do
       it 'returns a not found response' do
-        VCR.use_cassette('evss/letters/letters_not_eligible_error') do
+        VCR.use_cassette('mobile/lighthouse_letters/letters_404', match_requests_on: %i[method uri]) do
           get '/mobile/v0/letters', headers: iam_headers
-          expect(response).to have_http_status(:bad_gateway)
-          expect(response.body).to match_json_schema('evss_errors')
-          expect(JSON.parse(response.body)).to have_deep_attributes(
-            'errors' => [
-              {
-                'title' => 'Proxy error',
-                'detail' => 'Upstream server returned not eligible response',
-                'code' => '111',
-                'source' => 'EVSS::Letters::Service',
-                'status' => '502',
-                'meta' => {
-                  'messages' => [
-                    {
-                      'key' => 'lettergenerator.notEligible',
-                      'severity' => 'FATAL',
-                      'text' => 'Veteran is not eligible to receive the letter'
-                    }
-                  ]
-                }
-              }
-            ]
-          )
         end
-      end
-    end
-
-    context 'with can not determine eligibility error' do
-      it 'returns a not found response' do
-        VCR.use_cassette('evss/letters/letters_determine_eligibility_error') do
-          get '/mobile/v0/letters', headers: iam_headers
-          expect(response).to have_http_status(:bad_gateway)
-          expect(response.body).to match_json_schema('evss_errors')
-          expect(JSON.parse(response.body)).to have_deep_attributes(
-            'errors' => [
-              {
-                'title' => 'Proxy error',
-                'detail' => 'Can not determine eligibility for potential letters due to upstream server error',
-                'code' => '110',
-                'source' => 'EVSS::Letters::Service',
-                'status' => '502',
-                'meta' => {
-                  'messages' => [
-                    {
-                      'key' => 'letterGeneration.letterEligibilityError',
-                      'severity' => 'FATAL',
-                      'text' => 'Unable to determine eligibility on potential letters'
-                    }
-                  ]
-                }
-              }
-            ]
-          )
-        end
+        expect(response).to have_http_status(:not_found)
+        expect(response.parsed_body['errors']).to eq(
+          [{ 'title' => 'Person for ICN not found',
+             'detail' => 'Person for ICN not found',
+             'code' => 'LH_not_found',
+             'source' => 'Lighthouse::LettersGenerator::Service',
+             'status' => '404',
+             'meta' => { 'message' => 'No data found for ICN' } }]
+        )
       end
     end
   end

@@ -10,6 +10,7 @@ module VAOS
       DIRECT_SCHEDULE_ERROR_KEY = 'DirectScheduleError'
       VAOS_SERVICE_DATA_KEY = 'VAOSServiceTypesAndCategory'
       VAOS_TELEHEALTH_DATA_KEY = 'VAOSTelehealthData'
+      FACILITY_ERROR_MSG = 'Error fetching facility details'
 
       def get_appointments(start_date, end_date, statuses = nil, pagination_params = {})
         params = date_params(start_date, end_date)
@@ -20,8 +21,16 @@ module VAOS
         with_monitoring do
           response = perform(:get, appointments_base_url, params, headers)
           response.body[:data].each do |appt|
-            find_and_log_service_type_and_category(appt)
+            # for CnP appointments set cancellable to false per GH#57824
+            set_cancellable_false(appt) if cnp?(appt)
+            # for covid appointments set cancellable to false per GH#58690
+            set_cancellable_false(appt) if covid?(appt)
+
+            # remove service type(s) for non-medical non-CnP appointments per GH#56197
+            remove_service_type(appt) unless medical?(appt) || cnp?(appt) || no_service_cat?(appt)
+
             log_telehealth_data(appt[:telehealth]&.[](:atlas)) unless appt[:telehealth]&.[](:atlas).nil?
+            convert_appointment_time(appt)
           end
           {
             data: deserialized_appointments(response.body[:data]),
@@ -34,6 +43,18 @@ module VAOS
         params = {}
         with_monitoring do
           response = perform(:get, get_appointment_base_url(appointment_id), params, headers)
+          convert_appointment_time(response.body[:data])
+
+          # for CnP appointments set cancellable to false per GH#57824
+          set_cancellable_false(response.body[:data]) if cnp?(response.body[:data])
+          # for covid appointments set cancellable to false per GH#58690
+          set_cancellable_false(response.body[:data]) if covid?(response.body[:data])
+
+          # remove service type(s) for non-medical non-CnP appointments per GH#56197
+          unless medical?(response.body[:data]) || cnp?(response.body[:data]) || no_service_cat?(response.body[:data])
+            remove_service_type(response.body[:data])
+          end
+
           OpenStruct.new(response.body[:data])
         end
       end
@@ -43,7 +64,6 @@ module VAOS
         params.compact_blank!
         with_monitoring do
           response = perform(:post, appointments_base_url, params, headers)
-          find_and_log_service_type_and_category(response.body)
           log_telehealth_data(response.body[:telehealth]&.[](:atlas)) unless response.body[:telehealth]&.[](:atlas).nil?
           OpenStruct.new(response.body)
         rescue Common::Exceptions::BackendServiceException => e
@@ -63,9 +83,152 @@ module VAOS
 
       private
 
+      def mobile_facility_service
+        @mobile_facility_service ||=
+          VAOS::V2::MobileFacilityService.new(user)
+      end
+
+      # Get codes from a list of codeable concepts.
+      #
+      # @param input [Array<Hash>] An array of codeable concepts.
+      # @return [Array<String>] An array of codes.
+      #
+      def codes(input)
+        return [] if input.nil?
+
+        input.flat_map { |codeable_concept| codeable_concept[:coding]&.pluck(:code) }.compact
+      end
+
+      # Determines if the appointment is for compensation and pension.
+      #
+      # @param appt [Hash] the appointment to check
+      # @return [Boolean] true if the appointment is for compensation and pension, false otherwise
+      #
+      # @raise [ArgumentError] if the appointment is nil
+      #
+      def cnp?(appt)
+        raise ArgumentError, 'Appointment cannot be nil' if appt.nil?
+
+        codes(appt[:service_category]).include? 'COMPENSATION & PENSION'
+      end
+
+      # Determines if the appointment is for covid.
+      #
+      # @param appt [Hash] the appointment to check
+      # @return [Boolean] true if the appointment is for covid, false otherwise
+      #
+      # @raise [ArgumentError] if the appointment is nil
+      #
+      def covid?(appt)
+        raise ArgumentError, 'Appointment cannot be nil' if appt.nil?
+
+        codes(appt[:service_types]).include?('covid') || appt[:service_type] == 'covid'
+      end
+
+      # Determines if the appointment is a medical appointment.
+      #
+      # @param appt [Hash] The hash object containing appointment details.
+      # @return [Boolean] true if the appointment is a medical appointment, false otherwise.
+      #
+      # @raise [ArgumentError] if the appointment is nil
+      #
+      def medical?(appt)
+        raise ArgumentError, 'Appointment cannot be nil' if appt.nil?
+
+        codes(appt[:service_category]).include?('REGULAR')
+      end
+
+      # Determines if the appointment does not have a service category.
+      #
+      # @param appt [Hash] The hash object containing appointment details.
+      # @return [Boolean] true if the appointment does not have a service category, false otherwise.
+      #
+      # @raise [ArgumentError] if the appointment is nil
+      #
+      def no_service_cat?(appt)
+        raise ArgumentError, 'Appointment cannot be nil' if appt.nil?
+
+        codes(appt[:service_category]).empty?
+      end
+
+      # Modifies the appointment removing the service types and service type elements.
+      #
+      # @param appt [Hash] The hash object containing appointment details.
+      #
+      # @raises [ArgumentError] if the given appointment is nil.
+      #
+      def remove_service_type(appt)
+        raise ArgumentError, 'Appointment cannot be nil' if appt.nil?
+
+        appt.delete(:service_type)
+        appt.delete(:service_types)
+        nil
+      end
+
+      # Entry point for processing appointment responses for converting their times from UTC to local.
+      # Uses the location_id from the appt body to fetch the facility's timezone that is then passed along
+      # with the appointment time to the convert_utc_to_local_time method which does the actual conversion.
+      def convert_appointment_time(appt)
+        if !appt[:start].nil?
+          facility_timezone = get_facility_timezone(appt[:location_id])
+          appt[:local_start_time] = convert_utc_to_local_time(appt[:start], facility_timezone)
+        elsif !appt.dig(:requested_periods, 0, :start).nil?
+          appt[:requested_periods].each do |period|
+            facility_timezone = get_facility_timezone(appt[:location_id])
+            period[:local_start_time] = convert_utc_to_local_time(period[:start], facility_timezone)
+          end
+        end
+        appt
+      end
+
+      # Returns a local [DateTime] object converted from UTC using the facility's timezone offset.
+      # We'd like to perform this change only on the appointment responses to offer a consistently
+      # formatted local time to our consumers while not changing how we pass DateTimes to upstream services.
+      #
+      # @param [DateTime] date - the date to be modified, required
+      # @param [String] tz - the timezone id, won't convert if nil
+      # @return [DateTime] date in local time, will return in UTC if tz is nil
+      #
+      def convert_utc_to_local_time(date, tz)
+        raise Common::Exceptions::ParameterMissing, 'date' if date.nil?
+
+        if tz.nil?
+          'Unable to convert UTC to local time'
+        else
+          date.to_time.utc.in_time_zone(tz).to_datetime
+        end
+      end
+
+      # Returns the facility timezone id (eg. 'America/New_York') associated with facility id (location_id)
+      def get_facility_timezone(facility_location_id)
+        facility_info = get_facility(facility_location_id) unless facility_location_id.nil?
+        if facility_info == FACILITY_ERROR_MSG || facility_info.nil?
+          nil # returns nil if unable to fetch facility info, which will be handled by the timezone conversion
+        else
+          facility_info[:timezone]&.[](:time_zone_id)
+        end
+      end
+
+      def get_facility(location_id)
+        mobile_facility_service.get_facility_with_cache(location_id)
+      rescue Common::Exceptions::BackendServiceException
+        Rails.logger.error(
+          "Error fetching facility details for location_id #{location_id}",
+          location_id:
+        )
+        FACILITY_ERROR_MSG
+      end
+
       def log_direct_schedule_submission_errors(e)
         error_entry = { DIRECT_SCHEDULE_ERROR_KEY => ds_error_details(e) }
         Rails.logger.warn('Direct schedule submission error', error_entry.to_json)
+      end
+
+      # Modifies the appointment, setting the cancellable flag to false
+      #
+      # @param appointment [Hash] the appointment to modify
+      def set_cancellable_false(appointment)
+        appointment[:cancellable] = false
       end
 
       def ds_error_details(e)
@@ -85,38 +248,6 @@ module VAOS
           siteCode: atlas_data&.[](:site_code),
           address: atlas_data&.[](:address)
         }
-      end
-
-      def find_and_log_service_type_and_category(appt)
-        service_category_found = process_service_types_or_category(appt[:service_category])
-        service_types_array_found = process_service_types_or_category(appt[:service_types])
-        service_type_found = appt[:service_type]
-        log_service_type_and_category(type_and_category_data(service_type_found, service_types_array_found,
-                                                             service_category_found))
-      end
-
-      def process_service_types_or_category(appt_service_data)
-        found_values = []
-        appt_service_data&.each do |type_or_category_el|
-          type_or_category_el&.[](:coding)&.each do |coding_el|
-            service_type_or_category_data = coding_el&.[](:code)
-            found_values << service_type_or_category_data
-          end
-        end
-        found_values
-      end
-
-      def type_and_category_data(type, types_array, category)
-        {
-          vaos_service_type: type,
-          vaos_service_types_array: types_array,
-          vaos_service_category: category
-        }
-      end
-
-      def log_service_type_and_category(service_data)
-        service_log_entry = { VAOS_SERVICE_DATA_KEY => service_data }
-        Rails.logger.info('VAOS appointment service category and type', service_log_entry.to_json)
       end
 
       def deserialized_appointments(appointment_list)

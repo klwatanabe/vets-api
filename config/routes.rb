@@ -23,6 +23,8 @@ Rails.application.routes.draw do
   get '/v0/sign_in/logingov_logout_proxy', to: 'v0/sign_in#logingov_logout_proxy'
   get '/v0/sign_in/revoke_all_sessions', to: 'v0/sign_in#revoke_all_sessions'
 
+  get '/sign_in/openid_connect/certs' => 'sign_in/openid_connect_certificates#index'
+
   get '/inherited_proofing/auth', to: 'inherited_proofing#auth'
   get '/inherited_proofing/user_attributes', to: 'inherited_proofing#user_attributes'
   get '/inherited_proofing/callback', to: 'inherited_proofing#callback'
@@ -40,6 +42,7 @@ Rails.application.routes.draw do
     resources :education_career_counseling_claims, only: :create
     resources :veteran_readiness_employment_claims, only: :create
     resource :virtual_agent_token, only: [:create], controller: :virtual_agent_token
+    resource :virtual_agent_jwt_token, only: [:create], controller: :virtual_agent_jwt_token
 
     get 'form1095_bs/download_pdf/:tax_year', to: 'form1095_bs#download_pdf'
     get 'form1095_bs/download_txt/:tax_year', to: 'form1095_bs#download_txt'
@@ -49,7 +52,7 @@ Rails.application.routes.draw do
 
     resources :medical_copays, only: %i[index show]
     get 'medical_copays/get_pdf_statement_by_id/:statement_id', to: 'medical_copays#get_pdf_statement_by_id'
-    post 'medical_copays/send_new_statements_notifications', to: 'medical_copays#send_new_statements_notifications'
+    post 'medical_copays/send_statement_notifications', to: 'medical_copays#send_statement_notifications'
 
     resources :apps, only: %i[index show]
     scope_default = { category: 'unknown_category' }
@@ -60,6 +63,13 @@ Rails.application.routes.draw do
       collection do
         get 'beneficiary', to: 'letters#beneficiary'
         post ':id', to: 'letters#download'
+      end
+    end
+
+    resources :letters_generator, only: [:index] do
+      collection do
+        get 'beneficiary', to: 'letters_generator#beneficiary'
+        post 'download/:id', to: 'letters_generator#download'
       end
     end
 
@@ -99,6 +109,7 @@ Rails.application.routes.draw do
       collection do
         get(:healthcheck)
         get(:enrollment_status)
+        get(:rating_info)
       end
     end
 
@@ -124,7 +135,9 @@ Rails.application.routes.draw do
       resources :burial_claims, only: %i[create show]
     end
 
-    resources :benefits_claims, only: %i[index show]
+    resources :benefits_claims, only: %i[index show] do
+      post :submit5103, on: :member
+    end
 
     get 'claim_letters', to: 'claim_letters#index'
     get 'claim_letters/:document_id', to: 'claim_letters#show'
@@ -137,6 +150,7 @@ Rails.application.routes.draw do
     end
 
     resources :evss_claims_async, only: %i[index show]
+    resources :evss_benefits_claims, only: %i[index show]
 
     namespace :virtual_agent do
       get 'claim', to: 'virtual_agent_claim#index'
@@ -158,6 +172,8 @@ Rails.application.routes.draw do
     get 'welcome', to: 'example#welcome', as: :welcome
     get 'limited', to: 'example#limited', as: :limited
     get 'status', to: 'admin#status'
+    get 'healthcheck', to: 'example#healthcheck', as: :healthcheck
+    get 'startup_healthcheck', to: 'example#startup_healthcheck', as: :startup_healthcheck
 
     get 'ppiu/payment_information', to: 'ppiu#index'
     put 'ppiu/payment_information', to: 'ppiu#update'
@@ -416,7 +432,7 @@ Rails.application.routes.draw do
   mount DebtsApi::Engine, at: '/debts_api'
   mount DhpConnectedDevices::Engine, at: '/dhp_connected_devices'
   mount FacilitiesApi::Engine, at: '/facilities_api'
-  mount FormsApi::Engine, at: '/forms_api'
+  mount SimpleFormsApi::Engine, at: '/simple_forms_api'
   mount HealthQuest::Engine, at: '/health_quest'
   mount IncomeLimits::Engine, at: '/income_limits'
   mount MebApi::Engine, at: '/meb_api'
