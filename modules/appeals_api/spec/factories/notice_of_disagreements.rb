@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require_relative '../support/fixture_helpers'
+
 FactoryBot.define do
   # Decision Reviews API v1 NODs
   factory :notice_of_disagreement, class: 'AppealsApi::NoticeOfDisagreement' do

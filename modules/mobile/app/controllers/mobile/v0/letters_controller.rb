@@ -108,10 +108,11 @@ module Mobile
 
       # body params appear in the params hash in specs but not in actual requests
       def download_options_hash
-        body_params = Rack::Utils.parse_nested_query(request.body.string)
+        body_string = request.body.string
+        return {} if body_string.blank?
+
+        body_params = JSON.parse(body_string)
         body_params.keep_if { |k, _| k.in? DOWNLOAD_PARAMS }
-                   .transform_values { |v| ActiveModel::Type::Boolean.new.cast(v) }
-                   .transform_keys { |k| k.camelize(:lower) }
       end
 
       def letter_info_adapter

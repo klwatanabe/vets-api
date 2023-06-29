@@ -781,6 +781,10 @@ features:
     actor_type: user
     enable_in_development: true
     description: Toggle for the print list initiative
+  va_online_scheduling_descriptive_back_link:
+    actor_type: user
+    enable_in_development: true
+    description: Toggle for the descriptive back link
   va_online_scheduling_use_dsot:
     actor_type: user
     enable_in_development: true
@@ -903,3 +907,7 @@ features:
   drupal_footer:
     actor_type: user
     description: If enabled, pulls Drupal data to populate most of the global footer
+  my_va_lighthouse_claims:
+    actor_type: user
+    description: Use lighthouse instead of EVSS to view benefit claims
+    enable_in_development: true
