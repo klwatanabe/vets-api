@@ -5,13 +5,10 @@ module Flipper
     def self.matches?(request)
       puts 'request_path: ' + request.method + ' ' + request.path
 
-      return true if request.method == 'GET' && request.session[:flipper_user].present?
+      authenticate(request)
 
-      if request.session[:flipper_user].blank?
-        warden = request.env['warden']
-        warden.authenticate!(scope: :flipper)
-      end
-      require 'pry'; binding.pry;
+      return true if request.method == 'GET'
+
       github_organization_authenticate!(request.session[:flipper_user], Settings.flipper.github_organization)
       github_team_authenticate!(request.session[:flipper_user], Settings.flipper.github_team)
 
@@ -42,6 +39,30 @@ module Flipper
       # # we want to log who has made a change in Flipper::Instrumentation::EventSubscriber
 
       # false
+    end
+
+    def self.authenticate(request)
+      puts '**** authenticate ****'
+      if request.session[:flipper_user].present?
+        user = request.session[:flipper_user]
+        RequestStore.store[:flipper_user_email_for_log] = user&.email
+        authorize(user)
+
+        return true
+      end
+
+      RequestStore.store[:flipper_user_email_for_log] = nil
+      warden = request.env['warden']
+      warden.authenticate!(scope: :flipper)
+    end
+
+    def self.authorize(user)
+      puts '**** authorize ****'
+
+      org_name = Settings.flipper.github_organization
+      team_id = Settings.flipper.github_team
+
+      RequestStore.store[:flipper_authorized] = user.organization_member?(org_name) && user.team_member?(team_id)
     end
 
     # private

@@ -5,6 +5,9 @@
       <% if RequestStore.store[:flipper_user_email_for_log].blank? &&  !Rails.env.development? %>
         <a href ="<%= SAML::URLService::VIRTUAL_HOST_MAPPINGS.dig(request.base_url, :base_redirect) %>">Sign in</a> with an identity-verified admin account to edit feature toggles.
       <% end %>
+      <% if !RequestStore.store[:flipper_authorized] %>
+        TODO -- You are not authorized to perform any actions. See some docs
+      <% end%>
       <thead>
         <tr>
           <th>Status</th>
