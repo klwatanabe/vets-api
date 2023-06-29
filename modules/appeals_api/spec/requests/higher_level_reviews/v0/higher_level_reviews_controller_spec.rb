@@ -102,6 +102,6 @@ describe AppealsApi::HigherLevelReviews::V0::HigherLevelReviewsController, type:
   end
 
   describe '#download' do
-    it_behaves_like 'watermarked pdf download endpoint', { factory: :higher_level_review_v2 }
+    it_behaves_like 'watermarked pdf download endpoint', { factory: :higher_level_review_v0 }
   end
 end

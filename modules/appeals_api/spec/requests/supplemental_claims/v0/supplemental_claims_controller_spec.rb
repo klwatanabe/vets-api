@@ -101,6 +101,6 @@ describe AppealsApi::SupplementalClaims::V0::SupplementalClaimsController, type:
   end
 
   describe '#download' do
-    it_behaves_like 'watermarked pdf download endpoint', { factory: :supplemental_claim }
+    it_behaves_like 'watermarked pdf download endpoint', { factory: :supplemental_claim_v0 }
   end
 end

@@ -99,7 +99,7 @@ describe AppealsApi::NoticeOfDisagreements::V0::NoticeOfDisagreementsController,
   describe '#download' do
     it_behaves_like 'watermarked pdf download endpoint', {
       expunged_attrs: { board_review_option: 'hearing' },
-      factory: :notice_of_disagreement_v2
+      factory: :notice_of_disagreement_v0
     }
   end
 end
