@@ -132,3 +132,6 @@ modules/appeals_api @department-of-veterans-affairs/backend-review-group @depart
 
 # Disability Benefits Experience support
 lib/disability_compensation @department-of-veterans-affairs/backend-review-group @department-of-veterans-affairs/bdex
+
+# After Visit Summary product
+modules/avs @department-of-veterans-affairs/va-cto-health-products 
