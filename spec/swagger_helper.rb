@@ -18,7 +18,8 @@ RSpec.configure do |config|
 
   config.swagger_docs = [
     ClaimsApi,
-    AppealsApi
+    AppealsApi,
+    Avs
   ].inject({}) do |acc, module_name|
     require_relative "#{module_name::Engine.root.join('spec', 'support')}/rswag_config"
     acc.merge(module_name::RswagConfig.new.config)

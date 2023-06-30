@@ -73,6 +73,17 @@ namespace :rswag do
       run_tasks_in_parallel(%w[rswag:appeals_api:prod rswag:appeals_api:dev])
     end
   end
+
+  namespace :avs do
+    desc 'Generate production docs for After Visit Summary APIs'
+    task run: :environment do
+      ENV['PATTERN'] = 'modules/avs/spec/docs/**/*_spec.rb'
+      ENV['RAILS_MODULE'] = 'avs'
+      ENV['SWAGGER_DRY_RUN'] = '0'
+      Rake::Task['rswag:specs:swaggerize'].invoke
+    end
+  end
+
 end
 
 def generate_appeals_docs(dev: false)
