@@ -357,15 +357,13 @@ module ClaimsApi
         treatments = form_attributes['treatments']
         return if treatments.blank?
 
-        validate_treated_disability_names!
+        validate_treated_disability_names!(treatments)
       end
 
-      def validate_treated_disability_names!
-        treatments = form_attributes['treatments']
-
+      def validate_treated_disability_names!(treatments)
         treated_disability_names = collect_treated_disability_names(treatments)
-        declared_disability_names = collect_primary_secondary_disability_names(form_attributes['disabilities'])
 
+        declared_disability_names = collect_primary_secondary_disability_names(form_attributes['disabilities'])
         treated_disability_names.each do |treatment|
           next if declared_disability_names.include?(treatment)
 
