@@ -53,7 +53,7 @@
                     "unitAddress": "1243 pine court",
                     "component": "Active",
                     "title10Activation": {
-                        "anticipatedSeparationDate": "2705-10-03",
+                        "anticipatedSeparationDate": "6705-10-03",
                         "title10ActivationDate": "3619-02-11"
                     },
                     "unitPhone": {
@@ -70,18 +70,18 @@
             "disabilities": [
                 {
                     "disabilityActionType": "REOPEN",
-                    "name": "Traumatic Brain Injury",
-                    "classificationCode": "9020",
+                    "name": "Musculoskeletal - Foot",
+                    "classificationCode": "8994",
                     "serviceRelevance": "ABCDEFG",
                     "approximateDate": "03-11-2018",
                     "ratedDisabilityId": "ABCDEFGHIJKLMNOPQRSTUVWX",
-                    "diagnosticCode": 9020,
+                    "diagnosticCode": 9999,
                     "secondaryDisabilities": [
                         {
-                            "name": "Post Traumatic Stress Disorder (PTSD) Combat - Mental Disorders",
+                            "name": "Cancer - Musculoskeletal - Elbow",
                             "disabilityActionType": "SECONDARY",
                             "serviceRelevance": "ABCDEFGHIJKLMNOPQ",
-                            "classificationCode": "9010",
+                            "classificationCode": "249470",
                             "approximateDate": "03-12-2018",
                             "exposureOrEventOrInjury": "EXPOSURE"
                         }
@@ -91,12 +91,22 @@
                 },
                 {
                     "disabilityActionType": "REOPEN",
-                    "name": "Cancer - Musculoskeletal - Elbow",
-                    "classificationCode": "249470",
+                    "name": "Traumatic Brain Injury",
+                    "classificationCode": "9020",
                     "serviceRelevance": "ABCDEFG",
                     "approximateDate": "03-02-2018",
                     "ratedDisabilityId": "ABCDEFGHIJKLMNOPQRSTUVWX",
-                    "diagnosticCode": 249470,
+                    "diagnosticCode": 0,
+                    "secondaryDisabilities": [
+                        {
+                            "name": "Cancer - Musculoskeletal - Elbow",
+                            "disabilityActionType": "SECONDARY",
+                            "serviceRelevance": "ABCDEFGHIJKLMNOPQ",
+                            "classificationCode": "249470",
+                            "approximateDate": "03-12-2018",
+                            "exposureOrEventOrInjury": "EXPOSURE"
+                        }
+                    ],
                     "isRelatedToToxicExposure": true,
                     "exposureOrEventOrInjury": "EXPOSURE"
                 }
@@ -170,25 +180,7 @@
                         "state": "GA",
                         "city": "Decatur"
                     },
-                    "beginDate": "03-2019"
-                },
-                {
-                    "treatedDisabilityNames": ["Cancer - Musculoskeletal - Elbow"],
-                    "center": {
-                        "name": "Center One",
-                        "state": "GA",
-                        "city": "Decatur"
-                    },
-                    "beginDate": "05-2019"
-                },
-                {
-                    "treatedDisabilityNames": ["Post Traumatic Stress Disorder (PTSD) Combat - Mental Disorders"],
-                    "center": {
-                        "name": "Center One",
-                        "state": "GA",
-                        "city": "Decatur"
-                    },
-                    "beginDate": "06-2019"
+                    "beginDate": "03-1985"
                 }
             ],
             "servicePay": {
