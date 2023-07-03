@@ -5,8 +5,7 @@ http_interactions:
       uri: "<PRENEEDS_HOST>/eoas_SOA/PreNeedApplicationPort"
       body:
         encoding: US-ASCII
-        string:
-          "\r\n----==_mimepart_5f34b35a5e675_690ae7d998184a8\r\nContent-Type:
+        string: "\r\n----==_mimepart_5f34b35a5e675_690ae7d998184a8\r\nContent-Type:
           application/xop+xml;\r\n charset=UTF-8;\r\n type=\"text/xml\"\r\nContent-Transfer-Encoding:
           quoted-printable\r\nContent-ID: <soap-request-body@soap>\r\n\r\n<?xml version=3D\"1.0\" 
           encoding=3D\"UTF-8\"?><env:Envelope xmlns:xsd=3D\"http=\r\n://www.w3.org/2001/XMLSchema\" 
