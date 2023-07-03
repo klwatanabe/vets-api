@@ -5,7 +5,7 @@ require 'rails_helper'
 
 describe 'After Visit Summaries', swagger_doc: 'modules/avs/app/swagger/avs/v0/swagger.json', type: :request do
 
-  path '/after-visit-summaries' do
+  path '/' do
 
     let(:apikey) { 'apikey' }
 
@@ -24,17 +24,17 @@ describe 'After Visit Summaries', swagger_doc: 'modules/avs/app/swagger/avs/v0/s
       # parameter name: :stationNumber, in: :query, type: :string, description: 'VA Station Number'
 
       response '200', 'Array of After Visit Summaries' do
-        schema type: :array,
+        schema type: :object,
           properties: {
             data: {
               properties: {
                 id: {
-                  type: :string,
-                  pattern: '^[0-9a-fA-F]{8}(-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}$'
+                  type: :integer,
+                  pattern: '^[0-9]*$'
                 },
                 path: {
                   type: :string,
-                  pattern: '^[0-9a-fA-F]{8}(-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}$'
+                  pattern: '^[a-zA-Z0-9-/]*/[0-9]*$'
                 },
               },
             }

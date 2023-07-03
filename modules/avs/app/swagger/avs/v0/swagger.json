@@ -1,0 +1,90 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "After Visit Summary",
+    "version": "v0",
+    "termsOfService": "https://developer.va.gov/terms-of-service",
+    "description": "The After Visit Summary API returns a list of a patient's After Visit Summaries, filtered by Station Number and Appointment identifier.\n\n## Technical overview\nThe AVS API pulls data from VA's After Visit Summary generator, see https://github.com/department-of-veterans-affairs/avs for more information.\n"
+  },
+  "tags": [
+
+  ],
+  "components": {
+    "securitySchemes": {
+      "apikey": {
+        "type": "apiKey",
+        "name": "apikey",
+        "in": "header"
+      }
+    },
+    "schemas": {
+    }
+  },
+  "paths": {
+    "/": {
+      "get": {
+        "summary": "Returns information about After Visit Summaries matching the given parameters",
+        "tags": [
+          ""
+        ],
+        "operationId": "after-visit-summaries-index",
+        "security": [
+          {
+            "apikey": [
+
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Array of After Visit Summaries",
+            "content": {
+              "application/json": {
+                "example": {
+                  "status": 200,
+                  "message": "success",
+                  "data": {
+                    "id": 123,
+                    "path": "/my-health/medical-records/care-summaries/avs/123"
+                  }
+                },
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "properties": {
+                        "id": {
+                          "type": "integer",
+                          "pattern": "^[0-9]*$"
+                        },
+                        "path": {
+                          "type": "string",
+                          "pattern": "^[a-zA-Z0-9-/]*/[0-9]*$"
+                        }
+                      }
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "basePath": "/avs/v0/avs",
+  "servers": [
+    {
+      "url": "https://dev-api.va.gov/avs/{version}/avs",
+      "description": "VA.gov API sandbox environment",
+      "variables": {
+        "version": {
+          "default": "v0"
+        }
+      }
+    }
+  ]
+}
