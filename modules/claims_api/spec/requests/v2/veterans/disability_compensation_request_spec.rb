@@ -402,7 +402,7 @@ RSpec.describe 'Disability Claims', type: :request do
               {
                 dates: {
                   beginDate: '2012-11-31',
-                  endDate: ''
+                  endDate: '2015-11-31'
                 },
                 typeOfAddressChange: 'PERMANENT',
                 numberAndStreet: '10 Peach St',
@@ -410,7 +410,7 @@ RSpec.describe 'Disability Claims', type: :request do
                 city: 'Atlanta',
                 zipFirstFive: '42220',
                 zipLastFour: '',
-                state: '',
+                state: 'GA',
                 country: 'USA'
               }
             end
@@ -437,7 +437,7 @@ RSpec.describe 'Disability Claims', type: :request do
               {
                 dates: {
                   beginDate: '2012-11-31',
-                  endDate: ''
+                  endDate: '2015-11-31'
                 },
                 typeOfAddressChange: 'PERMANENT',
                 numberAndStreet: '',
@@ -461,8 +461,8 @@ RSpec.describe 'Disability Claims', type: :request do
                       post submit_path, params: data, headers: auth_header
                       expect(response).to have_http_status(:unprocessable_entity)
                       response_body = JSON.parse(response.body)
-                      expect(response_body['errors'][0]['detail']).to eq(
-                        'The number and street is required for change of address.'
+                      expect(response_body['errors'][0]['detail'][0..85]).to eq(
+                        'The property /changeOfAddress/numberAndStreet did not match the following requirements'
                       )
                     end
                   end
@@ -476,15 +476,15 @@ RSpec.describe 'Disability Claims', type: :request do
               {
                 dates: {
                   beginDate: '2012-11-31',
-                  endDate: ''
+                  endDate: '2015-11-31'
                 },
                 typeOfAddressChange: 'PERMANENT',
                 numberAndStreet: '10 Peach St',
                 apartmentOrUnitNumber: '',
-                city: '',
+                city: 'Atlanta',
                 zipFirstFive: '42220',
                 zipLastFour: '',
-                state: '',
+                state: 'GA',
                 country: ''
               }
             end
@@ -539,8 +539,8 @@ RSpec.describe 'Disability Claims', type: :request do
                       post submit_path, params: data, headers: auth_header
                       expect(response).to have_http_status(:unprocessable_entity)
                       response_body = JSON.parse(response.body)
-                      expect(response_body['errors'][0]['detail']).to eq(
-                        'The begin date is required for change of address.'
+                      expect(response_body['errors'][0]['detail'][0..85]).to eq(
+                        'The property /changeOfAddress/dates/beginDate did not match the following requirements'
                       )
                     end
                   end
@@ -2530,17 +2530,17 @@ RSpec.describe 'Disability Claims', type: :request do
                             name: '',
                             serviceRelevance: 'Caused by a service-connected disability.',
                             classificationCode: '',
-                            approximateDate: ''
+                            approximateDate: '12-31-1997'
                           }
                         ]
                       }
                     ]
                     params['data']['attributes']['disabilities'] = disabilities
                     post submit_path, params: params.to_json, headers: auth_header
-                    expect(response).to have_http_status(:unprocessable_entity)
                     response_body = JSON.parse(response.body)
-                    expect(response_body['errors'][0]['detail']).to eq(
-                      'The name is required for secondary disability.'
+                    expect(response).to have_http_status(:unprocessable_entity)
+                    expect(response_body['errors'][0]['detail'][0..84]).to eq(
+                      'The property /disabilities/0/secondaryDisabilities/0/name did not match the following'
                     )
                   end
                 end
@@ -2575,8 +2575,8 @@ RSpec.describe 'Disability Claims', type: :request do
                     post submit_path, params: params.to_json, headers: auth_header
                     expect(response).to have_http_status(:unprocessable_entity)
                     response_body = JSON.parse(response.body)
-                    expect(response_body['errors'][0]['detail']).to eq(
-                      'The disability action type is required for secondary disability.'
+                    expect(response_body['errors'][0]['detail'][13..105]).to eq(
+                      '/disabilities/0/secondaryDisabilities/0 did not contain the required key disabilityActionType'
                     )
                   end
                 end
@@ -2610,10 +2610,10 @@ RSpec.describe 'Disability Claims', type: :request do
                     ]
                     params['data']['attributes']['disabilities'] = disabilities
                     post submit_path, params: params.to_json, headers: auth_header
-                    expect(response).to have_http_status(:unprocessable_entity)
                     response_body = JSON.parse(response.body)
-                    expect(response_body['errors'][0]['detail']).to eq(
-                      'The service relevance is required for secondary disability.'
+                    expect(response).to have_http_status(:unprocessable_entity)
+                    expect(response_body['errors'][0]['detail'][0..95]).to eq(
+                      'The property /disabilities/0/secondaryDisabilities/0/approximateDate did not match the following'
                     )
                   end
                 end
