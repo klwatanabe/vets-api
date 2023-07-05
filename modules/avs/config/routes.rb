@@ -2,6 +2,7 @@
 
 Avs::Engine.routes.draw do
   namespace :v0, defaults: { format: 'json' } do
-    resource :avs, only: :show
+    get '/avs', to: 'avs#index'
+    get '/avs/:id', to: 'avs#show'
   end
 end

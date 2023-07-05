@@ -21,7 +21,7 @@
     }
   },
   "paths": {
-    "/": {
+    "/avs": {
       "get": {
         "summary": "Returns information about After Visit Summaries matching the given parameters",
         "tags": [
@@ -43,6 +43,72 @@
                 "example": {
                   "status": 200,
                   "message": "success",
+                  "data": [
+                    {
+                      "id": 123,
+                      "path": "/my-health/medical-records/care-summaries/avs/123"
+                    }
+                  ]
+                },
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "properties": {
+                        "id": {
+                          "type": "integer",
+                          "pattern": "^[0-9]*$"
+                        },
+                        "path": {
+                          "type": "string",
+                          "pattern": "^[a-zA-Z0-9\\-/]*/[0-9]*$"
+                        }
+                      }
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/avs/{id}": {
+      "get": {
+        "summary": "Returns After Visit Summary",
+        "tags": [
+          ""
+        ],
+        "operationId": "after-visit-summaries-show",
+        "security": [
+          {
+            "apikey": [
+
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "AVS ID",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "After Visit Summary",
+            "content": {
+              "application/json": {
+                "example": {
+                  "status": 200,
+                  "message": "success",
                   "data": {
                     "id": 123,
                     "path": "/my-health/medical-records/care-summaries/avs/123"
@@ -59,7 +125,7 @@
                         },
                         "path": {
                           "type": "string",
-                          "pattern": "^[a-zA-Z0-9-/]*/[0-9]*$"
+                          "pattern": "^[a-zA-Z0-9\\-/]*/[0-9]*$"
                         }
                       }
                     }
@@ -75,10 +141,9 @@
       }
     }
   },
-  "basePath": "/avs/v0/avs",
   "servers": [
     {
-      "url": "https://dev-api.va.gov/avs/{version}/avs",
+      "url": "https://dev-api.va.gov/avs/{version}",
       "description": "VA.gov API sandbox environment",
       "variables": {
         "version": {
