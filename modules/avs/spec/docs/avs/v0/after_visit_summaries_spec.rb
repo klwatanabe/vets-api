@@ -5,7 +5,7 @@ require 'rails_helper'
 
 describe 'After Visit Summaries', swagger_doc: 'modules/avs/app/swagger/avs/v0/swagger.json', type: :request do
 
-  path '/' do
+  path '/avs' do
 
     let(:apikey) { 'apikey' }
 

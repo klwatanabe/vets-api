@@ -24,10 +24,9 @@ class Avs::RswagConfig
           schemas: {}
         },
         paths: {},
-        basePath: '/avs/v0/avs',
         servers: [
           {
-            url: 'https://dev-api.va.gov/avs/{version}/avs',
+            url: 'https://dev-api.va.gov/avs/{version}',
             description: 'VA.gov API sandbox environment',
             variables: {
               version: {
