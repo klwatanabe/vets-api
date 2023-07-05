@@ -2196,21 +2196,22 @@ RSpec.describe 'Disability Claims', type: :request do
         let(:treatments) do
           [
             {
-                "treatedDisabilityNames" => ["Traumatic Brain Injury"],
-                "center" => {
-                    "name" => "Center One",
-                    "state" => 'GA'
-                }
+              'treatedDisabilityNames' => ['Traumatic Brain Injury'],
+              'center' => {
+                'name' => 'Center One',
+                'state' => 'GA'
+              }
             },
             {
-                "treatedDisabilityNames" => ["Cancer - Musculoskeletal - Elbow"],
-                "center" => {
-                    "name" => "Center One",
-                    "state" => 'GA'
-                }
+              'treatedDisabilityNames' => ['Cancer - Musculoskeletal - Elbow'],
+              'center' => {
+                'name' => 'Center One',
+                'state' => 'GA'
+              }
             }
-        ]
-      end
+          ]
+        end
+
         describe "'disabilities.classificationCode' validations" do
           context "when 'disabilites.classificationCode' is valid" do
             it 'returns a successful response' do
@@ -2254,9 +2255,11 @@ RSpec.describe 'Disability Claims', type: :request do
 
         describe "'disabilities.ratedDisabilityId' validations" do
           context "when 'disabilites.disabilityActionType' equals 'INCREASE'" do
-            let(:disabilityActionType) { 'INCREASE' }
+            let(:disability_action_type) { 'INCREASE' }
+
             context "and 'disabilities.ratedDisabilityId' is not provided" do
-              let(:ratedDisabilityId) { '' }
+              let(:rated_disability_id) { '' }
+
               it 'returns an unprocessible entity status' do
                 with_okta_user(scopes) do |auth_header|
                   VCR.use_cassette('evss/claims/claims') do
@@ -2265,8 +2268,8 @@ RSpec.describe 'Disability Claims', type: :request do
                       params = json_data
                       params['data']['attributes']['disabilities'] = disabilities
                       params['data']['attributes']['treatments'] = treatments
-                      params['data']['attributes']['disabilities'][0]['disabilityActionType'] = disabilityActionType
-                      params['data']['attributes']['disabilities'][0]['ratedDisabilityId'] = ratedDisabilityId
+                      params['data']['attributes']['disabilities'][0]['disabilityActionType'] = disability_action_type
+                      params['data']['attributes']['disabilities'][0]['ratedDisabilityId'] = rated_disability_id
                       post submit_path, params: params.to_json, headers: auth_header
                       expect(response).to have_http_status(:unprocessable_entity)
                     end
@@ -2339,8 +2342,8 @@ RSpec.describe 'Disability Claims', type: :request do
                     VCR.use_cassette('brd/countries') do
                       json_data = JSON.parse data
                       params = json_data
-                        params['data']['attributes']['disabilities'] = disabilities
-                        params['data']['attributes']['treatments'] = treatments
+                      params['data']['attributes']['disabilities'] = disabilities
+                      params['data']['attributes']['treatments'] = treatments
                       post submit_path, params: params.to_json, headers: auth_header
                       expect(response).to have_http_status(:ok)
                     end
@@ -2353,8 +2356,8 @@ RSpec.describe 'Disability Claims', type: :request do
 
         describe "'disabilites.approximateDate' validations" do
           let(:approximate_date) { (Time.zone.today + 1.year).strftime('%m-%d-%Y') }
-          context "when 'approximateDate' is in the future" do
 
+          context "when 'approximateDate' is in the future" do
             it 'responds with a bad request' do
               with_okta_user(scopes) do |auth_header|
                 VCR.use_cassette('brd/countries') do
@@ -2451,7 +2454,7 @@ RSpec.describe 'Disability Claims', type: :request do
             end
           end
         end
-        
+
         context 'when a secondaryDisability is added' do
           context 'but name is not present' do
             it 'returns a 422' do
