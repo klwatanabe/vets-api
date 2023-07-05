@@ -242,13 +242,13 @@ describe ClaimsApi::V2::DisabilityCompensationPdfMapper do
         has_conditions = pdf_data[:data][:attributes][:exposureInformation][:hasConditionsRelatedToToxicExposures]
 
         expect(has_conditions).to eq(true)
-        expect(name).to eq('Musculoskeletal - Foot')
+        expect(name).to eq('Traumatic Brain Injury')
         expect(relevance).to eq('ABCDEFG')
         expect(date).to eq('03-11-2018')
         expect(event).to eq('EXPOSURE')
         expect(is_related).to eq(true)
         expect(attribut_count).to eq(5)
-        expect(secondary_name).to eq('Traumatic Brain Injury')
+        expect(secondary_name).to eq('Cancer - Musculoskeletal - Elbow')
         expect(secondary_event).to eq('EXPOSURE')
         expect(secondary_relevance).to eq('ABCDEFG')
       end
@@ -280,7 +280,7 @@ describe ClaimsApi::V2::DisabilityCompensationPdfMapper do
         no_date = tx_center_data[0][:doNotHaveDate]
         treatment_details = tx_center_data[0][:treatmentDetails]
 
-        expect(start_date).to eq('03-1985')
+        expect(start_date).to eq('03-2019')
         expect(no_date).to eq(false)
         expect(treatment_details).to eq('Traumatic Brain Injury - Center One, Decatur, GA')
       end
@@ -347,7 +347,7 @@ describe ClaimsApi::V2::DisabilityCompensationPdfMapper do
         expect(alt_names).to eq('john jacob, johnny smith')
         expect(fed_orders).to eq(true)
         expect(fed_act).to eq('3619-02-11')
-        expect(fed_sep).to eq('6705-10-03')
+        expect(fed_sep).to eq('2705-10-03')
         expect(served_after_nine_eleven).to eq(false)
       end
     end
