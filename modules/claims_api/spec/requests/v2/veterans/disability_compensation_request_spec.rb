@@ -2278,6 +2278,23 @@ RSpec.describe 'Disability Claims', type: :request do
               end
             end
 
+            context "and 'disabilities.ratedDisabilityId' is provided" do
+              it 'responds with a 200' do
+                with_okta_user(scopes) do |auth_header|
+                  VCR.use_cassette('evss/claims/claims') do
+                    VCR.use_cassette('brd/countries') do
+                      json_data = JSON.parse data
+                      params = json_data
+                      params['data']['attributes']['disabilities'] = disabilities
+                      params['data']['attributes']['treatments'] = treatments
+                      post submit_path, params: params.to_json, headers: auth_header
+                      expect(response).to have_http_status(:ok)
+                    end
+                  end
+                end
+              end
+            end
+
             context "and 'disabilities.diagnosticCode' is not provided" do
               it 'returns an unprocessible entity status' do
                 with_okta_user(scopes) do |auth_header|
