@@ -4,6 +4,7 @@ require 'rails_helper'
 require 'preneeds/service'
 
 describe Preneeds::Service do
+  VCR.configure { |c| c.allow_http_connections_when_no_cassettes = true }
   let(:subject) { described_class.new }
   let(:burial_form) { build(:burial_form) }
 
