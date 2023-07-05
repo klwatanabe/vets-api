@@ -28,6 +28,7 @@ module ClaimsApi
         @pdf_data[:data][:attributes] = @auto_claim&.deep_symbolize_keys
         claim_date_and_signature
         veteran_info
+        @pdf_data[:data][:attributes].delete(:claimantCertification)
 
         @pdf_data
       end
@@ -93,8 +94,24 @@ module ClaimsApi
         abbr_country = country == 'USA' ? 'US' : country
         @pdf_data[:data][:attributes][:identificationInformation][:mailingAddress][:country] = abbr_country
 
+        current_va_employee
+        phone
         zip
 
+        @pdf_data
+      end
+
+      def current_va_employee
+        currently_va_employee = @pdf_data[:data][:attributes][:identificationInformation][:currentlyVaEmployee]
+        @pdf_data[:data][:attributes][:identificationInformation][:currentVaEmployee] = currently_va_employee
+        @pdf_data[:data][:attributes][:identificationInformation].delete(:currentlyVaEmployee)
+        @pdf_data
+      end
+
+      def phone
+        phone = @pdf_data[:data][:attributes][:identificationInformation][:veteranNumber]
+        @pdf_data[:data][:attributes][:identificationInformation][:phoneNumber] = phone
+        @pdf_data[:data][:attributes][:identificationInformation].delete(:veteranNumber)
         @pdf_data
       end
 
@@ -103,6 +120,7 @@ module ClaimsApi
               (@auto_claim&.dig('veteranIdentification', 'mailingAddress', 'zipLastFour') || '')
         mailing_addr = @pdf_data&.dig(:data, :attributes, :identificationInformation, :mailingAddress).present?
         @pdf_data[:data][:attributes][:identificationInformation][:mailingAddress].merge!(zip:) if mailing_addr
+        @pdf_data
       end
 
       def disability_attributes

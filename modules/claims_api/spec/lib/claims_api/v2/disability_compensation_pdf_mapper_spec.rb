@@ -98,16 +98,16 @@ describe ClaimsApi::V2::DisabilityCompensationPdfMapper do
       it 'maps the other veteran info' do
         mapper.map_claim
 
-        currently_va_employee = pdf_data[:data][:attributes][:identificationInformation][:currentlyVaEmployee]
+        current_va_employee = pdf_data[:data][:attributes][:identificationInformation][:currentVaEmployee]
         va_file_number = pdf_data[:data][:attributes][:identificationInformation][:vaFileNumber]
         email = pdf_data[:data][:attributes][:identificationInformation][:emailAddress][:email]
         agree_to_email =
           pdf_data[:data][:attributes][:identificationInformation][:emailAddress][:agreeToEmailRelatedToClaim]
-        telephone = pdf_data[:data][:attributes][:identificationInformation][:veteranNumber][:telephone]
+        telephone = pdf_data[:data][:attributes][:identificationInformation][:phoneNumber][:telephone]
         international_telephone =
-          pdf_data[:data][:attributes][:identificationInformation][:veteranNumber][:internationalTelephone]
+          pdf_data[:data][:attributes][:identificationInformation][:phoneNumber][:internationalTelephone]
 
-        expect(currently_va_employee).to eq(false)
+        expect(current_va_employee).to eq(false)
         expect(va_file_number).to eq('AB123CDEF')
         expect(email).to eq('valid@somedomain.com')
         expect(agree_to_email).to eq(true)
