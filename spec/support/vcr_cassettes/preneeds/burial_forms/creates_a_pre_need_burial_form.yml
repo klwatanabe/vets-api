@@ -4,9 +4,9 @@ http_interactions:
       method: post
       uri: "<PRENEEDS_HOST>/eoas_SOA/PreNeedApplicationPort"
       body:
-        encoding: UTF-8
+        encoding: US-ASCII
         string:
-          <?xml version="1.0" encoding="UTF-8"?><env:Envelope xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+          <?xml version="1.0" encoding="US-ASCII"?><env:Envelope xmlns:xsd="http://www.w3.org/2001/XMLSchema"
           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:tns="http://service.soa.eoas.cem.va.gov/"
           xmlns:env="http://schemas.xmlsoap.org/soap/envelope/"><env:Body><tns:receivePreNeedApplication><preNeedRequest><applicant><applicantEmail>hg@hotmail.com</applicantEmail><applicantPhoneNumber>555-555-5555
           - 234</applicantPhoneNumber><applicantRelationshipToClaimant>Self</applicantRelationshipToClaimant><completingReason>I
@@ -28,9 +28,9 @@ http_interactions:
           6</lastName><maidenName>maiden 6</maidenName><middleName>middle 6</middleName><suffix>Jr.</suffix></serviceName><serviceRecords><branchOfService>AF</branchOfService><dischargeType>1</dischargeType><enteredOnDutyDate>1940-08-07</enteredOnDutyDate><highestRank>GEN</highestRank><nationalGuardState>NY</nationalGuardState><releaseFromDutyDate>1945-08-07</releaseFromDutyDate></serviceRecords><ssn>123-45-6789</ssn><vaClaimNumber>23456789</vaClaimNumber><militaryStatus>A</militaryStatus></veteran></preNeedRequest></tns:receivePreNeedApplication></env:Body></env:Envelope>
       headers:
         Accept:
-          - text/xml;charset=UTF-8
+          - text/xml;charset=US-ASCII
         Content-Type:
-          - text/xml;charset=UTF-8
+          - text/xml;charset=US-ASCII
         User-Agent:
           - Vets.gov Agent
         Date:
