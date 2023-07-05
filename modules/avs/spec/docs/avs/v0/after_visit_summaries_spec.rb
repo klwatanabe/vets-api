@@ -34,7 +34,7 @@ describe 'After Visit Summaries', swagger_doc: 'modules/avs/app/swagger/avs/v0/s
                 },
                 path: {
                   type: :string,
-                  pattern: '^[a-zA-Z0-9-/]*/[0-9]*$'
+                  pattern: '^[a-zA-Z0-9\-/]*/[0-9]*$'
                 },
               },
             }
