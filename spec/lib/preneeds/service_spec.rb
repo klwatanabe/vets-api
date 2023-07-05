@@ -4,7 +4,6 @@ require 'rails_helper'
 require 'preneeds/service'
 
 describe Preneeds::Service do
-  VCR.configure { |c| c.allow_http_connections_when_no_cassettes = true }
   let(:subject) { described_class.new }
   let(:burial_form) { build(:burial_form) }
 
@@ -70,7 +69,7 @@ describe Preneeds::Service do
           'u6HaIsaeE5DodpGD8nVG'
         )
         allow(burial_form).to receive(:preneed_attachments).and_return([])
-
+        
         application = VCR.use_cassette(
           'preneeds/burial_forms/creates_a_pre_need_burial_form',
           match_requests_on: %i[method uri body headers]
