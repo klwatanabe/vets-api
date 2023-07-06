@@ -19,6 +19,7 @@ module HCA
         response = with_monitoring do
           perform(:post, '', build_lookup_user_xml(icn)).body
         end
+        binding.pry; fail
 
         {
           enrollment_status: get_xpath(

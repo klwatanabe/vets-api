@@ -32,6 +32,7 @@ describe HCA::EnrollmentEligibility::Service do
       VCR.config do |c|
         c.allow_http_connections_when_no_cassette = true
       end
+      described_class.new.lookup_user('1013032368V065534')
       binding.pry; fail
 
       VCR.use_cassette(
@@ -39,7 +40,7 @@ describe HCA::EnrollmentEligibility::Service do
         VCR::MATCH_EVERYTHING.merge(erb: true)
       ) do
         expect(
-          described_class.new.lookup_user('1013032368V065534')
+          
         ).to eq(
           enrollment_status: 'Verified',
           application_date: '2018-12-27T00:00:00.000-06:00',
