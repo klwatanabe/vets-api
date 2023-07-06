@@ -28,6 +28,12 @@ describe HCA::EnrollmentEligibility::Service do
     end
 
     it 'lookups the user through the hca ee api', run_at: 'Fri, 08 Feb 2019 02:50:45 GMT' do
+
+      VCR.config do |c|
+        c.allow_http_connections_when_no_cassette = true
+      end
+      binding.pry; fail
+
       VCR.use_cassette(
         'hca/ee/lookup_user',
         VCR::MATCH_EVERYTHING.merge(erb: true)
