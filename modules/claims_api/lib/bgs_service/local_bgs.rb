@@ -102,6 +102,10 @@ module ClaimsApi
 
       wsdl = log_duration(event: 'connection_wsdl_get', endpoint:) do
         connection.get("#{Settings.bgs.url}/#{endpoint}?WSDL")
+      rescue EOFError
+        raise ::Common::Exceptions::UnprocessableEntity.new(
+          detail: 'Connection disrupted, please try again.'
+        )
       end
       target_namespace = Hash.from_xml(wsdl.body).dig('definitions', 'targetNamespace')
       response = log_duration(event: 'connection_post', endpoint:, action:) do
