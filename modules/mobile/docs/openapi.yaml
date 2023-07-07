@@ -26,12 +26,7 @@ paths:
         and OS
       operationId: index
       parameters:
-        - in: header
-          name: X-Key-Inflection
-          schema:
-            description: Allows the API to return camelCase keys rather than snake_case.
-            example: camel
-            type: string
+        - $ref: '#/components/parameters/InflectionHeader'
       requestBody:
         content:
           application/json:
@@ -46,25 +41,24 @@ paths:
               schema:
                 $ref: ./schemas/DiscoveryResponse.yml
           description: OK
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
         '408':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: The response from this API timed out.
+          $ref: '#/components/responses/408'
         '422':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Unprocessable Entity, usually because of one or more invalid
-            parameters.
+          $ref: '#/components/responses/422'
         '500':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An internal API error occured.
+          $ref: '#/components/responses/500'
+        '502':
+          $ref: '#/components/responses/502'
+        '503':
+          $ref: '#/components/responses/503'
+        '504':
+          $ref: '#/components/responses/504'
       summary: /
   /v0/appeal/{id}:
     get:
@@ -78,6 +72,7 @@ paths:
           required: true
           schema:
             type: string
+        - $ref: '#/components/parameters/InflectionHeader'
       responses:
         '200':
           content:
@@ -96,48 +91,23 @@ paths:
                 $ref: ./schemas/Appeal.yml
           description: OK
         '401':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Authentication is possible but has failed or not yet been provided.
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
         '404':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: The requested resource could not be found.
+          $ref: '#/components/responses/404'
         '408':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: The response from this API timed out.
+          $ref: '#/components/responses/408'
         '422':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Failure in processing entity
+          $ref: '#/components/responses/422'
         '500':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An internal API error occured.
+          $ref: '#/components/responses/500'
+        '502':
+          $ref: '#/components/responses/502'
         '503':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An upstream service is unavailable, or its circuit breaker
-            may have been tripped.
+          $ref: '#/components/responses/503'
         '504':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: A response from an upstream service timed out.
+          $ref: '#/components/responses/504'
       security:
         - Bearer: []
       summary: /v0/appeal/{id}
@@ -192,18 +162,23 @@ paths:
           name: sort
           schema:
             type: string
-        - description: Field to include pending appointments. Currently only supports value `pending`. Redundant with field `included[]` for backwards compability but `include` is the correct one to use when following conventions.
+        - description: Field to include pending appointments. Currently only supports value `pending`. Redundant with field `included[]` for backwards compatibility but `include` is the correct one to use when following conventions.
           example: pending
           in: query
           name: include[]
           schema:
-            type: array of strings
-        - description: Field to include pending appointments. Currently only supports value `pending`. Redundant with field `include[]` for backwards compability but `include` is the correct one to use when following conventions.
+            type: array
+            items:
+              type: string
+        - description: Field to include pending appointments. Currently only supports value `pending`. Redundant with field `include[]` for backwards compatibility but `include` is the correct one to use when following conventions.
           example: pending
           in: query
           name: included[]
           schema:
-            type: array of strings
+            type: array
+            items:
+              type: string
+        - $ref: '#/components/parameters/InflectionHeader'
       responses:
         '200':
           content:
@@ -235,54 +210,23 @@ paths:
                 $ref: ./schemas/Appointments.yml
           description: OK
         '401':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Authentication is possible but has failed or not yet been provided.
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
         '404':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: The requested resource could not be found.
+          $ref: '#/components/responses/404'
         '408':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: The response from this API timed out.
+          $ref: '#/components/responses/408'
         '422':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Validation Error.
+          $ref: '#/components/responses/422'
         '500':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An internal API error occured.
+          $ref: '#/components/responses/500'
         '502':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An upstream service the API depends on returned an error.
+          $ref: '#/components/responses/502'
         '503':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An upstream service is unavailable, or its circuit breaker
-            may have been tripped.
+          $ref: '#/components/responses/503'
         '504':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: A response from an upstream service timed out.
+          $ref: '#/components/responses/504'
       security:
         - Bearer: []
       summary: /v0/appointments
@@ -300,64 +244,34 @@ paths:
           required: true
           schema:
             type: string
+        - $ref: '#/components/parameters/InflectionHeader'
       responses:
         '204':
           description: No Content
         '401':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Authentication is possible but has failed or not yet been provided.
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
         '404':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: The requested resource could not be found.
+          $ref: '#/components/responses/404'
         '408':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: The response from this API timed out.
+          $ref: '#/components/responses/408'
         '422':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Validation error.
+          $ref: '#/components/responses/422'
         '500':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An internal API error occured.
+          $ref: '#/components/responses/500'
         '502':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An upstream service the API depends on returned an error.
+          $ref: '#/components/responses/502'
         '503':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An upstream service is unavailable, or its circuit breaker
-            may have been tripped.
+          $ref: '#/components/responses/503'
         '504':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: A response from an upstream service timed out.
+          $ref: '#/components/responses/504'
       security:
         - Bearer: []
       summary: /v0/appointments/cancel/{cancelId}
   /v0/appointments/community_care/eligibility/{service_type}:
     get:
-      description: Checks if user is eligibile to make an appointment with Community Care for a type of service. Checks if user is registered at a site that is marked as accepting community care requests and community care eligibility api says that they're eligible for the type of care they chose
+      description: Checks if user is eligible to make an appointment with Community Care for a type of service. Checks if user is registered at a site that is marked as accepting community care requests and community care eligibility api says that they're eligible for the type of care they chose
       operationId: communityCareEligibility
       parameters:
         - description: Type of service to check eligibility for. Can only be one of following options primaryCare, nutrition, podiatry, optometry, audiology.
@@ -366,6 +280,7 @@ paths:
           required: true
           schema:
             type: string
+        - $ref: '#/components/parameters/InflectionHeader'
       responses:
         '200':
           content:
@@ -374,54 +289,29 @@ paths:
                 $ref: ./schemas/CommunityCaresEligibility.yml
           description: OK
         '401':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Authentication is possible but has failed or not yet been provided.
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
         '404':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: The requested resource could not be found.
+          $ref: '#/components/responses/404'
         '408':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: The response from this API timed out.
+          $ref: '#/components/responses/408'
         '422':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Failure in processing entity
+          $ref: '#/components/responses/422'
         '500':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An internal API error occured.
+          $ref: '#/components/responses/500'
+        '502':
+          $ref: '#/components/responses/502'
         '503':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An upstream service is unavailable, or its circuit breaker
-            may have been tripped.
+          $ref: '#/components/responses/503'
         '504':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: A response from an upstream service timed out.
+          $ref: '#/components/responses/504'
       security:
         - Bearer: []
       summary: /v0/appointments/community_care/eligibility/{service_type}
   /v0/appointments/facility/eligibility:
     get:
-      description: Checks if a list of facilities if they are eligibile to create a appointment request to provide the given type of service at the facility.
+      description: Checks if a list of facilities if they are eligible to create a appointment request to provide the given type of service at the facility.
       operationId: facilityEligibility
       parameters:
         - description: Type of service to check eligibility for.
@@ -449,13 +339,16 @@ paths:
           name: FacilityIds[]
           required: true
           schema:
-            type: array of strings
+            type: array
+            items:
+              type: string
         - description: type of appointment. Can either be 'request' or 'direct' but only request will be used until direct scheduling functionality is built out
           in: path
           name: type
           required: true
           schema:
             type: string
+        - $ref: '#/components/parameters/InflectionHeader'
       responses:
         '200':
           content:
@@ -464,59 +357,34 @@ paths:
                 $ref: ./schemas/FacilityEligibilities.yml
           description: OK
         '401':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Authentication is possible but has failed or not yet been provided.
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
         '404':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: The requested resource could not be found.
+          $ref: '#/components/responses/404'
         '408':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: The response from this API timed out.
+          $ref: '#/components/responses/408'
         '422':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Failure in processing entity
+          $ref: '#/components/responses/422'
         '500':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An internal API error occured.
+          $ref: '#/components/responses/500'
+        '502':
+          $ref: '#/components/responses/502'
         '503':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An upstream service is unavailable, or its circuit breaker
-            may have been tripped.
+          $ref: '#/components/responses/503'
         '504':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: A response from an upstream service timed out.
+          $ref: '#/components/responses/504'
       security:
         - Bearer: []
       summary: /v0/appointments/facility/eligibility
-  /v0/appointments/facilities/{facililty_id}/clinics:
+  /v0/appointments/facilities/{facility_id}/clinics:
     get:
       description: Returns all available clinics at a facility for a given type of service.
       operationId: clinic
       parameters:
         - description: Facility ID
           in: path
-          name: facililty_id
+          name: facility_id
           required: true
           schema:
             type: string
@@ -541,6 +409,7 @@ paths:
               - socialWork
               - cpap
               - ophthalmology
+        - $ref: '#/components/parameters/InflectionHeader'
       responses:
         '200':
           content:
@@ -549,52 +418,27 @@ paths:
                 $ref: ./schemas/FacilityClinics.yml
           description: OK
         '401':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Authentication is possible but has failed or not yet been provided.
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
         '404':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: The requested resource could not be found.
+          $ref: '#/components/responses/404'
         '408':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: The response from this API timed out.
+          $ref: '#/components/responses/408'
         '422':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Failure in processing entity
+          $ref: '#/components/responses/422'
         '500':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An internal API error occured.
+          $ref: '#/components/responses/500'
+        '502':
+          $ref: '#/components/responses/502'
         '503':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An upstream service is unavailable, or its circuit breaker
-            may have been tripped.
+          $ref: '#/components/responses/503'
         '504':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: A response from an upstream service timed out.
+          $ref: '#/components/responses/504'
       security:
         - Bearer: []
-      summary: /v0/appointments/facilities/{facililty_id}/clinics
-  /v0/appointments/facilities/{facililty_id}/clinics/{clinic_id}/slots:
+      summary: /v0/appointments/facilities/{facility_id}/clinics
+  /v0/appointments/facilities/{facility_id}/clinics/{clinic_id}/slots:
     get:
       description: Accepts date range for a clinic at a va facility and returns available slots for a a direct schedule appointment.
       operationId: slot
@@ -615,6 +459,7 @@ paths:
           schema:
             format: date-time
             type: string
+        - $ref: '#/components/parameters/InflectionHeader'
       responses:
         '200':
           content:
@@ -623,55 +468,32 @@ paths:
                 $ref: ./schemas/ClinicSlots.yml
           description: OK
         '401':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Authentication is possible but has failed or not yet been provided.
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
         '404':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: The requested resource could not be found.
+          $ref: '#/components/responses/404'
         '408':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: The response from this API timed out.
+          $ref: '#/components/responses/408'
         '422':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Failure in processing entity
+          $ref: '#/components/responses/422'
         '500':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An internal API error occured.
+          $ref: '#/components/responses/500'
+        '502':
+          $ref: '#/components/responses/502'
         '503':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An upstream service is unavailable, or its circuit breaker
-            may have been tripped.
+          $ref: '#/components/responses/503'
         '504':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: A response from an upstream service timed out.
+          $ref: '#/components/responses/504'
       security:
         - Bearer: []
-      summary: /v0/appointments/facilities/{facililty_id}/clinics/{clinic_id}/slots
+      summary: /v0/appointments/facilities/{facility_id}/clinics/{clinic_id}/slots
   /v0/appointments/preferences:
     get:
       description: Returns VAOS appointment contact preferences
       operationId: appointment_preferences
+      parameters:
+        - $ref: '#/components/parameters/InflectionHeader'
       responses:
         '200':
           content:
@@ -680,54 +502,31 @@ paths:
                 $ref: ./schemas/AppointmentPreferences.yml
           description: OK
         '401':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Authentication is possible but has failed or not yet been provided.
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
         '404':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: The requested resource could not be found.
+          $ref: '#/components/responses/404'
         '408':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: The response from this API timed out.
+          $ref: '#/components/responses/408'
         '422':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Failure in processing entity
+          $ref: '#/components/responses/422'
         '500':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An internal API error occured.
+          $ref: '#/components/responses/500'
+        '502':
+          $ref: '#/components/responses/502'
         '503':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An upstream service is unavailable, or its circuit breaker
-            may have been tripped.
+          $ref: '#/components/responses/503'
         '504':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: A response from an upstream service timed out.
+          $ref: '#/components/responses/504'
       security:
         - Bearer: [ ]
       summary: /v0/appointments/preferences
     put:
       description: updates VAOS appointment preferences
       operationId: appointment_preferences
+      parameters:
+        - $ref: '#/components/parameters/InflectionHeader'
       requestBody:
         content:
           application/json:
@@ -743,54 +542,23 @@ paths:
                 $ref: ./schemas/AppointmentPreferences.yml
           description: OK
         '401':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Authentication is possible but has failed or not yet been provided.
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
         '404':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: The requested resource could not be found.
+          $ref: '#/components/responses/404'
         '408':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: The response from this API timed out.
+          $ref: '#/components/responses/408'
         '422':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Failure in processing entity
+          $ref: '#/components/responses/422'
         '500':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An internal API error occured.
+          $ref: '#/components/responses/500'
         '502':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An upstream service the API depends on returned an error.
+          $ref: '#/components/responses/502'
         '503':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An upstream service is unavailable, or its circuit breaker
-            may have been tripped.
+          $ref: '#/components/responses/503'
         '504':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: A response from an upstream service timed out.
+          $ref: '#/components/responses/504'
       security:
         - Bearer: []
       summary: /v0/appointments/preferences
@@ -805,6 +573,7 @@ paths:
           required: true
           schema:
             type: array
+        - $ref: '#/components/parameters/InflectionHeader'
       responses:
         '200':
           content:
@@ -813,48 +582,23 @@ paths:
                 $ref: ./schemas/ServiceEligibilities.yml
           description: OK
         '401':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Authentication is possible but has failed or not yet been provided.
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
         '404':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: The requested resource could not be found.
+          $ref: '#/components/responses/404'
         '408':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: The response from this API timed out.
+          $ref: '#/components/responses/408'
         '422':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Failure in processing entity
+          $ref: '#/components/responses/422'
         '500':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An internal API error occured.
+          $ref: '#/components/responses/500'
+        '502':
+          $ref: '#/components/responses/502'
         '503':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An upstream service is unavailable, or its circuit breaker
-            may have been tripped.
+          $ref: '#/components/responses/503'
         '504':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: A response from an upstream service timed out.
+          $ref: '#/components/responses/504'
       security:
         - Bearer: []
       summary: /v0/appointments/va/eligibility
@@ -862,6 +606,8 @@ paths:
     post:
       description: Creates a new appointment or appointment request.
       operationId: CreateNewAppointment
+      parameters:
+        - $ref: '#/components/parameters/InflectionHeader'
       requestBody:
         content:
           application/json:
@@ -871,7 +617,7 @@ paths:
                 - $ref: ./schemas/CreateAppointmentRequest.yml
                 - $ref: ./schemas/CreateAppointmentDirect.yml
       responses:
-        "200":
+        '200':
           description: OK
           content:
             application/json:
@@ -893,54 +639,23 @@ paths:
                       attributes:
                         $ref: ./schemas/NewAppointment.yml
         '401':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Authentication is possible but has failed or not yet been provided.
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
         '404':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: The requested resource could not be found.
+          $ref: '#/components/responses/404'
         '408':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: The response from this API timed out.
+          $ref: '#/components/responses/408'
         '422':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Validation error.
+          $ref: '#/components/responses/422'
         '500':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An internal API error occured.
+          $ref: '#/components/responses/500'
         '502':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An upstream service the API depends on returned an error.
+          $ref: '#/components/responses/502'
         '503':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An upstream service is unavailable, or its circuit breaker
-            may have been tripped.
+          $ref: '#/components/responses/503'
         '504':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: A response from an upstream service timed out.
+          $ref: '#/components/responses/504'
       security:
         - Bearer: [ ]
       summary: /v0/appointment
@@ -956,6 +671,7 @@ paths:
           required: true
           schema:
             type: string
+        - $ref: '#/components/parameters/InflectionHeader'
       responses:
         '200':
           content:
@@ -964,48 +680,23 @@ paths:
                 $ref: ./schemas/Claim.yml
           description: OK
         '401':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Authentication is possible but has failed or not yet been provided.
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
         '404':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: The requested resource could not be found.
+          $ref: '#/components/responses/404'
         '408':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: The response from this API timed out.
+          $ref: '#/components/responses/408'
         '422':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Failure in processing entity
+          $ref: '#/components/responses/422'
         '500':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An internal API error occured.
+          $ref: '#/components/responses/500'
+        '502':
+          $ref: '#/components/responses/502'
         '503':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An upstream service is unavailable, or its circuit breaker
-            may have been tripped.
+          $ref: '#/components/responses/503'
         '504':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: A response from an upstream service timed out.
+          $ref: '#/components/responses/504'
       security:
         - Bearer: []
       summary: /v0/claim/{id}
@@ -1021,6 +712,7 @@ paths:
           required: true
           schema:
             type: string
+        - $ref: '#/components/parameters/InflectionHeader'
       requestBody:
         content:
           multipart/form-data:
@@ -1051,48 +743,23 @@ paths:
                 $ref: ./schemas/ClaimDocUpload.yml
           description: Accepted
         '401':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Authentication is possible but has failed or not yet been provided.
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
         '404':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: The requested resource could not be found.
+          $ref: '#/components/responses/404'
         '408':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: The response from this API timed out.
+          $ref: '#/components/responses/408'
         '422':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Failure in processing entity
+          $ref: '#/components/responses/422'
         '500':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An internal API error occured.
+          $ref: '#/components/responses/500'
+        '502':
+          $ref: '#/components/responses/502'
         '503':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An upstream service is unavailable, or its circuit breaker
-            may have been tripped.
+          $ref: '#/components/responses/503'
         '504':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: A response from an upstream service timed out.
+          $ref: '#/components/responses/504'
       security:
         - Bearer: []
       summary: /v0/claim/{id}/documents
@@ -1108,6 +775,7 @@ paths:
           required: true
           schema:
             type: string
+        - $ref: '#/components/parameters/InflectionHeader'
       requestBody:
         content:
           application/json:
@@ -1122,48 +790,23 @@ paths:
                 $ref: ./schemas/ClaimDocUpload.yml
           description: Accepted
         '401':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Authentication is possible but has failed or not yet been provided.
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
         '404':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: The requested resource could not be found.
+          $ref: '#/components/responses/404'
         '408':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: The response from this API timed out.
+          $ref: '#/components/responses/408'
         '422':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Failure in processing entity
+          $ref: '#/components/responses/422'
         '500':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An internal API error occured.
+          $ref: '#/components/responses/500'
+        '502':
+          $ref: '#/components/responses/502'
         '503':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An upstream service is unavailable, or its circuit breaker
-            may have been tripped.
+          $ref: '#/components/responses/503'
         '504':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: A response from an upstream service timed out.
+          $ref: '#/components/responses/504'
       security:
         - Bearer: []
       summary: /v0/claim/{id}/documents/multi-image
@@ -1178,6 +821,7 @@ paths:
           required: true
           schema:
             type: string
+        - $ref: '#/components/parameters/InflectionHeader'
       responses:
         '202':
           content:
@@ -1186,48 +830,23 @@ paths:
                 $ref: ./schemas/ClaimDocUpload.yml
           description: Accepted
         '401':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Authentication is possible but has failed or not yet been provided.
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
         '404':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: The requested resource could not be found.
+          $ref: '#/components/responses/404'
         '408':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: The response from this API timed out.
+          $ref: '#/components/responses/408'
         '422':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Failure in processing entity
+          $ref: '#/components/responses/422'
         '500':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An internal API error occured.
+          $ref: '#/components/responses/500'
+        '502':
+          $ref: '#/components/responses/502'
         '503':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An upstream service is unavailable, or its circuit breaker
-            may have been tripped.
+          $ref: '#/components/responses/503'
         '504':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: A response from an upstream service timed out.
+          $ref: '#/components/responses/504'
       security:
         - Bearer: []
       summary: /v0/claim/{id}/request-decision
@@ -1235,6 +854,8 @@ paths:
     get:
       description: Returns the list of claim decision letters for given user
       operationId: decision-letters
+      parameters:
+        - $ref: '#/components/parameters/InflectionHeader'
       responses:
         '200':
           content:
@@ -1243,60 +864,23 @@ paths:
                 $ref: ./schemas/DecisionLetters.yml
           description: OK
         '401':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Authentication is possible but has failed or not yet been provided.
+          $ref: '#/components/responses/401'
         '403':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Client was forbidden from upstream resource.
+          $ref: '#/components/responses/403'
         '404':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: The requested resource could not be found.
+          $ref: '#/components/responses/404'
         '408':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: The response from this API timed out.
+          $ref: '#/components/responses/408'
         '422':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Failure in processing entity
+          $ref: '#/components/responses/422'
         '500':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An internal API error occured.
+          $ref: '#/components/responses/500'
         '502':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An upstream service the API depends on returned an error.
+          $ref: '#/components/responses/502'
         '503':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An upstream service is unavailable, or its circuit breaker
-            may have been tripped.
+          $ref: '#/components/responses/503'
         '504':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: A response from an upstream service timed out.
+          $ref: '#/components/responses/504'
       security:
         - Bearer: [ ]
       summary: /v0/claims/decision-letters
@@ -1309,6 +893,7 @@ paths:
           in: path
           name: document_id
           required: true
+        - $ref: '#/components/parameters/InflectionHeader'
       responses:
         '200':
           content:
@@ -1318,60 +903,23 @@ paths:
                 type: string
           description: OK
         '401':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Authentication is possible but has failed or not yet been provided.
+          $ref: '#/components/responses/401'
         '403':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Client was forbidden from upstream resource.
+          $ref: '#/components/responses/403'
         '404':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: The requested resource could not be found.
+          $ref: '#/components/responses/404'
         '408':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: The response from this API timed out.
+          $ref: '#/components/responses/408'
         '422':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Failure in processing entity
+          $ref: '#/components/responses/422'
         '500':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An internal API error occured.
+          $ref: '#/components/responses/500'
         '502':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An upstream service the API depends on returned an error.
+          $ref: '#/components/responses/502'
         '503':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An upstream service is unavailable, or its circuit breaker
-            may have been tripped.
+          $ref: '#/components/responses/503'
         '504':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: A response from an upstream service timed out.
+          $ref: '#/components/responses/504'
       security:
         - Bearer: [ ]
       summary: /v0/claims/decision-letters/{document_id}/download
@@ -1424,6 +972,7 @@ paths:
           name: useCache
           schema:
             type: boolean
+        - $ref: '#/components/parameters/InflectionHeader'
       responses:
         '200':
           content:
@@ -1440,54 +989,23 @@ paths:
                   - $ref: ./schemas/ClaimsAndAppealsOverviewAppealsError.yml
           description: One of the two upstream services failed
         '401':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Authentication is possible but has failed or not yet been provided.
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
         '404':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: The requested resource could not be found.
+          $ref: '#/components/responses/404'
         '408':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: The response from this API timed out.
+          $ref: '#/components/responses/408'
         '422':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Failure in processing entity
+          $ref: '#/components/responses/422'
         '500':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An internal API error occured.
+          $ref: '#/components/responses/500'
         '502':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/ClaimsAndAppealsOverviewDoubleFailure.yml
-          description: Both upstream services the API depends on returned an error.
+          $ref: '#/components/responses/502'
         '503':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An upstream service is unavailable, or its circuit breaker
-            may have been tripped.
+          $ref: '#/components/responses/503'
         '504':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: A response from an upstream service timed out.
+          $ref: '#/components/responses/504'
       security:
         - Bearer: []
       summary: /v0/claims-and-appeals-overview
@@ -1525,6 +1043,7 @@ paths:
           name: page[size]
           schema:
             type: integer
+        - $ref: '#/components/parameters/InflectionHeader'
       responses:
         '200':
           content:
@@ -1545,61 +1064,23 @@ paths:
                 $ref: ./schemas/Errors.yml
           description: Bad Request
         '401':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Authentication is possible but has failed or not yet been provided.
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
         '404':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: The requested resource could not be found.
+          $ref: '#/components/responses/404'
         '408':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: The response from this API timed out.
+          $ref: '#/components/responses/408'
         '422':
-          content:
-            application/json:
-              example:
-                errors:
-                  - code: '422'
-                    detail: User has no home latitude and longitude
-                    source: Mobile::V0::CommunityCareProvidersController
-                    status: '422'
-                    title: Unprocessable Entity
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Failure in processing entity
+          $ref: '#/components/responses/422'
         '500':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An internal API error occured.
+          $ref: '#/components/responses/500'
         '502':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An upstream service the API depends on returned an error.
+          $ref: '#/components/responses/502'
         '503':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An upstream service is unavailable, or its circuit breaker
-            may have been tripped.
+          $ref: '#/components/responses/503'
         '504':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: A response from an upstream service timed out.
+          $ref: '#/components/responses/504'
       security:
         - Bearer: []
       summary: /v0/community-care-providers
@@ -1607,6 +1088,8 @@ paths:
     get:
       description: Returns the list of disability ratings for given user
       operationId: disability-rating
+      parameters:
+        - $ref: '#/components/parameters/InflectionHeader'
       responses:
         '200':
           content:
@@ -1614,67 +1097,150 @@ paths:
               schema:
                 $ref: ./schemas/DisabilityRating.yml
           description: OK
+        '400':
+          content:
+            application/json:
+              example:
+                errors:
+                  - timestamp: '2023-02-13T17:38:36.551+00:00'
+                    status: '400'
+                    error: 'Bad Request'
+                    path: '/veteran_verification/v2/disability_rating'
+                    code: '400'
+                    title: 'Common::Exceptions::BadRequest'
+                    detail: 'Bad Request'
+              schema:
+                $ref: ./schemas/LighthouseErrors.yml
+          description: Bad request. Server can't understand request.
         '401':
           content:
             application/json:
+              example:
+                errors:
+                  - status: '401'
+                    error: 'Invalid Token.'
+                    path: '/veteran_verification/v2/disability_rating'
+                    code: '401'
+                    title: 'Common::Exceptions::Unauthorized'
+                    detail: 'Invalid Token.'
               schema:
-                $ref: ./schemas/Errors.yml
+                $ref: ./schemas/LighthouseErrors.yml
           description: Authentication is possible but has failed or not yet been provided.
         '403':
           content:
             application/json:
+              example:
+                errors:
+                  - status: '403'
+                    error: 'Token not granted requested scope.'
+                    path: '/veteran_verification/v2/disability_rating'
+                    code: '403'
+                    title: 'Common::Exceptions::Forbidden'
+                    detail: 'Token not granted requested scope.'
               schema:
-                $ref: ./schemas/Errors.yml
+                $ref: ./schemas/LighthouseErrors.yml
           description: Client was forbidden from upstream resource.
         '404':
           content:
             application/json:
+              example:
+                errors:
+                  - title: 'Veteran not identifiable.'
+                    detail: 'No data found for ICN.'
+                    code: '404'
+                    status: '404'
               schema:
-                $ref: ./schemas/Errors.yml
+                $ref: ./schemas/LighthouseErrors.yml
           description: The requested resource could not be found.
-        '408':
+        '405':
           content:
             application/json:
+              example:
+                errors:
+                  - status: '405'
+                    error: 'Unknown.'
+                    path: '/veteran_verification/v2/disability_rating'
+                    code: '405'
+                    title: 'Common::Exceptions::ServiceError'
+                    detail: 'Unknown.'
               schema:
-                $ref: ./schemas/Errors.yml
-          description: The response from this API timed out.
-        '422':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
+                $ref: ./schemas/LighthouseErrors.yml
           description: Failure in processing entity
+        '408':
+          $ref: '#/components/responses/408'
+        '413':
+          content:
+            application/json:
+              example:
+                errors:
+                  - message: 'Request size limit exceeded'
+                    status: '413.'
+                    code: '413'
+                    title: 'Common::Exceptions::PayloadTooLarge'
+                    detail: 'Request size limit exceeded'
+              schema:
+                $ref: ./schemas/LighthouseErrors.yml
+          description: Failure in processing entity
+        '429':
+          content:
+            application/json:
+              example:
+                errors:
+                  - title: 'Too Many Requests'
+                    detail: 'The user has sent too many requests in a given amount of time'
+                    code: '429'
+                    status: '429'
+              schema:
+                $ref: ./schemas/LighthouseErrors.yml
+          description: Too Many Requests
         '500':
           content:
             application/json:
+              example:
+                errors:
+                  - timestamp: '2023-02-13T17:38:36.551+00:00'
+                    status: '500'
+                    error: 'Internal Server Error'
+                    path: '/veteran_verification/v2/disability_rating'
+                    code: '500'
+                    title: 'Common::Exceptions::ExternalServerInternalServerError'
+                    detail: 'Internal Server Error'
               schema:
-                $ref: ./schemas/Errors.yml
-          description: An internal API error occured.
+                $ref: ./schemas/LighthouseErrors.yml
+          description: An internal API error occurred.
         '502':
           content:
             application/json:
+              example:
+                errors:
+                  - title: 'Unexpected Response Body'
+                    detail: 'EMIS service responded with something other than veteran status information.'
+                    code: 'EMIS_STATUS502'
+                    status: '502'
               schema:
-                $ref: ./schemas/Errors.yml
+                $ref: ./schemas/LighthouseErrors.yml
           description: An upstream service the API depends on returned an error.
         '503':
           content:
             application/json:
+              example:
+                errors:
+                  - title: 'Error title'
+                    detail: 'Detailed error message'
+                    code: '503'
+                    status: '503'
               schema:
-                $ref: ./schemas/Errors.yml
+                $ref: ./schemas/LighthouseErrors.yml
           description: An upstream service is unavailable, or its circuit breaker
             may have been tripped.
         '504':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: A response from an upstream service timed out.
+          $ref: '#/components/responses/504'
       security:
         - Bearer: []
       summary: /v0/disability-rating
   /v0/facilities-info/{sort_method}:
     get:
-      description: Retreives facilities info for a given user
+      description: Retrieves facilities info for a given user
       operationId: GetFacilitiesInfo
       parameters:
         - description: Sort method (Closest to home or current location, alphabetical, or by most recent appointment location) Note - When most recent appointment is selected any facility that doesn't appear in the user's appointments will be sorted alphabetically after those that do appear in the appointments list
@@ -1688,6 +1254,7 @@ paths:
               - home
               - alphabetical
               - appointments
+        - $ref: '#/components/parameters/InflectionHeader'
       requestBody:
         description: Lat Long for user's current location. Only required if sort method is current, but can be supplied anyway
         content:
@@ -1702,60 +1269,23 @@ paths:
                 $ref: ./schemas/FacilitiesInfo.yml
           description: OK
         '401':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Authentication is possible but has failed or not yet been provided.
+          $ref: '#/components/responses/401'
         '403':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Client was forbidden from upstream resource.
+          $ref: '#/components/responses/403'
         '404':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: The requested resource could not be found.
+          $ref: '#/components/responses/404'
         '408':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: The response from this API timed out.
+          $ref: '#/components/responses/408'
         '422':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Failure in processing entity
+          $ref: '#/components/responses/422'
         '500':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An internal API error occured.
+          $ref: '#/components/responses/500'
         '502':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An upstream service the API depends on returned an error.
+          $ref: '#/components/responses/502'
         '503':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An upstream service is unavailable, or its circuit breaker
-            may have been tripped.
+          $ref: '#/components/responses/503'
         '504':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: A response from an upstream service timed out.
+          $ref: '#/components/responses/504'
       security:
         - Bearer: [ ]
       summary: /v0/facilities-info/{sort_method}
@@ -1763,6 +1293,8 @@ paths:
     get:
       description: Returns the list of immunization records for given user
       operationId: immunizations
+      parameters:
+        - $ref: '#/components/parameters/InflectionHeader'
       responses:
         '200':
           content:
@@ -1771,60 +1303,23 @@ paths:
                 $ref: ./schemas/Immunizations.yml
           description: OK
         '401':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Authentication is possible but has failed or not yet been provided.
+          $ref: '#/components/responses/401'
         '403':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Client was forbidden from upstream resource.
+          $ref: '#/components/responses/403'
         '404':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: The requested resource could not be found.
+          $ref: '#/components/responses/404'
         '408':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: The response from this API timed out.
+          $ref: '#/components/responses/408'
         '422':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Failure in processing entity
+          $ref: '#/components/responses/422'
         '500':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An internal API error occured.
+          $ref: '#/components/responses/500'
         '502':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An upstream service the API depends on returned an error.
+          $ref: '#/components/responses/502'
         '503':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An upstream service is unavailable, or its circuit breaker
-            may have been tripped.
+          $ref: '#/components/responses/503'
         '504':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: A response from an upstream service timed out.
+          $ref: '#/components/responses/504'
       security:
         - Bearer: []
       summary: /v0/health/immunizations
@@ -1839,6 +1334,7 @@ paths:
           required: true
           schema:
             type: string
+        - $ref: '#/components/parameters/InflectionHeader'
       responses:
         '200':
           content:
@@ -1847,60 +1343,23 @@ paths:
                 $ref: ./schemas/Locations.yml
           description: OK
         '401':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Authentication is possible but has failed or not yet been provided.
+          $ref: '#/components/responses/401'
         '403':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Client was forbidden from upstream resource.
+          $ref: '#/components/responses/403'
         '404':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: The requested resource could not be found.
+          $ref: '#/components/responses/404'
         '408':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: The response from this API timed out.
+          $ref: '#/components/responses/408'
         '422':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Failure in processing entity
+          $ref: '#/components/responses/422'
         '500':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An internal API error occured.
+          $ref: '#/components/responses/500'
         '502':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An upstream service the API depends on returned an error.
+          $ref: '#/components/responses/502'
         '503':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An upstream service is unavailable, or its circuit breaker
-            may have been tripped.
+          $ref: '#/components/responses/503'
         '504':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: A response from an upstream service timed out.
+          $ref: '#/components/responses/504'
       security:
         - Bearer: []
       summary: /v0/health/locations/{id}
@@ -1935,6 +1394,7 @@ paths:
           name: page[size]
           schema:
             type: integer
+        - $ref: '#/components/parameters/InflectionHeader'
       responses:
         '200':
           content:
@@ -1943,23 +1403,13 @@ paths:
                 $ref: ./schemas/Prescriptions.yml
           description: OK
         '401':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Authentication is possible but has failed or not yet been provided.
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
         '404':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: The requested resource could not be found.
+          $ref: '#/components/responses/404'
         '408':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: The response from this API timed out.
+          $ref: '#/components/responses/408'
         '409':
           content:
             application/json:
@@ -1967,42 +1417,24 @@ paths:
                 $ref: ./schemas/Errors.yml
           description: Record is locked by upstream server.
         '422':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Failure in processing entity
+          $ref: '#/components/responses/422'
         '500':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An internal API error occured.
+          $ref: '#/components/responses/500'
         '502':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An upstream service the API depends on returned an error.
+          $ref: '#/components/responses/502'
         '503':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An upstream service is unavailable, or its circuit breaker
-            may have been tripped.
+          $ref: '#/components/responses/503'
         '504':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: A response from an upstream service timed out.
+          $ref: '#/components/responses/504'
       security:
         - Bearer: [ ]
       summary: /v0/health/rx/prescriptions
   /v0/health/rx/prescriptions/refill:
     put:
       description: Requests refill for prescriptions.
+      operationId: putPrescription
+      parameters:
+        - $ref: '#/components/parameters/InflectionHeader'
       requestBody:
         content:
           application/json:
@@ -2017,24 +1449,28 @@ paths:
               schema:
                 $ref: ./schemas/PrescriptionsRefill.yml
           description: OK
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
         '404':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Not Found
+          $ref: '#/components/responses/404'
         '408':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: The response from this API timed out.
+          $ref: '#/components/responses/408'
         '409':
           content:
             application/json:
               schema:
                 $ref: ./schemas/Errors.yml
           description: Record is locked by upstream server.
+        '500':
+          $ref: '#/components/responses/500'
+        '502':
+          $ref: '#/components/responses/502'
+        '503':
+          $ref: '#/components/responses/503'
+        '504':
+          $ref: '#/components/responses/504'
       security:
         - Bearer: [ ]
       summary: /v0/health/rx/prescriptions/refill
@@ -2050,6 +1486,7 @@ paths:
           required: true
           schema:
             type: object
+        - $ref: '#/components/parameters/InflectionHeader'
       responses:
         '200':
           content:
@@ -2057,18 +1494,14 @@ paths:
               schema:
                 $ref: ./schemas/PrescriptionTracking.yml
           description: OK
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
         '404':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Not Found
+          $ref: '#/components/responses/404'
         '408':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: The response from this API timed out.
+          $ref: '#/components/responses/408'
         '409':
           content:
             application/json:
@@ -2076,30 +1509,13 @@ paths:
                 $ref: ./schemas/Errors.yml
           description: Record is locked by upstream server.
         '500':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An internal API error occured.
+          $ref: '#/components/responses/500'
         '502':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An upstream service the API depends on returned an error.
+          $ref: '#/components/responses/502'
         '503':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An upstream service is unavailable, or its circuit breaker
-            may have been tripped.
+          $ref: '#/components/responses/503'
         '504':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: A response from an upstream service timed out.
+          $ref: '#/components/responses/504'
       security:
         - Bearer: [ ]
       summary: /v0/health/rx/prescriptions/{id}/tracking
@@ -2107,6 +1523,8 @@ paths:
     get:
       description: Returns the list of letter names and types for the given user
       operationId: letters
+      parameters:
+        - $ref: '#/components/parameters/InflectionHeader'
       responses:
         '200':
           content:
@@ -2114,55 +1532,40 @@ paths:
               schema:
                 $ref: ./schemas/Letters.yml
           description: OK
+        '400':
+          $ref: '#/components/responses/400'
         '401':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Authentication is possible but has failed or not yet been provided.
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
         '404':
+          $ref: '#/components/responses/404'
+        '406':
           content:
             application/json:
               schema:
                 $ref: ./schemas/Errors.yml
-          description: The requested resource could not be found.
+          description: Not acceptable.
         '408':
+          $ref: '#/components/responses/408'
+        '413':
           content:
             application/json:
               schema:
                 $ref: ./schemas/Errors.yml
-          description: The response from this API timed out.
+          description: Payload too large.
         '422':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Failure in processing entity
+          $ref: '#/components/responses/422'
+        '429':
+          $ref: '#/components/responses/429'
         '500':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An internal API error occured.
+          $ref: '#/components/responses/500'
         '502':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An upstream service the API depends on returned an error.
+          $ref: '#/components/responses/502'
         '503':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An upstream service is unavailable, or its circuit breaker
-            may have been tripped.
+          $ref: '#/components/responses/503'
         '504':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: A response from an upstream service timed out.
+          $ref: '#/components/responses/504'
       security:
         - Bearer: []
       summary: /v0/letters
@@ -2171,6 +1574,8 @@ paths:
       description: Returns benefit info and options for the given user with or without
         a dependent
       operationId: beneficiary
+      parameters:
+        - $ref: '#/components/parameters/InflectionHeader'
       responses:
         '200':
           content:
@@ -2178,55 +1583,46 @@ paths:
               schema:
                 $ref: ./schemas/LettersBeneficiaryInfo.yml
           description: OK
+        '400':
+          $ref: '#/components/responses/400'
         '401':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Authentication is possible but has failed or not yet been provided.
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
         '404':
+          $ref: '#/components/responses/404'
+        '406':
           content:
             application/json:
               schema:
                 $ref: ./schemas/Errors.yml
-          description: The requested resource could not be found.
+          description: Not acceptable.
         '408':
+          $ref: '#/components/responses/408'
+        '413':
           content:
             application/json:
               schema:
                 $ref: ./schemas/Errors.yml
-          description: The response from this API timed out.
+          description: Payload too large.
+        '422':
+          $ref: '#/components/responses/422'
+        '429':
+          $ref: '#/components/responses/429'
         '500':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An internal API error occured.
+          $ref: '#/components/responses/500'
         '502':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An upstream service the API depends on returned an error.
+          $ref: '#/components/responses/502'
         '503':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An upstream service is unavailable, or its circuit breaker
-            may have been tripped.
+          $ref: '#/components/responses/503'
         '504':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: A response from an upstream service timed out.
+          $ref: '#/components/responses/504'
       security:
         - Bearer: []
       summary: /v0/letters/beneficiary
   /v0/letters/{type}/download:
     post:
-      description: Returns requested letter for download
+      description: Returns requested letter for download. Downloads as either PDF or JSON, dependent upon format param. Defaults to PDF when format is not specified.
       operationId: download
       parameters:
         - description: letter type
@@ -2235,6 +1631,15 @@ paths:
           required: true
           schema:
             type: string
+            enum: [benefit_summary, benefit_summary_dependent, benefit_verification, certificate_of_eligibility, civil_service, commissary, medicare_partd, minimum_essential_coverage, proof_of_service, service_verification]
+        - description: format
+          in: query
+          name: format
+          required: false
+          schema:
+            type: string
+            enum: [ pdf, json ]
+        - $ref: '#/components/parameters/InflectionHeader'
       requestBody:
         content:
           application/json:
@@ -2248,50 +1653,38 @@ paths:
               schema:
                 format: binary
                 type: string
+            application/json:
+              schema:
+                $ref: ./schemas/Letter.yml
           description: OK
+        '400':
+          $ref: '#/components/responses/400'
         '401':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Authentication is possible but has failed or not yet been provided.
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
         '404':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: The requested resource could not be found.
+          $ref: '#/components/responses/404'
         '408':
+          $ref: '#/components/responses/408'
+        '413':
           content:
             application/json:
               schema:
                 $ref: ./schemas/Errors.yml
-          description: The response from this API timed out.
+          description: Payload too large.
+        '422':
+          $ref: '#/components/responses/422'
+        '429':
+          $ref: '#/components/responses/429'
         '500':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An internal API error occured.
+          $ref: '#/components/responses/500'
         '502':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An upstream service the API depends on returned an error.
+          $ref: '#/components/responses/502'
         '503':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An upstream service is unavailable, or its circuit breaker
-            may have been tripped.
+          $ref: '#/components/responses/503'
         '504':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: A response from an upstream service timed out.
+          $ref: '#/components/responses/504'
       security:
         - Bearer: []
       summary: /v0/letters/{type}/download
@@ -2299,6 +1692,8 @@ paths:
     get:
       description: List maintenance windows
       operationId: get_maintenance_windows
+      parameters:
+        - $ref: '#/components/parameters/InflectionHeader'
       responses:
         '200':
           content:
@@ -2307,17 +1702,21 @@ paths:
                 $ref: ./schemas/MaintenanceWindows.yml
           description: OK
         '401':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Unauthorized
+          $ref: '#/components/responses/401'
         '403':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Not authorized for access to maintenance windows
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+        '408':
+          $ref: '#/components/responses/408'
+        '500':
+          $ref: '#/components/responses/500'
+        '502':
+          $ref: '#/components/responses/502'
+        '503':
+          $ref: '#/components/responses/503'
+        '504':
+          $ref: '#/components/responses/504'
       security:
         - Bearer: [ ]
       summary: /v0/maintenance_windows
@@ -2325,6 +1724,8 @@ paths:
     get:
       description: List available secure messaging folders
       operationId: get_folders
+      parameters:
+        - $ref: '#/components/parameters/InflectionHeader'
       responses:
         '200':
           content:
@@ -2333,23 +1734,29 @@ paths:
                 $ref: ./schemas/SecureMessagingFolders.yml
           description: OK
         '401':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Unauthorized
+          $ref: '#/components/responses/401'
         '403':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Not authorized for access to secure messages
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+        '408':
+          $ref: '#/components/responses/408'
+        '500':
+          $ref: '#/components/responses/500'
+        '502':
+          $ref: '#/components/responses/502'
+        '503':
+          $ref: '#/components/responses/503'
+        '504':
+          $ref: '#/components/responses/504'
       security:
         - Bearer: []
       summary: /v0/messaging/health/folders
     post:
       description: Create a new secure messaging folder
       operationId: post_create_folder
+      parameters:
+        - $ref: '#/components/parameters/InflectionHeader'
       requestBody:
         content:
           application/json:
@@ -2364,17 +1771,21 @@ paths:
                 $ref: ./schemas/CreateSecureMessagingFolderResponse.yml
           description: OK
         '401':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Unauthorized
+          $ref: '#/components/responses/401'
         '403':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Not authorized for access to secure messages
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+        '408':
+          $ref: '#/components/responses/408'
+        '500':
+          $ref: '#/components/responses/500'
+        '502':
+          $ref: '#/components/responses/502'
+        '503':
+          $ref: '#/components/responses/503'
+        '504':
+          $ref: '#/components/responses/504'
       security:
         - Bearer: [ ]
       summary: /v0/messaging/health/folder
@@ -2382,6 +1793,8 @@ paths:
     get:
       description: Get a secure messaging folder
       operationId: get_folder
+      parameters:
+        - $ref: '#/components/parameters/InflectionHeader'
       responses:
         '200':
           content:
@@ -2390,17 +1803,21 @@ paths:
                 $ref: ./schemas/SecureMessagingFolder.yml
           description: OK
         '401':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Unauthorized
+          $ref: '#/components/responses/401'
         '403':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Not authorized for access to secure messages
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+        '408':
+          $ref: '#/components/responses/408'
+        '500':
+          $ref: '#/components/responses/500'
+        '502':
+          $ref: '#/components/responses/502'
+        '503':
+          $ref: '#/components/responses/503'
+        '504':
+          $ref: '#/components/responses/504'
       security:
         - Bearer: []
       summary: /v0/messaging/health/folders/{id}
@@ -2413,6 +1830,8 @@ paths:
         Specifically, the message body and attachment information is not included. Those attributes can be obtained by
         getting the specific message resource.
       operationId: get_folder_messages
+      parameters:
+        - $ref: '#/components/parameters/InflectionHeader'
       responses:
         '200':
           content:
@@ -2421,17 +1840,21 @@ paths:
                 $ref: ./schemas/SecureMessageList.yml
           description: OK
         '401':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Unauthorized
+          $ref: '#/components/responses/401'
         '403':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Not authorized for access to secure messages
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+        '408':
+          $ref: '#/components/responses/408'
+        '500':
+          $ref: '#/components/responses/500'
+        '502':
+          $ref: '#/components/responses/502'
+        '503':
+          $ref: '#/components/responses/503'
+        '504':
+          $ref: '#/components/responses/504'
       security:
         - Bearer: []
       summary: /v0/messaging/health/folders/{id}/messages
@@ -2468,7 +1891,7 @@ paths:
           schema:
             type: string
             enum: [ ASC, DESC ]
-        - $ref: "#/components/parameters/InflectionHeader"
+        - $ref: '#/components/parameters/InflectionHeader'
       responses:
         '200':
           content:
@@ -2489,17 +1912,21 @@ paths:
                 $ref: ./schemas/Errors.yml
           description: Folder does not exist
         '401':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Unauthorized
+          $ref: '#/components/responses/401'
         '403':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Not authorized for access to secure messages
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+        '408':
+          $ref: '#/components/responses/408'
+        '500':
+          $ref: '#/components/responses/500'
+        '502':
+          $ref: '#/components/responses/502'
+        '503':
+          $ref: '#/components/responses/503'
+        '504':
+          $ref: '#/components/responses/504'
       security:
         - Bearer: [ ]
       summary: /v0/messaging/health/folders/{id}/threads
@@ -2507,6 +1934,8 @@ paths:
     post:
       description: Save a new draft message
       operationId: post_create_message_draft
+      parameters:
+        - $ref: '#/components/parameters/InflectionHeader'
       requestBody:
         content:
           application/json:
@@ -2521,17 +1950,21 @@ paths:
                 $ref: ./schemas/SecureMessageNewMessageRequest.yml
           description: Created
         '401':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Unauthorized
+          $ref: '#/components/responses/401'
         '403':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Not authorized for access to secure messages
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+        '408':
+          $ref: '#/components/responses/408'
+        '500':
+          $ref: '#/components/responses/500'
+        '502':
+          $ref: '#/components/responses/502'
+        '503':
+          $ref: '#/components/responses/503'
+        '504':
+          $ref: '#/components/responses/504'
       security:
         - Bearer: []
       summary: /v0/messaging/health/message_drafts
@@ -2546,6 +1979,7 @@ paths:
           required: true
           schema:
             type: string
+        - $ref: '#/components/parameters/InflectionHeader'
       requestBody:
         content:
           application/json:
@@ -2558,17 +1992,21 @@ paths:
         '204':
           description: No Content
         '401':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Unauthorized
+          $ref: '#/components/responses/401'
         '403':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Not authorized for access to secure messages
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+        '408':
+          $ref: '#/components/responses/408'
+        '500':
+          $ref: '#/components/responses/500'
+        '502':
+          $ref: '#/components/responses/502'
+        '503':
+          $ref: '#/components/responses/503'
+        '504':
+          $ref: '#/components/responses/504'
       security:
         - Bearer: []
       summary: /v0/messaging/health/message_drafts/{id}
@@ -2583,6 +2021,7 @@ paths:
           required: true
           schema:
             type: string
+        - $ref: '#/components/parameters/InflectionHeader'
       requestBody:
         content:
           application/json:
@@ -2597,17 +2036,21 @@ paths:
                 $ref: ./schemas/SecureMessageNewMessageRequest.yml
           description: Created
         '401':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Unauthorized
+          $ref: '#/components/responses/401'
         '403':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Not authorized for access to secure messages
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+        '408':
+          $ref: '#/components/responses/408'
+        '500':
+          $ref: '#/components/responses/500'
+        '502':
+          $ref: '#/components/responses/502'
+        '503':
+          $ref: '#/components/responses/503'
+        '504':
+          $ref: '#/components/responses/504'
       security:
         - Bearer: []
       summary: /v0/messaging/health/message_drafts/{reply_id}/replydraft
@@ -2628,6 +2071,7 @@ paths:
           required: true
           schema:
             type: string
+        - $ref: '#/components/parameters/InflectionHeader'
       requestBody:
         content:
           application/json:
@@ -2640,17 +2084,21 @@ paths:
         '204':
           description: No Content
         '401':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Unauthorized
+          $ref: '#/components/responses/401'
         '403':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Not authorized for access to secure messages
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+        '408':
+          $ref: '#/components/responses/408'
+        '500':
+          $ref: '#/components/responses/500'
+        '502':
+          $ref: '#/components/responses/502'
+        '503':
+          $ref: '#/components/responses/503'
+        '504':
+          $ref: '#/components/responses/504'
       security:
         - Bearer: []
       summary: /v0/messaging/health/message_drafts/{reply_id}/replydraft/{draft_id}
@@ -2658,6 +2106,8 @@ paths:
     post:
       description: Send a new secure message
       operationId: post_create_message
+      parameters:
+        - $ref: '#/components/parameters/InflectionHeader'
       requestBody:
         content:
           application/json:
@@ -2668,7 +2118,7 @@ paths:
               properties:
                 message:
                   description: Stringified JSON with same parameters as if this was
-                    an application/json request (e.g. '{"category":"OTHER","recipient_id":1763526,"body":"test
+                    an application/json request (e.g. '{'category":"OTHER","recipient_id":1763526,"body":"test
                     message"}')
                   type: string
                 uploads[]:
@@ -2715,17 +2165,21 @@ paths:
                 $ref: ./schemas/SecureMessageDetail.yml
           description: OK
         '401':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Unauthorized
+          $ref: '#/components/responses/401'
         '403':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Not authorized for access to secure messages
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+        '408':
+          $ref: '#/components/responses/408'
+        '500':
+          $ref: '#/components/responses/500'
+        '502':
+          $ref: '#/components/responses/502'
+        '503':
+          $ref: '#/components/responses/503'
+        '504':
+          $ref: '#/components/responses/504'
       security:
         - Bearer: []
       summary: /v0/messaging/health/messages
@@ -2733,6 +2187,8 @@ paths:
     get:
       description: List available message categories
       operationId: get_categories
+      parameters:
+        - $ref: '#/components/parameters/InflectionHeader'
       responses:
         '200':
           content:
@@ -2741,17 +2197,21 @@ paths:
                 $ref: ./schemas/SecureMessageCategories.yml
           description: OK
         '401':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Unauthorized
+          $ref: '#/components/responses/401'
         '403':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Not authorized for access to secure messages
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+        '408':
+          $ref: '#/components/responses/408'
+        '500':
+          $ref: '#/components/responses/500'
+        '502':
+          $ref: '#/components/responses/502'
+        '503':
+          $ref: '#/components/responses/503'
+        '504':
+          $ref: '#/components/responses/504'
       security:
         - Bearer: []
       summary: /v0/messaging/health/messages/categories
@@ -2759,6 +2219,8 @@ paths:
     get:
       description: Gets user message signature preferences
       operationId: get_signature
+      parameters:
+        - $ref: '#/components/parameters/InflectionHeader'
       responses:
         '200':
           content:
@@ -2767,17 +2229,21 @@ paths:
                 $ref: ./schemas/SecureMessageSignature.yml
           description: OK
         '401':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Unauthorized
+          $ref: '#/components/responses/401'
         '403':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Not authorized for access to secure messages
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+        '408':
+          $ref: '#/components/responses/408'
+        '500':
+          $ref: '#/components/responses/500'
+        '502':
+          $ref: '#/components/responses/502'
+        '503':
+          $ref: '#/components/responses/503'
+        '504':
+          $ref: '#/components/responses/504'
       security:
         - Bearer: []
       summary: /v0/messaging/health/messages/signature
@@ -2792,6 +2258,7 @@ paths:
           required: true
           schema:
             type: string
+        - $ref: '#/components/parameters/InflectionHeader'
       responses:
         '204':
           description: The message was deleted successfully
@@ -2808,29 +2275,21 @@ paths:
                 $ref: ./schemas/Errors.yml
           description: Bad Request
         '401':
-          content:
-            application/json:
-              example:
-                errors:
-                  - code: '401'
-                    detail: IAM user session is inactive
-                    status: '401'
-                    title: Not authorized
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Unauthorized
+          $ref: '#/components/responses/401'
         '403':
-          content:
-            application/json:
-              example:
-                errors:
-                  - code: '403'
-                    detail: You do not have access to messaging
-                    status: '403'
-                    title: Forbidden
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Not authorized for access to secure messages
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+        '408':
+          $ref: '#/components/responses/408'
+        '500':
+          $ref: '#/components/responses/500'
+        '502':
+          $ref: '#/components/responses/502'
+        '503':
+          $ref: '#/components/responses/503'
+        '504':
+          $ref: '#/components/responses/504'
       security:
         - Bearer: []
       summary: /v0/messaging/health/messages/{id}
@@ -2846,6 +2305,8 @@ paths:
           <li>If message has an attachment included, attachmentSize is displayed in bytes</li>
         </ul>
       operationId: get_message
+      parameters:
+        - $ref: '#/components/parameters/InflectionHeader'
       responses:
         '200':
           content:
@@ -2854,17 +2315,21 @@ paths:
                 $ref: ./schemas/SecureMessageDetail.yml
           description: OK
         '401':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Unauthorized
+          $ref: '#/components/responses/401'
         '403':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Not authorized for access to secure messages
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+        '408':
+          $ref: '#/components/responses/408'
+        '500':
+          $ref: '#/components/responses/500'
+        '502':
+          $ref: '#/components/responses/502'
+        '503':
+          $ref: '#/components/responses/503'
+        '504':
+          $ref: '#/components/responses/504'
       security:
         - Bearer: []
       summary: /v0/messaging/health/messages/{id}
@@ -2884,21 +2349,26 @@ paths:
           required: true
           schema:
             type: string
+        - $ref: '#/components/parameters/InflectionHeader'
       responses:
         '204':
           description: The message was moved successfully
         '401':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Unauthorized
+          $ref: '#/components/responses/401'
         '403':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Not authorized for access to secure messages
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+        '408':
+          $ref: '#/components/responses/408'
+        '500':
+          $ref: '#/components/responses/500'
+        '502':
+          $ref: '#/components/responses/502'
+        '503':
+          $ref: '#/components/responses/503'
+        '504':
+          $ref: '#/components/responses/504'
       security:
         - Bearer: []
       summary: /v0/messaging/health/messages/{id}/move
@@ -2914,6 +2384,7 @@ paths:
           required: true
           schema:
             type: integer
+        - $ref: '#/components/parameters/InflectionHeader'
       responses:
         '200':
           content:
@@ -2929,17 +2400,21 @@ paths:
               schema:
                 type: string
         '401':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Unauthorized
+          $ref: '#/components/responses/401'
         '403':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Not authorized for access to secure messages
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+        '408':
+          $ref: '#/components/responses/408'
+        '500':
+          $ref: '#/components/responses/500'
+        '502':
+          $ref: '#/components/responses/502'
+        '503':
+          $ref: '#/components/responses/503'
+        '504':
+          $ref: '#/components/responses/504'
       security:
         - Bearer: []
       summary: /v0/messaging/health/messages/{id}/attachments/{attachment_id}
@@ -2965,6 +2440,7 @@ paths:
           required: true
           schema:
             type: integer
+        - $ref: '#/components/parameters/InflectionHeader'
       requestBody:
         content:
           application/json:
@@ -3003,17 +2479,21 @@ paths:
                 $ref: ./schemas/SecureMessageDetail.yml
           description: OK
         '401':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Unauthorized
+          $ref: '#/components/responses/401'
         '403':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Not authorized for access to secure messages
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+        '408':
+          $ref: '#/components/responses/408'
+        '500':
+          $ref: '#/components/responses/500'
+        '502':
+          $ref: '#/components/responses/502'
+        '503':
+          $ref: '#/components/responses/503'
+        '504':
+          $ref: '#/components/responses/504'
       security:
         - Bearer: []
       summary: /v0/messaging/health/messages/{id}/reply
@@ -3023,6 +2503,8 @@ paths:
         Gets a list of message summaries that are related to the message of the passed id and older than the message of 
         the id provided. Does <strong>not</strong> include the message of the passed id itself.
       operationId: get_message_history
+      parameters:
+        - $ref: '#/components/parameters/InflectionHeader'
       responses:
         '200':
           content:
@@ -3031,17 +2513,21 @@ paths:
                 $ref: ./schemas/SecureMessageList.yml
           description: OK
         '401':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Unauthorized
+          $ref: '#/components/responses/401'
         '403':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Not authorized for access to secure messages
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+        '408':
+          $ref: '#/components/responses/408'
+        '500':
+          $ref: '#/components/responses/500'
+        '502':
+          $ref: '#/components/responses/502'
+        '503':
+          $ref: '#/components/responses/503'
+        '504':
+          $ref: '#/components/responses/504'
       security:
         - Bearer: []
       summary: /v0/messaging/health/messages/{id}/thread
@@ -3051,6 +2537,8 @@ paths:
         Gets a list of message summaries that are related to the message of the passed id regardless of their age in 
         relation to the message of the id provided. Does <strong>not</strong> include the message of the passed id itself.
       operationId: get_message_thread
+      parameters:
+        - $ref: '#/components/parameters/InflectionHeader'
       responses:
         '200':
           content:
@@ -3059,17 +2547,21 @@ paths:
                 $ref: ./schemas/v1/SecureMessageList.yml
           description: OK
         '401':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Unauthorized
+          $ref: '#/components/responses/401'
         '403':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Not authorized for access to secure messages
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+        '408':
+          $ref: '#/components/responses/408'
+        '500':
+          $ref: '#/components/responses/500'
+        '502':
+          $ref: '#/components/responses/502'
+        '503':
+          $ref: '#/components/responses/503'
+        '504':
+          $ref: '#/components/responses/504'
       security:
         - Bearer: []
       summary: /v1/messaging/health/messages/{id}/thread
@@ -3077,6 +2569,8 @@ paths:
     get:
       description: List available recipients to which messages may be sent
       operationId: get_triage_teams
+      parameters:
+        - $ref: '#/components/parameters/InflectionHeader'
       responses:
         '200':
           content:
@@ -3085,17 +2579,21 @@ paths:
                 $ref: ./schemas/SecureMessagingRecipients.yml
           description: OK
         '401':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Unauthorized
+          $ref: '#/components/responses/401'
         '403':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Not authorized for access to secure messages
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+        '408':
+          $ref: '#/components/responses/408'
+        '500':
+          $ref: '#/components/responses/500'
+        '502':
+          $ref: '#/components/responses/502'
+        '503':
+          $ref: '#/components/responses/503'
+        '504':
+          $ref: '#/components/responses/504'
       security:
         - Bearer: []
       summary: /v0/messaging/health/recipients
@@ -3103,6 +2601,8 @@ paths:
     get:
       description: Returns user's service history
       operationId: getServiceHistory
+      parameters:
+        - $ref: '#/components/parameters/InflectionHeader'
       responses:
         '200':
           content:
@@ -3111,48 +2611,21 @@ paths:
                 $ref: ./schemas/MilitaryHistory.yml
           description: OK
         '401':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Authentication is possible but has failed or not yet been provided.
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
         '404':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: The requested resource could not be found.
+          $ref: '#/components/responses/404'
         '408':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: The response from this API timed out.
+          $ref: '#/components/responses/408'
         '500':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An internal API error occured.
+          $ref: '#/components/responses/500'
         '502':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An upstream service the API depends on returned an error.
+          $ref: '#/components/responses/502'
         '503':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An upstream service is unavailable, or its circuit breaker
-            may have been tripped.
+          $ref: '#/components/responses/503'
         '504':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: A response from an upstream service timed out.
+          $ref: '#/components/responses/504'
       security:
         - Bearer: []
       summary: /v0/military-service-history
@@ -3160,6 +2633,8 @@ paths:
     get:
       description: Returns user's payment history
       operationId: getPaymentHistory
+      parameters:
+        - $ref: '#/components/parameters/InflectionHeader'
       responses:
         '200':
           content:
@@ -3168,48 +2643,21 @@ paths:
                 $ref: ./schemas/PaymentHistory.yml
           description: OK
         '401':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Authentication is possible but has failed or not yet been provided.
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
         '404':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: The requested resource could not be found.
+          $ref: '#/components/responses/404'
         '408':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: The response from this API timed out.
+          $ref: '#/components/responses/408'
         '500':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An internal API error occured.
+          $ref: '#/components/responses/500'
         '502':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An upstream service the API depends on returned an error.
+          $ref: '#/components/responses/502'
         '503':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An upstream service is unavailable, or its circuit breaker
-            may have been tripped.
+          $ref: '#/components/responses/503'
         '504':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: A response from an upstream service timed out.
+          $ref: '#/components/responses/504'
       security:
         - Bearer: []
       summary: /v0/payment-history
@@ -3217,6 +2665,8 @@ paths:
     get:
       description: Returns direct deposit payment info
       operationId: getPaymentInformation
+      parameters:
+        - $ref: '#/components/parameters/InflectionHeader'
       responses:
         '200':
           content:
@@ -3225,60 +2675,31 @@ paths:
                 $ref: ./schemas/PaymentInfo.yml
           description: OK
         '401':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Authentication is possible but has failed or not yet been provided.
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
         '404':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: The requested resource could not be found.
+          $ref: '#/components/responses/404'
         '408':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: The response from this API timed out.
+          $ref: '#/components/responses/408'
         '422':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Failure in processing entity
+          $ref: '#/components/responses/422'
         '500':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An internal API error occured.
+          $ref: '#/components/responses/500'
         '502':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An upstream service the API depends on returned an error.
+          $ref: '#/components/responses/502'
         '503':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An upstream service is unavailable, or its circuit breaker
-            may have been tripped.
+          $ref: '#/components/responses/503'
         '504':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: A response from an upstream service timed out.
+          $ref: '#/components/responses/504'
       security:
         - Bearer: []
       summary: /v0/payment-information/benefits
     put:
       description: Returns updated direct deposit payment info
       operationId: updatePaymentInformation
+      parameters:
+        - $ref: '#/components/parameters/InflectionHeader'
       requestBody:
         content:
           application/json:
@@ -3294,54 +2715,23 @@ paths:
                 $ref: ./schemas/PaymentInfo.yml
           description: OK
         '401':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Authentication is possible but has failed or not yet been provided.
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
         '404':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: The requested resource could not be found.
+          $ref: '#/components/responses/404'
         '408':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: The response from this API timed out.
+          $ref: '#/components/responses/408'
         '422':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Failure in processing entity
+          $ref: '#/components/responses/422'
         '500':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An internal API error occured.
+          $ref: '#/components/responses/500'
         '502':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An upstream service the API depends on returned an error.
+          $ref: '#/components/responses/502'
         '503':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An upstream service is unavailable, or its circuit breaker
-            may have been tripped.
+          $ref: '#/components/responses/503'
         '504':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: A response from an upstream service timed out.
+          $ref: '#/components/responses/504'
       security:
         - Bearer: []
       summary: /v0/payment-information/benefits
@@ -3356,6 +2746,7 @@ paths:
           required: true
           schema:
             type: string
+        - $ref: '#/components/parameters/InflectionHeader'
       responses:
         '200':
           content:
@@ -3364,54 +2755,23 @@ paths:
                 $ref: ./schemas/PushGetPreferences.yml
           description: OK
         '401':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Authentication is possible but has failed or not yet been provided.
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
         '404':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: The requested resource could not be found.
+          $ref: '#/components/responses/404'
         '408':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: The response from this API timed out.
+          $ref: '#/components/responses/408'
         '422':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Failure in processing entity
+          $ref: '#/components/responses/422'
         '500':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An internal API error occured.
+          $ref: '#/components/responses/500'
         '502':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An upstream service the API depends on returned an error.
+          $ref: '#/components/responses/502'
         '503':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An upstream service is unavailable, or its circuit breaker
-            may have been tripped.
+          $ref: '#/components/responses/503'
         '504':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: A response from an upstream service timed out.
+          $ref: '#/components/responses/504'
       security:
         - Bearer: []
       summary: /v0/push/prefs/{endpointSid}
@@ -3425,6 +2785,7 @@ paths:
           required: true
           schema:
             type: string
+        - $ref: '#/components/parameters/InflectionHeader'
       requestBody:
         content:
           application/json:
@@ -3436,54 +2797,23 @@ paths:
         '200':
           description: OK
         '401':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Authentication is possible but has failed or not yet been provided.
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
         '404':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: The requested resource could not be found.
+          $ref: '#/components/responses/404'
         '408':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: The response from this API timed out.
+          $ref: '#/components/responses/408'
         '422':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Failure in processing entity
+          $ref: '#/components/responses/422'
         '500':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An internal API error occured.
+          $ref: '#/components/responses/500'
         '502':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An upstream service the API depends on returned an error.
+          $ref: '#/components/responses/502'
         '503':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An upstream service is unavailable, or its circuit breaker
-            may have been tripped.
+          $ref: '#/components/responses/503'
         '504':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: A response from an upstream service timed out.
+          $ref: '#/components/responses/504'
       security:
         - Bearer: []
       summary: /v0/push/prefs/{endpointSid}
@@ -3491,6 +2821,8 @@ paths:
     put:
       description: Allows a new app install to register to receive push notifications
       operationId: register
+      parameters:
+        - $ref: '#/components/parameters/InflectionHeader'
       requestBody:
         content:
           application/json:
@@ -3506,54 +2838,23 @@ paths:
                 $ref: ./schemas/PushRegistrationResponse.yml
           description: OK
         '401':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Authentication is possible but has failed or not yet been provided.
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
         '404':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: The requested resource could not be found.
+          $ref: '#/components/responses/404'
         '408':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: The response from this API timed out.
+          $ref: '#/components/responses/408'
         '422':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Failure in processing entity
+          $ref: '#/components/responses/422'
         '500':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An internal API error occured.
+          $ref: '#/components/responses/500'
         '502':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An upstream service the API depends on returned an error.
+          $ref: '#/components/responses/502'
         '503':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An upstream service is unavailable, or its circuit breaker
-            may have been tripped.
+          $ref: '#/components/responses/503'
         '504':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: A response from an upstream service timed out.
+          $ref: '#/components/responses/504'
       security:
         - Bearer: []
       summary: /v0/push/register
@@ -3562,6 +2863,8 @@ paths:
       description: Allows client to trigger specified push notification to be sent
         to specified endpoint
       operationId: sendNotification
+      parameters:
+        - $ref: '#/components/parameters/InflectionHeader'
       requestBody:
         content:
           application/json:
@@ -3573,54 +2876,23 @@ paths:
         '200':
           description: OK
         '401':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Authentication is possible but has failed or not yet been provided.
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
         '404':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: The requested resource could not be found.
+          $ref: '#/components/responses/404'
         '408':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: The response from this API timed out.
+          $ref: '#/components/responses/408'
         '422':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Failure in processing entity
+          $ref: '#/components/responses/422'
         '500':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An internal API error occured.
+          $ref: '#/components/responses/500'
         '502':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/ClaimsAndAppealsOverviewDoubleFailure.yml
-          description: Both upstream services the API depends on returned an error.
+          $ref: '#/components/responses/502'
         '503':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An upstream service is unavailable, or its circuit breaker
-            may have been tripped.
+          $ref: '#/components/responses/503'
         '504':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: A response from an upstream service timed out.
+          $ref: '#/components/responses/504'
       security:
         - Bearer: []
       summary: /v0/push/send
@@ -3630,12 +2902,7 @@ paths:
         Returns the user profile, including the user's addresses and the services the user has the requisite ids to access. Meta data for this endpoint returns all the services available in the API.
       operationId: user.getProfile
       parameters:
-        - in: header
-          name: X-Key-Inflection
-          schema:
-            description: Allows the API to return camelCase keys rather than snake_case.
-            example: camel
-            type: string
+        - $ref: '#/components/parameters/InflectionHeader'
       responses:
         '200':
           content:
@@ -3664,48 +2931,21 @@ paths:
                         type: array
           description: OK
         '401':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Authentication is possible but has failed or not yet been provided.
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
         '404':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: The requested resource could not be found.
+          $ref: '#/components/responses/404'
         '408':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: The response from this API timed out.
+          $ref: '#/components/responses/408'
         '500':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An internal API error occured.
+          $ref: '#/components/responses/500'
         '502':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An upstream service the API depends on returned an error.
+          $ref: '#/components/responses/502'
         '503':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An upstream service is unavailable, or its circuit breaker
-            may have been tripped.
+          $ref: '#/components/responses/503'
         '504':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: A response from an upstream service timed out.
+          $ref: '#/components/responses/504'
       security:
         - Bearer: []
       summary: /v0/user
@@ -3715,12 +2955,7 @@ paths:
         Returns the user profile, including the user's addresses and the services the user has the requisite ids to access. Meta data for this endpoint returns all the services available in the API. v1 includes LOGINGOV as login type.
       operationId: v1/user.getProfile
       parameters:
-        - in: header
-          name: X-Key-Inflection
-          schema:
-            description: Allows the API to return camelCase keys rather than snake_case.
-            example: camel
-            type: string
+        - $ref: '#/components/parameters/InflectionHeader'
       responses:
         '200':
           content:
@@ -3749,48 +2984,21 @@ paths:
                         type: array
           description: OK
         '401':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Authentication is possible but has failed or not yet been provided.
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
         '404':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: The requested resource could not be found.
+          $ref: '#/components/responses/404'
         '408':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: The response from this API timed out.
+          $ref: '#/components/responses/408'
         '500':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An internal API error occured.
+          $ref: '#/components/responses/500'
         '502':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An upstream service the API depends on returned an error.
+          $ref: '#/components/responses/502'
         '503':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An upstream service is unavailable, or its circuit breaker
-            may have been tripped.
+          $ref: '#/components/responses/503'
         '504':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: A response from an upstream service timed out.
+          $ref: '#/components/responses/504'
       security:
         - Bearer: [ ]
       summary: /v1/user
@@ -3799,12 +3007,7 @@ paths:
       description: Deletes a user's address
       operationId: user.deleteAddresses
       parameters:
-        - in: header
-          name: X-Key-Inflection
-          schema:
-            description: Allows the API to return camelCase keys rather than snake_case.
-            example: camel
-            type: string
+        - $ref: '#/components/parameters/InflectionHeader'
       requestBody:
         content:
           application/json:
@@ -3820,49 +3023,23 @@ paths:
                 $ref: ./schemas/AddressTransaction.yml
           description: OK
         '401':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Authentication is possible but has failed or not yet been provided.
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
         '408':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: The response from this API timed out.
+          $ref: '#/components/responses/408'
         '422':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Unprocessable Entity, usually because of one or more invalid
-            parameters.
+          $ref: '#/components/responses/422'
         '500':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An internal API error occured.
+          $ref: '#/components/responses/500'
         '502':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An upstream service the API depends on returned an error.
+          $ref: '#/components/responses/502'
         '503':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An upstream service is unavailable, or its circuit breaker
-            may have been tripped.
+          $ref: '#/components/responses/503'
         '504':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: A response from an upstream service timed out.
+          $ref: '#/components/responses/504'
       security:
         - Bearer: []
       summary: /v0/user/addresses
@@ -3878,12 +3055,7 @@ paths:
         that an invalid address be passed through.
       operationId: user.createAddress
       parameters:
-        - in: header
-          name: X-Key-Inflection
-          schema:
-            description: Allows the API to return camelCase keys rather than snake_case.
-            example: camel
-            type: string
+        - $ref: '#/components/parameters/InflectionHeader'
       requestBody:
         content:
           application/json:
@@ -3915,7 +3087,7 @@ paths:
                   stateCode: MS
                   zipCode: '38843'
             schema:
-              $ref: '#./schemas/AddressCreate.yml'
+              $ref: './schemas/AddressCreate.yml'
         description: A domestic, internation, or military address
         required: true
       responses:
@@ -3926,49 +3098,23 @@ paths:
                 $ref: ./schemas/AddressTransaction.yml
           description: OK
         '401':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Authentication is possible but has failed or not yet been provided.
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
         '408':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: The response from this API timed out.
+          $ref: '#/components/responses/408'
         '422':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Unprocessable Entity, usually because of one or more invalid
-            parameters.
+          $ref: '#/components/responses/422'
         '500':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An internal API error occured.
+          $ref: '#/components/responses/500'
         '502':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An upstream service the API depends on returned an error.
+          $ref: '#/components/responses/502'
         '503':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An upstream service is unavailable, or its circuit breaker
-            may have been tripped.
+          $ref: '#/components/responses/503'
         '504':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: A response from an upstream service timed out.
+          $ref: '#/components/responses/504'
       security:
         - Bearer: []
       summary: /v0/user/addresses
@@ -3984,12 +3130,7 @@ paths:
         be passed through.
       operationId: user.updateAddress
       parameters:
-        - in: header
-          name: X-Key-Inflection
-          schema:
-            description: Allows the API to return camelCase keys rather than snake_case.
-            example: camel
-            type: string
+        - $ref: '#/components/parameters/InflectionHeader'
       requestBody:
         content:
           application/json:
@@ -4023,7 +3164,7 @@ paths:
                   stateCode: MS
                   zipCode: '38843'
             schema:
-              $ref: '#./schemas/AddressUpdate.yml'
+              $ref: './schemas/AddressUpdate.yml'
         description: A domestic, internation, or military address
         required: true
       responses:
@@ -4034,49 +3175,23 @@ paths:
                 $ref: ./schemas/AddressTransaction.yml
           description: OK
         '401':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Authentication is possible but has failed or not yet been provided.
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
         '408':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: The response from this API timed out.
+          $ref: '#/components/responses/408'
         '422':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Unprocessable Entity, usually because of one or more invalid
-            parameters.
+          $ref: '#/components/responses/422'
         '500':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An internal API error occured.
+          $ref: '#/components/responses/500'
         '502':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An upstream service the API depends on returned an error.
+          $ref: '#/components/responses/502'
         '503':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An upstream service is unavailable, or its circuit breaker
-            may have been tripped.
+          $ref: '#/components/responses/503'
         '504':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: A response from an upstream service timed out.
+          $ref: '#/components/responses/504'
       security:
         - Bearer: []
       summary: /v0/user/addresses
@@ -4092,12 +3207,7 @@ paths:
         be passed through.
       operationId: user.validateAddress
       parameters:
-        - in: header
-          name: X-Key-Inflection
-          schema:
-            description: Allows the API to return camelCase keys rather than snake_case.
-            example: camel
-            type: string
+        - $ref: '#/components/parameters/InflectionHeader'
       requestBody:
         content:
           application/json:
@@ -4112,7 +3222,7 @@ paths:
               type: DOMESTIC
               zipCode: '43202'
             schema:
-              $ref: '#./schemas/Address.yml'
+              $ref: ./schemas/Address.yml
         description: A domestic, internation, or military address
         required: true
       responses:
@@ -4127,52 +3237,26 @@ paths:
                   value:
                     $ref: ./examples/appointments/va_appointment.yml
               schema:
-                $ref: '#./schemas/AddressResponse.yml'
+                $ref: ./schemas/AddressResponse.yml
           description: OK
         '401':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Authentication is possible but has failed or not yet been provided.
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
         '408':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: The response from this API timed out.
+          $ref: '#/components/responses/408'
         '422':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Unprocessable Entity, usually because of one or more invalid
-            parameters.
+          $ref: '#/components/responses/422'
         '500':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An internal API error occured.
+          $ref: '#/components/responses/500'
         '502':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An upstream service the API depends on returned an error.
+          $ref: '#/components/responses/502'
         '503':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An upstream service is unavailable, or its circuit breaker
-            may have been tripped.
+          $ref: '#/components/responses/503'
         '504':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: A response from an upstream service timed out.
+          $ref: '#/components/responses/504'
       security:
         - Bearer: []
       summary: /v0/user/addresses/validate
@@ -4181,12 +3265,7 @@ paths:
       description: Deletes a user's email address
       operationId: user.deleteEmailAddress
       parameters:
-        - in: header
-          name: X-Key-Inflection
-          schema:
-            description: Allows the API to return camelCase keys rather than snake_case.
-            example: camel
-            type: string
+        - $ref: '#/components/parameters/InflectionHeader'
       requestBody:
         content:
           application/json:
@@ -4205,49 +3284,23 @@ paths:
                 $ref: ./schemas/EmailTransaction.yml
           description: OK
         '401':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Authentication is possible but has failed or not yet been provided.
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
         '408':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: The response from this API timed out.
+          $ref: '#/components/responses/408'
         '422':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Unprocessable Entity, usually because of one or more invalid
-            parameters.
+          $ref: '#/components/responses/422'
         '500':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An internal API error occured.
+          $ref: '#/components/responses/500'
         '502':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An upstream service the API depends on returned an error.
+          $ref: '#/components/responses/502'
         '503':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An upstream service is unavailable, or its circuit breaker
-            may have been tripped.
+          $ref: '#/components/responses/503'
         '504':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: A response from an upstream service timed out.
+          $ref: '#/components/responses/504'
       security:
         - Bearer: []
       summary: /v0/user/emails
@@ -4255,19 +3308,14 @@ paths:
       description: Creates a new email address
       operationId: user.createEmailAddress
       parameters:
-        - in: header
-          name: X-Key-Inflection
-          schema:
-            description: Allows the API to return camelCase keys rather than snake_case.
-            example: camel
-            type: string
+        - $ref: '#/components/parameters/InflectionHeader'
       requestBody:
         content:
           application/json:
             example:
               emailAddress: person42@example.com
             schema:
-              $ref: '#./schemas/Email.yml'
+              $ref: ./schemas/Email.yml
         description: The new email address
         required: true
       responses:
@@ -4278,49 +3326,23 @@ paths:
                 $ref: ./schemas/EmailTransaction.yml
           description: OK
         '401':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Authentication is possible but has failed or not yet been provided.
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
         '408':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: The response from this API timed out.
+          $ref: '#/components/responses/408'
         '422':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Unprocessable Entity, usually because of one or more invalid
-            parameters.
+          $ref: '#/components/responses/422'
         '500':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An internal API error occured.
+          $ref: '#/components/responses/500'
         '502':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An upstream service the API depends on returned an error.
+          $ref: '#/components/responses/502'
         '503':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An upstream service is unavailable, or its circuit breaker
-            may have been tripped.
+          $ref: '#/components/responses/503'
         '504':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: A response from an upstream service timed out.
+          $ref: '#/components/responses/504'
       security:
         - Bearer: []
       summary: /v0/user/emails
@@ -4328,12 +3350,7 @@ paths:
       description: Updates a user's email address
       operationId: user.updateEmailAddress
       parameters:
-        - in: header
-          name: X-Key-Inflection
-          schema:
-            description: Allows the API to return camelCase keys rather than snake_case.
-            example: camel
-            type: string
+        - $ref: '#/components/parameters/InflectionHeader'
       requestBody:
         content:
           application/json:
@@ -4352,68 +3369,37 @@ paths:
                 $ref: ./schemas/EmailTransaction.yml
           description: OK
         '401':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Authentication is possible but has failed or not yet been provided.
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
         '408':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: The response from this API timed out.
+          $ref: '#/components/responses/408'
         '422':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Unprocessable Entity, usually because of one or more invalid
-            parameters.
+          $ref: '#/components/responses/422'
         '500':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An internal API error occured.
+          $ref: '#/components/responses/500'
         '502':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An upstream service the API depends on returned an error.
+          $ref: '#/components/responses/502'
         '503':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An upstream service is unavailable, or its circuit breaker
-            may have been tripped.
+          $ref: '#/components/responses/503'
         '504':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: A response from an upstream service timed out.
+          $ref: '#/components/responses/504'
       security:
         - Bearer: []
       summary: /v0/user/emails
   /v0/user/gender_identity:
     put:
-      description: Updates a user's gender identity. Only id.me or login.gov users may use this
+      description: Updates a user's gender identity. Only users with id.me or login.gov accounts may use this
       operationId: user.updateGenderIdentity
       parameters:
-        - in: header
-          name: X-Key-Inflection
-          schema:
-            description: Allows the API to return camelCase keys rather than snake_case.
-            example: camel
-            type: string
+        - $ref: '#/components/parameters/InflectionHeader'
       requestBody:
         content:
           application/json:
             example:
-              code: "B"
+              code: 'B'
             schema:
               $ref: ./schemas/GenderIdentityUpdate.yml
         description: The new gender identity key
@@ -4422,17 +3408,27 @@ paths:
         '204':
           description: No Content
         '401':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Received a bad request response from the upstream server.
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+        '408':
+          $ref: '#/components/responses/408'
+        '500':
+          $ref: '#/components/responses/500'
+        '502':
+          $ref: '#/components/responses/502'
+        '503':
+          $ref: '#/components/responses/503'
+        '504':
+          $ref: '#/components/responses/504'
       security:
         - Bearer: [ ]
       summary: /v0/user/gender_identity
   /v0/user/gender_identity/edit:
     get:
-      description: Retrieves a list of valid gender identity keys. Note that this endpoint does not use the camel case key inflection header like most other mobile endpoints to keep the keys upcase. Only id.me or login.gov users may use this
+      description: Retrieves a list of valid gender identity keys. Note that this endpoint does not use the camel case key inflection header like most other mobile endpoints to keep the keys upcase.
       operationId: user.editGenderIdentity
       responses:
         '200':
@@ -4440,12 +3436,23 @@ paths:
             application/json:
               schema:
                 $ref: ./schemas/GenderIdentityEdit.yml
+          description: OK
         '401':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Received a bad request response from the upstream server.
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+        '408':
+          $ref: '#/components/responses/408'
+        '500':
+          $ref: '#/components/responses/500'
+        '502':
+          $ref: '#/components/responses/502'
+        '503':
+          $ref: '#/components/responses/503'
+        '504':
+          $ref: '#/components/responses/504'
       security:
         - Bearer: [ ]
       summary: /v0/user/gender_identity/edit
@@ -4455,72 +3462,37 @@ paths:
         Logs the user out by revoking their access token from the IAM SSOe OAuth service and destroying the IAM user, user identity, and session objects from Redis.
       operationId: user.logout
       parameters:
-        - in: header
-          name: X-Key-Inflection
-          schema:
-            description: Allows the API to return camelCase keys rather than snake_case.
-            example: camel
-            type: string
+        - $ref: '#/components/parameters/InflectionHeader'
       responses:
         '200':
           description: OK
         '400':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Bad Request.
+          $ref: '#/components/responses/400'
         '401':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Authentication is possible but has failed or not yet been provided.
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
         '408':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: The response from this API timed out.
+          $ref: '#/components/responses/408'
         '500':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An internal API error occured.
+          $ref: '#/components/responses/500'
         '502':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An upstream service the API depends on returned an error.
+          $ref: '#/components/responses/502'
         '503':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An upstream service is unavailable, or its circuit breaker
-            may have been tripped.
+          $ref: '#/components/responses/503'
         '504':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: A response from an upstream service timed out.
+          $ref: '#/components/responses/504'
       security:
         - Bearer: []
       summary: /v0/user/logout
   /v0/user/preferred_name:
     put:
-      description: Updates a user's preferred name. Only id.me or login.gov users may use this
+      description: Updates a user's preferred name. Only users with id.me or login.gov accounts may use this
       operationId: user.updatePreferredName
       parameters:
-        - in: header
-          name: X-Key-Inflection
-          schema:
-            description: Allows the API to return camelCase keys rather than snake_case.
-            example: camel
-            type: string
+        - $ref: '#/components/parameters/InflectionHeader'
       requestBody:
         content:
           application/json:
@@ -4534,11 +3506,21 @@ paths:
         '204':
           description: No Content
         '401':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Received a bad request response from the upstream server.
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+        '408':
+          $ref: '#/components/responses/408'
+        '500':
+          $ref: '#/components/responses/500'
+        '502':
+          $ref: '#/components/responses/502'
+        '503':
+          $ref: '#/components/responses/503'
+        '504':
+          $ref: '#/components/responses/504'
       security:
         - Bearer: [ ]
       summary: /v0/user/preferred_name
@@ -4547,12 +3529,7 @@ paths:
       description: Deletes one of a user's phone numbers
       operationId: user.deletePhone
       parameters:
-        - in: header
-          name: X-Key-Inflection
-          schema:
-            description: Allows the API to return camelCase keys rather than snake_case.
-            example: camel
-            type: string
+        - $ref: '#/components/parameters/InflectionHeader'
       requestBody:
         content:
           application/json:
@@ -4568,62 +3545,31 @@ paths:
                 $ref: ./schemas/PhoneTransaction.yml
           description: OK
         '401':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Authentication is possible but has failed or not yet been provided.
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
         '408':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: The response from this API timed out.
+          $ref: '#/components/responses/408'
         '422':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Unprocessable Entity, usually because of one or more invalid
-            parameters.
+          $ref: '#/components/responses/422'
         '500':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An internal API error occured.
+          $ref: '#/components/responses/500'
         '502':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An upstream service the API depends on returned an error.
+          $ref: '#/components/responses/502'
         '503':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An upstream service is unavailable, or its circuit breaker
-            may have been tripped.
+          $ref: '#/components/responses/503'
         '504':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: A response from an upstream service timed out.
+          $ref: '#/components/responses/504'
       security:
         - Bearer: []
       summary: /v0/user/phones
     post:
-      description: Creats a phone number for a user
+      description: Creates a phone number for a user
       operationId: user.createPhoneNumber
       parameters:
-        - in: header
-          name: X-Key-Inflection
-          schema:
-            description: Allows the API to return camelCase keys rather than snake_case.
-            example: camel
-            type: string
+        - $ref: '#/components/parameters/InflectionHeader'
       requestBody:
         content:
           application/json:
@@ -4639,49 +3585,23 @@ paths:
                 $ref: ./schemas/PhoneTransaction.yml
           description: OK
         '401':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Authentication is possible but has failed or not yet been provided.
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
         '408':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: The response from this API timed out.
+          $ref: '#/components/responses/408'
         '422':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Unprocessable Entity, usually because of one or more invalid
-            parameters.
+          $ref: '#/components/responses/422'
         '500':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An internal API error occured.
+          $ref: '#/components/responses/500'
         '502':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An upstream service the API depends on returned an error.
+          $ref: '#/components/responses/502'
         '503':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An upstream service is unavailable, or its circuit breaker
-            may have been tripped.
+          $ref: '#/components/responses/503'
         '504':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: A response from an upstream service timed out.
+          $ref: '#/components/responses/504'
       security:
         - Bearer: []
       summary: /v0/user/phones
@@ -4689,12 +3609,7 @@ paths:
       description: Updates a user's phone number
       operationId: user.updatePhoneNumber
       parameters:
-        - in: header
-          name: X-Key-Inflection
-          schema:
-            description: Allows the API to return camelCase keys rather than snake_case.
-            example: camel
-            type: string
+        - $ref: '#/components/parameters/InflectionHeader'
       requestBody:
         content:
           application/json:
@@ -4710,49 +3625,23 @@ paths:
                 $ref: ./schemas/PhoneTransaction.yml
           description: OK
         '401':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Authentication is possible but has failed or not yet been provided.
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
         '408':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: The response from this API timed out.
+          $ref: '#/components/responses/408'
         '422':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Unprocessable Entity, usually because of one or more invalid
-            parameters.
+          $ref: '#/components/responses/422'
         '500':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An internal API error occured.
+          $ref: '#/components/responses/500'
         '502':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An upstream service the API depends on returned an error.
+          $ref: '#/components/responses/502'
         '503':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An upstream service is unavailable, or its circuit breaker
-            may have been tripped.
+          $ref: '#/components/responses/503'
         '504':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: A response from an upstream service timed out.
+          $ref: '#/components/responses/504'
       security:
         - Bearer: []
       summary: /v0/user/phones
@@ -4760,6 +3649,8 @@ paths:
     get:
       description: Returns a paginated list of immunization records for given user
       operationId: v1/immunizations
+      parameters:
+        - $ref: '#/components/parameters/InflectionHeader'
       responses:
         '200':
           content:
@@ -4768,60 +3659,23 @@ paths:
                 $ref: ./schemas/v1/Immunizations.yml
           description: OK
         '401':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Authentication is possible but has failed or not yet been provided.
+          $ref: '#/components/responses/401'
         '403':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Client was forbidden from upstream resource.
+          $ref: '#/components/responses/403'
         '404':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: The requested resource could not be found.
+          $ref: '#/components/responses/404'
         '408':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: The response from this API timed out.
+          $ref: '#/components/responses/408'
         '422':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: Failure in processing entity
+          $ref: '#/components/responses/422'
         '500':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An internal API error occured.
+          $ref: '#/components/responses/500'
         '502':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An upstream service the API depends on returned an error.
+          $ref: '#/components/responses/502'
         '503':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: An upstream service is unavailable, or its circuit breaker
-            may have been tripped.
+          $ref: '#/components/responses/503'
         '504':
-          content:
-            application/json:
-              schema:
-                $ref: ./schemas/Errors.yml
-          description: A response from an upstream service timed out.
+          $ref: '#/components/responses/504'
       security:
         - Bearer: []
       summary: /v1/health/immunizations
@@ -4833,3 +3687,81 @@ components:
       name: Authorization
       in: header
       description: Authentication is via an access token returned from IAM's SSOe service. Pass the access token in the 'Authorization' Header in the format 'Bearer {accessToken}'. e.g. 'Bearer abcdefg1234567'.
+  parameters:
+    InflectionHeader:
+      in: header
+      name: X-Key-Inflection
+      required: false
+      schema:
+        type: string
+        enum: [ camel, snake ]
+        default: snake
+      description: Allows the API to return camelCase keys rather than snake_case
+  responses:
+    '400':
+      content:
+        application/json:
+          schema:
+            $ref: ./schemas/Errors.yml
+      description: Bad request.
+    '401':
+      content:
+        application/json:
+          schema:
+            $ref: ./schemas/Errors.yml
+      description: Authentication is possible but has failed or not yet been provided.
+    '403':
+      content:
+        application/json:
+          schema:
+            $ref: ./schemas/Errors.yml
+      description: Client was forbidden from upstream resource.
+    '404':
+      content:
+        application/json:
+          schema:
+            $ref: ./schemas/Errors.yml
+      description: The requested resource could not be found.
+    '408':
+      content:
+        application/json:
+          schema:
+            $ref: ./schemas/Errors.yml
+      description: The response from this API timed out.
+    '422':
+      content:
+        application/json:
+          schema:
+            $ref: ./schemas/Errors.yml
+      description: Failure in processing entity
+    '429':
+      content:
+        application/json:
+          schema:
+            $ref: ./schemas/Errors.yml
+      description: Too many requests.
+    '500':
+      content:
+        application/json:
+          schema:
+            $ref: ./schemas/Errors.yml
+      description: An internal API error occurred.
+    '502':
+      content:
+        application/json:
+          schema:
+            $ref: ./schemas/Errors.yml
+      description: An upstream service the API depends on returned an error.
+    '503':
+      content:
+        application/json:
+          schema:
+            $ref: ./schemas/Errors.yml
+      description: An upstream service is unavailable, or its circuit breaker
+        may have been tripped.
+    '504':
+      content:
+        application/json:
+          schema:
+            $ref: ./schemas/Errors.yml
+      description: A response from an upstream service timed out.

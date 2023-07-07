@@ -92,7 +92,7 @@ module Mobile
             location:,
             minutes_duration: minutes_duration(appointment[:minutes_duration]),
             phone_only: appointment[:kind] == PHONE_KIND,
-            start_date_local: start_date_utc&.in_time_zone(timezone),
+            start_date_local:,
             start_date_utc:,
             status:,
             status_detail: cancellation_reason(appointment[:cancelation_reason]),
@@ -106,7 +106,8 @@ module Mobile
             patient_phone_number:,
             patient_email:,
             best_time_to_call: appointment[:preferred_times_for_phone_call],
-            friendly_location_name:
+            friendly_location_name:,
+            service_category_name: appointment.dig(:service_category, 0, :text)
           }
 
           StatsD.increment('mobile.appointments.type', tags: ["type:#{appointment_type}"])
@@ -227,6 +228,14 @@ module Mobile
             else
               time_to_datetime(start)
             end
+          end
+        end
+
+        def start_date_local
+          @start_date_local ||= begin
+            DateTime.parse(appointment[:local_start_time])
+          rescue
+            start_date_utc&.in_time_zone(timezone)
           end
         end
 

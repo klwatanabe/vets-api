@@ -107,6 +107,9 @@ mcp:
     mock: false
     mock_vista: false
     api_key: abcd1234abcd1234abcd1234abcd1234abcd1234
+  notifications:
+    job_interval: 90
+    batch_size: 100
 
 fsr:
   prefill: true
@@ -365,12 +368,6 @@ coe:
   prefill: true
 
 adapted_housing:
-  prefill: true
-
-medical_release:
-  prefill: true
-
-lay_witness:
   prefill: true
 
 # Settings for Expiry Scanner
@@ -926,6 +923,7 @@ flipper:
     - jennie.mcgibney@va.gov
     - jeremy.wu@oddball.io
     - jesse.cohn@adhocteam.us
+    - jesse.james@themostudio.com
     - jlinn@governmentcio.com
     - joe.hall@thoughtworks.com # Virtual Agent
     - joeyn414@gmail.com # Joe Niquette (Oddball), Identity, Sr Security Engineer
@@ -1071,6 +1069,10 @@ flipper:
     - kevin.duensing@adhocteam.us # Kevin Duensing - Ad Hoc - Benefits Team 1, Management Tools
     - randi.mays@va.gov # Randi Mays - Front End Engineer - Kind Systems, Sitewide Crew, Public Websites
     - rmays@kindsys.us # Randi Mays - Front End Engineer - Kind Systems, Sitewide Crew, Public Websites
+    - luke@verdance.co # Luke Short - Software Engineer - Verdance LLC, Contention Classification
+    - adewitt@thoughtworks.com # Anita DeWitt - Virtual Agent Chatbot
+    - maurice.okumu@thoughtworks.com # Maurice Okumu - Virtual Agent Chatbot
+    - nichelous.herndon@thoughtworks.com # Nichelous Herndon - Virtual Agent Chatbot
 
 bgs:
   application: ~
@@ -1298,6 +1300,7 @@ vanotify:
         covid_vaccine_expanded_registration: fake_template_id
         direct_deposit_edu: edu_template_id
         direct_deposit_comp_pen: comp_pen_template_id
+        login_reactivation_email: 08d9f04-ae3f-4b73-b932-3ad175d21ba9
     lighthouse:
       api_key: fake_secret
       template_id:
@@ -1516,11 +1519,11 @@ rrd:
       - fake_email
 
 virtual_regional_office:
-  url: http://localhost:8080
+  url: http://localhost:8120
   api_key: 9d3868d1-ec15-4889-8002-2bff1b50ba62
-  health_assessment_path: health-data-assessment
   evidence_pdf_path: evidence-pdf
-  ctn_classification_path: contention-classification/classifier
+  # ctn_classification_path: contention-classification/classifier
+  ctn_classification_path: classifier
 
 # Settings for Test User Dashboard modules
 test_user_dashboard:

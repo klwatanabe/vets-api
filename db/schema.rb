@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2023_05_12_221434) do
+ActiveRecord::Schema.define(version: 2023_07_05_144658) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "btree_gin"
@@ -270,6 +270,15 @@ ActiveRecord::Schema.define(version: 2023_05_12_221434) do
     t.index ["source"], name: "index_claims_api_auto_established_claims_on_source"
   end
 
+  create_table "claims_api_claim_submissions", force: :cascade do |t|
+    t.uuid "claim_id", null: false
+    t.string "claim_type", null: false
+    t.string "consumer_label", null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["claim_id"], name: "index_claims_api_claim_submissions_on_claim_id"
+  end
+
   create_table "claims_api_evidence_waiver_submissions", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.text "auth_headers_ciphertext"
     t.text "encrypted_kms_key"
@@ -335,6 +344,7 @@ ActiveRecord::Schema.define(version: 2023_05_12_221434) do
     t.text "logout_redirect_uri"
     t.boolean "pkce"
     t.string "certificates", array: true
+    t.string "refresh_token_path"
     t.index ["client_id"], name: "index_client_configs_on_client_id", unique: true
   end
 
@@ -831,6 +841,18 @@ ActiveRecord::Schema.define(version: 2023_05_12_221434) do
     t.index ["id", "type"], name: "index_saved_claims_on_id_and_type"
   end
 
+  create_table "service_account_configs", force: :cascade do |t|
+    t.string "service_account_id", null: false
+    t.text "description", null: false
+    t.text "scopes", null: false, array: true
+    t.string "access_token_audience", null: false
+    t.interval "access_token_duration", null: false
+    t.string "certificates", array: true
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["service_account_id"], name: "index_service_account_configs_on_service_account_id", unique: true
+  end
+
   create_table "spool_file_events", force: :cascade do |t|
     t.integer "rpo"
     t.integer "number_of_submissions"
@@ -899,7 +921,7 @@ ActiveRecord::Schema.define(version: 2023_05_12_221434) do
   end
 
   create_table "std_zipcodes", force: :cascade do |t|
-    t.integer "zip_code", null: false
+    t.string "zip_code", null: false
     t.integer "zip_classification_id"
     t.integer "preferred_zip_place_id"
     t.integer "state_id", null: false
@@ -1063,6 +1085,15 @@ ActiveRecord::Schema.define(version: 2023_05_12_221434) do
     t.index ["url"], name: "index_vba_documents_git_items_on_url", unique: true
   end
 
+  create_table "vba_documents_monthly_stats", force: :cascade do |t|
+    t.integer "month", null: false
+    t.integer "year", null: false
+    t.jsonb "stats", default: {}
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["month", "year"], name: "index_vba_documents_monthly_stats_uniqueness", unique: true
+  end
+
   create_table "vba_documents_upload_submissions", id: :serial, force: :cascade do |t|
     t.uuid "guid", null: false
     t.string "status", default: "pending", null: false
@@ -1187,6 +1218,7 @@ ActiveRecord::Schema.define(version: 2023_05_12_221434) do
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "appeal_submissions", "user_accounts"
   add_foreign_key "async_transactions", "user_accounts"
+  add_foreign_key "claims_api_claim_submissions", "claims_api_auto_established_claims", column: "claim_id"
   add_foreign_key "deprecated_user_accounts", "user_accounts"
   add_foreign_key "deprecated_user_accounts", "user_verifications"
   add_foreign_key "education_stem_automated_decisions", "user_accounts"

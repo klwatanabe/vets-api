@@ -6,28 +6,22 @@ module CopayNotifications
 
     sidekiq_options retry: false
 
-    def self.throttle
-      return Sidekiq::Limiter.unlimited if Rails.env.test?
-
-      Sidekiq::Limiter.concurrent('new-copay-statements', 8, wait_timeout: 259_200,
-                                                             lock_timeout: 120)
-    end
-
-    LIMITER = throttle
+    # time (in seconds) between scheduling batch of jobs
+    JOB_INTERVAL = Settings.mcp.notifications.job_interval
+    # number of jobs to perform at next interval
+    BATCH_SIZE = Settings.mcp.notifications.batch_size
 
     def perform(statements_json_byte)
+      StatsD.increment('api.copay_notifications.json_file.total')
       # Decode and parse large json file (~60-90k objects)
       statements_json = Oj.load(Base64.decode64(statements_json_byte))
       unique_statements = statements_json.uniq { |statement| statement['veteranIdentifier'] }
 
-      batch = Sidekiq::Batch.new
-
-      unique_statements.each do |statement|
-        LIMITER.within_limit do
-          batch.jobs do
-            CopayNotifications::NewStatementNotificationJob.perform_async(statement)
-          end
-        end
+      unique_statements.each_with_index do |statement, index|
+        # For every BATCH_SIZE jobs, enqueue the next BATCH_SIZE amount of jobs JOB_INTERVAL seconds later
+        CopayNotifications::NewStatementNotificationJob.perform_in(
+          JOB_INTERVAL * (index / BATCH_SIZE), statement
+        )
       end
     end
   end
