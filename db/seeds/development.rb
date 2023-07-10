@@ -65,3 +65,14 @@ sample_client_api.update!(authentication: SignIn::Constants::Auth::API,
                           access_token_audience: 'sample_client',
                           logout_redirect_uri: 'http://localhost:4567',
                           refresh_token_duration: SignIn::Constants::RefreshToken::VALIDITY_LENGTH_SHORT_MINUTES)
+
+# Create Config for example external client using cookie auth
+vaid_dash = SignIn::ClientConfig.find_or_initialize_by(client_id: 'identity_dashboard')
+vaid_dash.update!(authentication: SignIn::Constants::Auth::COOKIE,
+                          anti_csrf: true,
+                          pkce: true,
+                          redirect_uri: 'http://localhost:3001/auth/login/callback',
+                          access_token_duration: SignIn::Constants::AccessToken::VALIDITY_LENGTH_SHORT_MINUTES,
+                          access_token_audience: 'sample_client',
+                          logout_redirect_uri: 'http://localhost:3001',
+                          refresh_token_duration: SignIn::Constants::RefreshToken::VALIDITY_LENGTH_SHORT_MINUTES)
