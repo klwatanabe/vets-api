@@ -5,6 +5,15 @@ require 'claim_letters/claim_letter_test_data'
 module ClaimStatusTool
   class ClaimLetterDownloader
     FILENAME = 'ClaimLetter'
+    # 184: Notification Letter (e.g. VA 20-8993, VA 21-0290, PCGL)
+    # 339: Rating Decision Letter
+    # 27: Board Of Appeals Decision Letter
+    DOC_TYPE_ALLOWLIST =
+      if Flipper.enabled?(:cst_include_ddl_boa_letters, @current_user)
+        %w[184 27].freeze
+      else
+        %w[184].freeze
+      end
 
     def initialize(user)
       @user = user
@@ -32,7 +41,7 @@ module ClaimStatusTool
 
       filename = filename_with_date(letter_details[:received_at])
 
-      if !Rails.env.development? && !Rails.env.test? && Settings.vsp_environment != 'development'
+      if !Rails.env.development? && !Rails.env.test?
         req = VBMS::Requests::GetDocumentContent.new(document_id)
         res = @client.send_request(req)
 
@@ -41,17 +50,6 @@ module ClaimStatusTool
         File.open(ClaimLetterTestData::TEST_FILE_PATH, 'r') do |f|
           yield f.read, 'application/pdf', 'attachment', filename
         end
-      end
-    end
-
-    # 184: Notification Letter (e.g. VA 20-8993, VA 21-0290, PCGL)
-    # 339: Rating Decision Letter
-    # 27: Board Of Appeals Decision Letter
-    def allowed_doctypes
-      if Flipper.enabled?(:cst_include_ddl_boa_letters, @current_user)
-        %w[184 27]
-      else
-        %w[184]
       end
     end
 
@@ -66,7 +64,7 @@ module ClaimStatusTool
     end
 
     def filter_letters(document)
-      return nil unless allowed_doctypes.include?(document[:doc_type])
+      return nil unless DOC_TYPE_ALLOWLIST.include?(document[:doc_type])
 
       document.marshal_dump
     end
