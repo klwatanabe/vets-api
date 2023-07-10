@@ -4,17 +4,17 @@
 
 
 
-rakelib/prod/  @department-of-veterans-affairs/vfs-vaos @department-of-veterans-affairs/backend-review-group
+rakelib/prod/                         @department-of-veterans-affairs/vfs-vaos @department-of-veterans-affairs/backend-review-group
 
 
-modules/vaos/ @department-of-veterans-affairs/vfs-vaos @department-of-veterans-affairs/backend-review-group
-spec/support/*/vaos/ @department-of-veterans-affairs/vfs-vaos @department-of-veterans-affairs/backend-review-group
+modules/vaos/                        @department-of-veterans-affairs/vfs-vaos @department-of-veterans-affairs/backend-review-group
+spec/support/*/vaos/                 @department-of-veterans-affairs/vfs-vaos @department-of-veterans-affairs/backend-review-group
 
 lib/bgs @department-of-veterans-affairs/vfs-ebenefits @department-of-veterans-affairs/backend-review-group
 spec/bgs @department-of-veterans-affairs/vfs-ebenefits @department-of-veterans-affairs/backend-review-group
 
-modules/mobile/ @department-of-veterans-affairs/mobile-api-team @department-of-veterans-affairs/backend-review-group
-spec/support/*/mobile/ @department-of-veterans-affairs/mobile-api-team @department-of-veterans-affairs/backend-review-group
+modules/mobile/                      @department-of-veterans-affairs/mobile-api-team @department-of-veterans-affairs/backend-review-group
+spec/support/*/mobile/               @department-of-veterans-affairs/mobile-api-team @department-of-veterans-affairs/backend-review-group
 
 rakelib/form526.rake @department-of-veterans-affairs/benefits-team-1-backend @department-of-veterans-affairs/backend-review-group
 spec/rakelib/form526_spec.rb @department-of-veterans-affairs/benefits-team-1-backend @department-of-veterans-affairs/backend-review-group
@@ -78,8 +78,8 @@ modules/health_quest  @department-of-veterans-affairs/vsa-healthcare-health-ques
 spec/support/*/health_quest/ @department-of-veterans-affairs/vsa-healthcare-health-quest-1-backend @department-of-veterans-affairs/backend-review-group
 
 
-modules/check_in  @department-of-veterans-affairs/vsa-healthcare-health-quest-1-backend @department-of-veterans-affairs/patient-check-in
-spec/support/*/check_in/ @department-of-veterans-affairs/vsa-healthcare-health-quest-1-backend @department-of-veterans-affairs/patient-check-in
+modules/check_in  @department-of-veterans-affairs/vsa-healthcare-health-quest-1-backend @department-of-veterans-affairs/backend-review-group @department-of-veterans-affairs/patient-check-in
+spec/support/*/check_in/ @department-of-veterans-affairs/vsa-healthcare-health-quest-1-backend @department-of-veterans-affairs/backend-review-group @department-of-veterans-affairs/patient-check-in
 
 
 modules/facilities_api @department-of-veterans-affairs/vsa-facilities-backend @department-of-veterans-affairs/backend-review-group
@@ -118,15 +118,15 @@ spec/support/vcr_cassettes/debts @department-of-veterans-affairs/vsa-debt-resolu
 modules/vba_documents @department-of-veterans-affairs/lighthouse-banana-peels @department-of-veterans-affairs/backend-review-group
 
 
-lib/central_mail @department-of-veterans-affairs/lighthouse-banana-peels
-lib/pdf_info.rb @department-of-veterans-affairs/lighthouse-banana-peels
-lib/pdf_utilities/pdf_validator.rb @department-of-veterans-affairs/lighthouse-banana-peels
-spec/lib/central_mail @department-of-veterans-affairs/lighthouse-banana-peels
-spec/lib/pdf_info @department-of-veterans-affairs/lighthouse-banana-peels
-spec/lib/pdf_utilities/pdf_validator @department-of-veterans-affairs/lighthouse-banana-peels
+lib/central_mail @department-of-veterans-affairs/va-api-engineers @department-of-veterans-affairs/backend-review-group @department-of-veterans-affairs/lighthouse-banana-peels
+lib/pdf_info.rb @department-of-veterans-affairs/va-api-engineers @department-of-veterans-affairs/backend-review-group @department-of-veterans-affairs/lighthouse-banana-peels
+lib/pdf_utilities/pdf_validator.rb @department-of-veterans-affairs/va-api-engineers @department-of-veterans-affairs/backend-review-group @department-of-veterans-affairs/lighthouse-banana-peels
+spec/lib/central_mail @department-of-veterans-affairs/va-api-engineers @department-of-veterans-affairs/backend-review-group @department-of-veterans-affairs/lighthouse-banana-peels
+spec/lib/pdf_info @department-of-veterans-affairs/va-api-engineers @department-of-veterans-affairs/backend-review-group @department-of-veterans-affairs/lighthouse-banana-peels
+spec/lib/pdf_utilities/pdf_validator @department-of-veterans-affairs/va-api-engineers @department-of-veterans-affairs/backend-review-group @department-of-veterans-affairs/lighthouse-banana-peels
 
 
-modules/appeals_api @department-of-veterans-affairs/lighthouse-banana-peels
+modules/appeals_api @department-of-veterans-affairs/backend-review-group @department-of-veterans-affairs/lighthouse-banana-peels
 
 
-lib/disability_compensation @department-of-veterans-affairs/bdex
+lib/disability_compensation @department-of-veterans-affairs/backend-review-group @department-of-veterans-affairs/bdex
