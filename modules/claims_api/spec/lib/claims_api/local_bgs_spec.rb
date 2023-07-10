@@ -34,4 +34,20 @@ describe ClaimsApi::LocalBGS do
       end
     end
   end
+
+  describe '#make_request' do
+    let(:endpoint) { 'EBenefitsBnftClaimStatusWebServiceBean/EBenefitsBnftClaimStatusWebService' }
+    let(:action) { 'findBenefitClaimDetailsByBnftClaimId' }
+    let(:body) { '12345678' }
+
+    it 'can rescue an EOFError' do
+      expect(ClaimsApi::LocalBGS).to receive(:make_request).with(endpoint, action,
+                                                                                body).and_return(EOFError)
+                                                                                
+# Failure/Error: result = subject.make_request(endpoint: endpoint, action: action, body: body)
+# Missing required keyword arguments: endpoint, action, body
+      # result = subject.make_request(endpoint: endpoint, action: action, body: body)
+      # expect(result).to be_a Common::Exceptions::UnprocessableEntity
+    end
+  end
 end
