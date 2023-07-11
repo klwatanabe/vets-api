@@ -1,0 +1,154 @@
+File	Authors
+v1/supplemental_claims/contestable_issues_controller.rb	 2 author Scott Meyers
+v1/higher_level_reviews_controller.rb	 1 author Trevor Bosaw 1 author Mike 1 author Eric Boehs
+v1/gids/zipcode_rates_controller.rb	 1 author Devin McCurdy
+v1/gids/institution_programs_controller.rb	 1 author Devin McCurdy
+v1/gids/institutions_controller.rb	 1 author Devin McCurdy
+v1/gids/calculator_constants_controller.rb	 1 author Devin McCurdy
+v1/gids/yellow_ribbon_programs_controller.rb	 1 author Devin McCurdy
+v1/higher_level_reviews/contestable_issues_controller.rb	 2 author Mike
+v1/apidocs_controller.rb	 2 author Scott Meyers 1 author Mike 1 author Lance Sanchez
+v1/supplemental_claims_controller.rb	 5 author Kyle Soskin 1 author Trevor Bosaw 1 author Scott Meyers 1 author Eric Boehs
+v1/sessions_controller.rb	 23 author John Bramley 22 author Trevor Bosaw 21 author Eric Buckley 7 author Patrick Vinograd 5 author Lindsey Hattamer 4 author Ben 3 author bosawt 3 author Johnny Holton 2 author Eric Boehs 2 author Bennie Mosher 1 author patrickvinograd 1 author esubocz-va 1 author dependabot[bot] 1 author Travis 1 author Riley Anderson 1 author Philip Becker 1 author Josh 1 author Joe Niquette 1 author Dan Hinze
+v1/notice_of_disagreements_controller.rb	 2 author Scott Meyers 1 author Trevor Bosaw 1 author Eric Boehs
+v1/notice_of_disagreements/contestable_issues_controller.rb	 3 author Scott Meyers
+v1/facilities/va_controller.rb	 6 author Philip Becker 4 author Lance Sanchez 1 author Lindsey Hattamer 1 author John Paul Ashenfelter
+application_controller.rb	 57 author Kam Karshenas 13 author Johnny Holton 11 author Bill Ryan 7 author lihan 5 author patrickvinograd 5 author Shauni Deshmukh 5 author Aubrey Holland 4 author Alastair Dawson 3 author Keifer Furzland 3 author Anna Carey 2 author Mark Olson 2 author Katherine Rodriguez 2 author Derek Hall 1 author mark olson 1 author dependabot[bot] 1 author Trevor Bosaw 1 author Travis 1 author Shane Russell 1 author Patrick Vinograd 1 author Nathan Wright 1 author Michael Bastos 1 author Lindsey Hattamer 1 author Kenneth Koski 1 author Eugene Doan 1 author Carl Johnson
+v0/letters_controller.rb	 12 author Alastair Dawson 1 author Travis 1 author Sarah-Jaine Szekeresh 1 author Philip Becker 1 author Lindsey Hattamer 1 author Bill Ryan 1 author Anna Carey
+v0/messages_controller.rb	 10 author Marc Harbatkin 8 author Kam Karshenas 2 author mphprogrammer 1 author Travis 1 author Narin Ratana 1 author Johnny Holton 1 author Eric Boehs
+v0/virtual_agent_token_controller.rb	 4 author Kha Huynh 3 author Jacob Gacek 2 author Anita DeWitt 1 author Travis Hilton 1 author Shefali Nayak
+v0/caregivers_assistance_claims_controller.rb	 17 author Kevin Mircovich 6 author lihan li 2 author lihan 2 author Daniel Nalbach 1 author Trevor Bosaw 1 author Eric Boehs
+v0/attachments_controller.rb	 2 author Kam Karshenas
+v0/documents_controller.rb	 6 author austin-martinez 4 author Carl Johnson 2 author Kam Karshenas 2 author Aubrey Holland 2 author Anna Carey 1 author lihan 1 author Travis 1 author Alastair Dawson
+v0/debt_letters_controller.rb	 5 author Cameron Testerman 1 author lihan 1 author Scott James
+v0/ppiu_controller.rb	 6 author lihan 2 author Johnny Holton 2 author Joe Niquette 1 author Tom Harrison 1 author Silvio Luthi 1 author SMLuthi 1 author Philip Becker 1 author Lindsey Hattamer
+v0/mhv_opt_in_flags_controller.rb	 2 author Eric Boehs 1 author Oseas Moran 1 author John Bramley
+v0/higher_level_reviews_controller.rb	 6 author Ed Mangimelli 1 author Trevor Bosaw 1 author Riley Anderson 1 author Eric Boehs 1 author Cameron Testerman 1 author Anna Carey
+v0/apps_controller.rb	 1 author Braden Shipley
+v0/upload_supporting_evidences_controller.rb	 1 author Evangeline Garreau
+v0/prescriptions_controller.rb	 5 author Kam Karshenas 1 author Travis 1 author Johnny Holton 1 author Eric Boehs
+v0/appointments_controller.rb	 1 author Philip Becker 1 author Harry Levine
+v0/medical_copays_controller.rb	 5 author Scott James 1 author Justin Linn 1 author Dillo Raju
+v0/sign_in_controller.rb	 30 author Trevor Bosaw 11 author John Bramley 2 author Eric Boehs 1 author Daniel da Silva
+v0/claim_letters_controller.rb	 3 author samcoforma 2 author Jerek Shoemaker 1 author Eric Boehs
+v0/intent_to_files_controller.rb	 3 author Silvio Luthi 1 author SMLuthi 1 author Philip Becker 1 author Eddie Glenn 1 author Aurora Hampton 1 author Alastair Dawson
+v0/form1095_bs_controller.rb	 2 author stephte
+v0/triage_teams_controller.rb	 5 author Kam Karshenas 4 author Marc Harbatkin 1 author Narin Ratana
+v0/terms_and_conditions_controller.rb	 2 author Aubrey Holland 1 author Trevor Bosaw 1 author Travis 1 author Kam Karshenas 1 author Eugene Doan
+v0/search_click_tracking_controller.rb	 3 author Sam Suddath 1 author Travis Hilton
+v0/coe_controller.rb	 5 author Eugene Lynch 3 author Kevin Musiorski 3 author Kathleen Crawford 3 author Jerek Shoemaker 3 author Amanda Leaders 1 author Trevor Bosaw 1 author Scott Meyers 1 author Rob Garrison 1 author Eric Boehs
+v0/contact_us/inquiries_controller.rb	 2 author dependabot[bot] 1 author Shefali Nayak 1 author Lindsey Hattamer
+v0/veteran_readiness_employment_claims_controller.rb	 2 author kathleencrawford 2 author Kevin Musiorski 2 author Derek Dyer 1 author Trevor Bosaw 1 author Micah Chiang
+v0/decision_review_evidences_controller.rb	 1 author Anna Carey
+v0/evss_claims_controller.rb	 2 author lihan 1 author austin-martinez 1 author Travis 1 author Sarah-Jaine Szekeresh 1 author Philip Becker 1 author Keifer Furzland 1 author Kam Karshenas 1 author Johnny Holton 1 author Alastair Dawson
+v0/dependents_applications_controller.rb	 5 author kathleencrawford 2 author Johnny Holton 1 author lihan 1 author Keifer Furzland 1 author Derek Dyer
+v0/gids/zipcode_rates_controller.rb	 1 author Matt Roth 1 author Devin McCurdy
+v0/gids/institution_programs_controller.rb	 1 author Matt Roth 1 author Devin McCurdy
+v0/gids/institutions_controller.rb	 1 author Matt Roth 1 author Devin McCurdy
+v0/gids/calculator_constants_controller.rb	 1 author Matt Roth 1 author Devin McCurdy
+v0/gids/yellow_ribbon_programs_controller.rb	 1 author Kelson Adams 1 author Devin McCurdy
+v0/preneeds/preneed_attachments_controller.rb	 2 author Lihan Li 1 author lihan 1 author Kam Karshenas 1 author Anna Carey
+v0/preneeds/burial_forms_controller.rb	 6 author mphprogrammer 5 author lihan 4 author Johnny Holton 3 author marc harbatkin 3 author Lihan Li 1 author Neal Hill 1 author Kam Karshenas 1 author Andrew Mauricio
+v0/preneeds/cemeteries_controller.rb	 1 author Marc Harbatkin
+v0/higher_level_reviews/contestable_issues_controller.rb	 4 author Ed Mangimelli
+v0/feature_toggles_controller.rb	 3 author Anna Carey 1 author Trevor Bosaw 1 author Lindsey Hattamer 1 author Johnny Holton 1 author John Bramley 1 author Eric Boehs
+v0/claim_documents_controller.rb	 2 author lihan 2 author Mark Olson 1 author kathleencrawford 1 author Travis 1 author Kam Karshenas 1 author Eric Boehs 1 author Anna Carey 1 author Amanda Leaders
+v0/example_controller.rb	 3 author Kam Karshenas 1 author Shauni Deshmukh 1 author Lindsey Hattamer 1 author Jeremy Britt 1 author James Kassemi
+v0/messaging_preferences_controller.rb	 2 author Kam Karshenas 1 author patrickvinograd 1 author Keifer Furzland
+v0/education_career_counseling_claims_controller.rb	 3 author Derek Dyer 2 author Andrew Mauricio 1 author kathleencrawford 1 author Trevor Bosaw 1 author Micah Chiang
+v0/disability_compensation_forms_controller.rb	 8 author Alastair Dawson 7 author SMLuthi 5 author Evangeline Garreau 3 author Seth Darr 2 author John Bramley 2 author Anna Carey 1 author lihan 1 author kathleencrawford 1 author Trevor Bosaw 1 author Travis 1 author Philip Becker 1 author Ed Mangimelli 1 author Aurora Hampton 1 author Abhijit Kulkarni
+v0/id_card_attributes_controller.rb	 2 author patrickvinograd 2 author lihan 2 author Travis 2 author Kam Karshenas 1 author Riley Anderson 1 author Lindsey Hattamer 1 author Keifer Furzland 1 author Bill Ryan
+v0/hca_attachments_controller.rb	 1 author lihan 1 author Philip Becker 1 author Anna Carey
+v0/financial_status_reports_controller.rb	 5 author Scott James 4 author Dillo Raju 4 author Cameron Testerman 3 author Kevin Mircovich 1 author dependabot[bot] 1 author Travis Hilton 1 author Eric Boehs
+v0/maintenance_windows_controller.rb	 1 author Wyatt Walter 1 author Kam Karshenas
+v0/apidocs_controller.rb	 9 author marc harbatkin 9 author Harry Levine 8 author lihan 8 author Anna Carey 6 author Cameron Testerman 5 author Philip Becker 5 author Derek Dyer 5 author Alastair Dawson 4 author Silvio Luthi 4 author Claire Hsu 4 author Bill Ryan 3 author hpjaj 3 author Ryan Baker 3 author Keifer Furzland 3 author Evangeline Garreau 2 author patrickvinograd 2 author lihan li 2 author kathleencrawford 2 author Trevor Bosaw 2 author Tom Harrison 2 author Shefali Nayak 2 author Sam Suddath 2 author SMLuthi 2 author Lindsey Hattamer 2 author Lance Sanchez 2 author Aubrey Holland 1 author stephte 1 author mphprogrammer 1 author Wyatt Walter 1 author Sarah-Jaine Szekeresh 1 author Nick Sullivan 1 author Michael Talbot 1 author Mark Olson 1 author Marc Harbatkin 1 author Kyle Soskin 1 author Kevin Mircovich 1 author Kevin Duensing 1 author Kelson Adams 1 author Kam Karshenas 1 author John Bramley 1 author Jacob Gacek 1 author Eugene Lynch 1 author Eugene Doan 1 author Erik L 1 author Ed Mangimelli 1 author Dillo Raju 1 author Devin McCurdy 1 author Derek Hall 1 author Alex Teal
+v0/burial_claims_controller.rb	 3 author Mark Olson 3 author Ben 1 author Trevor Bosaw 1 author Sarah-Jaine Szekeresh 1 author Philip Becker 1 author Kam Karshenas 1 author Johnny Holton
+v0/health_care_applications_controller.rb	 10 author lihan 5 author lihan li 5 author Mark Olson 3 author Lihan Li 3 author Johnny Holton 2 author mark olson 2 author Rachal Cassity 2 author Kam Karshenas 2 author Bill Ryan 1 author Trevor Bosaw 1 author Philip Becker 1 author Keifer Furzland
+v0/disability_compensation_in_progress_forms_controller.rb	 5 author Anna Carey 1 author Travis Hilton 1 author Seth Darr 1 author Eric Boehs
+v0/debts_controller.rb	 5 author Cameron Testerman 1 author Scott James 1 author Philip Becker 1 author Dillo Raju
+v0/dependents_verifications_controller.rb	 2 author Derek Dyer 1 author kathleencrawford
+v0/mdot/supplies_controller.rb	 4 author Cameron Testerman 1 author lihan
+v0/benefits_reference_data_controller.rb	 1 author Kyle Soskin
+v0/users_controller.rb	 3 author Kam Karshenas 1 author Harry Levine 1 author Eric Buckley
+v0/message_drafts_controller.rb	 3 author Marc Harbatkin 2 author Kam Karshenas
+v0/benefits_claims_controller.rb	 1 author Jerek Shoemaker
+v0/folders_controller.rb	 5 author Marc Harbatkin 4 author Kam Karshenas 1 author Narin Ratana 1 author Eric Boehs
+v0/user_transition_availabilities_controller.rb	 1 author Melissa Miller
+v0/pension_claims_controller.rb	 3 author Mark Olson 1 author Kam Karshenas
+v0/search_controller.rb	 2 author Keifer Furzland 2 author Harry Levine 1 author Philip Becker
+v0/profile/payment_history_controller.rb	 1 author kathleencrawford 1 author Trevor Bosaw 1 author Derek Dyer 1 author Alastair Dawson
+v0/profile/valid_va_file_numbers_controller.rb	 5 author Philip Becker 1 author Trevor Bosaw 1 author Lindsey Hattamer 1 author John Paul Ashenfelter 1 author Derek Dyer
+v0/profile/full_names_controller.rb	 3 author hpjaj 2 author Harry Levine 1 author Keifer Furzland
+v0/profile/preferred_names_controller.rb	 3 author Tom Harrison
+v0/profile/direct_deposits/disability_compensations_controller.rb	 2 author Tom Harrison
+v0/profile/ch33_bank_accounts_controller.rb	 5 author lihan 3 author Trevor Bosaw 2 author Joe Niquette 1 author Tom Harrison 1 author Anna Carey
+v0/profile/connected_applications_controller.rb	 9 author Alex Teal 1 author Edward Paget
+v0/profile/permissions_controller.rb	 1 author lihan li 1 author lihan 1 author Michael Talbot 1 author Joe Niquette
+v0/profile/personal_informations_controller.rb	 9 author hpjaj 4 author Tom Harrison 2 author Lindsey Hattamer 1 author Trevor Bosaw 1 author Riley Anderson 1 author John Bramley 1 author Eric Boehs
+v0/profile/email_addresses_controller.rb	 8 author hpjaj 2 author Joe Niquette 1 author lihan li 1 author lihan 1 author emersonthis 1 author Ryan Baker 1 author Anna Carey
+v0/profile/gender_identities_controller.rb	 3 author Tom Harrison
+v0/profile/emails_controller.rb	 4 author hpjaj 3 author Harry Levine 1 author Philip Becker 1 author Keifer Furzland 1 author Joe Niquette
+v0/profile/primary_phones_controller.rb	 6 author hpjaj 2 author Joe Niquette 2 author Harry Levine 1 author Philip Becker 1 author Keifer Furzland
+v0/profile/transactions_controller.rb	 2 author lihan 2 author emersonthis 1 author hpjaj 1 author Ryan Baker 1 author Philip Becker
+v0/profile/addresses_controller.rb	 4 author lihan 4 author hpjaj 2 author emersonthis 2 author Joe Niquette 1 author lihan li 1 author Ryan Baker 1 author Erik P. Hansen 1 author Anna Carey
+v0/profile/alternate_phones_controller.rb	 5 author hpjaj 2 author Joe Niquette 2 author Harry Levine 1 author Philip Becker 1 author Keifer Furzland
+v0/profile/telephones_controller.rb	 3 author hpjaj 2 author Joe Niquette 1 author lihan li 1 author lihan 1 author emersonthis 1 author Ryan Baker 1 author Anna Carey
+v0/profile/address_validation_controller.rb	 3 author lihan 2 author Joe Niquette 1 author Philip Becker
+v0/profile/service_histories_controller.rb	 7 author hpjaj 4 author Tom Harrison 4 author Harry Levine 1 author emersonthis 1 author Philip Becker 1 author Keifer Furzland 1 author Eric Boehs
+v0/profile/persons_controller.rb	 3 author hpjaj 2 author lihan 2 author Lindsey Hattamer 1 author Ryan Baker 1 author Philip Becker 1 author John Bramley
+v0/profile/communication_preferences_controller.rb	 4 author lihan 1 author lihan li 1 author Joe Niquette
+v0/health_records_controller.rb	 4 author Kam Karshenas 2 author patrickvinograd 1 author Mark Olson 1 author Keifer Furzland
+v0/letters_generator_controller.rb	 1 author samcoforma
+v0/evss_benefits_claims_controller.rb	 1 author Jerek Shoemaker
+v0/admin_controller.rb	 3 author Kam Karshenas 1 author Shauni Deshmukh 1 author Lindsey Hattamer
+v0/form1010cg/attachments_controller.rb	 1 author Kevin Mircovich
+v0/health_record_contents_controller.rb	 1 author patrickvinograd 1 author Kam Karshenas
+v0/efolder_controller.rb	 1 author Philip Becker 1 author Cameron Testerman
+v0/trackings_controller.rb	 3 author Kam Karshenas 1 author Eric Boehs
+v0/search_typeahead_controller.rb	 3 author Sam Suddath
+v0/backend_statuses_controller.rb	 2 author Anna Carey 1 author bosawt 1 author Travis Hilton 1 author Philip Becker 1 author Johnny Holton 1 author Harry Levine 1 author Bill Ryan
+v0/virtual_agent/virtual_agent_appeal_controller.rb	 3 author justin-trieu 3 author Karan Krishnani 2 author Kha Huynh 2 author Joseph Hall 1 author Jacob Gacek 1 author Eric Boehs
+v0/virtual_agent/virtual_agent_claim_controller.rb	 5 author Kha Huynh 2 author helene-mccarron 2 author aaronyoung-tw 2 author Joseph Hall 2 author Jacob Gacek 1 author justin-trieu 1 author Trevor Bosaw 1 author Eric Boehs
+v0/virtual_agent/report_to_cxdw.rb	 2 author helene-mccarron 2 author Kha Huynh
+v0/evss_claims_async_controller.rb	 1 author Travis 1 author Sarah-Jaine Szekeresh 1 author Keifer Furzland 1 author Johnny Holton
+v0/addresses_controller.rb	 5 author Alastair Dawson 2 author Keifer Furzland 2 author Harry Levine 2 author Bill Ryan 1 author hpjaj 1 author Travis 1 author Philip Becker 1 author Kam Karshenas
+v0/in_progress_forms_controller.rb	 7 author lihan 7 author Mark Olson 4 author Ed Mangimelli 3 author mark olson 2 author Trevor Bosaw 2 author Sarah-Jaine Szekeresh 2 author Anna Carey 2 author Alastair Dawson 1 author lihan li 1 author Travis 1 author SMLuthi 1 author Keifer Furzland 1 author Kam Karshenas 1 author Harry Levine 1 author Eric Boehs
+v0/notice_of_disagreements_controller.rb	 3 author Ed Mangimelli 1 author Eric Boehs 1 author Anna Carey
+v0/onsite_notifications_controller.rb	 1 author lihan li 1 author Tom Harrison 1 author Eric Boehs
+v0/gi_bill_feedbacks_controller.rb	 1 author lihan 1 author Trevor Bosaw 1 author Keifer Furzland 1 author Kam Karshenas 1 author Johnny Holton
+v0/prescription_preferences_controller.rb	 2 author Kam Karshenas 1 author patrickvinograd 1 author Keifer Furzland
+v0/notice_of_disagreements/contestable_issues_controller.rb	 1 author Ed Mangimelli
+v0/appeals_controller.rb	 3 author Alastair Dawson 2 author Kam Karshenas 2 author Cameron Testerman 2 author Aubrey Holland
+v0/forms_controller.rb	 1 author Philip Becker 1 author Nick Sullivan
+v0/post911_gi_bill_statuses_controller.rb	 10 author Bill Ryan 8 author Alastair Dawson 2 author Philip Becker 1 author Trevor Bosaw 1 author Travis 1 author Kam Karshenas 1 author Eric Buckley 1 author Eric Boehs
+v0/mpi_users_controller.rb	 2 author Trevor Bosaw 2 author Lindsey Hattamer 1 author Philip Becker 1 author John Bramley
+v0/education_benefits_claims_controller.rb	 15 author lihan 5 author mark olson 3 author Mark Olson 3 author Kam Karshenas 2 author Matt Roth 2 author Johnny Holton 1 author Trevor Bosaw 1 author Keifer Furzland 1 author Devin McCurdy 1 author Bill Ryan
+v0/id_card_announcement_subscription_controller.rb	 1 author Kam Karshenas 1 author James Kassemi
+openid_application_controller.rb	 15 author dbrown-va 4 author Michael Bastos 3 author patrickvinograd 3 author lukemarkwordtlibertyits 2 author esubocz-va 2 author Travis 2 author Philip Becker 2 author Eric Boehs 1 author Trevor Bosaw 1 author Travis Hilton 1 author Patrick Vinograd 1 author Lindsey Hattamer 1 author Katherine Rodriguez 1 author Johnny Holton 1 author Drew Vogel 1 author Alex Teal
+sign_in/application_controller.rb	 2 author Trevor Bosaw
+facilities_controller.rb	 4 author patrickvinograd 3 author Lance Sanchez 1 author Travis 1 author Kam Karshenas 1 author Eric Boehs 1 author Aubrey Holland
+inherited_proofing_controller.rb	 5 author John Bramley 2 author Eric Boehs 1 author Trevor Bosaw
+appeals_base_controller_v1.rb	 1 author Travis Hilton 1 author Mike
+claims_base_controller.rb	 4 author lihan 3 author Mark Olson 2 author Johnny Holton 1 author Trevor Bosaw 1 author Philip Becker 1 author Kam Karshenas
+preneeds_controller.rb	 1 author lihan 1 author Marc Harbatkin 1 author Keifer Furzland 1 author Kam Karshenas
+gids_controller.rb	 1 author Matt Roth
+bb_controller.rb	 3 author Kam Karshenas
+sm_controller.rb	 6 author Kam Karshenas 1 author Narin Ratana 1 author Aubrey Holland
+appeals_base_controller.rb	 2 author Ed Mangimelli 1 author Travis Hilton 1 author Philip Becker 1 author Michael Bastos 1 author Cameron Testerman
+concerns/ignore_not_found.rb	 1 author lihan 1 author Kam Karshenas
+concerns/headers.rb	 1 author Alastair Dawson
+concerns/failed_request_loggable.rb	 5 author Ed Mangimelli 2 author John Bramley 1 author Riley Anderson 1 author Eric Boehs
+concerns/sign_in/authentication.rb	 6 author Trevor Bosaw 4 author John Bramley 2 author Eric Boehs
+concerns/sign_in/instrumentation.rb	 1 author Trevor Bosaw 1 author Kris Pethtel
+concerns/evss/authorizeable.rb	 1 author hpjaj
+concerns/vet360/transactionable.rb	 2 author lihan 1 author hpjaj 1 author Philip Becker
+concerns/vet360/writeable.rb	 4 author lihan 3 author hpjaj 2 author Harry Levine 1 author emersonthis 1 author Ryan Baker 1 author Philip Becker 1 author Keifer Furzland 1 author Anna Carey
+concerns/form_attachment_create.rb	 5 author Anna Carey 1 author lihan 1 author Lindsey Hattamer 1 author Keifer Furzland 1 author Bill Ryan
+concerns/sentry_controller_logging.rb	 5 author Anna Carey 1 author Eric Boehs 1 author Alastair Dawson
+concerns/accountable.rb	 6 author Trevor Bosaw 3 author Josh 3 author Harry Levine 2 author lihan 1 author Travis 1 author Lindsey Hattamer 1 author John Bramley
+concerns/mhv_controller_concerns.rb	 10 author Patrick Vinograd 7 author Kam Karshenas 2 author Eugene Doan 1 author patrickvinograd
+concerns/exception_handling.rb	 3 author Lindsey Hattamer 1 author dbrown-va 1 author Travis Hilton 1 author Lee DeBoom 1 author Kam Karshenas 1 author Andrew Herzberg 1 author Alastair Dawson
+concerns/filterable.rb	 2 author Kam Karshenas 1 author Travis 1 author Marc Harbatkin 1 author Keifer Furzland 1 author Johnny Holton
+concerns/instrumentation.rb	 1 author Trevor Bosaw 1 author Alastair Dawson
+concerns/authentication_and_sso_concerns.rb	 7 author John Bramley 6 author Kam Karshenas 3 author Trevor Bosaw 3 author Eric Buckley 2 author tynyttie 2 author Travis 2 author Johnny Holton 2 author Holden Hinkle 2 author Ben 1 author esubocz-va 1 author Patrick Vinograd 1 author Lindsey Hattamer 1 author Eugene Doan 1 author Anna Carey
+rx_controller.rb	 12 author Kam Karshenas 1 author Aubrey Holland
