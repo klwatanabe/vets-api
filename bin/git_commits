@@ -1,0 +1,16 @@
+#!/bin/bash
+
+# for filename in $(git ls-files app/models/)
+for filename in $(git ls-files )
+do
+  # Extract the three most recent authors and timestamps
+  authors="$(git blame $filename --line-porcelain | grep "^author " | sort | uniq -c | sort -r )"
+  timestamps=($(git log -3 --pretty=format:'%cD' -- "$filename"))
+  month=${timestamps[2]:-''}
+  year=${timestamps[3]:-''}
+  echo "$filename, $authors, $month $year" >> git_commits.md
+
+
+
+done
+
