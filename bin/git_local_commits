@@ -1,19 +1,19 @@
 #!/bin/bash
 
 # for filename in $(git ls-files app/models/)
-for filename in $(git ls-files spec/models/user_verification_spec.rb )
+for filename in $(git ls-files lib/evss/ )
 do
   # Extract the three most recent authors and timestamps
   # git blame filename --line-porcelain | grep    "^author " | sort | uniq -c | sort -r
     # authors=($(git blame `$filename` | grep "^author"))
 
-  # authors="$(git blame $filename --line-porcelain | grep "^author " | sort | uniq -c | sort -r )"
-  # timestamps=($(git log -3 --pretty=format:'%cD' -- "$filename"))
-  # month=${timestamps[2]:-''}
-  # year=${timestamps[3]:-''}
-  # echo "$filename, $authors, $month $year" >> git_most_commits.md
+  authors="$(git blame $filename --line-porcelain | grep "^author " | sort | uniq -c | sort -r )"
+  timestamps=($(git log -3 --pretty=format:'%cD' -- "$filename"))
+  month=${timestamps[2]:-''}
+  year=${timestamps[3]:-''}
+  echo "$filename, $authors, $month $year" >> git_most_commits.md
 
-  echo "$filename" >> codeowned_files.md
+  # echo "$filename" >> codeowned_files.md
 
   # echo "$filename | $month $year | $authors " >> git_most_commits.md
 
@@ -21,23 +21,23 @@ done
 
 
 
-# Get Identity
+# # Get Identity
 
-not_owned = Rails.root.join('not_owned.rb')
+# not_owned = Rails.root.join('not_owned.rb')
 
-lines = File.readlines(not_owned).grep(/Acct Experience/i)
-identity_files = []
-lines.each { |l| identity_files << l.gsub(" @department-of-veterans-affairs/vsp-identity\n", "") }
-
-
-identity_files = []
-lines.each { |l| identity_files << l.gsub("\n", "") }
+# lines = File.readlines(not_owned).grep(/Acct Experience/i)
+# identity_files = []
+# lines.each { |l| identity_files << l.gsub(" @department-of-veterans-affairs/vsp-identity\n", "") }
 
 
- array = File.readlines(file_invetory).to_a
+# identity_files = []
+# lines.each { |l| identity_files << l.gsub("\n", "") }
 
 
-# Other files
+#  array = File.readlines(file_invetory).to_a
+
+
+# # Other files
 
 # .dockerignore
 # .gitattributes
