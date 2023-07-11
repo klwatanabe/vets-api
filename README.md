@@ -1,4 +1,4 @@
-# Vets API
+# Vetss API
 This project provides common APIs for applications that live on VA.gov (formerly vets.gov APIs). 
 
 
