@@ -997,8 +997,9 @@ flipper:
     - trevor.bosaw@oddball.io # Trevor Bosaw (Oddball), Identity, Backend Engineer
     - tricia.baker@va.gov # Tricia Baker - Product Manager - VA Forms Team
     - tze@adhocteam.us
-    - yangyang@navapbc.com
-    - yoom@navapbc.com
+    - yangyang@navapbc.com # Yang Yang - Nava - Claims Fast Tracking / Employee Experience
+    - amylai@navapbc.com # Amy Lai - Nava - Claims Fast Tracking / Employee Experience
+    - yoom@navapbc.com # Yoom Lam - Nava - Virtual Regional Office
     - zmorel@governmentcio.com
     - kha.huynh@thoughtworks.com # Virtual Agent
     - zach.morel@gcio.com
@@ -1070,6 +1071,9 @@ flipper:
     - randi.mays@va.gov # Randi Mays - Front End Engineer - Kind Systems, Sitewide Crew, Public Websites
     - rmays@kindsys.us # Randi Mays - Front End Engineer - Kind Systems, Sitewide Crew, Public Websites
     - luke@verdance.co # Luke Short - Software Engineer - Verdance LLC, Contention Classification
+    - adewitt@thoughtworks.com # Anita DeWitt - Virtual Agent Chatbot
+    - maurice.okumu@thoughtworks.com # Maurice Okumu - Virtual Agent Chatbot
+    - nichelous.herndon@thoughtworks.com # Nichelous Herndon - Virtual Agent Chatbot
 
 bgs:
   application: ~
