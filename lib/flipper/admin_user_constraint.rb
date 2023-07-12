@@ -4,13 +4,24 @@ module Flipper
   class AdminUserConstraint
     def self.matches?(request)
       puts 'request_path: ' + request.method + ' ' + request.path
+      # require 'pry'; binding.pry;
+
+      if request.session[:flipper_user].present?
+        user = request.session[:flipper_user]
+        RequestStore.store[:flipper_user_email_for_log] = user&.email
+        authorize(user)
+
+        return true
+      end
+
+      # authenticate(request) if request.path.include?('/flipper/auth')
+
+      return true if request.method == 'GET' && request.path.exclude?('/callback')
 
       authenticate(request)
 
-      return true if request.method == 'GET'
-
-      github_organization_authenticate!(request.session[:flipper_user], Settings.flipper.github_organization)
-      github_team_authenticate!(request.session[:flipper_user], Settings.flipper.github_team)
+      # github_organization_authenticate!(request.session[:flipper_user], Settings.flipper.github_organization)
+      # github_team_authenticate!(request.session[:flipper_user], Settings.flipper.github_team)
 
       true
 
@@ -43,22 +54,23 @@ module Flipper
 
     def self.authenticate(request)
       puts '**** authenticate ****'
-      if request.session[:flipper_user].present?
-        user = request.session[:flipper_user]
-        RequestStore.store[:flipper_user_email_for_log] = user&.email
-        authorize(user)
+      # if request.session[:flipper_user].present?
+      #   user = request.session[:flipper_user]
+      #   RequestStore.store[:flipper_user_email_for_log] = user&.email
+      #   authorize(user)
 
-        return true
-      end
+      #   return true
+      # end
 
       RequestStore.store[:flipper_user_email_for_log] = nil
+      request['url'] = request.base_url + '/flipper/features'
       warden = request.env['warden']
       warden.authenticate!(scope: :flipper)
     end
 
     def self.authorize(user)
       puts '**** authorize ****'
-
+      # require 'pry'; binding.pry;
       org_name = Settings.flipper.github_organization
       team_id = Settings.flipper.github_team
 

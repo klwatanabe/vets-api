@@ -1,13 +1,15 @@
 <div class="vads-l-row">
   <div class="vads-l-col">
+    <% if RequestStore.store[:flipper_user_email_for_log].blank? %>
+      <p>User must authenticate with GitHub to edit feature toggles</p>
+      <form method="post" action="/flipper/features" >
+        <button type="submit" style="background-color:black"><img style="height:25px; margin-right:20px" src="/images/github-mark-white.png" alt="gh-logo">Sign in to GitHub</button>
+      </form>
+    <% elsif !RequestStore.store[:flipper_authorized] %>
+        <p>You are not authorized to perform any actions. Go look at some docs that don't exist yet</p>
+    <% end %>
     <table class="vads-u-margin-top--0">
       <caption class="vads-u-font-size--xl">Features</caption>
-      <% if RequestStore.store[:flipper_user_email_for_log].blank? &&  !Rails.env.development? %>
-        <a href ="<%= SAML::URLService::VIRTUAL_HOST_MAPPINGS.dig(request.base_url, :base_redirect) %>">Sign in</a> with an identity-verified admin account to edit feature toggles.
-      <% end %>
-      <% if !RequestStore.store[:flipper_authorized] %>
-        TODO -- You are not authorized to perform any actions. See some docs
-      <% end%>
       <thead>
         <tr>
           <th>Status</th>
@@ -23,7 +25,7 @@
               <%= feature.state.capitalize %>
             </td>
             <td>
-              <% if RequestStore.store[:flipper_user_email_for_log].present? || Rails.env.development? %>
+              <% if RequestStore.store[:flipper_authorized] %>
                 <a href="<%= "#{script_name}/features/#{feature.key}" %>">
                   <%= feature.key %>
                 </a>
