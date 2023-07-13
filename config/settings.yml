@@ -159,6 +159,8 @@ edu:
     pass: ~
     user: ~
     port: ~
+    relative_307_path: ~
+    relative_351_path: ~
   slack:
     webhook_url: https://example.com
   spool_error:
@@ -997,8 +999,9 @@ flipper:
     - trevor.bosaw@oddball.io # Trevor Bosaw (Oddball), Identity, Backend Engineer
     - tricia.baker@va.gov # Tricia Baker - Product Manager - VA Forms Team
     - tze@adhocteam.us
-    - yangyang@navapbc.com
-    - yoom@navapbc.com
+    - yangyang@navapbc.com # Yang Yang - Nava - Claims Fast Tracking / Employee Experience
+    - amylai@navapbc.com # Amy Lai - Nava - Claims Fast Tracking / Employee Experience
+    - yoom@navapbc.com # Yoom Lam - Nava - Virtual Regional Office
     - zmorel@governmentcio.com
     - kha.huynh@thoughtworks.com # Virtual Agent
     - zach.morel@gcio.com
@@ -1150,6 +1153,10 @@ hqva_mobile:
 
 # settings va.gov uses related to lighthouse api's
 lighthouse:
+  auth:
+    ccg:
+      client_id: ~
+      rsa_key: ~
   api_key: fake_key
   benefits_claims:
     host: https://sandbox-api.va.gov
@@ -1165,6 +1172,11 @@ lighthouse:
         client_id: ~
         rsa_key: ~
       use_mocks: false
+  benefits_documents:
+    host: https://sandbox-api.va.gov
+    access_token:
+      aud_claim_url: https://deptva-eval.okta.com/oauth2/ausi3ui83fLa68IJv2p7/v1/token
+    use_mocks: false
   letters_generator:
     url: https://sandbox-api.va.gov
     path: /services/va-letter-generator/v1/
@@ -1214,6 +1226,10 @@ lighthouse:
         client_id: ~
         rsa_key: ~
       use_mocks: false
+  s3:
+    uploads_enabled: false
+    bucket: lighthouse_s3_bucket
+    region: lighthouse_s3_region
 
 mail_automation:
   url: https://viccs-api-test.ibm-intelligent-automation.com
@@ -1300,7 +1316,7 @@ vanotify:
         covid_vaccine_expanded_registration: fake_template_id
         direct_deposit_edu: edu_template_id
         direct_deposit_comp_pen: comp_pen_template_id
-        login_reactivation_email: 08d9f04-ae3f-4b73-b932-3ad175d21ba9
+        login_reactivation_email: 480270b2-d2c8-4048-91d7-aebc51a2f073
     lighthouse:
       api_key: fake_secret
       template_id:
@@ -1443,6 +1459,14 @@ github_cvu:
   installation_id: ~
   integration_id: ~
   private_pem: ~
+
+chip:
+  url: https://vpce-06399548ef94bdb41-lk4qp2nd.execute-api.us-gov-west-1.vpce.amazonaws.com
+  base_path: dev
+  tmp_api_user: TzY6DFrnjPE8dwxUMbFf9HjbFqRim2MgXpMpMciXJFVohyURUJAc7W99rpFzhfh2B3sVnn4
+  tmp_api_id: 2dcdrrn5zc
+  tmp_api_username: vetsapiTempUser
+  mock: true
 
 check_in:
   travel_reimbursement_api:

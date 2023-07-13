@@ -363,14 +363,6 @@ features:
     actor_type: user
     description: Enables form 1990 email submission confirmation (VaNotify)
     enable_in_development: true
-  form1990_auth_confirmation_email:
-    actor_type: user
-    description: Enables form 1990 email submission confirmation for authenticated users (VaNotify)
-    enable_in_development: true
-  form1990e_auth_confirmation_email:
-    actor_type: user
-    description: Enables form 1990 email submission confirmation for authenticated users (VaNotify)
-    enable_in_development: true
   form1995_confirmation_email:
     actor_type: user
     description: Enables form 1995 email submission confirmation (VaNotify)
@@ -892,9 +884,15 @@ features:
   disability_compensation_lighthouse_rated_disabilities_provider:
     actor_type: user
     description: If enabled uses the lighthouse rated disabilities endpoint
+  disability_compensation_lighthouse_submit_migration:
+    actor_type: user
+    description: If enabled uses the lighthouse submit endpoint
   disability_compensation_lighthouse_intent_to_file_provider:
     actor_type: user
     description: If enabled uses the lighthouse intent to file endpoint
+  disability_compensation_lighthouse_ppiu_direct_deposit_provider:
+    actor_type: user
+    description: If enabled uses the lighthouse ppiu/direct deposit endpoint in the form526 submission workflow
   virtual_agent_fetch_jwt_token:
     actor_type: user
     description: Enable the fetching of a JWT token to access MAP environment
@@ -914,4 +912,7 @@ features:
   virtual_agent_voice:
     actor_type: user
     description: Enable the voice feature of the VA Chatbot
-
+  notification_center:
+    actor_type: user
+    description: Enable Notification Center
+    enable_in_development: true
