@@ -60,6 +60,8 @@ module MebApi
 
         clear_saved_form(params[:form_id]) if params[:form_id]
 
+        send_confirmation_email(params[:education_benefit]) if response.ok?
+
         render json: {
           data: {
             'status': response.status
@@ -125,6 +127,21 @@ module MebApi
 
       def enrollment_service
         MebApi::DGI::Enrollment::Service.new(@current_user)
+      end
+
+      def send_confirmation_email(form_data)
+        email = form_data.dig('claimant', 'contact_info', 'email_address')
+
+        return unless Flipper.enabled?(:form1990meb_confirmation_email) && email.present?
+
+        VANotify::EmailJob.perform_async(
+          email,
+          Settings.vanotify.services.va_gov.template_id.form1990meb_confirmation_email,
+          {
+            'first_name' => form_data.dig('claimant', 'first_name')&.upcase.presence,
+            'date_submitted' => Time.zone.today.strftime('%B %d, %Y')
+          }
+        )
       end
     end
   end

@@ -129,5 +129,128 @@ Rspec.describe MebApi::V0::EducationBenefitsController, type: :request do
         end
       end
     end
+
+    describe 'POST /meb_api/v0/submit_claim' do
+      let(:claimant_params) do
+        {
+          form_id: 1,
+          education_benefit: {
+            claimant: {
+              first_name: 'Herbert',
+              middle_name: 'Hoover',
+              last_name: 'Hoover',
+              date_of_birth: '1980-03-11',
+              contact_info: {
+                address_line1: '503 upper park',
+                address_line2: '',
+                city: 'falls church',
+                zipcode: '22046',
+                email_address: 'hhover@test.com',
+                address_type: 'DOMESTIC',
+                mobile_phone_number: '4409938894',
+                country_code: 'US',
+                state_code: 'VA'
+              },
+              notification_method: 'EMAIL'
+            }
+          },
+          relinquished_benefit: {
+            eff_relinquish_date: '2021-10-15',
+            relinquished_benefit: 'Chapter30'
+          },
+          additional_considerations: {
+            active_duty_kicker: 'N/A',
+            academy_rotc_scholarship: 'YES',
+            reserve_kicker: 'N/A',
+            senior_rotc_scholarship: 'YES',
+            active_duty_dod_repay_loan: 'YES'
+          },
+          comments: {
+            disagree_with_service_period: false
+          },
+          direct_deposit: {
+            account_number: '123123123123',
+            account_type: 'savings',
+            routing_number: '123123123'
+          }
+        }
+      end
+
+      context 'when successful' do
+        context 'confirmation email' do
+          it 'sends when successful' do
+            VCR.use_cassette('dgi/submit_claim') do
+              allow(VANotify::EmailJob).to receive(:perform_async)
+
+              post '/meb_api/v0/submit_claim',
+                   params: claimant_params
+
+              expect(VANotify::EmailJob).to have_received(:perform_async).with(
+                'hhover@test.com',
+                'form1990meb_confirmation_email_template_id',
+                {
+                  'first_name' => 'HERBERT',
+                  'date_submitted' => Time.zone.today.strftime('%B %d, %Y')
+                }
+              )
+            end
+          end
+
+          it 'is skipped when feature flag is turned off' do
+            Flipper.disable(:form1990meb_confirmation_email)
+
+            VCR.use_cassette('dgi/submit_claim') do
+              allow(VANotify::EmailJob).to receive(:perform_async)
+
+              post '/meb_api/v0/submit_claim',
+                   params: claimant_params
+
+              expect(VANotify::EmailJob).not_to have_received(:perform_async)
+            end
+
+            Flipper.enable(:form1990meb_confirmation_email)
+          end
+
+          it 'is skipped when form email is missing' do
+            contact_info_without_email = {
+              **claimant_params[:education_benefit][:claimant][:contact_info],
+              email_address: nil
+            }
+            claimant_params_without_email = {
+              **claimant_params[:education_benefit],
+              claimant: {
+                **claimant_params[:education_benefit][:claimant],
+                contact_info: { **contact_info_without_email }
+              }
+            }
+
+            VCR.use_cassette('dgi/submit_claim') do
+              allow(VANotify::EmailJob).to receive(:perform_async)
+
+              post '/meb_api/v0/submit_claim',
+                   params: claimant_params_without_email
+
+              expect(VANotify::EmailJob).not_to have_received(:perform_async)
+            end
+          end
+        end
+      end
+
+      context 'when unsuccessful' do
+        context 'confirmation email' do
+          it 'does not send' do
+            VCR.use_cassette('dgi/submit_claim_failure') do
+              allow(VANotify::EmailJob).to receive(:perform_async)
+
+              response = post '/meb_api/v0/submit_claim',
+                              params: claimant_params
+
+              expect(response).to be(503)
+              expect(VANotify::EmailJob).not_to have_received(:perform_async)
+            end
+          end
+        end
+      end
+    end
   end
 end
