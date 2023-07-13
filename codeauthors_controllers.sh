@@ -1,7 +1,7 @@
 #!/bin/bash
 
-output_file="git_most_commits_initializers.csv"
-directory="/Users/ryan/Development/vets-api/config/initializers"
+output_file="git_most_commits.csv"
+directory="/Users/ryan/Development/vets-api/app/controllers"
 
 # Create a temporary file
 temp_file=$(mktemp)
