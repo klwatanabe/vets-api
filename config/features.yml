@@ -351,6 +351,10 @@ features:
   file_upload_short_workflow_enabled:
     actor_type: user
     description: Enables shorter workflow enhancement for file upload component
+  financial_status_report_streamlined_waiver:
+    actor_type: user
+    description: Enables streamlined waiver flow for qualifying users completing the Financial Status Report (FSR) form
+    enable_in_development: true
   form526_legacy:
     actor_type: user
     description: If true, points controllers to the legacy EVSS Form 526 instance. If false, the controllers will use the Dockerized instance running in DVP.
@@ -362,6 +366,14 @@ features:
   form1990_confirmation_email:
     actor_type: user
     description: Enables form 1990 email submission confirmation (VaNotify)
+    enable_in_development: true
+  form1990_auth_confirmation_email:
+    actor_type: user
+    description: Enables form 1990 email submission confirmation for authenticated users (VaNotify)
+    enable_in_development: true
+  form1990e_auth_confirmation_email:
+    actor_type: user
+    description: Enables form 1990 email submission confirmation for authenticated users (VaNotify)
     enable_in_development: true
   form1995_confirmation_email:
     actor_type: user
@@ -574,6 +586,10 @@ features:
     actor_type: user
     description: Use for experimental features for My VA application
     enable_in_development: true
+  my_va_redirect:
+    actor_type: user
+    description: After authentication redirects a user to the My VA page if they are on the homepage
+    enable_in_development: true
   search_representative:
     actor_type: user
     description: Enable frontend application and cta for Search Representative application
@@ -709,10 +725,6 @@ features:
   va_online_scheduling_requests:
     actor_type: user
     description: Allows veterans to submit requests for VA appointments
-    enable_in_development: true
-  va_online_scheduling_static_landing_page:
-    actor_type: user
-    description: Allows updates to the static landing widget on the Public Websites page
     enable_in_development: true
   va_online_scheduling_unenrolled_vaccine:
     actor_type: user
@@ -884,9 +896,6 @@ features:
   disability_compensation_lighthouse_rated_disabilities_provider:
     actor_type: user
     description: If enabled uses the lighthouse rated disabilities endpoint
-  disability_compensation_lighthouse_submit_migration:
-    actor_type: user
-    description: If enabled uses the lighthouse submit endpoint
   disability_compensation_lighthouse_intent_to_file_provider:
     actor_type: user
     description: If enabled uses the lighthouse intent to file endpoint
