@@ -138,9 +138,6 @@ RSpec.describe Lighthouse::LettersGenerator::Service do
           .not_to receive(:get_access_token)
           .and_return('faketoken')
 
-        fake_response_json = File.read("#{FAKE_RESPONSES_PATH}/fakeResponse.json")
-        fake_response_body = JSON.parse(fake_response_json)
-
         client = Lighthouse::LettersGenerator::Service.new
 
         expect { client.get_letter('DOLLYPARTON', 'LETTER') }.to raise_error do |error|

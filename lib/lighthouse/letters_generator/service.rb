@@ -159,9 +159,8 @@ module Lighthouse
       end
 
       def validate_downloadable_letter_type(letter_type)
-        unless LETTER_TYPES.include? letter_type.downcase
-          raise create_invalid_type_error(letter_type.downcase)
-        end
+        error = create_invalid_type_error(letter_type.downcase)
+        raise error unless LETTER_TYPES.include? letter_type.downcase
       end
     end
   end
