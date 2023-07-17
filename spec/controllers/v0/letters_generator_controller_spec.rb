@@ -24,7 +24,7 @@ RSpec.describe V0::LettersGeneratorController, type: :controller do
       end
     end
 
-    context "there is an error" do
+    context 'with errors' do
       it 'handles a timeout error as a 504' do
         VCR.use_cassette('lighthouse/letters_generator/504_response') do
           get(:index)

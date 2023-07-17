@@ -50,8 +50,7 @@ module Lighthouse
         log = "Retrieving letter from #{config.generator_url}/#{endpoint}"
         params = { icn: }.merge(options)
 
-        response = get_from_lighthouse(endpoint, params, log)
-        response.body
+        get_from_lighthouse(endpoint, params, log)
       end
 
       def get_eligible_letter_types(icn)
@@ -59,10 +58,11 @@ module Lighthouse
         log = "Retrieving eligible letter types and destination from #{config.generator_url}/#{endpoint}"
         params = { icn: }
 
-        get_from_lighthouse(endpoint, params, log)
+        response_body = get_from_lighthouse(endpoint, params, log)
+
         {
-          letters: transform_letters(response.body['letters']),
-          letter_destination: response.body['letterDestination']
+          letters: transform_letters(response_body['letters']),
+          letter_destination: response_body['letterDestination']
         }
       end
 
@@ -71,10 +71,11 @@ module Lighthouse
         log = "Retrieving benefit information from #{config.generator_url}/#{endpoint}"
         params = { icn: }
 
-        response = get_from_lighthouse(endpoint, params, log)
+        response_body = get_from_lighthouse(endpoint, params, log)
+
         {
-          benefitInformation: transform_benefit_information(response.body['benefitInformation']),
-          militaryService: transform_military_services(response.body['militaryServices'])
+          benefitInformation: transform_benefit_information(response_body['benefitInformation']),
+          militaryService: transform_military_services(response_body['militaryServices'])
         }
       end
 
@@ -85,19 +86,19 @@ module Lighthouse
         log = "Downloading letter from #{config.generator_url}/#{endpoint}"
         params = { icn: }.merge(options)
 
-        response = get_from_lighthouse(endpoint, params, log)
-        response.body
+        get_from_lighthouse(endpoint, params, log)
       end
 
       private
 
       def get_from_lighthouse(endpoint, params, log)
         Lighthouse::LettersGenerator.measure_time(log) do
-          config.connection.get(
+          response = config.connection.get(
             endpoint,
             params,
             { Authorization: "Bearer #{config.get_access_token}" }
           )
+          response.body
         end
       rescue Faraday::ClientError, Faraday::ServerError => e
         Raven.tags_context(
@@ -151,18 +152,15 @@ module Lighthouse
       end
 
       def create_invalid_type_error(letter_type)
-        error = Lighthouse::LettersGenerator::ServiceError.new
-        error.title = 'Invalid letter type'
-        error.message = "Letter type of #{letter_type.downcase} is not one of the expected options"
-        error.status = 400
+        error = Common::Exceptions::BadRequest.new
+        error.source = "Invalid letter type: Letter type of #{letter_type.downcase} is not one of the expected options"
 
         error
       end
 
       def validate_downloadable_letter_type(letter_type)
         unless LETTER_TYPES.include? letter_type.downcase
-          error = create_invalid_type_error(letter_type.downcase)
-          raise error
+          raise create_invalid_type_error(letter_type.downcase)
         end
       end
     end
