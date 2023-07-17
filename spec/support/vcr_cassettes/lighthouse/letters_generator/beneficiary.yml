@@ -2,7 +2,7 @@
 http_interactions:
 - request:
     method: get
-    uri: https://sandbox-api.va.gov/services/va-letter-generator/v1/eligible-letters?icn=1012666073V986297
+    uri: https://sandbox-api.va.gov/services/va-letter-generator/v1/eligible-letters?icn=123498767V234859
     body:
       encoding: US-ASCII
       string: ''

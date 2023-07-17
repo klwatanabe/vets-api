@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require 'lighthouse/letters_generator/configuration'
-require 'lighthouse/letters_generator/service_error'
+require 'lighthouse/service_exception'
 
 module Lighthouse
   module LettersGenerator
@@ -59,7 +59,7 @@ module Lighthouse
         log = "Retrieving eligible letter types and destination from #{config.generator_url}/#{endpoint}"
         params = { icn: }
 
-        response = get_from_lighthouse(endpoint, params, log)
+        get_from_lighthouse(endpoint, params, log)
         {
           letters: transform_letters(response.body['letters']),
           letter_destination: response.body['letterDestination']
@@ -104,7 +104,12 @@ module Lighthouse
           team: 'benefits-claim-appeal-status',
           feature: 'letters-generator'
         )
-        raise Lighthouse::LettersGenerator::ServiceError.new(e.response[:body]), 'Lighthouse error'
+        Lighthouse::ServiceException.send_error(
+          e,
+          self.class.to_s.underscore,
+          config.service_name,
+          "#{config.generator_url}/#{endpoint}"
+        )
       end
 
       def transform_letters(letters)

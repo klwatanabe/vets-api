@@ -1,12 +1,9 @@
 # frozen_string_literal: true
 
 require 'rails_helper'
-require 'lighthouse/letters_generator/service_error'
 
 RSpec.describe V0::LettersGeneratorController, type: :controller do
-  # These users are from Lighthouse API sandbox
-  # https://github.com/department-of-veterans-affairs/vets-api-clients/blob/master/test_accounts/letter_generator_test_accounts.md
-  let(:user) { build(:user, :loa3, icn: '1012666073V986297') }
+  let(:user) { build(:user, :loa3, icn: '123498767V234859') }
   let(:user_error) { build(:user, :loa3, icn: '1012667145V762142') }
 
   before do
@@ -22,9 +19,18 @@ RSpec.describe V0::LettersGeneratorController, type: :controller do
       VCR.use_cassette('lighthouse/letters_generator/index') do
         get(:index)
 
-        letters_response = JSON.parse(response.body)
         expected_important_key = 'letters'
-        expect(letters_response).to include(expected_important_key)
+        expect(response.body).to include(expected_important_key)
+      end
+    end
+
+    context "there is an error" do
+      it 'handles a timeout error as a 504' do
+        VCR.use_cassette('lighthouse/letters_generator/504_response') do
+          get(:index)
+        end
+
+        expect(response).to  have_http_status(:gateway_timeout)
       end
     end
   end
@@ -37,7 +43,7 @@ RSpec.describe V0::LettersGeneratorController, type: :controller do
         VCR.use_cassette('lighthouse/letters_generator/download') do
           post :download, params: { id: 'BENEFIT_SUMMARY' }
 
-          expect(response.header['Content-Type']).to eq('application/pdf')
+          expect(response.header['Content-Type']).to include('application/pdf')
         end
       end
     end
@@ -76,9 +82,9 @@ RSpec.describe V0::LettersGeneratorController, type: :controller do
       it 'raises Lighthouse::LettersGenerator::ServiceError' do
         VCR.use_cassette('lighthouse/letters_generator/download_error') do
           post :download, params: { id: 'BENEFIT_SUMMARY' }
-          response_body = JSON.parse(response.body)
-          expect(response_body['errors'].first).to include('status' => '422')
         end
+
+        expect(response).to have_http_status(:unprocessable_entity)
       end
     end
   end

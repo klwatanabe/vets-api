@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require 'lighthouse/letters_generator/service'
-require 'lighthouse/letters_generator/service_error'
 require 'lighthouse/letters_generator/veteran_sponsor_resolver'
 
 module V0

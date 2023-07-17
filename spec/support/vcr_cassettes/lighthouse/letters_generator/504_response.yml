@@ -1,0 +1,70 @@
+---
+http_interactions:
+- request:
+    method: get
+    uri: https://sandbox-api.va.gov/services/va-letter-generator/v1/eligible-letters?icn=123498767V234859
+    body:
+      encoding: US-ASCII
+      string: ''
+    headers:
+      Accept:
+      - application/json
+      Content-Type:
+      - application/json
+      User-Agent:
+      - Vets.gov Agent
+      Authorization:
+      - Bearer abcdefghijklmnop
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+  response:
+    status:
+      code: 504
+    headers:
+      Date:
+      - Tue, 18 Apr 2023 16:22:34 GMT
+      Content-Type:
+      - text/html; charset=utf-8
+      Connection:
+      - keep-alive
+      X-Ratelimit-Limit-Minute:
+      - '400'
+      Ratelimit-Remaining:
+      - '396'
+      Ratelimit-Reset:
+      - '27'
+      Ratelimit-Limit:
+      - '400'
+      X-Ratelimit-Remaining-Minute:
+      - '396'
+      Content-Language:
+      - en-US
+      Pragma:
+      - no-cache
+      - no-cache
+      X-Kong-Upstream-Latency:
+      - '938'
+      X-Kong-Proxy-Latency:
+      - '0'
+      Strict-Transport-Security:
+      - max-age=16000000; includeSubDomains; preload;
+      - max-age=31536000; includeSubDomains; preload
+      Access-Control-Allow-Origin:
+      - "*"
+      X-Frame-Options:
+      - SAMEORIGIN
+      Cache-Control:
+      - no-cache, no-store
+      Transfer-Encoding:
+      - chunked
+    body:
+      encoding: UTF-8
+      string: |
+        <html>
+        <head><title>504 Gateway Time-out</title></head>
+        <body>
+        <center><h1>504 Gateway Time-out</h1></center>
+        </body>
+        </html>
+  recorded_at: Tue, 18 Apr 2023 16:22:34 GMT
+recorded_with: VCR 6.1.0
