@@ -102,7 +102,7 @@ module VetsAPI
         client_id: Settings.flipper.github_oauth_key,
         client_secret: Settings.flipper.github_oauth_secret,
         scope: 'read:org',
-        redirect_uri: 'flipper/auth/github/callback' # TODO
+        redirect_uri: 'flipper/auth/github/callback'
       }
 
       config.serialize_from_session { |key| Warden::GitHub::Verifier.load(key) }

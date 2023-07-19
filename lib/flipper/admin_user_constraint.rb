@@ -13,6 +13,7 @@ module Flipper
         return true
       end
 
+      # return true if (request.method == 'GET' && request.path.exclude?('/callback')) || Rails.env.development?
       return true if request.method == 'GET' && request.path.exclude?('/callback')
 
       authenticate(request)

@@ -1,5 +1,6 @@
 <div class="vads-l-row">
   <div class="vads-l-col">
+    <%# TODO Add `&& !Rails.env.development?` back to line below %>
     <% if RequestStore.store[:flipper_user_email_for_log].blank? %>
       <p>User must authenticate with GitHub to edit feature toggles</p>
       <form method="post" action="/flipper/features" >
@@ -25,6 +26,7 @@
               <%= feature.state.capitalize %>
             </td>
             <td>
+              <%# TODO Add `|| Rails.env.development?` back to line below %>
               <% if RequestStore.store[:flipper_authorized] %>
                 <a href="<%= "#{script_name}/features/#{feature.key}" %>">
                   <%= feature.key %>

@@ -872,14 +872,6 @@ search_click_tracking:
   mock: false
   url: https://api.gsa.gov/technology/searchgov/v2
 
-flipper:
-  mute_logs: false
-  github_organization: ~
-  github_team: ~
-  github_oauth_key: ~
-  github_oauth_secret: ~
-  github_api_key: ~
-
 bgs:
   application: ~
   client_station_id: ~
@@ -1362,6 +1354,14 @@ notifications:
   public_key: ~
 
 sidekiq:
+  github_organization: ~
+  github_team: ~
+  github_oauth_key: ~
+  github_oauth_secret: ~
+  github_api_key: ~
+
+flipper:
+  mute_logs: false
   github_organization: ~
   github_team: ~
   github_oauth_key: ~
