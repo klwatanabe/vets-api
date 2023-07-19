@@ -101,8 +101,9 @@ class AcceptableVerifiedCredentialAdoptionService
   end
 
   def eligible_for_sending?
+    # Thanks to Ruby's short circuit evaluation, our rate limiting via Flipper will only apply to eligible users.
     user.email && user_qualifies_for_reactivation? && !recent_triggered_send? && Flipper.enabled?(
-      :reactivation_experiment, user
+      :reactivation_experiment_rate_limit, user
     )
   end
 end
