@@ -508,7 +508,7 @@ features:
   reactivation_experiment_initial_gate:
     actor_type: user
     description: Toggle to enable all users to enter the eligibility check portion of the flow.  This only be set to
-      enabled for one (1) to two (2) weeks starting 20JULY2023.
+      enabled for one (1) week at the longest, starting 20JULY2023 or 21JULY2023 depending on deployment timing.
   reactivation_experiment_rate_limit:
     actor_type: user
     description: Toggle to control the amount of eligible users entering the send_email portion of the flow.
