@@ -73,7 +73,7 @@ RSpec.describe 'Dynamic forms uploader', type: :request do
           upload_url: anything,
           file: anything,
           metadata: anything,
-          attachments: ["tmp/vba_21_4142-attachment-tmp.pdf"]
+          attachments: ['tmp/vba_21_4142-attachment-tmp.pdf']
         )
       end
     end
