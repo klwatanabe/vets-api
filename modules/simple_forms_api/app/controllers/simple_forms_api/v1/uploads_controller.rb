@@ -58,7 +58,8 @@ module SimpleFormsApi
         response = lighthouse_service.upload_doc(
           upload_url: uuid_and_location[:location],
           file: file_path,
-          metadata: metadata.to_json
+          metadata: metadata.to_json,
+          attachments: attachments
         )
 
         [response.status, uuid_and_location[:uuid]]
@@ -83,6 +84,20 @@ module SimpleFormsApi
           message.gsub!(word, '')
         end
         message
+      end
+
+      def attachments
+        form_id = FORM_NUMBER_MAP[params[:form_number]]
+        if form_id == 'vba_21_4142'
+          data = JSON.parse(params.to_json)
+          text = "RELATIONSHIP TO VETERAN/CLAIMANT:  #{data.dig('preparer_identification', 'relationship_to_veteran') || data.dig('preparer_identification', 'other')} #{data.dig('preparer_identification', 'preparer_full_name', 'first')} #{data.dig('preparer_identification', 'preparer_full_name', 'middle')} #{data.dig('preparer_identification', 'preparer_full_name', 'last')} #{data.dig('preparer_identification', 'preparer_title')} #{data.dig('preparer_identification', 'preparer_organization')} #{data.dig('preparer_identification', 'preparer_address', 'street')} #{data.dig('preparer_identification', 'preparer_address', 'street2')} #{data.dig('preparer_identification', 'preparer_address', 'city')} #{data.dig('preparer_identification', 'preparer_address', 'state')} #{data.dig('preparer_identification', 'preparer_address', 'postal_code')} #{data.dig('preparer_identification', 'court_appointment_info')}"
+          pdf = Prawn::Document.new
+          pdf.text text
+          pdf.render_file("tmp/#{form_id}-attachment-tmp.pdf")
+          ["tmp/#{form_id}-attachment-tmp.pdf"]
+        else
+          []
+        end
       end
     end
   end

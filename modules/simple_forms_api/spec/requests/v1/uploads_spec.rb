@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'rails_helper'
+require 'simple_forms_api_submission/service'
 
 RSpec.describe 'Dynamic forms uploader', type: :request do
   describe 'form request' do
@@ -50,5 +51,33 @@ RSpec.describe 'Dynamic forms uploader', type: :request do
 
     test_failed_request_scrubs_error_message 'vba_26_4555.json'
     test_failed_request_scrubs_error_message 'vba_21_4142.json'
+
+    def self.test_attach_long_text_as_separate_pdf(test_payload)
+      it 'sends an attachment for 21_4142' do
+        lighthouse_service = double('SimpleFormsApiSubmission::Service')
+        upload_location = double
+        upload_doc = double
+
+        fixture_path = Rails.root.join('modules', 'simple_forms_api', 'spec', 'fixtures', 'form_json', test_payload)
+        data = JSON.parse(fixture_path.read)
+
+        allow(SimpleFormsApiSubmission::Service).to receive(:new).and_return(lighthouse_service)
+        allow(upload_location).to receive(:body).and_return({ 'data' => { 'id' => 'location-id' } })
+        allow(upload_doc).to receive(:status).and_return(:ok)
+        allow(lighthouse_service).to receive(:get_upload_location).and_return(upload_location)
+        allow(lighthouse_service).to receive(:upload_doc).and_return(upload_doc)
+
+        post '/simple_forms_api/v1/simple_forms', params: data
+
+        expect(lighthouse_service).to have_received(:upload_doc).with(
+          upload_url: anything,
+          file: anything,
+          metadata: anything,
+          attachments: ["tmp/vba_21_4142-attachment-tmp.pdf"]
+        )
+      end
+    end
+
+    test_attach_long_text_as_separate_pdf 'vba_21_4142.json'
   end
 end

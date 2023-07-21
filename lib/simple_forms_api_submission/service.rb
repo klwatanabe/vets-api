@@ -27,16 +27,19 @@ module SimpleFormsApiSubmission
       Common::FileHelpers.generate_temp_file(metadata.to_s, "#{SecureRandom.hex}.SimpleFormsApi.metadata.json")
     end
 
-    def get_upload_docs(file:, metadata:)
+    def get_upload_docs(file:, metadata:, attachments:)
       json_tmpfile = generate_tmp_metadata(metadata)
       file_name = File.basename(file)
       params = { metadata: Faraday::UploadIO.new(json_tmpfile, Mime[:json].to_s, 'metadata.json'),
                  content: Faraday::UploadIO.new(file, Mime[:pdf].to_s, file_name) }
+      attachments.each.with_index do |attachment, i|
+        params["attachment#{i + 1}".to_sym] = Faraday::UploadIO.new(attachment, Mime[:pdf].to_s, attachment)
+      end
       [params, json_tmpfile]
     end
 
-    def upload_doc(upload_url:, file:, metadata:)
-      params, _json_tmpfile = get_upload_docs(file:, metadata:)
+    def upload_doc(upload_url:, file:, metadata:, attachments: [])
+      params, _json_tmpfile = get_upload_docs(file:, metadata:, attachments:)
       response = perform :put, upload_url, params, { 'Content-Type' => 'multipart/form-data' }
 
       raise response.body unless response.success?
