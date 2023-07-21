@@ -41,8 +41,8 @@ module SimpleFormsApi
       STRING
       pdf = Prawn::Document.new
       pdf.text text
-      pdf.render_file("tmp/vba_21_4142-attachment-tmp.pdf")
-      ["tmp/vba_21_4142-attachment-tmp.pdf"]
+      pdf.render_file('tmp/vba_21_4142-attachment-tmp.pdf')
+      ['tmp/vba_21_4142-attachment-tmp.pdf']
     end
   end
 end
