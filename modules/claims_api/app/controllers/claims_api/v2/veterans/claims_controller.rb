@@ -2,11 +2,13 @@
 
 require 'claims_api/bgs_claim_status_mapper'
 require 'claims_api/v2/mock_documents_service'
+require 'claims_api/transform_bgs_data'
 
 module ClaimsApi
   module V2
     module Veterans
-      class ClaimsController < ClaimsApi::V2::ApplicationController # rubocop:disable Metrics/ClassLength
+      class ClaimsController < ClaimsApi::V2::ApplicationController
+        include ClaimsApi::TransformBGSData
         before_action :verify_access!
 
         def index
@@ -45,10 +47,6 @@ module ClaimsApi
           service = EVSS::DocumentsService.new(auth_headers)
           ClaimsApi::Logger.log('EVSS', rid: request.request_id, detail: 'service started')
           service
-        end
-
-        def bgs_phase_status_mapper
-          ClaimsApi::BGSClaimStatusMapper.new
         end
 
         def validate_id_with_icn(bgs_claim, lighthouse_claim, request_icn)
@@ -240,59 +238,8 @@ module ClaimsApi
           bgs_phase_status_mapper.get_phase_type_from_dictionary(indicator.last.to_i)
         end
 
-        def get_current_status_from_hash(data)
-          if data&.dig('benefit_claim_details_dto', 'bnft_claim_lc_status').present?
-            data[:benefit_claim_details_dto][:bnft_claim_lc_status].last do |lc|
-              phase_number = get_completed_phase_number_from_phase_details(lc)
-              bgs_phase_status_mapper.name(lc[:phase_type], phase_number || nil)
-            end
-          elsif data&.dig(:phase_type).present?
-            bgs_phase_status_mapper.name(data[:phase_type])
-          end
-        end
-
-        def get_completed_phase_number_from_phase_details(details)
-          if details[:phase_type_change_ind].present?
-            return if details[:phase_type_change_ind] == 'N'
-
-            details[:phase_type_change_ind].split('').first
-          end
-        end
-
-        def get_bgs_phase_completed_dates(data)
-          lc_status_array =
-            [data&.dig(:benefit_claim_details_dto, :bnft_claim_lc_status)].flatten.compact
-          return {} if lc_status_array.first.nil?
-
-          max_completed_phase = lc_status_array.first[:phase_type_change_ind].split('').first
-          return {} if max_completed_phase.downcase.eql?('n')
-
-          {}.tap do |phase_date|
-            lc_status_array.reverse.map do |phase|
-              completed_phase_number = phase[:phase_type_change_ind].split('').first
-              if completed_phase_number <= max_completed_phase &&
-                 completed_phase_number.to_i.positive?
-                phase_date["phase#{completed_phase_number}CompleteDate"] = date_present(phase[:phase_chngd_dt])
-              end
-            end
-          end.sort.reverse.to_h
-        end
-
         def extract_date(bgs_details)
           bgs_details.is_a?(Array) ? bgs_details.first[:phase_chngd_dt] : bgs_details[:phase_chngd_dt]
-        end
-
-        ### called from inside of format_bgs_phase_date & format_bgs_phase_chng_dates
-        ### calls format_bgs_date
-        def date_present(date)
-          return unless date.is_a?(Date) || date.is_a?(String)
-
-          date.present? ? format_bgs_date(date) : nil
-        end
-
-        def format_bgs_date(phase_change_date)
-          d = Date.parse(phase_change_date.to_s)
-          d.strftime('%Y-%m-%d')
         end
 
         def format_bgs_phase_date(data)
@@ -318,24 +265,6 @@ module ClaimsApi
           date_present(phase_change_date)
         end
 
-        def detect_current_status(data)
-          if data[:bnft_claim_lc_status].nil? && data.exclude?(:claim_status) && data.exclude?(:phase_type)
-            return 'NO_STATUS_PROVIDED'
-          end
-
-          phase_data = if data[:phase_type].present?
-                         data[:phase_type]
-                       elsif data[:bnft_claim_lc_status].present?
-                         data[:bnft_claim_lc_status]
-                       else
-                         data[:claim_status]
-                       end
-
-          return bgs_phase_status_mapper.name(phase_data) if phase_data.is_a?(String)
-
-          phase_data.is_a?(Array) ? cast_claim_lc_status(phase_data) : get_current_status_from_hash(phase_data)
-        end
-
         def get_errors(lighthouse_claim)
           return [] if lighthouse_claim.blank? || lighthouse_claim.evss_response.blank?
 
@@ -344,32 +273,6 @@ module ClaimsApi
               detail: "#{error['severity']} #{error['detail'] || error['text']}".squish,
               source: error['key'] ? error['key'].gsub('.', '/') : error['key']
             }
-          end
-        end
-
-        # The status can either be an object or array
-        # This picks the most recent status from the array
-        def cast_claim_lc_status(phase_data)
-          return if phase_data.blank?
-
-          phase = [phase_data].flatten.max do |a, b|
-            a[:phase_chngd_dt] <=> b[:phase_chngd_dt]
-          end
-          phase_number = get_completed_phase_number_from_phase_details(phase_data.last)
-          bgs_phase_status_mapper.name(phase[:phase_type], phase_number || nil)
-        end
-
-        def map_yes_no_to_boolean(key, value)
-          # Requested decision appears to be included in the BGS payload
-          # only when it is yes. Assume an ommission is akin to no, i.e., false
-          return false if value.blank?
-
-          case value.downcase
-          when 'yes', 'y' then true
-          when 'no', 'n' then false
-          else
-            Rails.logger.error "Expected key '#{key}' to be Yes/No. Got '#{s}'."
-            nil
           end
         end
 

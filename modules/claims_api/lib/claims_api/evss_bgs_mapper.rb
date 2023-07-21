@@ -1,7 +1,10 @@
 # frozen_string_literal: true
 
+require 'claims_api/transform_bgs_data'
+
 module ClaimsApi
   class EvssBgsMapper
+    include ClaimsApi::TransformBGSData
     attr_reader :evss_id, :list_data
 
     def initialize(claim)
@@ -35,7 +38,7 @@ module ClaimsApi
       claim['data']['max_est_claim_date'] = format_bgs_date(@data['max_est_claim_complete_dt'])
       claim['data']['claim_phase_dates'] = claim_phase_dates
       claim['data']['status_type'] = @data['claim_status_type']
-      claim['data']['status'] = phase.to_s
+      claim['data']['status'] = detect_current_status(@data).to_s # phase.to_s
       claim['data']['open'] = claim['data']['status'].downcase != 'complete'
       claim['data']['claim_dt'].to_s
       claim['data']['claim_complete_date'] = format_bgs_date(@data['claim_complete_dt'])
@@ -47,7 +50,7 @@ module ClaimsApi
     private
 
     def contentions
-      contentions = @data['contentions']&.split(/(?<=\)),/)
+      contentions = @data['contentions']&.split(/(?<=\)),/)&.strip
       return [] if contentions.nil?
 
       contentions
@@ -80,25 +83,14 @@ module ClaimsApi
 
       obj = [@data['bnft_claim_lc_status']].flatten
       latest_phase_info = obj.max_by { |d| d['phase_chngd_dt'] }
-      phases = phases(obj)
-      {
-        'latest_phase_type' => latest_phase_info['phase_type'],
-        'phase_change_date' => format_bgs_date(latest_phase_info['phase_chngd_dt']),
-        'phase_type_change_ind' => latest_phase_info['phase_type_change_ind']
-      }.merge(phases)
-    end
 
-    def phases(obj)
-      events = {}
-      sorted = obj.sort_by { |p| p['phase_chngd_dt'] }
-      sorted.each_with_index do |phase, index|
-        phase_num = phase['phase_type_change_ind'][0]
-        phase_date = format_bgs_date(phase['phase_chngd_dt'])
-        key = "phase#{phase_num}_complete_date"
-        events.delete(key) if phase_num.to_i != index && phase_num != 'N'
-        events[key] = phase_date
-      end
-      events
+      phases = get_bgs_phase_completed_dates(obj)
+      phases.transform_keys(&:to_s)
+      {
+        'latest_phase_type' => latest_phase_info[:phase_type],
+        'phase_change_date' => format_bgs_date(latest_phase_info[:phase_chngd_dt]),
+        'phase_type_change_ind' => latest_phase_info[:phase_type_change_ind]
+      }.merge(phases)
     end
   end
 end
