@@ -550,7 +550,6 @@ module HCA
             ),
             'incomes' => incomes,
             'spouseFinancialsList' => veteran_to_spouse_financials(veteran),
-            'marriedLastCalendarYear' => veteran['maritalStatus'] == 'Married',
             'dependentFinancialsList' => veteran_to_dependent_financials_collection(veteran),
             'numberOfDependentChildren' => veteran['dependents']&.size
           }
