@@ -21,6 +21,7 @@ module HCA
     def submit_form(form)
       formatted = HCA::EnrollmentSystem.veteran_to_save_submit_form(form, @user_identifier)
       content = Gyoku.xml(formatted)
+      binding.pry; fail
       content = <<-EOF
       <va:form
   xmlns:va="http://va.gov/schema/esr/voa/v1">
