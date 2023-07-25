@@ -51,7 +51,7 @@ RSpec.describe 'Dynamic forms uploader', type: :request do
     test_failed_request_scrubs_error_message 'vba_26_4555.json'
     test_failed_request_scrubs_error_message 'vba_21_4142.json'
 
-    def self.test_submit_request_with_double_quotes
+    def self.test_submit_request_with_dangerous_characters
       it 'makes the request with double quotes replaced with single quotes' do
         VCR.use_cassette('lighthouse/benefits_intake/200_lighthouse_intake_upload_location') do
           VCR.use_cassette('lighthouse/benefits_intake/200_lighthouse_intake_upload') do
@@ -61,7 +61,7 @@ RSpec.describe 'Dynamic forms uploader', type: :request do
               'spec',
               'fixtures',
               'form_json',
-              'form_with_double_quotes.json'
+              'form_with_dangerous_characters.json'
             )
             data = JSON.parse(fixture_path.read)
             post '/simple_forms_api/v1/simple_forms', params: data
@@ -73,5 +73,7 @@ RSpec.describe 'Dynamic forms uploader', type: :request do
         end
       end
     end
+
+    test_submit_request_with_dangerous_characters
   end
 end

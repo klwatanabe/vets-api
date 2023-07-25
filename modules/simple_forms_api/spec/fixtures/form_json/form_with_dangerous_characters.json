@@ -1,6 +1,6 @@
 {
   "action": "submit",
-  "additional_information": "More information here! Including the much-feared \"double quotes\"!!!",
+  "additional_information": "More information here! Including the much-feared \"double quotes\"!!! And a newline \n and an emoji 😊 and much much more > : <",
   "claimant_address": {
     "city": "Los Angeles",
     "country": "USA",
