@@ -86,7 +86,7 @@ module SimpleFormsApi
       end
 
       def data_as_hash
-        JSON.parse(params.to_json.gsub('\"', '\''))
+        JSON.parse(params.to_json.gsub('\"', '\\\\\u0022'))
       end
     end
   end
