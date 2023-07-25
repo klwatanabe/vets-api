@@ -22,7 +22,7 @@ module SimpleFormsApi
         Datadog::Tracing.active_trace&.set_tag('form_id', params[:form_number])
 
         form_id = FORM_NUMBER_MAP[params[:form_number]]
-        filler = SimpleFormsApi::PdfFiller.new(form_number: form_id, data: JSON.parse(params.to_json))
+        filler = SimpleFormsApi::PdfFiller.new(form_number: form_id, data: data_as_hash)
 
         file_path = filler.generate
         metadata = filler.metadata
@@ -83,6 +83,10 @@ module SimpleFormsApi
           message.gsub!(word, '')
         end
         message
+      end
+
+      def data_as_hash
+        JSON.parse(params.to_json.gsub('\"', '\''))
       end
     end
   end

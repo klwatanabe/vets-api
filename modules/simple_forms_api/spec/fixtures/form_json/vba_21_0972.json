@@ -1,6 +1,6 @@
 {
   "action": "submit",
-  "additional_information": "More information here!",
+  "additional_information": "More information here! Including some \"hard to parse\" quotes!",
   "claimant_address": {
     "city": "Los Angeles",
     "country": "USA",
