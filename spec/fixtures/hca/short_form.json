@@ -20,6 +20,28 @@
     "provinceCode": "ProvinceName",
     "postalCode": "21231"
   },
+  "dependents": [
+    {
+      "fullName": {
+        "first": "FirstChildA",
+        "middle": "MiddleChildA",
+        "last": "LastChildA",
+        "suffix": "Jr."
+      },
+      "dependentRelation": "Stepson",
+      "socialSecurityNumber": "111229876",
+      "becameDependent": "1992-04-07",
+      "dateOfBirth": "1982-05-05",
+      "disabledBefore18": true,
+      "attendedSchoolLastYear": true,
+      "dependentEducationExpenses": 45.2,
+      "cohabitedLastYear": true,
+      "receivedSupportLastYear": false,
+      "grossIncome": 991.9,
+      "netIncome": 981.2,
+      "otherIncome": 91.9
+    }
+  ],
   "discloseFinancialInformation": true,
   "isMedicaidEligible": false,
   "isEssentialAcaCoverage": false,
