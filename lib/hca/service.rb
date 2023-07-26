@@ -35,12 +35,12 @@ module HCA
       end
 
       root = response.body.locate('S:Envelope/S:Body/submitFormResponse').first
-      binding.pry; fail
-      {
+      res = {
         success: true,
         formSubmissionId: root.locate('formSubmissionId').first.text.to_i,
         timestamp: root.locate('timeStamp').first&.text || Time.now.getlocal.to_s
       }
+      binding.pry; fail
     end
 
     def health_check
