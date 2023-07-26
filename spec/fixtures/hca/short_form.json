@@ -11,6 +11,7 @@
   "veteranGrossIncome": 1000,
   "veteranNetIncome": 90.11,
   "veteranOtherIncome": 10.1,
+  "deductibleMedicalExpenses": 33.3,
   "isSpanishHispanicLatino": false,
   "veteranAddress": {
     "street": "123 NW 5th St",
