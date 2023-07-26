@@ -23,6 +23,7 @@ Rails.application.routes.draw do
   get '/v0/sign_in/logingov_logout_proxy', to: 'v0/sign_in#logingov_logout_proxy'
   get '/v0/sign_in/revoke_all_sessions', to: 'v0/sign_in#revoke_all_sessions'
 
+  get '/v0/sign_in/client_config', to: 'v0/sign_in#read_client_config'
   get '/sign_in/openid_connect/certs' => 'sign_in/openid_connect_certificates#index'
 
   get '/inherited_proofing/auth', to: 'inherited_proofing#auth'
@@ -44,11 +45,17 @@ Rails.application.routes.draw do
     resource :virtual_agent_token, only: [:create], controller: :virtual_agent_token
     resource :virtual_agent_jwt_token, only: [:create], controller: :virtual_agent_jwt_token
 
+    namespace :ask_va do
+      resources :static_data, only: [:index]
+      resources :static_data_auth, only: [:index]
+
+      get 'static_data', to: 'ask_va_static_data#index'
+      get 'static_data_auth', to: 'ask_va_static_data_auth#index'
+    end
+
     get 'form1095_bs/download_pdf/:tax_year', to: 'form1095_bs#download_pdf'
     get 'form1095_bs/download_txt/:tax_year', to: 'form1095_bs#download_txt'
     get 'form1095_bs/available_forms', to: 'form1095_bs#available_forms'
-
-    get 'user_transition_availabilities', to: 'user_transition_availabilities#index'
 
     resources :medical_copays, only: %i[index show]
     get 'medical_copays/get_pdf_statement_by_id/:statement_id', to: 'medical_copays#get_pdf_statement_by_id'
@@ -426,6 +433,7 @@ Rails.application.routes.draw do
   end
 
   # Modules
+  mount AskVAApi::Engine, at: '/ask_va_api'
   mount CheckIn::Engine, at: '/check_in'
   mount CovidResearch::Engine, at: '/covid-research'
   mount CovidVaccine::Engine, at: '/covid_vaccine'
@@ -442,7 +450,6 @@ Rails.application.routes.draw do
   # End Modules
 
   require 'sidekiq/web'
-  require 'sidekiq-scheduler/web'
   require 'sidekiq/pro/web' if Gem.loaded_specs.key?('sidekiq-pro')
   require 'sidekiq-ent/web' if Gem.loaded_specs.key?('sidekiq-ent')
   require 'github_authentication/sidekiq_web'
