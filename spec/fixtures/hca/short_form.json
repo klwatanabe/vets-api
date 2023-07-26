@@ -9,6 +9,7 @@
   "gender": "F",
   "veteranDateOfBirth": "1923-01-02",
   "veteranGrossIncome": 1000,
+  "veteranNetIncome": 90.11,
   "isSpanishHispanicLatino": false,
   "veteranAddress": {
     "street": "123 NW 5th St",
