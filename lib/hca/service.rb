@@ -26,7 +26,6 @@ module HCA
       is_short_form = HealthCareApplication.new(form: form.to_json).short_form?
 
       response = with_monitoring do
-        binding.pry; fail
         perform(:post, '', submission.body)
       rescue => e
         increment_failure('submit_form_short_form', e) if is_short_form
@@ -36,6 +35,7 @@ module HCA
       end
 
       root = response.body.locate('S:Envelope/S:Body/submitFormResponse').first
+      binding.pry; fail
       {
         success: true,
         formSubmissionId: root.locate('formSubmissionId').first.text.to_i,
