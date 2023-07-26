@@ -20,6 +20,9 @@
     "provinceCode": "ProvinceName",
     "postalCode": "21231"
   },
+  "spouseGrossIncome": 64.1,
+  "spouseNetIncome": 35.1,
+  "spouseOtherIncome": 12.3,
   "dependents": [
     {
       "fullName": {
