@@ -21,61 +21,12 @@ module HCA
     def submit_form(form)
       formatted = HCA::EnrollmentSystem.veteran_to_save_submit_form(form, @user_identifier)
       content = Gyoku.xml(formatted)
-      binding.pry; fail
-      content = <<-EOF
-      <va:form
-  xmlns:va="http://va.gov/schema/esr/voa/v1">
-  <va:formIdentifier>
-    <va:type>100</va:type>
-    <va:value>1010EZ</va:value>
-    <va:version>2986360436</va:version>
-  </va:formIdentifier>
-  <va:summary>
-    <eeSummary:financialsInfo
-      xmlns:eeSummary="http://jaxws.webservices.esr.med.va.gov/schemas">
-      <eeSummary:incomeTest>
-        <eeSummary:discloseFinancialInformation>true</eeSummary:discloseFinancialInformation>
-      </eeSummary:incomeTest>
-      <eeSummary:financialStatement>
-        <eeSummary:incomes>
-          <eeSummary:income>
-            <eeSummary:amount>1000</eeSummary:amount>
-            <eeSummary:type>7</eeSummary:type>
-          </eeSummary:income>
-        </eeSummary:incomes>
-      </eeSummary:financialStatement>
-    </eeSummary:financialsInfo>
-    <eeSummary:personInfo
-      xmlns:eeSummary="http://jaxws.webservices.esr.med.va.gov/schemas">
-      <eeSummary:firstName>FIRSTNAME</eeSummary:firstName>
-      <eeSummary:middleName>MIDDLENAME</eeSummary:middleName>
-      <eeSummary:lastName>ZZTEST</eeSummary:lastName>
-      <eeSummary:suffix>JR.</eeSummary:suffix>
-      <eeSummary:gender>F</eeSummary:gender>
-      <eeSummary:dob>01/02/1923</eeSummary:dob>
-      <eeSummary:ssnText>111111234</eeSummary:ssnText>
-    </eeSummary:personInfo>
-  </va:summary>
-  <va:applications>
-    <va:applicationInfo>
-      <va:appDate>2022-03-16</va:appDate>
-      <va:appMethod>1</va:appMethod>
-    </va:applicationInfo>
-  </va:applications>
-</va:form>
-<va:identity
-  xmlns:va="http://va.gov/schema/esr/voa/v1">
-  <va:authenticationLevel>
-    <va:type>100</va:type>
-    <va:value>anonymous</va:value>
-  </va:authenticationLevel>
-</va:identity>
-EOF
       submission = soap.build_request(:save_submit_form, message: content)
 
       is_short_form = HealthCareApplication.new(form: form.to_json).short_form?
 
       response = with_monitoring do
+        binding.pry; fail
         perform(:post, '', submission.body)
       rescue => e
         increment_failure('submit_form_short_form', e) if is_short_form
