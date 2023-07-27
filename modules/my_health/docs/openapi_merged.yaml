@@ -830,7 +830,7 @@ paths:
       summary: /v1/messaging/messages/categories
       parameters:
         - $ref: '#/components/parameters/InflectionHeader'
-  /v1/messaging/messages/signature:
+  /v1/messaging/preferences/signature:
     get:
       description: Gets user message signature preferences
       operationId: get_signature
@@ -853,7 +853,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Errors'
           description: Not authorized for access to secure messages
-      summary: /v1/messaging/messages/signature
+      summary: /v1/messaging/preferences/signature
       parameters:
         - $ref: '#/components/parameters/InflectionHeader'
   /v1/messaging/messages/{id}:
@@ -1865,31 +1865,24 @@ components:
         data:
           type: object
           required:
-            - type
-            - id
-            - attributes
+            - signatureName
+            - includeSignature
+            - signatureTitle
           properties:
-            type:
+            signatureName:
               type: string
-              example: messageSignature
-            id:
+              example: My Signature Name
+            includeSignature:
+              type: boolean
+            signatureTitle:
               type: string
-              example: abe3f152-90b0-45cb-8776-4958bad0e0ef
-            attributes:
-              type: object
-              required:
-                - signatureName
-                - includeSignature
-                - signatureTitle
-              properties:
-                signatureName:
-                  type: string
-                  example: My Signature Name
-                includeSignature:
-                  type: boolean
-                signatureTitle:
-                  type: string
-                  example: My Signature Title
+              example: My Signature Title
+        errors:
+          type: object
+          example: {}
+        metadata:
+          type: object
+          example: {}
     SecureMessageReplyRequest:
       type: object
       required:
