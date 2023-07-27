@@ -2,19 +2,14 @@
 
 module Users
   class Form526UserIdentificationVerifier
+    FORM526_REQUIRED_IDENTIFIERS = %w[participant_id birls_id ssn birth_date edipi].freeze
+
     def initialize(user)
       @user = user
     end
 
     def missing_identifiers
-      missing_ids = []
-      missing_ids << 'participant_id' if @user.participant_id.blank?
-      missing_ids << 'birls_id' if @user.birls_id.blank?
-      missing_ids << 'ssn' if @user.ssn.blank?
-      missing_ids << 'birth_date' if @user.birth_date.blank?
-      missing_ids << 'edipi' if @user.edipi.blank?
-
-      missing_ids
+      FORM526_REQUIRED_IDENTIFIERS.select { |id| @user[id].blank? }
     end
   end
 end
