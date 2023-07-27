@@ -20,7 +20,10 @@ module MyHealth
 
       def signature
         resource = client.get_signature
-        resource[:data] = { signature_name: nil, include_signature: false, signature_title: nil } if resource[:data].nil?
+        if resource[:data].nil?
+          resource[:data] =
+            { signature_name: nil, include_signature: false, signature_title: nil }
+        end
         render json: resource,
                each_serializer: MessageSignatureSerializer
       end
