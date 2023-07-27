@@ -236,7 +236,7 @@ describe 'Disability Claims', production: false, swagger_doc: Rswag::TextHelpers
       pdf_description = <<~VERBIAGE
         Returns a filled out 526EZ form for a disability compensation claim (21-526EZ).
 
-        This endpoint can be used to generate the PDF based on the request data in the case that the submission was not able to be successfully auto-established. The PDF can then be uploaded via the Benefits Intake API to digitally submit directly to the Veterans Benefits Administration's (VBA) claims intake process.
+        This endpoint can be used to generate the PDF based on the request data in the case that the submission was not able to be successfully auto-established. The PDF can then be uploaded via the [Benefits Intake API](https://developer.va.gov/explore/api/benefits-intake) to digitally submit directly to the Veterans Benefits Administration's (VBA) claims intake process.
       VERBIAGE
       description pdf_description
 
