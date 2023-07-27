@@ -193,6 +193,9 @@ features:
   claims_status_v1_bgs_enabled:
     actor_type: user
     description: enables calling BGS instead of EVSS for the claims status v1.
+  claims_status_v2_lh_benefits_docs_service_enabled:
+    actor_type: user
+    description: enable/disable the use of LH Benefits Documents API in our Claim Status v2 services.
     enable_in_development: false
   debt_letters_show_letters:
     actor_type: user
@@ -505,9 +508,13 @@ features:
   organic_conversion_experiment:
     actor_type: user
     description: Toggle to enable login.gov create account experiment
-  reactivation_experiment:
+  reactivation_experiment_initial_gate:
     actor_type: user
-    description: Toggle to enable login.gov reactivate account experiment
+    description: Toggle to enable all users to enter the eligibility check portion of the flow.  This only be set to
+      enabled for one (1) week at the longest, starting 20JULY2023 or 21JULY2023 depending on deployment timing.
+  reactivation_experiment_rate_limit:
+    actor_type: user
+    description: Toggle to control the amount of eligible users entering the send_email portion of the flow.
   pdf_warning_banner:
     description: "When enabled, will allow display of PDF cert warnings in find-a-form"
     actor_type: user
@@ -858,6 +865,10 @@ features:
     actor_type: user
     description: Provides a flag wrapper for minor code changes to be gated from Prod.
     enable_in_development: true
+  supply_reordering_sleep_apnea_enabled:
+    actor_type: user
+    description: Enables sleep apnea supplies to be ordered in the supply reorder tool / MDOT.
+    enable_in_development: true
   move_form_back_button:
     actor_type: user
     description: Test moving form back button to the top of the page
@@ -870,6 +881,9 @@ features:
   mobile_lighthouse_claims:
     actor_type: user
     description: For mobile app, use Lighthouse instead of EVSS for our claims endpoints upstream service
+  mobile_lighthouse_document_upload:
+    actor_type: user
+    description: For mobile app, use Lighthouse instead of EVSS for our document uploads
   mobile_lighthouse_disability_ratings:
     actor_type: user
     description: For mobile app, use Lighthouse instead of EVSS for our disability ratings endpoints upstream service
@@ -879,12 +893,6 @@ features:
   form526_backup_submission_force_offramp:
     actor_type: user
     description: If enabled add the "forceOfframp" flag to backup 526 submission metadata
-  bgs_via_faraday:
-    actor_type: user
-    description: If enabled uses the faraday connection to BGS as opposed to bgs-ext
-  bgs_via_faraday_file_number:
-    actor_type: user
-    description: If enabled uses the faraday connection to BGS to locate file_number
   virtual_agent_show_floating_chatbot:
     actor_type: user
     description: Enables a floating chatbot on the chatbot page - managed by virtual agent team
@@ -930,3 +938,6 @@ features:
     actor_type: user
     description: NOD update to latest form, part III box 11
     enable_in_development: true
+  nod_browser_monitoring_enabled:
+    actor_type: user
+    description: NOD Datadog RUM monitoring
