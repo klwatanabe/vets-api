@@ -3,10 +3,7 @@
 module Avs
   module V0
     class AvsController < ApplicationController
-      # before_action { :authenticate }
-      # FIXME: This is a temporary workaround to allow testing before launch.
-      skip_before_action :authenticate
-
+      before_action { :authenticate }
       # TODO: filter returned IDs by veteran ICN.
 
       def index
@@ -54,7 +51,7 @@ module Avs
       end
 
       def avs_service
-        @avs_service ||= Avs::V0::AvsService.new(@user)
+        @avs_service ||= Avs::V0::AvsService.new(@current_user)
       end
 
       def get_avs_path(sid)

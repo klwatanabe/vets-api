@@ -5,9 +5,6 @@ require 'common/exceptions'
 module Avs
   class UserService < Avs::BaseService
     def session(user)
-      # FIXME: this is a hack to get around the fact that we don't have a user object.
-      return if user.nil?
-
       cached = cached_by_account_uuid(user.account_uuid)
       return cached.token if cached
 
