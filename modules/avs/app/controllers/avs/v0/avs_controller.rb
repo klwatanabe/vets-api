@@ -12,8 +12,8 @@ module Avs
                     render json: {
                         errors: [
                             {
-                                title: 'Not found',
-                                detail: "Station number and Appointment IEN must be present and valid",
+                                title: 'Invalid parameters',
+                                detail: 'Station number and Appointment IEN must be present and valid.',
                                 status: '400'
                             }
                         ]
@@ -30,7 +30,18 @@ module Avs
 
             def show
                 sid = params[:sid]
-                # TODO: validate sid format
+                if !validate_sid?(sid)
+                    render json: {
+                        errors: [
+                            {
+                                title: 'Invalid AVS id',
+                                detail: 'AVS id does not match accepted format.',
+                                status: '400'
+                            }
+                        ]
+                        }, status: :bad_request
+                    return
+                end
 
                 avs_response, failures = avs_service.get_avs(sid)
                 # TODO: validate ICN matches logged in veteran.
@@ -63,6 +74,10 @@ module Avs
 
             def validate_search_param?(param)
                 !param.nil? && /^\d+$/.match(param)
+            end
+
+            def validate_sid?(sid)
+                /^([A-F0-9]){32}$/.match(sid)
             end
 
         end
