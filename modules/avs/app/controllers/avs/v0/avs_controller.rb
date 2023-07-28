@@ -15,18 +15,11 @@ module Avs
                     return
                 end
 
-                avs_list, failures = avs_service.get_avs_list(station_no, appointment_ien)
+                search_response, failures = avs_service.get_avs_by_appointment(station_no, appointment_ien)
+                # TODO: filter returned IDs by veteran ICN.
 
-                # TODO: sort AVS items by date so we can get the most recent.
-
-                Rails.logger.debug(avs_list[:data][0]["id"])
-
-                if avs_list[:data][0]["id"].nil?
-                    response = { status: 404, message: 'Not Found', data: [] }
-                    render json: response, status: response[:status]
-                end
-
-                response = { status: 200, message: 'success', data: [ { path: get_avs_path(avs_list[:data][0]["id"]) } ]}
+                search_response[:data].empty? ? data = [] : data = [ { path: get_avs_path(search_response[:data][0]["sid"]) } ]
+                response = { status: 200, message: 'success', data: data }
                 render json: response, status: response[:status]
             end
 
@@ -34,9 +27,9 @@ module Avs
                 @avs_service ||= Avs::V0::AvsService.new(@user)
             end
 
-            def get_avs_path(avs_id)
-                # TODO: define constant for base path.
-                "/my-health/medical-records/care-summaries/avs/#{avs_id}"
+            def get_avs_path(sid)
+                # TODO: define and use constant for base path.
+                "/my-health/medical-records/care-summaries/avs/#{sid}"
             end
 
         end

@@ -7,11 +7,10 @@ require 'json'
 module Avs
   module V0
     class AvsService < Avs::SessionService
-      def get_avs_list(station_no, appointment_ien)
+      def get_avs_by_appointment(station_no, appointment_ien)
 
         with_monitoring do
-          params = {}
-          response = perform(:get, avs_base_url, params, headers)
+          response = perform(:get, get_avs_by_appointment_url(station_no, appointment_ien), nil, headers)
           {
             data: response.body
           }
@@ -22,12 +21,12 @@ module Avs
         # TODO: implement this.
       end
 
-      def avs_base_url
-        "/avs"
+      def get_avs_by_appointment_url(station_no, appointment_ien)
+        "/avs-by-appointment/#{station_no}/#{appointment_ien}"
       end
 
-      def get_avs_base_url(avs_id)
-        "/avs/#{avs_id}"
+      def get_avs_base_url(sid)
+        "/avs/#{sid}"
       end
 
     end
