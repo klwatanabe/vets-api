@@ -6,20 +6,19 @@ module Avs
 
     def initialize(user)
       @user = user
+      super()
     end
 
     private
 
     def perform(method, path, params, headers = nil, options = nil)
-      response = super(method, path, params, headers, options)
-      # user_service.extend_session(@user.account_uuid)
-      response
+      super(method, path, params, headers, options)
     end
 
     def headers
       {
         # TODO: adjust according to AVS service reqs.
-        'X-AVS-JWT' => user_service.session(@user),
+        'X-AVS-JWT' => user_service.session(@user)
       }
     end
 
