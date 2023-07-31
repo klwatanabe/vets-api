@@ -21,7 +21,7 @@ module Avs
                end
 
         unless @current_user.icn == search_response[:data][0]['icn']
-          render_client_error('Not authorized', 'User is not authorized to view the AVS for this appointment.', :unauthorized)
+          render_client_error('Not authorized', 'User may not view the AVS for this appointment.', :unauthorized)
           return
         end
 
@@ -46,7 +46,7 @@ module Avs
         data = avs_response[:data]['sid'] == sid ? avs_response[:data] : {}
 
         unless @current_user.icn == data['data']['patientInfo']['icn']
-          render_client_error('Not authorized', 'User is not authorized to view this AVS.', :unauthorized)
+          render_client_error('Not authorized', 'User may not view this AVS.', :unauthorized)
           return
         end
 
