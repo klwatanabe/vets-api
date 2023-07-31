@@ -4,7 +4,6 @@ module Avs
   module V0
     class AvsController < ApplicationController
       before_action { :authenticate }
-      # TODO: filter returned IDs by veteran ICN.
 
       def index
         station_no = params[:stationNo]
@@ -20,6 +19,12 @@ module Avs
                else
                  { path: get_avs_path(search_response[:data][0]['sid']) }
                end
+
+        unless @current_user.icn == search_response[:data][0]['icn']
+          render_client_error('Not authorized', 'User is not authorized to view the AVS for this appointment.', :unauthorized)
+          return
+        end
+
         render json: data
       end
 
@@ -34,19 +39,17 @@ module Avs
         # TODO: validate ICN matches logged in veteran.
 
         if avs_response[:data].nil?
-          render json: {
-            errors: [
-              {
-                title: 'Not found',
-                detail: "No AVS found for sid #{sid}",
-                status: '404'
-              }
-            ]
-          }, status: :not_found
+          render_client_error('Not found', "No AVS found for sid #{sid}", :not_found)
           return
         end
 
         data = avs_response[:data]['sid'] == sid ? avs_response[:data] : {}
+
+        unless @current_user.icn == data['data']['patientInfo']['icn']
+          render_client_error('Not authorized', 'User is not authorized to view this AVS.', :unauthorized)
+          return
+        end
+
         render json: data
       end
 
@@ -59,16 +62,16 @@ module Avs
         "/my-health/medical-records/care-summaries/avs/#{sid}"
       end
 
-      def render_client_error(title, message)
+      def render_client_error(title, message, status = :bad_request)
         render json: {
           errors: [
             {
               title:,
               detail: message,
-              status: '400'
+              status:
             }
           ]
-        }, status: :bad_request
+        }, status:
       end
 
       def validate_search_param?(param)
