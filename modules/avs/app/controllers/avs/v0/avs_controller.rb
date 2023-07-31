@@ -20,10 +20,14 @@ module Avs
                  { path: get_avs_path(search_response[:data][0]['sid']) }
                end
 
-        unless @current_user.icn == search_response[:data][0]['icn']
-          render_client_error('Not authorized', 'User may not view the AVS for this appointment.', :unauthorized)
-          return
+        # rubocop:disable Style/SoleNestedConditional
+        unless search_response[:data].empty?
+          unless @current_user.icn == search_response[:data][0]['icn']
+            render_client_error('Not authorized', 'User may not view the AVS for this appointment.', :unauthorized)
+            return
+          end
         end
+        # rubocop:enable Style/SoleNestedConditional
 
         render json: data
       end
