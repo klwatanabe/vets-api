@@ -17,6 +17,7 @@ module MyHealth
         render json: resource,
                serializer: MessagingPreferenceSerializer
       end
+      #test line
     end
   end
 end
