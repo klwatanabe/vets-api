@@ -15,13 +15,13 @@
     }
   ],
   "paths": {
-    "/appealable-issues/{decision_review_type}": {
-      "get": {
+    "/appealable-issues/{decisionReviewType}": {
+      "post": {
         "summary": "Returns all appealable issues for a specific veteran.",
         "tags": [
           "Appealable Issues"
         ],
-        "operationId": "getAppealableIssues",
+        "operationId": "listAppealableIssues",
         "description": "Returns all issues associated with a Veteran that have been decided as of the `receiptDate`. Not all issues returned are guaranteed to be eligible for appeal.",
         "security": [
           {
@@ -46,22 +46,22 @@
         ],
         "parameters": [
           {
-            "name": "decision_review_type",
+            "name": "decisionReviewType",
             "in": "path",
             "required": true,
             "description": "Scoping of appeal type for associated issues",
             "schema": {
               "type": "string",
               "enum": [
-                "higher_level_reviews",
-                "notice_of_disagreements",
-                "supplemental_claims"
+                "higher-level-reviews",
+                "notice-of-disagreements",
+                "supplemental-claims"
               ]
             },
-            "example": "higher_level_reviews"
+            "example": "higher-level-reviews"
           },
           {
-            "name": "benefit_type",
+            "name": "benefitType",
             "in": "query",
             "description": "Required if decision review type is Higher Level Review or Supplemental Claims.",
             "schema": {
@@ -79,45 +79,6 @@
               ]
             },
             "example": "compensation"
-          },
-          {
-            "in": "header",
-            "name": "X-VA-SSN",
-            "required": true,
-            "description": "Veteran's SSN",
-            "example": "706547821",
-            "schema": {
-              "$ref": "#/components/schemas/X-VA-SSN"
-            }
-          },
-          {
-            "in": "header",
-            "name": "X-VA-Receipt-Date",
-            "required": true,
-            "description": "(yyyy-mm-dd) In order to determine contestability of issues, the receipt date of a hypothetical Decision Review must be specified.",
-            "example": "2022-01-01",
-            "schema": {
-              "$ref": "#/components/schemas/X-VA-Receipt-Date"
-            }
-          },
-          {
-            "in": "header",
-            "name": "X-VA-File-Number",
-            "required": false,
-            "description": "Veteran's file number",
-            "schema": {
-              "$ref": "#/components/schemas/X-VA-File-Number"
-            }
-          },
-          {
-            "in": "header",
-            "name": "X-VA-ICN",
-            "required": true,
-            "description": "Veteran's ICN",
-            "example": "1013062086V794840",
-            "schema": {
-              "$ref": "#/components/schemas/X-VA-ICN"
-            }
           }
         ],
         "responses": {
@@ -232,13 +193,13 @@
             "content": {
               "application/json": {
                 "examples": {
-                  "decision_review_type must be one of: higher_level_reviews, notice_of_disagreements, supplemental_claims": {
+                  "decisionReviewType must be one of: higher-level-reviews, notice-of-disagreements, supplemental-claims": {
                     "value": {
                       "errors": [
                         {
                           "title": "Unprocessable Entity",
                           "code": "unprocessable_entity",
-                          "detail": "decision_review_type must be one of: higher_level_reviews, notice_of_disagreements, supplemental_claims",
+                          "detail": "decisionReviewType must be one of: higher-level-reviews, notice-of-disagreements, supplemental-claims",
                           "status": "422"
                         }
                       ]
@@ -256,7 +217,7 @@
                       ]
                     }
                   },
-                  "X-VA-ICN header missing": {
+                  "'icn' parameter missing": {
                     "value": {
                       "errors": [
                         {
@@ -264,7 +225,7 @@
                           "detail": "'' did not fit within the defined length limits",
                           "code": "142",
                           "source": {
-                            "pointer": "/X-VA-ICN"
+                            "pointer": "/icn"
                           },
                           "status": "422",
                           "meta": {
@@ -277,7 +238,7 @@
                           "detail": "'' did not match the defined pattern",
                           "code": "143",
                           "source": {
-                            "pointer": "/X-VA-ICN"
+                            "pointer": "/icn"
                           },
                           "status": "422",
                           "meta": {
@@ -329,6 +290,15 @@
                     }
                   ]
                 }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/listAppealableIssues"
               }
             }
           }
@@ -590,41 +560,83 @@
           }
         }
       },
+      "icn": {
+        "type": "string",
+        "description": "Veteran's Master Person Index (MPI) Integration Control Number (ICN)",
+        "pattern": "^[0-9]{10}V[0-9]{6}$",
+        "minLength": 17,
+        "maxLength": 17
+      },
+      "listAppealableIssues": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "description": "JSON Schema for Appealable Issues endpoint",
+        "type": "object",
+        "properties": {
+          "fileNumber": {
+            "allOf": [
+              {
+                "$ref": "nonBlankString.json"
+              },
+              {
+                "description": "Veteran's file number",
+                "minLength": 1,
+                "maxLength": 9
+              }
+            ]
+          },
+          "icn": {
+            "allOf": [
+              {
+                "$ref": "icn.json"
+              },
+              {
+                "description": "Veteran's ICN"
+              }
+            ]
+          },
+          "receiptDate": {
+            "description": "(yyyy-mm-dd) Date to limit the appealable issues",
+            "type": "string",
+            "format": "date"
+          },
+          "ssn": {
+            "allOf": [
+              {
+                "$ref": "ssn.json"
+              },
+              {
+                "description": "Veteran's SSN"
+              }
+            ]
+          }
+        },
+        "oneOf": [
+          {
+            "required": [
+              "icn",
+              "receiptDate",
+              "ssn"
+            ]
+          },
+          {
+            "required": [
+              "fileNumber",
+              "icn",
+              "receiptDate"
+            ]
+          }
+        ]
+      },
       "nonBlankString": {
         "type": "string",
         "pattern": "[^ \\f\\n\\r\\t\\v\\u00a0\\u1680\\u2000-\\u200a\\u2028\\u2029\\u202f\\u205f\\u3000\\ufeff]"
       },
-      "X-VA-File-Number": {
-        "allOf": [
-          {
-            "description": "VA file number (c-file / css)"
-          },
-          {
-            "maxLength": 9
-          },
-          {
-            "$ref": "#/components/schemas/nonBlankString"
-          }
-        ]
-      },
-      "X-VA-ICN": {
-        "description": "Veteran's Integration Control Number, a unique identifier established via the Master Person Index (MPI)",
+      "ssn": {
         "type": "string",
-        "minLength": 17,
-        "maxLength": 17,
-        "pattern": "^[0-9]{10}V[0-9]{6}$"
-      },
-      "X-VA-Receipt-Date": {
-        "description": "(yyyy-mm-dd) Date to limit the appealable issues",
-        "type": "string",
-        "format": "date"
-      },
-      "X-VA-SSN": {
-        "description": "social security number",
-        "type": "string",
+        "description": "Social Security Number",
+        "pattern": "^[0-9]{9}",
         "minLength": 9,
-        "maxLength": 9,
-        "pattern": "^[0-9]{9}$"
+        "maxLength": 9
       }
     }
   },

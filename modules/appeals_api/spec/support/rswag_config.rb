@@ -235,15 +235,16 @@ class AppealsApi::RswagConfig
       merge_schemas(
         sc_create_schemas,
         sc_response_schemas,
-        appealable_issues_schema.slice(*%i[appealableIssue]),
+        appealable_issues_response_schemas.slice(*%i[appealableIssue]),
         generic_schemas.slice(*%i[errorModel documentUploadMetadata]),
         shared_schemas.slice(*%w[address icn phone ssn timezone nonBlankString])
       )
     when 'appealable_issues'
       merge_schemas(
-        appealable_issues_schema,
-        generic_schemas.slice(*%i[errorModel X-VA-SSN X-VA-File-Number X-VA-ICN]),
-        shared_schemas.slice(*%w[nonBlankString])
+        appealable_issues_response_schemas,
+        appealable_issues_request_schemas,
+        generic_schemas.slice(*%i[errorModel]),
+        shared_schemas.slice(*%w[icn ssn nonBlankString])
       )
     when 'legacy_appeals'
       merge_schemas(
@@ -396,7 +397,7 @@ class AppealsApi::RswagConfig
     }
   end
 
-  def appealable_issues_schema
+  def appealable_issues_response_schemas
     {
       'appealableIssues': {
         'type': 'object',
@@ -409,12 +410,13 @@ class AppealsApi::RswagConfig
           }
         }
       },
-      'appealableIssue': JSON.parse(File.read(AppealsApi::Engine.root.join('spec', 'support', 'schemas', 'appealable_issue.json'))),
-      'X-VA-Receipt-Date': {
-        "description": '(yyyy-mm-dd) Date to limit the appealable issues',
-        "type": 'string',
-        "format": 'date'
-      }
+      'appealableIssue': JSON.parse(File.read(AppealsApi::Engine.root.join('spec', 'support', 'schemas', 'appealable_issue.json')))
+    }
+  end
+
+  def appealable_issues_request_schemas
+    {
+      'listAppealableIssues': JSON.parse(File.read(AppealsApi::Engine.root.join('config', 'schemas', 'appealable_issues', 'v0', 'appealable_issues.json')))
     }
   end
 
