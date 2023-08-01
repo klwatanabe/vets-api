@@ -845,7 +845,7 @@ paths:
       summary: /v1/messaging/messages/categories
       parameters:
         - $ref: "#/components/parameters/InflectionHeader"
-  /v1/messaging/preferences/signature:
+  /v1/messaging/messages/signature:
     get:
       description: Gets user message signature preferences
       operationId: get_signature
@@ -868,7 +868,7 @@ paths:
               schema:
                 $ref: ./schemas/Errors.yml
           description: Not authorized for access to secure messages
-      summary: /v1/messaging/preferences/signature
+      summary: /v1/messaging/messages/signature
       parameters:
         - $ref: "#/components/parameters/InflectionHeader"
   /v1/messaging/messages/{id}:

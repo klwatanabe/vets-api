@@ -29,6 +29,7 @@ MyHealth::Engine.routes.draw do
       resources :messages, only: %i[show create destroy], defaults: { format: :json } do
         get :thread, on: :member
         get :categories, on: :collection
+        get :signature, on: :collection
         patch :move, on: :member
         post :reply, on: :member
         resources :attachments, only: [:show], defaults: { format: :json }
@@ -39,9 +40,7 @@ MyHealth::Engine.routes.draw do
         put ':reply_id/replydraft/:draft_id', on: :collection, action: :update_reply_draft, as: :update_reply
       end
 
-      resources :preferences, only: %i[show update], defaults: { format: :json }, controller: 'messaging_preferences' do
-        get :signature, on: :collection
-      end
+      resources :preferences, only: %i[show update], defaults: { format: :json }, controller: 'messaging_preferences'
     end
 
     resources :prescriptions, only: %i[index show], defaults: { format: :json } do

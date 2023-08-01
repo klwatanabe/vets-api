@@ -17,16 +17,6 @@ module MyHealth
         render json: resource,
                serializer: MessagingPreferenceSerializer
       end
-
-      def signature
-        resource = client.get_signature
-        if resource[:data].nil?
-          resource[:data] =
-            { signature_name: nil, include_signature: false, signature_title: nil }
-        end
-        render json: resource,
-               each_serializer: MessageSignatureSerializer
-      end
     end
   end
 end
