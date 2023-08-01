@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2023_06_16_145330) do
+ActiveRecord::Schema.define(version: 2023_07_25_172333) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "btree_gin"
@@ -344,6 +344,7 @@ ActiveRecord::Schema.define(version: 2023_06_16_145330) do
     t.text "logout_redirect_uri"
     t.boolean "pkce"
     t.string "certificates", array: true
+    t.string "refresh_token_path"
     t.index ["client_id"], name: "index_client_configs_on_client_id", unique: true
   end
 
@@ -383,6 +384,18 @@ ActiveRecord::Schema.define(version: 2023_06_16_145330) do
     t.date "verified_decryptable_at"
     t.index ["account_id", "created_at"], name: "index_covid_vaccine_registry_submissions_2"
     t.index ["sid"], name: "index_covid_vaccine_registry_submissions_on_sid", unique: true
+  end
+
+  create_table "credential_adoption_email_records", force: :cascade do |t|
+    t.string "icn", null: false
+    t.string "email_address", null: false
+    t.string "email_template_id", null: false
+    t.datetime "email_triggered_at"
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["email_address"], name: "index_credential_adoption_email_records_on_email_address"
+    t.index ["email_template_id"], name: "index_credential_adoption_email_records_on_email_template_id"
+    t.index ["icn"], name: "index_credential_adoption_email_records_on_icn"
   end
 
   create_table "deprecated_user_accounts", force: :cascade do |t|
@@ -739,6 +752,8 @@ ActiveRecord::Schema.define(version: 2023_06_16_145330) do
     t.string "icn", null: false
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
+    t.integer "vet360_link_attempts"
+    t.boolean "vet360_linked"
     t.index ["icn"], name: "index_mobile_users_on_icn", unique: true
   end
 
@@ -1082,6 +1097,15 @@ ActiveRecord::Schema.define(version: 2023_06_16_145330) do
     t.datetime "updated_at", precision: 6, null: false
     t.index ["notified", "label"], name: "index_vba_documents_git_items_on_notified_and_label"
     t.index ["url"], name: "index_vba_documents_git_items_on_url", unique: true
+  end
+
+  create_table "vba_documents_monthly_stats", force: :cascade do |t|
+    t.integer "month", null: false
+    t.integer "year", null: false
+    t.jsonb "stats", default: {}
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["month", "year"], name: "index_vba_documents_monthly_stats_uniqueness", unique: true
   end
 
   create_table "vba_documents_upload_submissions", id: :serial, force: :cascade do |t|

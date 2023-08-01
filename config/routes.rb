@@ -25,6 +25,12 @@ Rails.application.routes.draw do
 
   get '/sign_in/openid_connect/certs' => 'sign_in/openid_connect_certificates#index'
 
+  unless Settings.vsp_environment == 'production'
+    namespace :sign_in do
+      resources :client_configs
+    end
+  end
+
   get '/inherited_proofing/auth', to: 'inherited_proofing#auth'
   get '/inherited_proofing/user_attributes', to: 'inherited_proofing#user_attributes'
   get '/inherited_proofing/callback', to: 'inherited_proofing#callback'
@@ -43,12 +49,11 @@ Rails.application.routes.draw do
     resources :veteran_readiness_employment_claims, only: :create
     resource :virtual_agent_token, only: [:create], controller: :virtual_agent_token
     resource :virtual_agent_jwt_token, only: [:create], controller: :virtual_agent_jwt_token
+    resource :virtual_agent_speech_token, only: [:create], controller: :virtual_agent_speech_token
 
     get 'form1095_bs/download_pdf/:tax_year', to: 'form1095_bs#download_pdf'
     get 'form1095_bs/download_txt/:tax_year', to: 'form1095_bs#download_txt'
     get 'form1095_bs/available_forms', to: 'form1095_bs#available_forms'
-
-    get 'user_transition_availabilities', to: 'user_transition_availabilities#index'
 
     resources :medical_copays, only: %i[index show]
     get 'medical_copays/get_pdf_statement_by_id/:statement_id', to: 'medical_copays#get_pdf_statement_by_id'
@@ -426,6 +431,7 @@ Rails.application.routes.draw do
   end
 
   # Modules
+  mount AskVAApi::Engine, at: '/ask_va_api'
   mount CheckIn::Engine, at: '/check_in'
   mount CovidResearch::Engine, at: '/covid-research'
   mount CovidVaccine::Engine, at: '/covid_vaccine'
@@ -442,7 +448,6 @@ Rails.application.routes.draw do
   # End Modules
 
   require 'sidekiq/web'
-  require 'sidekiq-scheduler/web'
   require 'sidekiq/pro/web' if Gem.loaded_specs.key?('sidekiq-pro')
   require 'sidekiq-ent/web' if Gem.loaded_specs.key?('sidekiq-ent')
   require 'github_authentication/sidekiq_web'

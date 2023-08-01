@@ -136,7 +136,7 @@ module DebtManagementCenter
       vha_form = form_submission.form
       vha_form['transactionId'] = form_submission.id
       vha_form['timestamp'] = DateTime.now.strftime('%Y%m%dT%H%M%S')
-
+      vha_form = streamline_adjustments(vha_form)
       vbs_request = DebtManagementCenter::VBS::Request.build
       sharepoint_request = DebtManagementCenter::Sharepoint::Request.new
       Rails.logger.info('5655 Form Submitting to VHA', submission_id: form_submission.id)
@@ -162,6 +162,20 @@ module DebtManagementCenter
     end
 
     private
+
+    def streamline_adjustments(form)
+      if form.key?('streamlined')
+        if form['streamlined']['value']
+          reasons_array = form['personalIdentification']['fsrReason'].split(',').map(&:strip)
+          reasons = reasons_array.push('Automatically Approved').uniq.join(', ')
+          form['personalIdentification']['fsrReason'] = reasons
+        end
+        streamline_data = form.fetch('streamlined')
+        form.reject! { |k, _v| k == 'streamlined' }
+        form['streamlined'] = streamline_data['value']
+      end
+      form
+    end
 
     def raise_client_error
       raise Common::Client::Errors::ClientError.new('malformed request', 400)

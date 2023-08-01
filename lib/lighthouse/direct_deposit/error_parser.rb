@@ -7,7 +7,7 @@ module Lighthouse
     class ErrorParser
       def self.parse(response)
         status = response[:status]
-        body = response[:body].with_indifferent_access
+        body = parse_body(response[:body])
         detail = parse_detail(body)
 
         errors = [
@@ -26,6 +26,10 @@ module Lighthouse
         body[:error] || body[:title] || status_message_from(body[:status]) || 'Unknown error'
       end
 
+      def self.parse_body(body)
+        body.to_hash.with_indifferent_access
+      end
+
       def self.parse_detail(body)
         messages = []
         messages.push(body[:error_codes][0][:error_code]) if body[:error_codes].present?
@@ -35,8 +39,9 @@ module Lighthouse
         messages.compact.join(': ')
       end
 
-      def self.parse_code(detail)
+      def self.parse_code(detail) # rubocop:disable Metrics/MethodLength
         return 'cnp.payment.api.rate.limit.exceeded' if detail.include? 'API rate limit exceeded'
+        return 'cnp.payment.api.gateway.timeout' if detail.include? 'Did not receive a timely response'
         return 'cnp.payment.invalid.authentication.creds' if detail.include? 'Invalid authentication credentials'
         return 'cnp.payment.invalid.token' if detail.include? 'Invalid token'
         return 'cnp.payment.invalid.scopes' if detail.include? 'scopes are not configured'
@@ -48,7 +53,7 @@ module Lighthouse
         return 'cnp.payment.routing.number.invalid.checksum' if detail.include? 'accountRoutingNumber.invalidCheckSum'
         return 'cnp.payment.routing.number.invalid' if detail.include? 'payment.accountRoutingNumber.invalid'
         return 'cnp.payment.routing.number.fraud' if detail.include? 'Routing number related to potential fraud'
-        return 'cnp.payment.restriction.indicators.present'  if detail.include? 'restriction.indicators.present'
+        return 'cnp.payment.restriction.indicators.present' if detail.include? 'restriction.indicators.present'
         return 'cnp.payment.day.phone.number.invalid' if detail.include? 'Day phone number is invalid'
         return 'cnp.payment.day.area.number.invalid' if detail.include? 'Day area number is invalid'
         return 'cnp.payment.night.phone.number.invalid' if detail.include? 'Night phone number is invalid'
