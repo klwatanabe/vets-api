@@ -17,7 +17,6 @@ module MyHealth
         render json: resource,
                serializer: MessagingPreferenceSerializer
       end
-      #test line
 
       def signature
         resource = client.get_signature
