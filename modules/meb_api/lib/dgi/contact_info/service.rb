@@ -20,11 +20,11 @@ module MebApi
             response = perform(:post, duplicates_end_point, camelize_keys_for_java_service(params).to_json, headers,
                                options)
 
-            if  email_params[0]['value'] == response.body['email']['value'] &&  email_params[0]['acknowledged'] == true
+            if email_params[0]['value'] == response.body['email']['value'] && email_params[0]['acknowledged'] == true
               response.body['phone']['acknowledged'] = true
             end
 
-            if  phone_params[0]['value'] == response.body['phone']['value'] &&  phone_params[0]['acknowledged'] == true
+            if phone_params[0]['value'] == response.body['phone']['value'] && phone_params[0]['acknowledged'] == true
               response.body['phone']['acknowledged'] = true
             end
 
