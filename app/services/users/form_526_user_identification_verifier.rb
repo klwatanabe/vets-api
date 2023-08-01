@@ -13,13 +13,13 @@ module Users
     end
 
     def call
-      missing_identifiers
+      identifer_mapping
     end
 
     private
 
-    def missing_identifiers
-      FORM526_REQUIRED_IDENTIFIERS.select { |id| @user[id].blank? }
+    def identifer_mapping
+      FORM526_REQUIRED_IDENTIFIERS.index_with { |identifier| @user[identifier].present? }
     end
   end
 end
