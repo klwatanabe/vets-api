@@ -37,6 +37,21 @@ RSpec.describe EVSS::DisabilityCompensationForm::Form526ToLighthouseTransform do
       expect(result.veteran_identification.class).to eq(Requests::VeteranIdentification)
       expect(result.change_of_address.class).to eq(Requests::ChangeOfAddress)
       expect(result.homeless.class).to eq(Requests::Homeless)
+      expect(result.service_information.class).to eq(Requests::ServiceInformation)
+      expect(result.disabilities.first.class).to eq(Requests::Disability)
+      expect(result.direct_deposit.class).to eq(Requests::DirectDeposit)
+    end
+  end
+
+  describe 'optional request objects are correctly rendered' do
+    let(:submission) { create(:form526_submission, :only_526_required) }
+    let(:data) { submission.form['form526'] }
+
+    it 'renders JSON correctly when missing optional sections' do
+      result = transformer.transform(data)
+      expect(result.change_of_address).to be_nil
+      expect(result.homeless).to be_nil
+      expect(result.direct_deposit).to be_nil
     end
   end
 
@@ -131,6 +146,37 @@ RSpec.describe EVSS::DisabilityCompensationForm::Form526ToLighthouseTransform do
       expect(result).to eq('National Guard')
       result = transformer.send(:convert_to_service_component, 'Space Force')
       expect(result).to eq('Active')
+    end
+  end
+
+  describe 'transform disabilities' do
+    let(:submission) { create(:form526_submission, :with_everything) }
+    let(:data) { submission.form['form526']['form526']['disabilities'] }
+
+    it 'sets disabilities correctly' do
+      result = transformer.send(:transform_disabilities, data)
+      expect(result.length).to eq(1)
+    end
+
+    it 'converts approximate dates' do
+      result = transformer.send(:convert_approximate_date,
+                                JSON.parse({ month: '03', day: '22', year: '1973' }.to_json))
+      expect(result).to eq('03-22-1973')
+      result = transformer.send(:convert_approximate_date, JSON.parse({ month: '03', year: '1973' }.to_json))
+      expect(result).to eq('03-1973')
+    end
+  end
+
+  describe 'transform direct deposit' do
+    let(:submission) { create(:form526_submission, :with_everything) }
+    let(:data) { submission.form['form526']['form526']['directDeposit'] }
+
+    it 'sets direct deposit correctly' do
+      result = transformer.send(:transform_direct_deposit, data)
+      expect(result.financial_institution_name).to eq('SomeBank')
+      expect(result.account_type).to eq('CHECKING')
+      expect(result.account_number).to eq('123123123123')
+      expect(result.routing_number).to eq('123123123')
     end
   end
 end

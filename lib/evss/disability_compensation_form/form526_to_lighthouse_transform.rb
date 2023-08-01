@@ -16,8 +16,17 @@ module EVSS
 
         veteran = form526['veteran']
         lh_request_body.veteran_identification = transform_veteran(veteran)
-        lh_request_body.change_of_address = transform_change_of_address(veteran)
-        lh_request_body.homeless = transform_homeless(veteran)
+        lh_request_body.change_of_address = transform_change_of_address(veteran) if veteran['changeOfAddress'].present?
+        lh_request_body.homeless = transform_homeless(veteran) if veteran['homelessness'].present?
+
+        service_information = form526['serviceInformation']
+        lh_request_body.service_information = transform_service_information(service_information)
+
+        disabilities = form526['disabilities']
+        lh_request_body.disabilities = transform_disabilities(disabilities)
+
+        direct_deposit = form526['directDeposit']
+        lh_request_body.direct_deposit = transform_direct_deposit(direct_deposit) if direct_deposit.present?
 
         lh_request_body
       end
@@ -204,6 +213,60 @@ module EVSS
         return 'National Guard' if service_branch.include?('national guard')
 
         'Active'
+      end
+
+      def convert_approximate_date(approximate_date_source)
+        approximate_date = "#{approximate_date_source['month']}-"
+        approximate_date += "#{approximate_date_source['day']}-" if approximate_date_source['day']
+        approximate_date += (approximate_date_source['year']).to_s
+
+        approximate_date
+      end
+
+      def transform_disabilities(disabilities_source)
+        disabilities_source.map do |disability_source|
+          dis = Requests::Disability.new
+          dis.disability_action_type = disability_source['disabilityActionType ']
+          dis.name = disability_source['name']
+          dis.classification_code = disability_source['classificationCode'] if disability_source['classificationCode']
+          dis.service_relevance = disability_source['serviceRelevance']
+          if disability_source['approximateBeginDate']
+            dis.approximate_date = convert_approximate_date(disability_source['approximateBeginDate'])
+          end
+          dis.rated_disability_id = disability_source['ratedDisabilityId'] if disability_source['ratedDisabilityId']
+          dis.diagnostic_code = disability_source['diagnosticCode'] if disability_source['diagnosticCode']
+          if disability_source['secondaryDisabilities']
+            dis.secondary_disabilities = transform_secondary_disabilities(disability_source)
+          end
+          dis
+        end
+      end
+
+      def transform_secondary_disabilities(disability_source)
+        disability_source['secondaryDisabilities'].map do |secondary_disability_source|
+          sd = Requests::SecondaryDisability.new
+          sd.name = secondary_disability_source['name']
+          if secondary_disability_source['classificationCode']
+            sd.classification_code = secondary_disability_source['classificationCode']
+          end
+          sd.service_relevance = secondary_disability_source['serviceRelevance']
+          if secondary_disability_source['approximateBeginDate']
+            sd.approximate_date = convert_approximate_date(secondary_disability_source['approximateBeginDate'])
+          end
+          sd
+        end
+      end
+
+      def transform_direct_deposit(direct_deposit_source)
+        direct_deposit = Requests::DirectDeposit.new
+        if direct_deposit_source['bankName']
+          direct_deposit.financial_institution_name = direct_deposit_source['bankName']
+        end
+        direct_deposit.account_type = direct_deposit_source['accountType'] if direct_deposit_source['accountType']
+        direct_deposit.account_number = direct_deposit_source['accountNumber'] if direct_deposit_source['accountNumber']
+        direct_deposit.routing_number = direct_deposit_source['routingNumber'] if direct_deposit_source['routingNumber']
+
+        direct_deposit
       end
     end
   end
