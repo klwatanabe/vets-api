@@ -38,10 +38,6 @@ MyHealth::Engine.routes.draw do
         post ':reply_id/replydraft', on: :collection, action: :create_reply_draft, as: :create_reply
         put ':reply_id/replydraft/:draft_id', on: :collection, action: :update_reply_draft, as: :update_reply
       end
-
-      resources :preferences, only: %i[show update], defaults: { format: :json } do
-        get :signature, on: :member
-      end
     end
 
     resources :prescriptions, only: %i[index show], defaults: { format: :json } do
