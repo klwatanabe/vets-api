@@ -1,0 +1,37 @@
+---
+http_interactions:
+  - request:
+      method: get
+      uri: https://something.fake.va.gov/avs/9A7AF40B2BC2471EA116891839113252
+    response:
+      status:
+        code: 200
+        message: OK
+      headers:
+        Server:
+          - Server
+        Date:
+          - Mon, 29 Jun 2020 15:46:52 GMT
+        Content-Type:
+          - application/json
+      body:
+        encoding: UTF-8
+        string: |-
+          { 
+            "data": {
+              "patientInfo": {
+                "icn": "64762895576664260"
+              },
+              "clinicsVisited": [
+                {
+                  "_t": "ClinicVisited",
+                  "date": "01/01/2023",
+                  "time": "08:30",
+                  "clinic": "Appt. - Primary Care Provider (Dr. Doc's Clinic; ACC B WING 2ND FL BRAVO)",
+                  "clinicIen": "55555"
+                }
+              ]
+            }
+          }
+    recorded_at: Thu, 19 Nov 2020 16:45:03 GMT
+recorded_with: VCR 6.0.0

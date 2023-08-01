@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 
-
 require 'rails_helper'
 
 RSpec.describe 'V0::Avs', type: :request do
@@ -51,7 +50,44 @@ RSpec.describe 'V0::Avs', type: :request do
       VCR.use_cassette('avs/search/9876543') do
         get '/avs/v0/avs/search?stationNo=500&appointmentIen=9876543'
         expect(response).to have_http_status(:ok)
-        expect(JSON.parse(response.body)).to eq({ 'path' => '/my-health/medical-records/care-summaries/avs/9A7AF40B2BC2471EA116891839113252' })
+        expect(JSON.parse(response.body)).to eq(
+          {
+            'path' => '/my-health/medical-records/care-summaries/avs/9A7AF40B2BC2471EA116891839113252'
+          }
+        )
+      end
+    end
+  end
+
+  describe 'GET `show`' do
+    icn = '64762895576664260'
+    let(:current_user) { build(:user, :loa3, icn:) }
+
+    it 'returns error when sid format is incorrect' do
+      get '/avs/v0/avs/1234567890'
+      expect(response).to have_http_status(:bad_request)
+    end
+
+    it 'returns empty response found when AVS not found for sid' do
+      VCR.use_cassette('avs/show/not_found') do
+        get '/avs/v0/avs/9A7AF40B2BC2471EA116891839113253'
+        expect(response).to have_http_status(:not_found)
+      end
+    end
+
+    it 'returns 401 when ICN does not match' do
+      VCR.use_cassette('avs/show/unauthorized') do
+        get '/avs/v0/avs/9A7AF40B2BC2471EA116891839113252'
+        expect(response).to have_http_status(:unauthorized)
+      end
+    end
+
+    it 'returns 200 when AVS found for appointment' do
+      VCR.use_cassette('avs/show/9A7AF40B2BC2471EA116891839113252') do
+        get '/avs/v0/avs/9A7AF40B2BC2471EA116891839113252'
+        expect(response).to have_http_status(:ok)
+        parsed = JSON.parse(response.body)
+        expect(parsed['patient_info']['icn']).to eq(icn)
       end
     end
   end

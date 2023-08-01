@@ -14,15 +14,15 @@ module Avs
         end
 
         search_response = avs_service.get_avs_by_appointment(station_no, appointment_ien)
-        data = if search_response[:data].empty?
+        data = if search_response[:body].empty?
                  {}
                else
-                 { path: get_avs_path(search_response[:data][0][:sid]) }
+                 { path: get_avs_path(search_response[:body][0][:sid]) }
                end
 
         # rubocop:disable Style/SoleNestedConditional
-        unless search_response[:data].empty?
-          unless @current_user.icn == search_response[:data][0][:icn]
+        unless data.empty?
+          unless @current_user.icn == search_response[:body][0][:icn]
             render_client_error('Not authorized', 'User may not view the AVS for this appointment.', :unauthorized)
             return
           end
@@ -40,16 +40,14 @@ module Avs
         end
 
         avs_response = avs_service.get_avs(sid)
-        # TODO: validate ICN matches logged in veteran.
 
-        if avs_response[:data].nil?
+        if avs_response[:status] == 404
           render_client_error('Not found', "No AVS found for sid #{sid}", :not_found)
           return
         end
 
-        data = avs_response[:data]['sid'] == sid ? avs_response[:data] : {}
-
-        unless @current_user.icn == data['data']['patientInfo']['icn']
+        data = avs_response[:body][:data]
+        unless @current_user.icn == data[:patient_info][:icn]
           render_client_error('Not authorized', 'User may not view this AVS.', :unauthorized)
           return
         end

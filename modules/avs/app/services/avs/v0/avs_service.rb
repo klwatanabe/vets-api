@@ -9,19 +9,13 @@ module Avs
     class AvsService < Avs::SessionService
       def get_avs_by_appointment(station_no, appointment_ien)
         with_monitoring do
-          response = perform(:get, get_avs_by_appointment_url(station_no, appointment_ien), nil, headers)
-          {
-            data: response.body
-          }
+          perform(:get, get_avs_by_appointment_url(station_no, appointment_ien), nil, headers)
         end
       end
 
       def get_avs(sid)
         with_monitoring do
-          response = perform(:get, get_avs_base_url(sid), nil, headers)
-          {
-            data: response.body
-          }
+          perform(:get, get_avs_base_url(sid), nil, headers)
         end
       end
 
