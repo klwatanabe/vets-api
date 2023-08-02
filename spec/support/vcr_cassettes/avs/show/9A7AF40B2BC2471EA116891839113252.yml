@@ -31,7 +31,8 @@ http_interactions:
                   "clinic": "Appt. - Primary Care Provider (Dr. Doc's Clinic; ACC B WING 2ND FL BRAVO)",
                   "clinicIen": "55555"
                 }
-              ]
+              ],
+              "radiologyReports1Yr": "                                  \nDate        Procedure      "
             }
           }
     recorded_at: Thu, 19 Nov 2020 16:45:03 GMT

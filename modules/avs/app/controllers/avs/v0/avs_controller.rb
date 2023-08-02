@@ -48,11 +48,15 @@ module Avs
           return
         end
 
-        render json: avs_response.avs
+        render json: serializer(data)
       end
 
       def avs_service
         @avs_service ||= Avs::V0::AvsService.new(@current_user)
+      end
+
+      def serializer(avs)
+        Avs::V0::AfterVisitSummarySerializer.new(avs)
       end
 
       def get_avs_path(sid)

@@ -88,7 +88,7 @@ RSpec.describe 'V0::Avs', type: :request do
         get "/avs/v0/avs/#{sid}"
         expect(response).to have_http_status(:ok)
         parsed = JSON.parse(response.body)
-        expect(parsed['id']).to eq(sid)
+        expect(parsed['data']['id']).to eq(sid)
       end
     end
   end
