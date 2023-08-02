@@ -20,6 +20,14 @@ module Requests
     attribute :international_telephone, String
   end
 
+  class UnitPhone
+    include Virtus.model
+    include ActiveModel::Serialization
+
+    attribute :area_code, String
+    attribute :phone_number, String
+  end
+
   class MailingAddress
     include Virtus.model
     include ActiveModel::Serialization
@@ -173,7 +181,7 @@ module Requests
     attribute :unit_address, String
     attribute :component, String
     attribute :title10_activation, Title10Activation
-    attribute :unit_phone, ContactNumber
+    attribute :unit_phone, UnitPhone
     attribute :receiving_inactive_duty_training_pay, Boolean
   end
 
@@ -236,6 +244,14 @@ module Requests
     attribute :other_description, String
   end
 
+  class RiskOfBecomingHomeless
+    include Virtus.model
+    include ActiveModel::Serialization
+
+    attribute :living_situation_options, String
+    attribute :other_description, String
+  end
+
   class Homeless
     include Virtus.model
     include ActiveModel::Serialization
@@ -243,6 +259,7 @@ module Requests
     attribute :point_of_contact, String
     attribute :point_of_contact_number, ContactNumber
     attribute :currently_homeless, CurrentlyHomeless
+    attribute :risk_of_becoming_homeless, RiskOfBecomingHomeless
   end
 
   class ToxicExposure
