@@ -28,7 +28,6 @@ module Avs
         end
 
         conn.response :betamocks if mock_enabled?
-        conn.response :snakecase
         conn.response :json_parser
         conn.adapter Faraday.default_adapter
       end

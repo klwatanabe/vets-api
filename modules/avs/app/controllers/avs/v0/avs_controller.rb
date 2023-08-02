@@ -14,13 +14,13 @@ module Avs
         end
 
         search_response = avs_service.get_avs_by_appointment(station_no, appointment_ien)
-        data = if search_response[:body].empty?
+        data = if search_response['body'].empty?
                  {}
                else
-                 { path: get_avs_path(search_response[:body][0][:sid]) }
+                 { path: get_avs_path(search_response['body'][0]['sid']) }
                end
 
-        if !data.empty? && @current_user.icn != search_response[:body][0][:icn]
+        if !data.empty? && @current_user.icn != search_response['body'][0]['icn']
           render_client_error('Not authorized', 'User may not view the AVS for this appointment.', :unauthorized)
           return
         end
@@ -29,7 +29,7 @@ module Avs
       end
 
       def show
-        sid = params[:sid]
+        sid = params['sid']
         unless validate_sid?(sid)
           render_client_error('Invalid AVS id', 'AVS id does not match accepted format.')
           return
@@ -42,13 +42,13 @@ module Avs
           return
         end
 
-        data = avs_response[:body][:data]
-        unless @current_user.icn == data[:patient_info][:icn]
+        data = avs_response.avs
+        unless @current_user.icn == data['icn']
           render_client_error('Not authorized', 'User may not view this AVS.', :unauthorized)
           return
         end
 
-        render json: data
+        render json: avs_response.avs
       end
 
       def avs_service

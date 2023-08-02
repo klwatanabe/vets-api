@@ -18,6 +18,7 @@ http_interactions:
         encoding: UTF-8
         string: |-
           { 
+            "sid": "9A7AF40B2BC2471EA116891839113252",
             "data": {
               "patientInfo": {
                 "icn": "64762895576664260"

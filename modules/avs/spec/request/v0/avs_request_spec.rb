@@ -83,11 +83,12 @@ RSpec.describe 'V0::Avs', type: :request do
     end
 
     it 'returns 200 when AVS found for appointment' do
-      VCR.use_cassette('avs/show/9A7AF40B2BC2471EA116891839113252') do
-        get '/avs/v0/avs/9A7AF40B2BC2471EA116891839113252'
+      sid = '9A7AF40B2BC2471EA116891839113252'
+      VCR.use_cassette("avs/show/#{sid}") do
+        get "/avs/v0/avs/#{sid}"
         expect(response).to have_http_status(:ok)
         parsed = JSON.parse(response.body)
-        expect(parsed['patient_info']['icn']).to eq(icn)
+        expect(parsed['id']).to eq(sid)
       end
     end
   end

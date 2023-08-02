@@ -15,7 +15,8 @@ module Avs
 
       def get_avs(sid)
         with_monitoring do
-          perform(:get, get_avs_base_url(sid), nil, headers)
+          response = perform(:get, get_avs_base_url(sid), nil, headers)
+          Avs::Response.new(response.body, response.status)
         end
       end
 
