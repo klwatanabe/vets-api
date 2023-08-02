@@ -679,7 +679,7 @@ RSpec.describe FormProfile, type: :model do
           'decisionCode' => 'SVCCONNCTED',
           'decisionText' => 'Service Connected',
           'name' => 'Diabetes mellitus0',
-          'ratedDisabilityId' => '0',
+          'ratedDisabilityId' => '1',
           'ratingDecisionId' => '63655',
           'ratingPercentage' => 100
         },
@@ -688,7 +688,7 @@ RSpec.describe FormProfile, type: :model do
           'decisionCode' => 'SVCCONNCTED',
           'decisionText' => 'Service Connected',
           'name' => 'Diabetes mellitus1',
-          'ratedDisabilityId' => '1',
+          'ratedDisabilityId' => '2',
           'ratingDecisionId' => '63655',
           'ratingPercentage' => 100
         }
@@ -996,6 +996,57 @@ RSpec.describe FormProfile, type: :model do
 
       it 'returns a prefilled 5655 form' do
         expect_prefilled('5655')
+      end
+
+      context 'payment window' do
+        let(:education_payments) do
+          [
+            { payment_date: DateTime.now - 3.months, payment_amount: '1500' }
+          ]
+        end
+
+        before do
+          allow_any_instance_of(DebtManagementCenter::PaymentsService).to(
+            receive(:education).and_return(education_payments)
+          )
+        end
+
+        it 'filters older payments when window is present' do
+          allow(Settings.dmc).to receive(:fsr_payment_window).and_return(30)
+
+          expect_prefilled('5655')
+        end
+
+        context 'no window present' do
+          let(:v5655_expected) do
+            {
+              'personalIdentification' => {
+                'ssn' => user.ssn.last(4),
+                'fileNumber' => '3735'
+              },
+              'personalData' => {
+                'veteranFullName' => full_name,
+                'address' => address,
+                'telephoneNumber' => us_phone,
+                'emailAddress' => user.pciu_email,
+                'dateOfBirth' => user.birth_date
+              },
+              'income' => [
+                {
+                  'veteranOrSpouse' => 'VETERAN',
+                  'compensationAndPension' => '3000',
+                  'education' => '1500'
+                }
+              ]
+            }
+          end
+
+          it 'includes older payments when no window is present' do
+            allow(Settings.dmc).to receive(:fsr_payment_window).and_return(nil)
+
+            expect_prefilled('5655')
+          end
+        end
       end
     end
 
