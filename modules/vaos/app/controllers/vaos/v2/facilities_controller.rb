@@ -4,6 +4,7 @@ module VAOS
   module V2
     class FacilitiesController < VAOS::BaseController
       def index
+        # TODO: verify responses
         response = mobile_facility_service.get_facilities(ids:,
                                                           schedulable:,
                                                           children:,
