@@ -29,7 +29,7 @@ module EVSS
         Flipper.enabled?(:form526_weekly_error_report_enabled) &&
         FeatureFlipper.send_email?
     end
-    
+
   end
 
   class WeeklyBackupSubmissionReportJob
@@ -51,7 +51,7 @@ module EVSS
           js.job_class == 'BackupSubmission' && js.status == 'exhausted'
         end
       end.pluck(:id)
-      no_ids.pluck(:id)
+      totally_failed_ids = no_ids.pluck(:id) - still_pending
       body = ["#{@start_date} - #{@end_date}"]
       body << %(Total Submissions: #{total_count})
       body << %(Total Number of auto-establish Failures: #{exhausted})
