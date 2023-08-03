@@ -29,8 +29,7 @@ module EVSS
         Flipper.enabled?(:form526_weekly_error_report_enabled) &&
         FeatureFlipper.send_email?
     end
-
-    def load_recipients(key); end
+    
   end
 
   class WeeklyBackupSubmissionReportJob
