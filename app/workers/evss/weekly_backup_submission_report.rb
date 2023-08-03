@@ -15,10 +15,35 @@ module EVSS
   class WeeklyBackupSubmissionReport
     include Sidekiq::Worker
 
-    def perform(recipients, start_date = 7.days.ago.beginning_of_week.beginning_of_day,
-                end_date = Time.zone.today.beginning_of_week.beginning_of_day)
-      Rails.logger.info("Sending Weekly Backup Submission Report for #{start_date} - #{end_date}, to #{recipients}")
-      total = Form526Submission.where('created_at BETWEEN ? AND ?', start_date, end_date)
+    def perform
+      if enabled?
+        recipients = Settings.form526_backup.weekly_backup_submission_report.recipients
+        WeeklyBackupSubmissionReportJob.new(recipients:).send! if recipients.present?
+      end
+    end
+
+    private
+
+    def enabled?
+      Settings.form526_backup.weekly_backup_submission_report.enabled &&
+        Flipper.enabled?(:form526_weekly_error_report_enabled) &&
+        FeatureFlipper.send_email?
+    end
+
+    def load_recipients(key); end
+  end
+
+  class WeeklyBackupSubmissionReportJob
+    def initialize(recipients:, start_date: 7.days.ago.beginning_of_week.beginning_of_day,
+                   end_date: Time.zone.today.beginning_of_week.beginning_of_day)
+      @recipients = recipients
+      @start_date = start_date
+      @end_date = end_date
+    end
+
+    def send!
+      Rails.logger.info("Sending Weekly Backup Submission Report for #{@start_date} - #{@end_date}, to #{@recipients}")
+      total = Form526Submission.where('created_at BETWEEN ? AND ?', @start_date, @end_date)
       total_count = total.count
       exhausted = total.where(submitted_claim_id: nil).size
       no_ids = total.where(submitted_claim_id: nil).where(backup_submitted_claim_id: nil)
@@ -28,7 +53,7 @@ module EVSS
         end
       end.pluck(:id)
       no_ids.pluck(:id)
-      body = ["#{start_date} - #{end_date}"]
+      body = ["#{@start_date} - #{@end_date}"]
       body << %(Total Submissions: #{total_count})
       body << %(Total Number of auto-establish Failures: #{exhausted})
       body << %(Successful Backup Submissions: #{exhausted - no_ids.count})
@@ -36,7 +61,7 @@ module EVSS
       body << %(Still Pending/Attempting Submission: #{still_pending.size})
       body << %(Submission IDs Pending: #{still_pending})
       body = body.join('<br>')
-      WeeklyErrorReportMailer.build(recipients:, body:).deliver_now
+      WeeklyErrorReportMailer.build(recipients: @recipients, body:).deliver_now
     end
   end
 end

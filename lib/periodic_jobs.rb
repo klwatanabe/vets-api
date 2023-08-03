@@ -153,5 +153,7 @@ PERIODIC_JOBS = lambda { |mgr|
   # Notifies slack channel if certain benefits states get stuck
   mgr.register('0 2,9,16 * * 1-5', 'VBADocuments::FlipperStatusAlert')
   # Checks status of Flipper features expected to be enabled and alerts to Slack if any are not enabled
+
+  mgr.register('0 8 * * 1', 'EVSS::WeeklyBackupSubmissionReport')
 }
 # rubocop:enable Metrics/BlockLength

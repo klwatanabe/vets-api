@@ -1746,6 +1746,10 @@ form526_backup:
     region: ~
     access_key_id: ~
     secret_access_key: ~
+  weekly_backup_submission_report:
+    enabled: true
+    recipients:
+      - fake_email
 
 form526_export:
   aws:
