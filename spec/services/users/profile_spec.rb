@@ -151,6 +151,24 @@ RSpec.describe Users::Profile do
             expect(profile[:sign_in][:service_name]).to eq(SAML::User::DSLOGON_CSID)
           end
         end
+
+        context 'when a user is missing an identifier required by the 526 form' do
+          it 'has a value of false in the [:claims][:form526_required_identifier_presence] hash' do
+            allow(user).to receive(:participant_id).and_return(nil)
+
+            identifiers = profile[:claims][:form526_required_identifier_presence]
+            expect(identifiers['participant_id']).to eq(false)
+          end
+        end
+
+        context 'when a user is not missing an identifier required by the 526 form' do
+          it 'has a value of true in the [:claims][:form526_required_identifier_presence] hash' do
+            allow(user).to receive(:participant_id).and_return('8675309')
+
+            identifiers = profile[:claims][:form526_required_identifier_presence]
+            expect(identifiers['participant_id']).to eq(true)
+          end
+        end
       end
 
       it 'includes email' do

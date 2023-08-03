@@ -96,7 +96,8 @@ module Users
           military_history: Vet360Policy.new(user).military_access?,
           payment_history: BGSPolicy.new(user).access?(log_stats: false),
           personal_information: MPIPolicy.new(user).queryable?,
-          rating_info: EVSSPolicy.new(user).access?
+          rating_info: EVSSPolicy.new(user).access?,
+          form526_required_identifier_presence: Form526Policy.new(user).form526_required_identifier_presence
         }
       end
     end
