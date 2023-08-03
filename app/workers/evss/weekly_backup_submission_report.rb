@@ -2,10 +2,10 @@
 
 module EVSS
   class WeeklyErrorReportMailer < ApplicationMailer
-    def build(recipients:, body:)
+    def build(recipients:, body:, start_date:, end_date:)
       mail(
         to: recipients,
-        subject: 'Weekly 526 Error Report',
+        subject: "Weekly 526 Error Report for #{start_date} - #{end_date}",
         content_type: 'text/html',
         body:
       )
@@ -22,12 +22,12 @@ module EVSS
       total_count = total.count
       exhausted = total.where(submitted_claim_id: nil).size
       no_ids = total.where(submitted_claim_id: nil).where(backup_submitted_claim_id: nil)
-      totally_failed_ids = no_ids.map(&:form526_job_statuses).select do |jss|
-                             jss.any? do |js|
-                               js.job_class == 'BackupSubmission' && js.status == 'exhausted'
-                             end
-                           end.map { |e| e.first.form526_submission_id }
-      still_pending = no_ids.pluck(:id) - totally_failed_ids
+      still_pending = no_ids.reject do |sub|
+        sub.form526_job_statuses.any? do |js|
+          js.job_class == 'BackupSubmission' && js.status == 'exhausted'
+        end
+      end.pluck(:id)
+      no_ids.pluck(:id)
       body = ["#{start_date} - #{end_date}"]
       body << %(Total Submissions: #{total_count})
       body << %(Total Number of auto-establish Failures: #{exhausted})
