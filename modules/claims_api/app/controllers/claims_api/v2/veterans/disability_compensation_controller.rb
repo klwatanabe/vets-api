@@ -6,7 +6,6 @@ require 'claims_api/v2/disability_compensation_validation'
 require 'claims_api/v2/disability_compensation_pdf_mapper'
 require 'claims_api/v2/disability_compensation_evss_mapper'
 require 'evss_service/base'
-require 'bd/bd'
 
 module ClaimsApi
   module V2
@@ -33,6 +32,12 @@ module ClaimsApi
 
           get_benefits_documents_auth_token unless Rails.env.test?
 
+          # evss_data = evss_mapper_service(auto_claim).map_claim
+          # evss_service.submit(auto_claim, evss_data)
+
+          # find_by_ssn is not the same as find_by(ssn:)
+          _file_nbr = local_bgs_service.find_by_ssn(target_veteran.ssn)&.dig(:file_nbr) # rubocop:disable Rails/DynamicFindBy
+          # benefits_doc_api(true).upload(auto_claim, pdf_path, file_nbr)
           render json: auto_claim
         end
 
@@ -91,10 +96,6 @@ module ClaimsApi
                 {}
             }
           }
-        end
-
-        def benefits_doc_api
-          ClaimsApi::BD.new
         end
 
         def evss_service
