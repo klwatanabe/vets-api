@@ -519,7 +519,19 @@ module ClaimsApi
           docs = if sandbox?
                    { documents: ClaimsApi::V2::MockDocumentsService.new.generate_documents }.with_indifferent_access
                  else
+                  if benefits_documents_enabled?
+                    file_number = local_bgs_service.find_by_ssn(target_veteran.ssn)&.dig(:file_nbr) # rubocop:disable Rails/DynamicFindBy
+
+                    raise ::Common::Exceptions::UnprocessableEntity.new(detail:
+                      "Unable to locate Veteran's File Number. " \
+                      'Please submit an issue at ask.va.gov or call 1-800-MyVA411 (800-698-2411) for assistance.') if file_number.nil?
+                    ClaimsApi::Logger.log('benefits_documents', rid: request.request_id, detail: 'calling benefits documents api')
+                    # add with_indifferent_access so ['documents'] works below - we can remove when EVSS is gone
+                    # and access it via it's symbol
+                    benefits_doc_api.search(params[:id], file_number).dig(:data).with_indifferent_access
+                  else
                    get_evss_documents(bgs_claim[:benefit_claim_details_dto][:benefit_claim_id])
+                  end
                  end
           ClaimsApi::Logger.log('EVSS', rid: request.request_id, detail: 'recieved docs from evss doc service')
           return [] if docs.nil? || docs&.dig('documents').blank?
@@ -527,6 +539,7 @@ module ClaimsApi
           @supporting_documents = docs['documents']
 
           docs['documents'].map do |doc|
+            doc = doc.transform_keys{ |k| k.underscore } if benefits_documents_enabled?
             {
               document_id: doc['document_id'],
               document_type_label: doc['document_type_label'],
@@ -566,6 +579,10 @@ module ClaimsApi
 
         def sandbox?
           Settings.claims_api.claims_error_reporting.environment_name&.downcase.eql? 'sandbox'
+        end
+
+        def benefits_documents_enabled?
+          @benefits_documents_enabled ||= Flipper.enabled? :claims_status_v2_lh_benefits_docs_service_enabled
         end
       end
     end
