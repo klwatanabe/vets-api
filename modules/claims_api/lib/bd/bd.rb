@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 
-require 'evss_service/base'
 require 'faraday'
 
 module ClaimsApi
@@ -20,7 +19,9 @@ module ClaimsApi
     #
     # @return Documents list
     def search(claim_id, file_number)
-      body = { data: { claimId: claim_id, fileNumber: file_number }}
+      body = { data: { claimId: claim_id, fileNumber: file_number } }
+      ClaimsApi::Logger.log('benefits_documents',
+                            detail: "calling benefits documents search for claimId #{claim_id}")
       client.post('documents/search', body)&.body
     end
 
@@ -76,8 +77,6 @@ module ClaimsApi
       raise StandardError, 'Benefits Docs token missing' if @token.blank?
 
       Faraday.new("https://#{base_name}/benefits-documents/v1",
-                  # Disable SSL for (localhost) testing
-                  ssl: { verify: Settings.bd&.ssl != false },
                   headers: { 'Authorization' => "Bearer #{@token}" }) do |f|
         f.request @multipart ? :multipart : :json
         f.response :raise_error
