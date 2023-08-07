@@ -7,5 +7,4 @@ Avs::Engine.routes.draw do
 
     resources :apidocs, only: [:index]
   end
-
 end
