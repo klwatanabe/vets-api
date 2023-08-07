@@ -22,6 +22,7 @@ module Avs
     attribute :primary_care_providers
     attribute :primary_care_team
     attribute :primary_care_team_members
+    # TODO: update structure of allergies_reactions to match swagger.
     attribute :allergies_reactions
     attribute :va_medications
     attribute :lab_results
