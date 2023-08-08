@@ -333,9 +333,7 @@ module V0
       params_hash = { code: user_code_map.login_code, type: user_code_map.type }
       params_hash.merge!(state: user_code_map.client_state) if user_code_map.client_state.present?
 
-      render body: SignIn::RedirectUrlGenerator.new(redirect_uri: user_code_map.client_config.redirect_uri,
-                                                    params_hash:).perform,
-             content_type: 'text/html'
+      redirect_to("#{user_code_map.client_config.redirect_uri}?#{params_hash}")
     end
 
     def refresh_token_param
