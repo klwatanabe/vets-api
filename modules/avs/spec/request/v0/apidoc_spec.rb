@@ -14,7 +14,7 @@ RSpec.describe 'Avs::V0::Apidocs', type: :request do
     it 'has valid json' do
       get '/avs/v0/apidocs.json'
       json = response.body
-      JSON.parse(json).to_yaml
+      expect(JSON.parse(json).to_yaml).to be_a(String)
     end
   end
 
