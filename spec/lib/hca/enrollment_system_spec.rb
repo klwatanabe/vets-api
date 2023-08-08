@@ -1575,4 +1575,10 @@ describe HCA::EnrollmentSystem do
       end
     end
   end
+
+  describe 'testing the enrollment system API for EZR integration' do
+    VCR.use_cassette('enrollment-system-testing-for-EZR', :record => :once) do
+      # code to call external api
+    end
+  end
 end
