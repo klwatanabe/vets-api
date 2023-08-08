@@ -5,7 +5,7 @@ module Flipper
     def self.matches?(request)
       # Raise exception for any unauthorized toggles
       if request.method == 'POST' && request.path.include?('/boolean')
-        return true if is_authorized?(request.session[:flipper_user])
+        return true if authorized?(request.session[:flipper_user])
 
         raise Common::Exceptions::Forbidden
       end
@@ -14,7 +14,7 @@ module Flipper
       if request.session[:flipper_user].present?
         user = request.session[:flipper_user]
         RequestStore.store[:flipper_user_email_for_log] = user&.email
-        RequestStore.store[:flipper_authorized] = is_authorized?(user)
+        RequestStore.store[:flipper_authorized] = authorized?(user)
 
         return true
       end
@@ -32,7 +32,7 @@ module Flipper
       warden.authenticate!(scope: :flipper)
     end
 
-    def self.is_authorized?(user)
+    def self.authorized?(user)
       org_name = Settings.flipper.github_organization
       team_id = Settings.flipper.github_team
 

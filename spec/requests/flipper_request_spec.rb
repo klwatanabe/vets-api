@@ -4,16 +4,16 @@ require 'rails_helper'
 require 'nokogiri'
 
 RSpec.describe 'Flipper UI' do
-    def bypass_flipper_authenticity_token
-      Rails.application.routes.draw do
-        mount Flipper::UI.app(
-          Flipper.instance,
-          rack_protection: { except: :authenticity_token }
-        ) => '/flipper', constraints: Flipper::AdminUserConstraint
-      end
-      yield
-      Rails.application.reload_routes!
+  def bypass_flipper_authenticity_token
+    Rails.application.routes.draw do
+      mount Flipper::UI.app(
+        Flipper.instance,
+        rack_protection: { except: :authenticity_token }
+      ) => '/flipper', constraints: Flipper::AdminUserConstraint
     end
+    yield
+    Rails.application.reload_routes!
+  end
 
   include Warden::Test::Helpers
 
@@ -48,7 +48,7 @@ RSpec.describe 'Flipper UI' do
         get '/flipper/features'
         body = Nokogiri::HTML(response.body)
         signin_button = body.at_css('button:contains("Sign in to GitHub")')
-        expect(signin_button).to_not be_nil
+        expect(signin_button).not_to be_nil
         assert_response :success
       end
 
@@ -93,7 +93,7 @@ RSpec.describe 'Flipper UI' do
           get '/flipper/features'
           body = Nokogiri::HTML(response.body)
           feature_link = body.at_css('a[href*="/flipper/features/this_is_only_a_test"]')
-          expect(feature_link).to_not be_nil
+          expect(feature_link).not_to be_nil
           assert_response :success
         end
       end
@@ -118,7 +118,7 @@ RSpec.describe 'Flipper UI' do
             body = Nokogiri::HTML(response.body)
             docs_link = body.at_css('a[href*="depo-platform-documentation"]')
             expect(response.body).to include(unauthorized_message)
-            expect(docs_link).to_not be_nil
+            expect(docs_link).not_to be_nil
           end
         end
 
@@ -131,8 +131,8 @@ RSpec.describe 'Flipper UI' do
             body = Nokogiri::HTML(response.body)
             docs_link = body.at_css('a[href*="depo-platform-documentation"]')
             expect(response.body).to include(unauthorized_message)
-            expect(docs_link).to_not be_nil
-            end
+            expect(docs_link).not_to be_nil
+          end
         end
       end
     end
@@ -150,7 +150,7 @@ RSpec.describe 'Flipper UI' do
         get '/flipper/features/this_is_only_a_test'
         body = Nokogiri::HTML(response.body)
         signin_button = body.at_css('button:contains("Sign in to GitHub")')
-        expect(signin_button).to_not be_nil
+        expect(signin_button).not_to be_nil
         assert_response :success
       end
 
@@ -198,12 +198,12 @@ RSpec.describe 'Flipper UI' do
           body = Nokogiri::HTML(response.body)
           title = body.at_css('h1:contains("this_is_only_a_test")')
           toggle_button = body.at_css('button:contains("Enable for everyone")')
-          expect(title).to_not be_nil
-          expect(toggle_button).to_not be_nil
+          expect(title).not_to be_nil
+          expect(toggle_button).not_to be_nil
           assert_response :success
         end
       end
-      
+
       context 'Unauthorized user' do
         unauthorized_message = 'You are not authorized to perform any actions'
 
@@ -225,7 +225,7 @@ RSpec.describe 'Flipper UI' do
             body = Nokogiri::HTML(response.body)
             docs_link = body.at_css('a[href*="depo-platform-documentation"]')
             expect(response.body).to include(unauthorized_message)
-            expect(docs_link).to_not be_nil
+            expect(docs_link).not_to be_nil
           end
         end
 
@@ -238,8 +238,8 @@ RSpec.describe 'Flipper UI' do
             body = Nokogiri::HTML(response.body)
             docs_link = body.at_css('a[href*="depo-platform-documentation"]')
             expect(response.body).to include(unauthorized_message)
-            expect(docs_link).to_not be_nil
-            end
+            expect(docs_link).not_to be_nil
+          end
         end
       end
     end
@@ -276,7 +276,7 @@ RSpec.describe 'Flipper UI' do
           allow(user).to receive(:organization_member?).with(Settings.flipper.github_organization).and_return(true)
           allow(user).to receive(:team_member?).with(Settings.flipper.github_team).and_return(true)
           Flipper.enable(:this_is_only_a_test)
-  
+
           bypass_flipper_authenticity_token do
             expect(Flipper.enabled?(:this_is_only_a_test)).to be true
             post '/flipper/features/this_is_only_a_test/boolean', params: nil
