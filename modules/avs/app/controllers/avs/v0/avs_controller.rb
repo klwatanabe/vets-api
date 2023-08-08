@@ -3,6 +3,7 @@
 module Avs
   module V0
     class AvsController < ApplicationController
+      before_action :feature_enabled
       before_action { :authenticate }
 
       def index
@@ -55,8 +56,8 @@ module Avs
         @avs_service ||= Avs::V0::AvsService.new(@current_user)
       end
 
-      def serializer(avs)
-        Avs::V0::AfterVisitSummarySerializer.new(avs)
+      def feature_enabled
+        routing_error unless Flipper.enabled?(:avs_enabled, @current_user)
       end
 
       def get_avs_path(sid)
@@ -74,6 +75,10 @@ module Avs
             }
           ]
         }, status:
+      end
+
+      def serializer(avs)
+        Avs::V0::AfterVisitSummarySerializer.new(avs)
       end
 
       def validate_search_param?(param)
