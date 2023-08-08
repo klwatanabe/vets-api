@@ -1255,6 +1255,7 @@ vanotify:
         covid_vaccine_expanded_registration: fake_template_id
         direct_deposit_edu: edu_template_id
         direct_deposit_comp_pen: comp_pen_template_id
+        login_reactivation_email: reactivation_email_test_b
     lighthouse:
       api_key: fake_secret
       template_id:
@@ -1265,6 +1266,7 @@ vanotify:
       template_id:
         fsr_confirmation_email: fake_template_id
         vha_new_copay_statement_email: fake_template_id
+        fsr_streamlined_confirmation_email: fake_template_id
     check_in:
       api_key: fake_secret
       sms_sender_id: fake_secret

@@ -14,7 +14,11 @@
 features:
   this_is_only_a_test:
     actor_type: user
-    description: Used in feature_toggles_controller_spec and flipper_request_spec.
+    description: Used in feature_toggles_controller_spec.
+  avs_enabled:
+    actor_type: user
+    description: Enables the After Visit Summary API.
+    enable_in_development: true
   bcas_letters_use_lighthouse:
     actor_type: user
     description: Use lighthouse instead of EVSS to view/download benefit letters.
@@ -357,6 +361,10 @@ features:
   file_upload_short_workflow_enabled:
     actor_type: user
     description: Enables shorter workflow enhancement for file upload component
+  financial_status_report_debts_api_module:
+    actor_type: user
+    description: Points to debts-api module routes
+    enable_in_development: true
   financial_status_report_streamlined_waiver:
     actor_type: user
     description: Enables streamlined waiver flow for qualifying users completing the Financial Status Report (FSR) form
@@ -591,6 +599,9 @@ features:
     actor_type: user
     description: Use for experimental features for My VA application
     enable_in_development: true
+  my_va_update_errors_warnings:
+    actor_type: user
+    description: Update all errors and warnings on My VA for consistency (will remove when va-notification component is released) 
   search_representative:
     actor_type: user
     description: Enable frontend application and cta for Search Representative application
@@ -807,6 +818,10 @@ features:
     actor_type: user
     enable_in_development: true
     description: Toggle that requires the inclusion of a new 'schedulable' boolean param for fetching facilities
+  va_online_scheduling_after_visit_summary:
+    actor_type: user
+    enable_in_development: true
+    description: Toggle for After visit summary feature.
   va_view_dependents_access:
     actor_type: user
     description: Allows us to gate the View/ Modify dependents content in a progressive rollout

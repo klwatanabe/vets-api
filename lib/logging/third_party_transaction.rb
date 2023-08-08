@@ -27,10 +27,11 @@ module Logging
           method_names.each do |method_name|
             # define patchable method(s) with the same name inside of a proxy module.
             define_method(method_name) do |*args, &block|
-              log_3pi_begin(method_name, additional_class_logs, additional_instance_logs, *args)
+              str_args = args.to_s
+              log_3pi_begin(method_name, additional_class_logs, additional_instance_logs, str_args)
               # delegate to the original behavior
               result = super(*args, &block)
-              log_3pi_complete(method_name, additional_class_logs, additional_instance_logs, *args)
+              log_3pi_complete(method_name, additional_class_logs, additional_instance_logs, str_args)
               result
             end
           end
@@ -44,39 +45,47 @@ module Logging
     # these will be included after instance instantiation, making them available
     # to the instance and retaining their scope.
     module ScopedInstanceMethods
-      def log_3pi_begin(method_name, additional_class_logs = {}, additional_instance_logs = {}, args = [])
+      def log_3pi_begin(method_name, additional_class_logs, additional_instance_logs, args)
         @start_time = Time.current
 
         log = {
-          process_id: Process.pid,
-          user_uuid: try(:current_user).try(:account_uuid),
-          action: 'Begin interaction with 3rd party API',
-          wrapped_method: "#{self.class}##{method_name}",
           start_time: @start_time.to_s,
+          wrapped_method: "#{self.class}##{method_name}",
           passed_args: args.to_s
-        }.merge(additional_class_logs).merge(parse_instance_logs(additional_instance_logs))
+        }
+
+        log.merge!(default_logs)
+           .merge!(additional_class_logs)
+           .merge!(parse_instance_logs(additional_instance_logs))
 
         Rails.logger.info(log)
       rescue => e
         Rails.logger.error(e)
       end
 
-      def log_3pi_complete(method_name, additional_class_logs = {}, additional_instance_logs = {}, args = [])
+      def log_3pi_complete(method_name, additional_class_logs, additional_instance_logs, args)
         now = Time.current
 
         log = {
-          process_id: Process.pid,
-          user_uuid: try(:current_user).try(:account_uuid),
-          action: 'Complete interaction with 3rd party API',
-          wrapped_method: "#{self.class}##{method_name}",
           upload_duration: (now - @start_time).to_f,
+          wrapped_method: "#{self.class}##{method_name}",
           end_time: now.to_s,
           passed_args: args.to_s
-        }.merge(additional_class_logs).merge(parse_instance_logs(additional_instance_logs))
+        }
+
+        log.merge!(default_logs)
+           .merge!(additional_class_logs)
+           .merge!(parse_instance_logs(additional_instance_logs))
 
         Rails.logger.info(log)
       rescue => e
         Rails.logger.error(e)
+      end
+
+      def default_logs
+        {
+          process_id: Process.pid
+        }
       end
 
       def parse_instance_logs(additional_instance_logs)
@@ -94,8 +103,20 @@ module Logging
         # { user_uuid: nil }
         {}.tap do |obj|
           additional_instance_logs.each do |key, method_chain|
-            # using :try ensures we can fail quietly
-            obj[key] = method_chain.inject(self, :try)
+            # call each method in the passed chain sequentially.  Each sequential
+            # method call is performed on the result of the previous method call
+            # The first method is called on `self`, which is the object context
+            # from which we are logging, thus performing this method chain at
+            # the instance level, with all of it's available context.
+            obj[key] = method_chain.inject(self) do |result, meth|
+              # we need to allow for silent failures if a method is not defined.
+              # `.try` would not work for private methods, such as `current_user`,
+              # so we use `.respond_to?(<method>, true)` where `true` indicates
+              # a check against both public and private methods.  This is
+              # logically equivalent to using `.try` for each method, however
+              # `.send` is required to fully access the instance context.
+              result.send(meth) if result.respond_to?(meth, true)
+            end
           end
         end
       end

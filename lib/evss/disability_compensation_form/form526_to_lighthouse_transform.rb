@@ -28,6 +28,12 @@ module EVSS
         direct_deposit = form526['directDeposit']
         lh_request_body.direct_deposit = transform_direct_deposit(direct_deposit) if direct_deposit.present?
 
+        treatments = form526['treatments']
+        lh_request_body.treatments = transform_treatments(treatments) if treatments.present?
+
+        service_pay = form526['servicePay']
+        lh_request_body.service_pay = transform_service_pay(service_pay) if service_pay.present?
+
         lh_request_body
       end
 
@@ -118,7 +124,75 @@ module EVSS
         service_information
       end
 
+      # Transforms EVSS treatments format into Lighthouse request treatments block format
+      # @param treatments_source Array[{}] accepts a list of treatments in the EVSS treatments format
+      def transform_treatments(treatments_source)
+        treatments_source.map do |treatment|
+          center = treatment['center']
+          Requests::Treatment.new(
+            treated_disability_names: treatment['treatedDisabilityNames'],
+            center: Requests::Center.new(
+              name: center['name'],
+              state: center['state'],
+              city: center['city']
+            ),
+            begin_date: convert_approximate_date(treatment['startDate'])
+          )
+        end
+      end
+
+      # Transforms EVSS service pay format into Lighthouse request service pay block format
+      # @param service_pay_source {} accepts an object in the EVSS servicePay format
+      def transform_service_pay(service_pay_source)
+        # mapping to target <- source
+        service_pay_target = Requests::ServicePay.new
+
+        service_pay_target.favor_training_pay = service_pay_source['waiveVABenefitsToRetainTrainingPay']
+        service_pay_target.favor_military_retired_pay = service_pay_source['waiveVABenefitsToRetainRetiredPay']
+
+        # map military retired pay block
+        if service_pay_source['militaryRetiredPay'].present?
+          transform_military_retired_pay(service_pay_source, service_pay_target)
+        end
+
+        # map separation pay block
+        transform_separation_pay(service_pay_source, service_pay_target) if service_pay_source['separationPay'].present?
+
+        service_pay_target
+      end
+
       private
+
+      def transform_separation_pay(service_pay_source, service_pay_target)
+        separation_pay_source = service_pay_source['separationPay']
+
+        service_pay_target.retired_status = service_pay_source['retiredStatus'] if separation_pay_source.present?
+        service_pay_target.received_separation_or_severance_pay = separation_pay_source['received']
+
+        separation_pay_payment_source = separation_pay_source['payment'] if separation_pay_source.present?
+        if separation_pay_payment_source.present?
+          service_pay_target.separation_severance_pay = Requests::SeparationSeverancePay.new(
+            date_payment_received: convert_approximate_date(separation_pay_source['receivedDate']),
+            branch_of_service: separation_pay_payment_source['serviceBranch'],
+            pre_tax_amount_received: separation_pay_payment_source['amount']
+          )
+        end
+      end
+
+      def transform_military_retired_pay(service_pay_source, service_pay_target)
+        military_retired_pay_source = service_pay_source['militaryRetiredPay']
+
+        service_pay_target.receiving_military_retired_pay = military_retired_pay_source['receiving']
+        service_pay_target.future_military_retired_pay = military_retired_pay_source['willReceiveInFuture']
+
+        military_retired_pay_payment_source = military_retired_pay_source['payment']
+        if military_retired_pay_payment_source.present?
+          service_pay_target.military_retired_pay = Requests::MilitaryRetiredPay.new(
+            branch_of_service: military_retired_pay_payment_source['serviceBranch'],
+            monthly_amount: military_retired_pay_payment_source['amount']
+          )
+        end
+      end
 
       def transform_confinements(service_information_source, service_information)
         service_information.confinements = service_information_source['confinements'].map do |confinement|
@@ -216,7 +290,8 @@ module EVSS
       end
 
       def convert_approximate_date(approximate_date_source)
-        approximate_date = "#{approximate_date_source['month']}-"
+        approximate_date = ''
+        approximate_date = "#{approximate_date_source['month']}-" if approximate_date_source['month']
         approximate_date += "#{approximate_date_source['day']}-" if approximate_date_source['day']
         approximate_date += (approximate_date_source['year']).to_s
 
