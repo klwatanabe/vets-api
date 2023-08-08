@@ -635,6 +635,76 @@ RSpec.describe V0::SignInController, type: :controller do
         let(:client_state) { SecureRandom.alphanumeric(SignIn::Constants::Auth::CLIENT_STATE_MINIMUM_LENGTH) }
 
         context 'and code in state payload matches an existing state code' do
+          shared_examples 'successful response' do
+            let(:client_code) { 'some-client-code' }
+            let(:client_redirect_uri) { client_config.redirect_uri }
+            let(:expected_log) { '[SignInService] [V0::SignInController] callback' }
+            let(:statsd_callback_success) { SignIn::Constants::Statsd::STATSD_SIS_CALLBACK_SUCCESS }
+            let(:expected_logger_context) do
+              {
+                type:,
+                client_id:,
+                ial:,
+                acr:
+              }
+            end
+
+            before { allow(SecureRandom).to receive(:uuid).and_return(client_code) }
+
+            context 'and client was configured with cookie based authentication' do
+              let(:authentication) { SignIn::Constants::Auth::COOKIE }
+
+              it 'returns ok status' do
+                expect(subject).to have_http_status(:ok)
+              end
+
+              it 'renders the oauth_get_form template' do
+                expect(subject.body).to include('form id="oauth-form"')
+              end
+
+              it 'directs to the given redirect url set in the client configuration' do
+                expect(subject.body).to include("action=\"#{client_redirect_uri}\"")
+              end
+
+              it 'includes expected code param' do
+                expect(subject.body).to include("value=\"#{client_code}\"")
+              end
+
+              it 'includes expected state param' do
+                expect(subject.body).to include("value=\"#{client_state}\"")
+              end
+
+              it 'includes expected type param' do
+                expect(subject.body).to include("value=\"#{type}\"")
+              end
+            end
+
+            context 'and client was configured with api based authentication' do
+              let(:authentication) { SignIn::Constants::Auth::API }
+              let(:expected_params_hash) { { code: client_code, type:, state: client_state } }
+              let(:expected_redirect_uri) do
+                "#{client_config.redirect_uri}?#{expected_params_hash.to_query}"
+              end
+
+              it 'returns redirect status' do
+                expect(subject).to have_http_status(:redirect)
+              end
+
+              it 'redirects to expected redirect uri' do
+                expect(subject).to redirect_to(expected_redirect_uri)
+              end
+            end
+
+            it 'logs the successful callback' do
+              expect(Rails.logger).to receive(:info).with(expected_log, expected_logger_context)
+              subject
+            end
+
+            it 'updates StatsD with a callback request success' do
+              expect { subject }.to trigger_statsd_increment(statsd_callback_success, tags: statsd_tags)
+            end
+          end
+
           context 'when type in state JWT is logingov' do
             let(:type) { SignIn::Constants::Auth::LOGINGOV }
             let(:response) { OpenStruct.new(access_token: token) }
@@ -704,19 +774,7 @@ RSpec.describe V0::SignInController, type: :controller do
 
               context 'and credential should not be uplevelled' do
                 let(:acr) { 'ial2' }
-                let(:ial) { 2 }
-                let(:client_code) { 'some-client-code' }
-                let(:client_redirect_uri) { client_config.redirect_uri }
-                let(:expected_log) { '[SignInService] [V0::SignInController] callback' }
-                let(:statsd_callback_success) { SignIn::Constants::Statsd::STATSD_SIS_CALLBACK_SUCCESS }
-                let(:expected_logger_context) do
-                  {
-                    type:,
-                    client_id:,
-                    ial:,
-                    acr:
-                  }
-                end
+                let(:ial) { IAL::TWO }
                 let(:expected_user_attributes) do
                   {
                     ssn: user_info.social_security_number,
@@ -734,40 +792,7 @@ RSpec.describe V0::SignInController, type: :controller do
                         family_name: user_info.family_name)
                 end
 
-                before { allow(SecureRandom).to receive(:uuid).and_return(client_code) }
-
-                it 'returns ok status' do
-                  expect(subject).to have_http_status(:ok)
-                end
-
-                it 'renders the oauth_get_form template' do
-                  expect(subject.body).to include('form id="oauth-form"')
-                end
-
-                it 'directs to the given redirect url set in the client configuration' do
-                  expect(subject.body).to include("action=\"#{client_redirect_uri}\"")
-                end
-
-                it 'includes expected code param' do
-                  expect(subject.body).to include("value=\"#{client_code}\"")
-                end
-
-                it 'includes expected state param' do
-                  expect(subject.body).to include("value=\"#{client_state}\"")
-                end
-
-                it 'includes expected type param' do
-                  expect(subject.body).to include("value=\"#{type}\"")
-                end
-
-                it 'logs the successful callback' do
-                  expect(Rails.logger).to receive(:info).with(expected_log, expected_logger_context)
-                  subject
-                end
-
-                it 'updates StatsD with a callback request success' do
-                  expect { subject }.to trigger_statsd_increment(statsd_callback_success, tags: statsd_tags)
-                end
+                it_behaves_like 'successful response'
 
                 it 'creates a user with expected attributes' do
                   subject
@@ -861,60 +886,16 @@ RSpec.describe V0::SignInController, type: :controller do
 
               context 'and credential should not be uplevelled' do
                 let(:acr) { 'loa3' }
-                let(:ial) { 2 }
+                let(:ial) { IAL::TWO }
                 let(:credential_ial) { LOA::IDME_CLASSIC_LOA3 }
-                let(:client_code) { 'some-client-code' }
-                let(:client_redirect_uri) { client_config.redirect_uri }
-                let(:expected_log) { '[SignInService] [V0::SignInController] callback' }
-                let(:statsd_callback_success) { SignIn::Constants::Statsd::STATSD_SIS_CALLBACK_SUCCESS }
-                let(:expected_logger_context) do
-                  {
-                    type:,
-                    client_id:,
-                    ial:,
-                    acr:
-                  }
-                end
 
-                before do
-                  allow(SecureRandom).to receive(:uuid).and_return(client_code)
-                end
-
-                it 'returns ok status' do
-                  expect(subject).to have_http_status(:ok)
-                end
-
-                it 'renders the oauth_get_form template' do
-                  expect(subject.body).to include('form id="oauth-form"')
-                end
-
-                it 'directs to the given redirect url set in the client configuration' do
-                  expect(subject.body).to include("action=\"#{client_redirect_uri}\"")
-                end
-
-                it 'includes expected code param' do
-                  expect(subject.body).to include("value=\"#{client_code}\"")
-                end
-
-                it 'includes expected state param' do
-                  expect(subject.body).to include("value=\"#{client_state}\"")
-                end
-
-                it 'includes expected type param' do
-                  expect(subject.body).to include("value=\"#{type}\"")
-                end
-
-                it 'logs the successful callback' do
-                  expect(Rails.logger).to receive(:info).with(expected_log, expected_logger_context)
-                  expect { subject }.to trigger_statsd_increment(statsd_callback_success, tags: statsd_tags)
-                end
+                it_behaves_like 'successful response'
 
                 it 'creates a user with expected attributes' do
                   subject
 
                   user_uuid = UserVerification.last.credential_identifier
                   user = User.find(user_uuid)
-
                   expect(user).to have_attributes(expected_user_attributes)
                 end
               end
@@ -998,46 +979,6 @@ RSpec.describe V0::SignInController, type: :controller do
                 allow(SecureRandom).to receive(:uuid).and_return(client_code)
               end
 
-              shared_context 'dslogon successful callback' do
-                it 'returns ok status' do
-                  expect(subject).to have_http_status(:ok)
-                end
-
-                it 'renders the oauth_get_form template' do
-                  expect(subject.body).to include('form id="oauth-form"')
-                end
-
-                it 'directs to the given redirect url set in the client configuration' do
-                  expect(subject.body).to include("action=\"#{client_redirect_uri}\"")
-                end
-
-                it 'includes expected code param' do
-                  expect(subject.body).to include("value=\"#{client_code}\"")
-                end
-
-                it 'includes expected state param' do
-                  expect(subject.body).to include("value=\"#{client_state}\"")
-                end
-
-                it 'includes expected type param' do
-                  expect(subject.body).to include("value=\"#{type}\"")
-                end
-
-                it 'logs the successful callback' do
-                  expect(Rails.logger).to receive(:info).with(expected_log, expected_logger_context)
-                  expect { subject }.to trigger_statsd_increment(statsd_callback_success, tags: statsd_tags)
-                end
-
-                it 'creates a user with expected attributes' do
-                  subject
-
-                  user_uuid = UserVerification.last.backing_credential_identifier
-                  user = User.find(user_uuid)
-
-                  expect(user).to have_attributes(expected_user_attributes)
-                end
-              end
-
               context 'and dslogon account is not premium' do
                 let(:dslogon_assurance) { 'some-dslogon-assurance' }
                 let(:ial) { IAL::ONE }
@@ -1052,7 +993,16 @@ RSpec.describe V0::SignInController, type: :controller do
                   }
                 end
 
-                it_behaves_like 'dslogon successful callback'
+                it_behaves_like 'successful response'
+
+                it 'creates a user with expected attributes' do
+                  subject
+
+                  user_uuid = UserVerification.last.backing_credential_identifier
+                  user = User.find(user_uuid)
+
+                  expect(user).to have_attributes(expected_user_attributes)
+                end
               end
 
               context 'and dslogon account is premium' do
@@ -1069,7 +1019,16 @@ RSpec.describe V0::SignInController, type: :controller do
                   }
                 end
 
-                it_behaves_like 'dslogon successful callback'
+                it_behaves_like 'successful response'
+
+                it 'creates a user with expected attributes' do
+                  subject
+
+                  user_uuid = UserVerification.last.backing_credential_identifier
+                  user = User.find(user_uuid)
+
+                  expect(user).to have_attributes(expected_user_attributes)
+                end
               end
             end
           end
@@ -1136,46 +1095,6 @@ RSpec.describe V0::SignInController, type: :controller do
                 allow(SecureRandom).to receive(:uuid).and_return(client_code)
               end
 
-              shared_context 'mhv successful callback' do
-                it 'returns ok status' do
-                  expect(subject).to have_http_status(:ok)
-                end
-
-                it 'renders the oauth_get_form template' do
-                  expect(subject.body).to include('form id="oauth-form"')
-                end
-
-                it 'directs to the given redirect url set in the client configuration' do
-                  expect(subject.body).to include("action=\"#{client_redirect_uri}\"")
-                end
-
-                it 'includes expected code param' do
-                  expect(subject.body).to include("value=\"#{client_code}\"")
-                end
-
-                it 'includes expected state param' do
-                  expect(subject.body).to include("value=\"#{client_state}\"")
-                end
-
-                it 'includes expected type param' do
-                  expect(subject.body).to include("value=\"#{type}\"")
-                end
-
-                it 'logs the successful callback' do
-                  expect(Rails.logger).to receive(:info).with(expected_log, expected_logger_context)
-                  expect { subject }.to trigger_statsd_increment(statsd_callback_success, tags: statsd_tags)
-                end
-
-                it 'creates a user with expected attributes' do
-                  subject
-
-                  user_uuid = UserVerification.last.backing_credential_identifier
-                  user = User.find(user_uuid)
-
-                  expect(user).to have_attributes(expected_user_attributes)
-                end
-              end
-
               context 'and mhv account is not premium' do
                 let(:mhv_assurance) { 'some-mhv-assurance' }
                 let(:ial) { IAL::ONE }
@@ -1186,7 +1105,16 @@ RSpec.describe V0::SignInController, type: :controller do
                   }
                 end
 
-                it_behaves_like 'mhv successful callback'
+                it_behaves_like 'successful response'
+
+                it 'creates a user with expected attributes' do
+                  subject
+
+                  user_uuid = UserVerification.last.backing_credential_identifier
+                  user = User.find(user_uuid)
+
+                  expect(user).to have_attributes(expected_user_attributes)
+                end
               end
 
               context 'and mhv account is premium' do
@@ -1199,7 +1127,16 @@ RSpec.describe V0::SignInController, type: :controller do
                   }
                 end
 
-                it_behaves_like 'mhv successful callback'
+                it_behaves_like 'successful response'
+
+                it 'creates a user with expected attributes' do
+                  subject
+
+                  user_uuid = UserVerification.last.backing_credential_identifier
+                  user = User.find(user_uuid)
+
+                  expect(user).to have_attributes(expected_user_attributes)
+                end
               end
             end
           end

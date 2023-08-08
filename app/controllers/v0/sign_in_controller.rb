@@ -310,7 +310,7 @@ module V0
              content_type: 'text/html'
     end
 
-    def create_login_code(state_payload, user_info, credential_level) # rubocop:disable Metrics/MethodLength
+    def create_login_code(state_payload, user_info, credential_level)
       user_attributes = auth_service(state_payload.type,
                                      state_payload.client_id).normalized_attributes(user_info, credential_level)
       verified_icn = SignIn::AttributeValidator.new(user_attributes:).perform
@@ -330,12 +330,23 @@ module V0
                               "client_id:#{state_payload.client_id}",
                               "ial:#{credential_level.current_ial}",
                               "acr:#{state_payload.acr}"])
-      params_hash = { code: user_code_map.login_code, type: user_code_map.type }
-      params_hash.merge!(state: user_code_map.client_state) if user_code_map.client_state.present?
+      handle_login_code_redirect(user_code_map, state_payload.client_id)
+    end
 
-      render body: SignIn::RedirectUrlGenerator.new(redirect_uri: user_code_map.client_config.redirect_uri,
-                                                    params_hash:).perform,
-             content_type: 'text/html'
+    def handle_login_code_redirect(user_code_map, client_id)
+      params_hash = { code: user_code_map.login_code,
+                      type: user_code_map.type,
+                      state: user_code_map.client_state }.compact
+
+      if cookie_authentication?(client_id)
+        render body: SignIn::RedirectUrlGenerator.new(redirect_uri: user_code_map.client_config.redirect_uri,
+                                                      params_hash:).perform,
+               content_type: 'text/html'
+      else
+        redirect_uri = URI.parse(user_code_map.client_config.redirect_uri)
+        redirect_uri.query = params_hash.to_query
+        redirect_to(redirect_uri.to_s)
+      end
     end
 
     def refresh_token_param
