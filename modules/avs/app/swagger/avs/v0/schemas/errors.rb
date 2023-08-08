@@ -16,7 +16,6 @@ module Avs
     end
 
     swagger_schema :Error do
-      key :required, %i[title detail code status]
       property :title, type: :string
       property :detail, type: :string
       property :code, type: :string

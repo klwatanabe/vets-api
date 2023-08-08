@@ -32,6 +32,12 @@ module Avs
             key :$ref, :AvsSearchResult
           end
         end
+        response 400 do
+          key :description, 'Invalid parameters'
+          schema do
+            key :$ref, :Error
+          end
+        end
       end
     end
   end
