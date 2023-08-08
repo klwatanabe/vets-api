@@ -20,8 +20,7 @@ module Flipper
       end
 
       # allow GET requests (minus the callback, which needs to pass through to finish auth flow)
-      # return true if (request.method == 'GET' && request.path.exclude?('/callback')) || Rails.env.development?
-      return true if request.method == 'GET' && request.path.exclude?('/callback')
+      return true if (request.method == 'GET' && request.path.exclude?('/callback')) || Rails.env.development?
 
       authenticate(request)
     end

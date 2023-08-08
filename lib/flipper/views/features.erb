@@ -1,7 +1,6 @@
 <div class="vads-l-row">
   <div class="vads-l-col">
-    <%# TODO Add `&& !Rails.env.development?` back to line below %>
-    <% if RequestStore.store[:flipper_user_email_for_log].blank? %>
+    <% if RequestStore.store[:flipper_user_email_for_log].blank? && !Rails.env.development? %>
       <p>User must authenticate with GitHub to edit feature toggles</p>
       <form action="/flipper/features" method="post" class="usa-form">
         <button type="submit" style="background-color:black; width:auto; margin-top:0">
@@ -29,7 +28,7 @@
             </td>
             <td>
               <%# TODO Add `|| Rails.env.development?` back to line below %>
-              <% if RequestStore.store[:flipper_authorized] %>
+              <% if RequestStore.store[:flipper_authorized] || Rails.env.development? %>
                 <a href="<%= "#{script_name}/features/#{feature.key}" %>">
                   <%= feature.key %>
                 </a>
