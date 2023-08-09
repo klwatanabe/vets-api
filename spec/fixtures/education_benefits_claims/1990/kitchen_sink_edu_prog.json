@@ -10,7 +10,6 @@
   "chapter1606": true,
   "chapter33": true,
   "chapter30": true,
-  "chapter32": true,
   "benefitsRelinquished": "chapter1607",
   "benefitsRelinquishedDate":"2016-12-15",
   "currentlyActiveDuty": {
@@ -18,7 +17,6 @@
     "onTerminalLeave": true,
     "yes": true
   },
-  "civilianBenefitsAssistance": true,
   "serviceAcademyGraduationYear": 2010,
   "seniorRotc": {
     "commissionYear": 1981,
@@ -40,19 +38,6 @@
       "to": "2013-10-10"
   },
   "preferredContactMethod": "email",
-  "educationStartDate": "1999-12-31",
-  "educationObjective": "Master’s in JSON document creation",
-  "educationProgram": {
-    "name": "\nFakeData University\n",
-    "address": {
-      "city": "Baltimore",
-      "country": "USA",
-      "postalCode": "21231",
-      "state": "MD",
-      "street": "111 Uni Drive"
-    },
-    "educationType": "flightTraining"
-  },
   "nonMilitaryJobs": [
     {
       "name": "Clerk",
@@ -72,9 +57,7 @@
       "postMilitaryJob": true
     }
   ],
-  "faaFlightCertificatesInformation": "cert1, cert2",
   "gender": "M",
-  "highSchoolOrGedCompletionDate": "2010-06-XX",
   "homePhone": "5551110000",
   "reserveKicker": true,
   "secondaryContact": {
@@ -114,21 +97,6 @@
     "applyPeriodToSelected": true,
     "serviceStatus": "ACTIVE DUTY"
   }],
-  "postHighSchoolTrainings": [
-    {
-      "name": "OtherCollege Name",
-      "dateRange": {
-        "from": "1999-01-01",
-        "to": "2000-01-01"
-      },
-      "city": "New York",
-      "hours": 8,
-      "hoursType": "semester",
-      "state": "NY",
-      "degreeReceived": "BA",
-      "major": "History"
-    }
-  ],
   "veteranAddress": {
     "city": "Milwaukee",
     "country": "USA",

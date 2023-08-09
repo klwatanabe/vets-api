@@ -14,22 +14,9 @@
     "yes": false
   },
   "preferredContactMethod": "email",
-  "faaFlightCertificatesInformation": "cert1, cert2",
   "gender": "M",
-  "highSchoolOrGedCompletionDate": "2010-06-06",
   "homePhone": "5551110000",
   "reserveKicker": false,
-  "educationProgram": {
-    "educationType": "college",
-    "address": {
-      "city": "Baltimore",
-      "country": "USA",
-      "postalCode": "21231",
-      "state": "MD",
-      "street": "111 Uni Drive"
-    },
-    "name": "FakeData University"
-  },
   "secondaryContact": {
     "fullName": "Sibling Olson",
     "sameAddress": true,
@@ -52,21 +39,6 @@
     "serviceBranch": "Army",
     "serviceStatus": "Honorable Discharge"
   }],
-  "postHighSchoolTrainings": [
-    {
-      "name": "OtherCollege Name",
-      "dateRange": {
-        "from": "1999-01-01",
-        "to": "2000-01-01"
-      },
-      "city": "New York",
-      "hours": 8,
-      "hoursType": "semester",
-      "state": "NY",
-      "degreeReceived": "BA",
-      "major": "History"
-    }
-  ],
   "veteranAddress": {
     "city": "Milwaukee",
     "country": "USA",
