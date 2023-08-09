@@ -9,7 +9,7 @@ module ClaimsApi
   # Takes an optional request parameter
   # @param [] rails request object
   class BD
-    def initialize(multipart = false, request = nil)
+    def initialize(multipart: false, request: nil)
       @request = request
       @multipart = multipart
     end

@@ -511,6 +511,7 @@ module ClaimsApi
           {}
         end
 
+        # rubocop:disable Metrics/MethodLength
         def build_supporting_docs(bgs_claim)
           return [] if bgs_claim.nil?
 
@@ -528,7 +529,8 @@ module ClaimsApi
                    end
                    ClaimsApi::Logger.log('benefits_documents',
                                          detail: "calling benefits documents api for claim_id #{params[:id]}")
-                   supporting_docs_list = benefits_doc_api.search(params[:id], file_number)&.dig(:data)
+                   supporting_docs_list = benefits_doc_api(multipart: false).search(params[:id],
+                                                                                    file_number)&.dig(:data)
                    # add with_indifferent_access so ['documents'] works below
                    # we can remove when EVSS is gone and access it via it's symbol
                    supporting_docs_list.with_indifferent_access if supporting_docs_list.present?
@@ -547,10 +549,11 @@ module ClaimsApi
               document_type_label: doc['document_type_label'],
               original_file_name: doc['original_file_name'],
               tracked_item_id: doc['tracked_item_id'],
-              upload_date: upload_date
+              upload_date:
             }
           end
         end
+        # rubocop:enable Metrics/MethodLength
 
         # duplicating temporarily to bd_upload_date. remove when EVSS call is gone
         def upload_date(upload_date)

@@ -37,7 +37,7 @@ module ClaimsApi
 
           # find_by_ssn is not the same as find_by(ssn:)
           _file_nbr = local_bgs_service.find_by_ssn(target_veteran.ssn)&.dig(:file_nbr) # rubocop:disable Rails/DynamicFindBy
-          # benefits_doc_api(true).upload(auto_claim, pdf_path, file_nbr)
+          # benefits_doc_api(multipart: true).upload(auto_claim, pdf_path, file_nbr)
           render json: auto_claim
         end
 

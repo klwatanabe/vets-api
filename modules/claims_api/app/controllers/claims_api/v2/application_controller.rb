@@ -137,7 +137,7 @@ module ClaimsApi
 
       private
 
-      def benefits_doc_api(multipart = false)
+      def benefits_doc_api(multipart: false)
         ClaimsApi::BD.new(multipart)
       end
 
