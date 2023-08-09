@@ -138,7 +138,7 @@ module ClaimsApi
       private
 
       def benefits_doc_api(multipart: false)
-        ClaimsApi::BD.new(multipart)
+        ClaimsApi::BD.new(multipart:)
       end
 
       def bgs_service
