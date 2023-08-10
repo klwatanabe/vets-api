@@ -544,7 +544,8 @@ RSpec.describe 'Claims', type: :request do
           expect(claim_attributes['claimPhaseDates']['currentPhaseBack']).to eq(false)
           expect(claim_attributes['claimPhaseDates']['latestPhaseType']).to eq('UNDER_REVIEW')
           expect(claim_attributes['claimPhaseDates']['previousPhases']).to be_truthy
-          expect(claim_attributes['supportingDocuments'].first['documentId']).to eq('6A40E389-EB12-473C-8C23-D1D6C996C544')
+          supp_docs = claim_attributes['supportingDocuments']
+          expect(supp_docs.first['documentId']).to eq('6A40E389-EB12-473C-8C23-D1D6C996C544')
         end
       end
 
