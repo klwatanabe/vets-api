@@ -23,6 +23,10 @@ module ClaimsApi
       ClaimsApi::Logger.log('benefits_documents',
                             detail: "calling benefits documents search for claimId #{claim_id}")
       client.post('documents/search', body)&.body
+    rescue => e
+      ClaimsApi::Logger.log('benefits_documents',
+                            detail: "/search failure for claimId #{claim_id}, #{e.message}")
+      {}
     end
 
     ##
