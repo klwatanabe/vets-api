@@ -19,8 +19,6 @@ describe ClaimsApi::BD do
 
     it 'uploads a document to BD' do
       VCR.use_cassette('bd/upload') do
-
-
         result = subject.upload(claim, pdf_path, file_number)
         expect(result).to be_a Hash
         expect(result[:data][:success]).to be true
