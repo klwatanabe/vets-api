@@ -52,6 +52,8 @@ RSpec.describe 'Claims', type: :request do
               expect(ClaimsApi::AutoEstablishedClaim)
                 .to receive(:where).and_return([])
 
+              puts 'CHECKING FLIPPER FEATURE'
+              puts Flipper.enabled? :claims_status_v2_lh_benefits_docs_service_enabled
               get all_claims_path, headers: auth_header
               expect(response.status).to eq(200)
             end
