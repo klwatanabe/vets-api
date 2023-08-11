@@ -26,6 +26,7 @@ module BGS
       @email = user.email
       @icn = user.icn
       @participant_id = user.participant_id
+      @va_profile_email = user.va_profile_email
     end
 
     def get_dependents
@@ -65,7 +66,7 @@ module BGS
         # why I am deliberately raising these errors here.
         validate_file_number_format!(file_number:)
         validate_file_number_matches_ssn!(file_number:)
-        BGS::SubmitForm686cJob.perform_async(uuid, icn, claim.id, form_hash_686c, user&.va_profile_email, email, user&.first_name, user&.ssn, user&.participant_id, user&.common_name)
+        BGS::SubmitForm686cJob.perform_async(uuid, @icn, claim.id, form_hash_686c, @va_profile_email, @email, @first_name, @ssn, @participant_id, @common_name)
         Rails.logger.info('BGS::DependentService succeeded!', { user_uuid: uuid, saved_claim_id: claim.id, icn: })
       end
     rescue => e
