@@ -60,14 +60,14 @@ module BGS
 
     def generate_temp_user(first_name, ssn, email, va_profile_email, participant_id, icn, uuid, common_name)
       OpenStruct.new(
-        first_name: first_name, 
-        ssn: ssn,
-        email: email,
-        va_profile_email: va_profile_email,
-        participant_id: participant_id,
-        icn: icn,
-        uuid: uuid, 
-        common_name: common_name
+        first_name:, 
+        ssn:,
+        email:,
+        va_profile_email:,
+        participant_id:,
+        icn:,
+        uuid:, 
+        common_name:
       )
     end
   end
