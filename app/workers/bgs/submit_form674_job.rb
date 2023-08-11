@@ -54,7 +54,7 @@ module BGS
     end
 
     def generate_temp_user(vet_info)
-      
+
       OpenStruct.new(
         first_name: vet_info['full_name']['first'],
         ssn: vet_info['ssn'],
