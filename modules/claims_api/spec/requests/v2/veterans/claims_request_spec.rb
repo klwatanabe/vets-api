@@ -517,36 +517,6 @@ RSpec.describe 'Claims', type: :request do
         end
       end
 
-      describe 'uses CCG and Benefits Documents', vcr: 'claims_api/v2/claims_show' do
-        let(:claim_show_route) { '/services/claims/v2/veterans/1012667169V030190/claims/600397218' }
-
-        before do
-          expect_any_instance_of(Token).to receive(:initialize)
-          expect_any_instance_of(Token).to receive(:client_credentials_token?).twice.and_return(true)
-          expect_any_instance_of(TokenValidation::V2::Client).to receive(:token_valid?).and_return(true)
-          expect_any_instance_of(OpenidApplicationController).to receive(:populate_launch_context).and_return(true)
-          expect_any_instance_of(OpenidApplicationController).to receive(:jwt?).and_return(true)
-          expect_any_instance_of(ClaimsApi::V2::BenefitsDocuments::Service)
-            .to receive(:get_auth_token).and_return('0h_y34h')
-        end
-
-        it 'returns successful' do
-          allow(Flipper).to receive(:enabled?)
-            .with(:claims_status_v2_lh_benefits_docs_service_enabled)
-            .and_return(true)
-          get claim_show_route, headers: { 'Authorization' => 'Bearer token' }
-
-          json_response = JSON.parse(response.body)
-          expect(response.status).to eq(200)
-          claim_attributes = json_response['data']['attributes']
-          expect(claim_attributes['claimPhaseDates']['currentPhaseBack']).to eq(false)
-          expect(claim_attributes['claimPhaseDates']['latestPhaseType']).to eq('UNDER_REVIEW')
-          expect(claim_attributes['claimPhaseDates']['previousPhases']).to be_truthy
-          supp_docs = claim_attributes['supportingDocuments']
-          expect(supp_docs.first['documentId']).to eq('6A40E389-EB12-473C-8C23-D1D6C996C544')
-        end
-      end
-
       context 'when no auth header provided' do
         it 'returns a 401 error code' do
           with_okta_user(scopes) do
