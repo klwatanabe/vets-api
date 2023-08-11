@@ -22,7 +22,7 @@ module BGS
       BGS::Form674.new(temp_user).submit(claim_data)
       send_confirmation_email(user_uuid, va_profile_email, first_name)
       in_progress_form&.destroy
-      Rails.logger.info('BGS::SubmitForm674Job succeeded!', { user_uuid:,  saved_claim_id:, icn: })
+      Rails.logger.info('BGS::SubmitForm674Job succeeded!', { user_uuid:, saved_claim_id:, icn: })
     rescue => e
       Rails.logger.error('BGS::SubmitForm674Job failed!', { user_uuid:, saved_claim_id:, icn:, error: e.message }) # rubocop:disable Layout/LineLength
       log_message_to_sentry(e, :error, {}, { team: 'vfs-ebenefits' })
@@ -55,13 +55,13 @@ module BGS
 
     def generate_temp_user(first_name, ssn, email, va_profile_email, participant_id, icn, uuid, common_name)
       OpenStruct.new(
-        first_name:, 
+        first_name:,
         ssn:,
         email:,
         va_profile_email:,
         participant_id:,
         icn:,
-        uuid:, 
+        uuid:,
         common_name:
       )
     end
