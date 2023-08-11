@@ -522,7 +522,6 @@ RSpec.describe 'Claims', type: :request do
 
         context 'with flipper enabled' do
           before do
-            Flipper.enable :claims_status_v2_lh_benefits_docs_service_enabled
             expect_any_instance_of(Token).to receive(:initialize)
             expect_any_instance_of(Token).to receive(:client_credentials_token?).twice.and_return(true)
             expect_any_instance_of(TokenValidation::V2::Client).to receive(:token_valid?).and_return(true)
@@ -532,11 +531,8 @@ RSpec.describe 'Claims', type: :request do
               .to receive(:get_auth_token).and_return('0h_y34h')
           end
 
-          after do
-            Flipper.disable :claims_status_v2_lh_benefits_docs_service_enabled
-          end
-
           it 'returns successful' do
+            Flipper.enable :claims_status_v2_lh_benefits_docs_service_enabled
             get claim_show_route, headers: { 'Authorization' => 'Bearer token' }
 
             json_response = JSON.parse(response.body)
@@ -547,6 +543,7 @@ RSpec.describe 'Claims', type: :request do
             expect(claim_attributes['claimPhaseDates']['previousPhases']).to be_truthy
             supp_docs = claim_attributes['supportingDocuments']
             expect(supp_docs.first['documentId']).to eq('6A40E389-EB12-473C-8C23-D1D6C996C544')
+            Flipper.disable :claims_status_v2_lh_benefits_docs_service_enabled
           end
         end
       end
