@@ -211,8 +211,6 @@ describe 'Claims',
             with_okta_user(scopes) do
               VCR.use_cassette('bgs/tracked_item_service/claims_v2_show_tracked_items') do
                 VCR.use_cassette('evss/documents/get_claim_documents') do
-                  puts 'CHECKING FLIPPER FEATURE'
-                  puts Flipper.enabled? :claims_status_v2_lh_benefits_docs_service_enabled
                   bgs_response[:benefit_claim_details_dto][:ptcpnt_vet_id] = target_veteran.participant_id
                   expect_any_instance_of(bcs)
                     .to receive(:find_benefit_claim_details_by_benefit_claim_id).and_return(bgs_response)
