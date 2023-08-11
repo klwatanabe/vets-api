@@ -519,6 +519,7 @@ RSpec.describe 'Claims', type: :request do
 
       describe 'uses CCG and Benefits Documents', vcr: 'claims_api/v2/claims_show' do
         let(:claim_show_route) { '/services/claims/v2/veterans/1012667169V030190/claims/600397218' }
+
         context 'with flipper enabled' do
           before do
             Flipper.enable :claims_status_v2_lh_benefits_docs_service_enabled
