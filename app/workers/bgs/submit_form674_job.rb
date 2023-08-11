@@ -12,10 +12,8 @@ module BGS
     sidekiq_options retry: false
 
     def perform(user_uuid, icn, saved_claim_id, vet_info, va_profile_email, email, first_name, ssn, participant_id, common_name)
-      #user = User.find(user_uuid)
-      user_account = UserAccount.find_by(icn:)
       Rails.logger.info('BGS::SubmitForm674Job running!', { saved_claim_id:, icn:  })
-      in_progress_form = InProgressForm.find_by(form_id: FORM_ID, user_account_id: user_account&.icn)
+      in_progress_form = InProgressForm.find_by(form_id: FORM_ID, user_uuid:)
       in_progress_copy = in_progress_form_copy(in_progress_form)
       claim_data = valid_claim_data(saved_claim_id, vet_info)
       normalize_names_and_addresses!(claim_data)

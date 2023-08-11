@@ -21,15 +21,15 @@ RSpec.describe BGS::SubmitForm674Job, type: :job do
 
   it 'calls #submit for 674 submission' do
     client_stub = instance_double('BGS::Form674')
-    allow(BGS::Form674).to receive(:new).with(an_instance_of(User)) { client_stub }
+    allow(BGS::Form674).to receive(:new).with(an_instance_of(OpenStruct)) { client_stub }
     expect(client_stub).to receive(:submit).once
 
-    described_class.new.perform(user.uuid, dependency_claim.id, vet_info)
+    described_class.new.perform(user.uuid, user.icn, dependency_claim.id, vet_info, user.va_profile_email, user.email, user.first_name, user.ssn, user.participant_id, user.common_name)
   end
 
   it 'sends confirmation email' do
     client_stub = instance_double('BGS::Form674')
-    allow(BGS::Form674).to receive(:new).with(an_instance_of(User)) { client_stub }
+    allow(BGS::Form674).to receive(:new).with(an_instance_of(OpenStruct)) { client_stub }
     expect(client_stub).to receive(:submit).once
 
     expect(VANotify::EmailJob).to receive(:perform_async).with(
@@ -41,7 +41,7 @@ RSpec.describe BGS::SubmitForm674Job, type: :job do
       }
     )
 
-    described_class.new.perform(user.uuid, dependency_claim.id, vet_info)
+    described_class.new.perform(user.uuid, user.icn, dependency_claim.id, vet_info, user.va_profile_email, user.email, user.first_name, user.ssn, user.participant_id, user.common_name)
   end
 
   context 'error' do
@@ -53,13 +53,13 @@ RSpec.describe BGS::SubmitForm674Job, type: :job do
       job = described_class.new
       client_stub = instance_double('BGS::Form674')
       mailer_double = double('Mail::Message')
-      allow(BGS::Form674).to receive(:new).with(an_instance_of(User)) { client_stub }
+      allow(BGS::Form674).to receive(:new).with(an_instance_of(OpenStruct)) { client_stub }
       expect(client_stub).to receive(:submit).and_raise(StandardError)
       allow(mailer_double).to receive(:deliver_now)
-      expect(DependentsApplicationFailureMailer).to receive(:build).with(an_instance_of(User)) { mailer_double }
+      expect(DependentsApplicationFailureMailer).to receive(:build).with(an_instance_of(OpenStruct)) { mailer_double }
       expect(job).to receive(:salvage_save_in_progress_form).with('686C-674', user.uuid, anything)
 
-      job.perform(user.uuid, dependency_claim.id, vet_info)
+      job.perform(user.uuid, user.icn, dependency_claim.id, vet_info, user.va_profile_email, user.email, user.first_name, user.ssn, user.participant_id, user.common_name)
     end
   end
 end
