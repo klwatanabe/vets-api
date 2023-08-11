@@ -24,12 +24,12 @@ module BGS
       claim = SavedClaim::DependencyClaim.find(saved_claim_id)
       BGS::SubmitForm674Job.perform_async(user_uuid, icn, saved_claim_id, vet_info) if claim.submittable_674?
 
-      send_confirmation_email(user_uuid, temp_user.va_profile_email, temp_user.first_name) 
+      send_confirmation_email(user_uuid, temp_user.va_profile_email, temp_user.first_name)
 
       in_progress_form&.destroy
-      Rails.logger.info('BGS::SubmitForm686cJob succeeded!', { user_uuid:, saved_claim_id:, icn:})
+      Rails.logger.info('BGS::SubmitForm686cJob succeeded!', { user_uuid:, saved_claim_id:, icn: })
     rescue => e
-      Rails.logger.error('BGS::SubmitForm686cJob failed!', { user_uuid:, saved_claim_id:, icn:, error: e.message }) # rubocop:disable Layout/LineLength
+      Rails.logger.error('BGS::SubmitForm686cJob failed!', { user_uuid:, saved_claim_id:, icn:, error: e.message })
       log_message_to_sentry(e, :error, {}, { team: 'vfs-ebenefits' })
       salvage_save_in_progress_form(FORM_ID, user_uuid, in_progress_copy)
       DependentsApplicationFailureMailer.build(temp_user).deliver_now if temp_user.present?

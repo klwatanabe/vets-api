@@ -12,7 +12,7 @@ module BGS
     sidekiq_options retry: false
 
     def perform(user_uuid, icn, saved_claim_id, vet_info)
-      Rails.logger.info('BGS::SubmitForm674Job running!', { saved_claim_id:, icn:  })
+      Rails.logger.info('BGS::SubmitForm674Job running!', { saved_claim_id:, icn: })
       in_progress_form = InProgressForm.find_by(form_id: FORM_ID, user_uuid:)
       in_progress_copy = in_progress_form_copy(in_progress_form)
       claim_data = valid_claim_data(saved_claim_id, vet_info)
@@ -24,7 +24,7 @@ module BGS
       in_progress_form&.destroy
       Rails.logger.info('BGS::SubmitForm674Job succeeded!', { user_uuid:, saved_claim_id:, icn: })
     rescue => e
-      Rails.logger.error('BGS::SubmitForm674Job failed!', { user_uuid:, saved_claim_id:, icn:, error: e.message }) # rubocop:disable Layout/LineLength
+      Rails.logger.error('BGS::SubmitForm674Job failed!', { user_uuid:, saved_claim_id:, icn:, error: e.message })
       log_message_to_sentry(e, :error, {}, { team: 'vfs-ebenefits' })
       salvage_save_in_progress_form(FORM_ID, user_uuid, in_progress_copy)
       DependentsApplicationFailureMailer.build(temp_user).deliver_now if temp_user.present?
@@ -53,8 +53,8 @@ module BGS
       )
     end
 
-    
     def generate_temp_user(vet_info)
+      
       OpenStruct.new(
         first_name: vet_info['full_name']['first'],
         ssn: vet_info['ssn'],

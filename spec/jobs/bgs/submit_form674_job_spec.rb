@@ -14,7 +14,7 @@ RSpec.describe BGS::SubmitForm674Job, type: :job do
           'first' => 'WESLEY', 'middle' => nil, 'last' => 'FORD'
         },
         'common_name' => user.common_name,
-        'participant_id' => "600061742",
+        'participant_id' => '600061742',
         'uuid' => user.uuid,
         'email' => user.email,
         'va_profile_email' => user.va_profile_email,
