@@ -594,7 +594,7 @@ module ClaimsApi
         end
 
         def benefits_documents_enabled?
-          @benefits_documents_enabled ||= Flipper.enabled? :claims_status_v2_lh_benefits_docs_service_enabled
+          Flipper.enabled? :claims_status_v2_lh_benefits_docs_service_enabled
         end
       end
     end
