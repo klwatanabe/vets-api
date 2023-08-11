@@ -11,20 +11,20 @@ module BGS
 
     sidekiq_options retry: false
 
-    def perform(user_uuid, icn, saved_claim_id, vet_info, va_profile_email, email, first_name, ssn, participant_id, common_name)
+    def perform(user_uuid, icn, saved_claim_id, vet_info)
       Rails.logger.info('BGS::SubmitForm686cJob running!', { saved_claim_id:, icn: })
       in_progress_form = InProgressForm.find_by(form_id: FORM_ID, user_uuid:)
       in_progress_copy = in_progress_form_copy(in_progress_form)
       claim_data = valid_claim_data(saved_claim_id, vet_info)
       normalize_names_and_addresses!(claim_data)
-      temp_user = generate_temp_user(first_name, ssn, email, va_profile_email, participant_id, icn, user_uuid, common_name)
+      temp_user = generate_temp_user(vet_info['veteran_information'])
       BGS::Form686c.new(temp_user).submit(claim_data)
 
       # If Form 686c job succeeds, then enqueue 674 job.
       claim = SavedClaim::DependencyClaim.find(saved_claim_id)
-      BGS::SubmitForm674Job.perform_async(user_uuid, icn, saved_claim_id, vet_info, va_profile_email, email, first_name, ssn, participant_id, common_name) if claim.submittable_674?
+      BGS::SubmitForm674Job.perform_async(user_uuid, icn, saved_claim_id, vet_info) if claim.submittable_674?
 
-      send_confirmation_email(user_uuid, va_profile_email, first_name) 
+      send_confirmation_email(user_uuid, temp_user.va_profile_email, temp_user.first_name) 
 
       in_progress_form&.destroy
       Rails.logger.info('BGS::SubmitForm686cJob succeeded!', { user_uuid:, saved_claim_id:, icn:})
@@ -58,16 +58,16 @@ module BGS
       )
     end
 
-    def generate_temp_user(first_name, ssn, email, va_profile_email, participant_id, icn, uuid, common_name)
+    def generate_temp_user(vet_info)
       OpenStruct.new(
-        first_name:,
-        ssn:,
-        email:,
-        va_profile_email:,
-        participant_id:,
-        icn:,
-        uuid:,
-        common_name:
+        first_name: vet_info['full_name']['first'],
+        ssn: vet_info['ssn'],
+        email: vet_info['email'],
+        va_profile_email: vet_info['va_profile_email'],
+        participant_id: vet_info['participant_id'],
+        icn: vet_info['icn'],
+        uuid: vet_info['uuid'],
+        common_name: vet_info['common_name']
       )
     end
   end
