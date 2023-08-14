@@ -1465,7 +1465,7 @@
                           "currentlyVAEmployee"
                         ],
                         "properties": {
-                          "currentlyVaEmployee": {
+                          "currentVaEmployee": {
                             "type": "boolean",
                             "description": "Flag if Veteran is VA Employee.",
                             "default": false
@@ -1580,15 +1580,15 @@
                             "properties": {
                               "beginDate": {
                                 "description": "Date in YYYY-MM-DD the Veteran changed address. Date must be in the future if change is temporary.",
-                                "pattern": "^$|^(\\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$",
+                                "pattern": "^$|^(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])-(\\d{4})$",
                                 "type": "string",
-                                "example": "2018-06-04"
+                                "example": "06-04-2018"
                               },
                               "endDate": {
                                 "description": "Date in YYYY-MM-DD the changed address expires, if change is temporary.",
                                 "type": "string",
-                                "pattern": "^$|^(\\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$",
-                                "example": "2018-06-04"
+                                "pattern": "^$|^(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])-(\\d{4})$",
+                                "example": "06-04-2018"
                               }
                             }
                           },
@@ -1804,7 +1804,7 @@
                                   "ASBESTOS",
                                   "MUSTARD_GAS",
                                   "RADIATION",
-                                  "SHAD",
+                                  "SHIPBOARD_HAZARD_AND_DEFENSE",
                                   "MILITARY_OCCUPATIONAL_SPECIALTY_RELATED",
                                   "CONTAMINATED_WATER_AT_CAMP_LEJEUNE",
                                   "OTHER"
@@ -2164,14 +2164,14 @@
                                 "activeDutyBeginDate": {
                                   "description": "Date Started Active Duty.",
                                   "type": "string",
-                                  "pattern": "^(\\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$",
-                                  "example": "1980-02-05"
+                                  "pattern": "^$|^(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])-(\\d{4})$",
+                                  "example": "02-05-1980"
                                 },
                                 "activeDutyEndDate": {
                                   "description": "Date Completed Active Duty.  If in the future, 'separationLocationCode' is required.",
                                   "type": "string",
-                                  "pattern": "^(\\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$",
-                                  "example": "1990-01-02"
+                                  "pattern": "^$|^(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])-(\\d{4})$",
+                                  "example": "01-02-1980"
                                 },
                                 "separationLocationCode": {
                                   "description": "Code for the facility the Veteran plans to separate from.  Required if 'servicePeriod.activeDutyEndDate' is in the future. [Code values available here.](https://github.com/department-of-veterans-affairs/vets-api/blob/master/modules/claims_api/lib/claims_api/separation_location_code_values.json)",
@@ -2211,14 +2211,14 @@
                                 "additionalProperties": false,
                                 "properties": {
                                   "beginDate": {
-                                    "pattern": "^$|^(\\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$",
+                                    "pattern": "^$|^(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])-(\\d{4})$",
                                     "type": "string",
-                                    "example": "2018-06-04"
+                                    "example": "06-04-2018"
                                   },
                                   "endDate": {
-                                    "pattern": "^$|^(\\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$",
+                                    "pattern": "^$|^(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])-(\\d{4})$",
                                     "type": "string",
-                                    "example": "2018-06-04"
+                                    "example": "06-04-2018"
                                   }
                                 }
                               },
@@ -2239,12 +2239,14 @@
                                   "anticipatedSeparationDate": {
                                     "description": "Anticipated date of separation. Date must be in the future.",
                                     "type": "string",
-                                    "pattern": "^$|^(\\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$"
+                                    "pattern": "^$|^(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])-(\\d{4})$",
+                                    "example": "06-04-2018"
                                   },
                                   "title10ActivationDate": {
                                     "description": "Date cannot be in the future and must be after the earliest servicePeriod.activeDutyBeginDate.",
                                     "type": "string",
-                                    "pattern": "^$|^(\\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$"
+                                    "pattern": "^$|^(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])-(\\d{4})$",
+                                    "example": "06-04-2018"
                                   }
                                 }
                               },
@@ -2554,7 +2556,7 @@
                               "mailingAddress"
                             ],
                             "properties": {
-                              "currentlyVaEmployee": {
+                              "currentVaEmployee": {
                                 "type": "boolean",
                                 "description": "Set to true if Veteran is a VA employee.",
                                 "default": false
@@ -2577,7 +2579,8 @@
                                   "agreeToEmailRelatedToClaim": {
                                     "type": "boolean",
                                     "description": "Agreement to email information relating to this claim.",
-                                    "example": true
+                                    "example": true,
+                                    "default": false
                                   }
                                 }
                               },
@@ -2670,16 +2673,16 @@
                                 "type": "object",
                                 "properties": {
                                   "beginDate": {
-                                    "description": "Date in YYYY-MM-DD the Veteran changed address. Date must be in the future if change is temporary.",
-                                    "pattern": "^$|^(\\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$",
+                                    "description": "Date in MM-DD-YYYY the Veteran changed address. Date must be in the future if change is temporary.",
+                                    "pattern": "^$|^(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])-(\\d{4})$",
                                     "type": "string",
-                                    "example": "2018-06-04"
+                                    "example": "06-04-2018"
                                   },
                                   "endDate": {
-                                    "description": "Date in YYYY-MM-DD the changed address expires, if change is temporary.",
+                                    "description": "Date in MM-DD-YYYY the changed address expires, if change is temporary.",
                                     "type": "string",
-                                    "pattern": "^$|^(\\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$",
-                                    "example": "2018-06-04"
+                                    "pattern": "^$|^(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])-(\\d{4})$",
+                                    "example": "06-04-2018"
                                   }
                                 }
                               },
@@ -2822,7 +2825,7 @@
                                   "servedInGulfWarHazardLocations": {
                                     "type": "boolean",
                                     "description": "Did the Veteran serve in any of the following Gulf War hazard locations? Iraq; Kuwait; Saudi Arabia; the neutral zone between Iraq and Saudi Arabia; Bahrain; Qatar; the United Arab Emirates; Oman; Yemen; Lebanon; Somalia; Afghanistan; Israel; Egypt; Turkey; Syria; Jordan; Djibouti; Uzbekistan; the Gulf of Aden; the Gulf of Oman; the Persian Gulf; the Arabian Sea; and the Red Sea.",
-                                    "example": true
+                                    "example": "YES"
                                   },
                                   "serviceDates": {
                                     "type": "object",
@@ -2850,7 +2853,8 @@
                                 "properties": {
                                   "servedInHerbicideHazardLocations": {
                                     "type": "boolean",
-                                    "description": "Did the Veteran serve in any of the following Herbicide (e.g., Agent Orange) locations? These locations include: Republic of Vietnam to include the 12 nautical mile territorial waters; Thailand at any United States or Royal Thai base; Laos; Cambodia at Mimot or Krek; Kampong Cham Province; Guam or American Samoa; or in the territorial waters thereof; Johnston Atoll or a ship that called at Johnston Atoll; Korean demilitarized zone; aboard (to include repeated operations and maintenance with) a C-123 aircraft known to have been used to spray an herbicide agent (during service in the Air Force and Air Force Reserves)."
+                                    "description": "Did the Veteran serve in any of the following Herbicide (e.g., Agent Orange) locations? These locations include: Republic of Vietnam to include the 12 nautical mile territorial waters; Thailand at any United States or Royal Thai base; Laos; Cambodia at Mimot or Krek; Kampong Cham Province; Guam or American Samoa; or in the territorial waters thereof; Johnston Atoll or a ship that called at Johnston Atoll; Korean demilitarized zone; aboard (to include repeated operations and maintenance with) a C-123 aircraft known to have been used to spray an herbicide agent (during service in the Air Force and Air Force Reserves).",
+                                    "example": "YES"
                                   },
                                   "otherLocationsServed": {
                                     "type": "string",
@@ -2891,7 +2895,7 @@
                                         "ASBESTOS",
                                         "MUSTARD_GAS",
                                         "RADIATION",
-                                        "SHAD",
+                                        "SHIPBOARD_HAZARD_AND_DEFENSE",
                                         "MILITARY_OCCUPATIONAL_SPECIALTY_RELATED",
                                         "CONTAMINATED_WATER_AT_CAMP_LEJEUNE",
                                         "OTHER"
@@ -3065,7 +3069,8 @@
                                 "isRelatedToToxicExposure": {
                                   "type": "boolean",
                                   "description": "Is the disability related to toxic exposures? If so, include exposure information.",
-                                  "example": true
+                                  "example": true,
+                                  "default": false
                                 },
                                 "exposureOrEventOrInjury": {
                                   "type": "string",
@@ -3251,14 +3256,14 @@
                                     "activeDutyBeginDate": {
                                       "description": "Date Started Active Duty.",
                                       "type": "string",
-                                      "pattern": "^(\\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$",
-                                      "example": "1980-02-05"
+                                      "pattern": "^$|^(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])-(\\d{4})$",
+                                      "example": "02-05-1980"
                                     },
                                     "activeDutyEndDate": {
                                       "description": "Date Completed Active Duty.  If in the future, 'separationLocationCode' is required.",
                                       "type": "string",
-                                      "pattern": "^(\\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$",
-                                      "example": "1990-01-02"
+                                      "pattern": "^$|^(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])-(\\d{4})$",
+                                      "example": "01-02-1990"
                                     },
                                     "separationLocationCode": {
                                       "description": "Location code for the facility the Veteran plans to separate from. Required if 'servicePeriod.activeDutyEndDate' is in the future. Code must match the values returned by the /intake-sites endpoint on the [Benefits reference Data API](https://developer.va.gov/explore/benefits/docs/benefits_reference_data?version=current).",
@@ -3298,14 +3303,14 @@
                                     "additionalProperties": false,
                                     "properties": {
                                       "beginDate": {
-                                        "pattern": "^$|^(\\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$",
+                                        "pattern": "^$|^(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])-(\\d{4})$",
                                         "type": "string",
-                                        "example": "2018-06-04"
+                                        "example": "06-04-2018"
                                       },
                                       "endDate": {
-                                        "pattern": "^$|^(\\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$",
+                                        "pattern": "^$|^(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])-(\\d{4})$",
                                         "type": "string",
-                                        "example": "2018-06-04"
+                                        "example": "06-04-2018"
                                       }
                                     }
                                   },
@@ -3326,12 +3331,14 @@
                                       "anticipatedSeparationDate": {
                                         "description": "Anticipated date of separation. Date must be in the future.",
                                         "type": "string",
-                                        "pattern": "^$|^(\\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$"
+                                        "pattern": "^$|^(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])-(\\d{4})$",
+                                        "example": "06-04-2018"
                                       },
                                       "title10ActivationDate": {
                                         "description": "Date cannot be in the future and must be after the earliest servicePeriod.activeDutyBeginDate.",
                                         "type": "string",
-                                        "pattern": "^$|^(\\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$"
+                                        "pattern": "^$|^(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])-(\\d{4})$",
+                                        "example": "06-04-2018"
                                       }
                                     }
                                   },
@@ -3363,7 +3370,8 @@
                                     }
                                   },
                                   "receivingInactiveDutyTrainingPay": {
-                                    "type": "boolean"
+                                    "type": "boolean",
+                                    "example": "YES"
                                   }
                                 }
                               },
@@ -3385,7 +3393,7 @@
                               "servedInActiveCombatSince911": {
                                 "type": "boolean",
                                 "description": "Did Veteran serve in a combat zone since 9-11-2001?",
-                                "example": true
+                                "example": "YES"
                               }
                             }
                           },
@@ -3396,23 +3404,24 @@
                               "favorTrainingPay": {
                                 "description": "Is the Veteran waiving VA benefits to retain training pay? See item 28 on form 21-526EZ for more details. ",
                                 "type": "boolean",
-                                "example": true
+                                "example": true,
+                                "default": false
                               },
                               "favorMilitaryRetiredPay": {
                                 "description": "Is the Veteran waiving VA benefits to retain military retired pay? See item 26 on form 21-526EZ for more details.",
                                 "type": "boolean",
-                                "example": true
+                                "example": true,
+                                "default": false
                               },
                               "receivingMilitaryRetiredPay": {
                                 "description": "Is the Veteran receiving military retired pay?",
                                 "type": "boolean",
-                                "example": true
+                                "example": "YES"
                               },
                               "futureMilitaryRetiredPay": {
                                 "description": "Will the Veteran receive military retired pay pay in future? \n If true, then 'futurePayExplanation' is required.",
                                 "type": "boolean",
-                                "default": false,
-                                "example": false
+                                "example": "YES"
                               },
                               "futureMilitaryRetiredPayExplanation": {
                                 "description": "Explains why future pay will be received.",
@@ -3477,8 +3486,7 @@
                               "receivedSeparationOrSeverancePay": {
                                 "description": "Has the Veteran ever received separation pay, disability severance pay, or any other lump sum payment from their branch of service?",
                                 "type": "boolean",
-                                "example": true,
-                                "default": true
+                                "example": "YES"
                               },
                               "separationSeverancePay": {
                                 "type": "object",
@@ -3603,7 +3611,7 @@
                       "claimProcessType": "STANDARD_CLAIM_PROCESS",
                       "claimDate": "2020-12-18",
                       "veteranIdentification": {
-                        "currentlyVaEmployee": false,
+                        "currentVaEmployee": false,
                         "mailingAddress": {
                           "numberAndStreet": "1234 Couch Street",
                           "apartmentOrUnitNumber": "22",
@@ -3626,8 +3634,8 @@
                       },
                       "changeOfAddress": {
                         "dates": {
-                          "beginDate": "2013-11-29",
-                          "endDate": "2025-10-11"
+                          "beginDate": "11-29-2013",
+                          "endDate": "10-11-2025"
                         },
                         "typeOfAddressChange": "TEMPORARY",
                         "numberAndStreet": "10 Peach St",
@@ -3668,7 +3676,7 @@
                         "additionalHazardExposures": {
                           "additionalExposures": [
                             "ASBESTOS",
-                            "SHAD"
+                            "SHIPBOARD_HAZARD_AND_DEFENSE"
                           ],
                           "specifyOtherExposures": "Other exposure details",
                           "exposureDates": {
@@ -3755,8 +3763,8 @@
                         "servicePeriods": [
                           {
                             "serviceBranch": "Public Health Service",
-                            "activeDutyBeginDate": "2015-11-14",
-                            "activeDutyEndDate": "2018-11-30",
+                            "activeDutyBeginDate": "11-14-2015",
+                            "activeDutyEndDate": "11-30-2018",
                             "serviceComponent": "Active",
                             "separationLocationCode": "V01D"
                           }
@@ -3773,15 +3781,15 @@
                         ],
                         "reservesNationalGuardService": {
                           "obligationTermsOfService": {
-                            "beginDate": "2016-11-24",
-                            "endDate": "2017-11-17"
+                            "beginDate": "11-24-2016",
+                            "endDate": "11-17-2017"
                           },
                           "unitName": "National Guard Unit Name",
                           "unitAddress": "1243 pine court",
                           "component": "National Guard",
                           "title10Activation": {
-                            "anticipatedSeparationDate": "2025-10-03",
-                            "title10ActivationDate": "2018-02-11"
+                            "anticipatedSeparationDate": "10-03-2025",
+                            "title10ActivationDate": "02-11-2018"
                           },
                           "unitPhone": {
                             "areaCode": "555",
@@ -3943,6 +3951,55 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/veterans/{veteranId}/526/{id}/getPDF": {
+      "get": {
+        "summary": "Returns filled out 526EZ form as PDF",
+        "tags": [
+          "Disability"
+        ],
+        "operationId": "get526Pdf",
+        "security": [
+          {
+            "productionOauth": [
+              "system/claim.read",
+              "system/claim.write"
+            ]
+          },
+          {
+            "sandboxOauth": [
+              "system/claim.read",
+              "system/claim.write"
+            ]
+          },
+          {
+            "bearer_token": [
+
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "name": "veteranId",
+            "in": "path",
+            "required": true,
+            "example": "1012667145V762142",
+            "description": "ID of Veteran",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "description": "Returns a filled out 526EZ form for a disability compensation claim (21-526EZ).\n\nThis endpoint can be used to generate the PDF based on the request data in the case that the submission was not able to be successfully auto-established. The PDF can then be uploaded via the [Benefits Intake API](https://developer.va.gov/explore/api/benefits-intake) to digitally submit directly to the Veterans Benefits Administration's (VBA) claims intake process.\n",
+        "responses": {
+          "200": {
+            "description": "upload response"
+          },
+          "401": {
+            "description": "Unauthorized"
           }
         }
       }
@@ -4459,8 +4516,8 @@
                     "id": "1",
                     "type": "intent_to_file",
                     "attributes": {
-                      "creationDate": "2023-07-14",
-                      "expirationDate": "2024-07-14",
+                      "creationDate": "2023-08-08",
+                      "expirationDate": "2024-08-08",
                       "type": "compensation",
                       "status": "active"
                     }

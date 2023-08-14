@@ -115,6 +115,7 @@ Rails.application.routes.draw do
         get(:healthcheck)
         get(:enrollment_status)
         get(:rating_info)
+        post(:download_pdf)
       end
     end
 
@@ -142,6 +143,7 @@ Rails.application.routes.draw do
 
     resources :benefits_claims, only: %i[index show] do
       post :submit5103, on: :member
+      post 'benefits_documents', to: 'benefits_documents#create'
     end
 
     get 'claim_letters', to: 'claim_letters#index'
