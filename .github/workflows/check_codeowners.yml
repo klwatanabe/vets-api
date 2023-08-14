@@ -1,7 +1,9 @@
-name: Check CODEOWNERS Entry
+name: Check CODEOWNERS Entries
 
 on:
   push:
+    branches:
+      - lhattamer-codeowners-entry-gha # temp for testing
     paths:
       - '**'
     paths-ignore:
@@ -16,5 +18,8 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v2
 
-    - name: Check CODEOWNERS Entry
+    - name: Check CODEOWNERS exists for new/updates files
       run: .github/scripts/check_codeowners.sh
+
+    - name: Check CODEOWNERS for removal when files deleted
+      run: .github/scripts/check_deleted_files.sh
