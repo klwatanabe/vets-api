@@ -1,0 +1,20 @@
+name: Check CODEOWNERS Entry
+
+on:
+  push:
+    paths:
+      - '**'
+    paths-ignore:
+      - '.github/CODEOWNERS'
+      - '.github/workflows/**'
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Check CODEOWNERS Entry
+      run: .github/scripts/check_codeowners.sh
