@@ -18,17 +18,16 @@ module ClaimsApi
       pdf_mapper_service(claim.form_attributes, pdf_data, target_veteran).map_claim
 
       generate_526_pdf(pdf_data)
-      case
-      when pdf.empty?
+      if pdf.empty?
         ClaimsApi::Logger.log('dis_comp_pdf_generator', claim_id: auto_claim.id, detail: '526EZ PDF generator failed.')
-      when pdf
+      elsif pdf
         # docker = ClaimsApi::DockerContainer.perform_async
         # @uploader ||= ClaimsApi::SupportingDocumentUploader.new(id)
       end
     end
 
     private
-    
+
     def pdf_mapper_service(auto_claim, pdf_data, target_veteran)
       ClaimsApi::V2::DisabilityCompensationPdfMapper.new(auto_claim, pdf_data, target_veteran)
     end
@@ -38,7 +37,6 @@ module ClaimsApi
         data: {}
       }
     end
-
 
     def generate_526_pdf(pdf_data)
       pdf_data[:data] = pdf_data[:data][:attributes]

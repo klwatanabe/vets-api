@@ -30,13 +30,12 @@ module ClaimsApi
           )
           track_pact_counter auto_claim
 
-          pdf = ClaimsApi::DisabilityCompPdfGenerator.perform_async(auto_claim, target_veteran)
+          ClaimsApi::DisabilityCompPdfGenerator.perform_async(auto_claim, target_veteran)
 
           # move into evss docker worker
-            # shouldn't the pdf generator create a file??, I want to send it to the VBMS uploader
-            # ClaimsApi::DisabilityCompVBMSUploadJob.perform_async(auto_claim.id, pdf)
-            # capture evss_id
-
+          # shouldn't the pdf generator create a file??, I want to send it to the VBMS uploader
+          # ClaimsApi::DisabilityCompVBMSUploadJob.perform_async(auto_claim.id, pdf)
+          # capture evss_id
 
           get_benefits_documents_auth_token unless Rails.env.test?
 
