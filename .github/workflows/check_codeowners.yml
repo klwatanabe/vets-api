@@ -22,4 +22,6 @@ jobs:
     #   run: .github/scripts/check_codeowners.sh
 
     - name: Check CODEOWNERS for removal when files deleted
-      run: .github/scripts/check_deleted_files.sh
+      run: |
+        chmod +x .github/scripts/check_deleted_files.sh
+        .github/scripts/check_deleted_files.sh
