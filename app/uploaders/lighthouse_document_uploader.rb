@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+# [wipn8923] replaces app/uploaders/evss_claim_document_uploader.rb ?
 # Files that will be associated with a previously submitted claim, from the Claim Status tool
 class LighthouseDocumentUploader < LighthouseDocumentUploaderBase
   def initialize(icn, ids)

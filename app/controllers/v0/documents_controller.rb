@@ -10,6 +10,7 @@ module V0
       claim = EVSSClaim.for_user(current_user).find_by(evss_id: params[:evss_claim_id])
       raise Common::Exceptions::RecordNotFound, params[:evss_claim_id] unless claim
 
+      # [wipn8923] probably needs switching?
       document_data = EVSSClaimDocument.new(
         evss_claim_id: claim.evss_id,
         file_obj: params[:file],
@@ -28,6 +29,7 @@ module V0
     private
 
     def service
+      # [wipn8923] probably needs switching?
       EVSSClaimService.new(current_user)
     end
   end

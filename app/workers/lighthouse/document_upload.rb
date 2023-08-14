@@ -4,6 +4,7 @@ require 'ddtrace'
 require 'timeout'
 require 'lighthouse/benefits_documents/worker_service'
 
+# [wipn8923] replaces app/workers/evss/document_upload.rb ?
 class Lighthouse::DocumentUpload
   include Sidekiq::Worker
 
@@ -23,6 +24,7 @@ class Lighthouse::DocumentUpload
 
       raise Common::Exceptions::ValidationErrors, document_data unless document.valid?
 
+      # [wipn8923] references the worker service (client facotry?) but doesn't seem to replace anything
       client = BenefitsDocuments::WorkerService.new(user_icn)
       uploader = LighthouseDocumentUploader.new(user_icn, document.uploader_ids)
       uploader.retrieve_from_store!(document.file_name)

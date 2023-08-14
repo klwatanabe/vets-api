@@ -137,6 +137,7 @@ RSpec.describe 'Documents management', type: :request do
       params = { file: tempfile, tracked_item_id:, document_type: }
       post('/v0/evss_claims/189625/documents', params:)
       expect(response.status).to eq(202)
+      # [wipn8923] probably need to update specs like this
       expect(JSON.parse(response.body)['job_id']).to eq(EVSS::DocumentUpload.jobs.first['jid'])
     end
   end

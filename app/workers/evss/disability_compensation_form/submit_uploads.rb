@@ -26,6 +26,7 @@ module EVSS
         upload_data = upload_data.first if upload_data.is_a?(Array) # temporary for transition
         guid = upload_data&.dig('confirmationCode')
         with_tracking("Form526 Upload: #{guid}", submission.saved_claim_id, submission.id) do
+          # [wipn8923] update to use flipper
           sea = SupportingEvidenceAttachment.find_by(guid:)
           file_body = sea&.get_file&.read
 
@@ -34,11 +35,12 @@ module EVSS
           document_data = create_document_data(upload_data, sea.converted_filename)
           raise Common::Exceptions::ValidationErrors, document_data unless document_data.valid?
 
-          if Flipper.enabled?(:disability_compensation_lighthouse_document_service_provider)
-            # TODO: create client from lighthouse document service
-          else
-            client = EVSS::DocumentsService.new(submission.auth_headers)
-          end
+          # [wipn8923] flipper
+          client = if Flipper.enabled?(:disability_compensation_lighthouse_document_service_provider)
+                     BenefitsDocuments::Service.new(submission.auth_headers)
+                   else
+                     EVSS::DocumentsService.new(submission.auth_headers)
+                   end
           client.upload(file_body, document_data)
         end
       rescue => e
@@ -55,12 +57,21 @@ module EVSS
       end
 
       def create_document_data(upload_data, converted_filename)
-        EVSSClaimDocument.new(
-          evss_claim_id: submission.submitted_claim_id,
-          file_name: converted_filename || upload_data['name'],
-          tracked_item_id: nil,
-          document_type: upload_data['attachmentId']
-        )
+        if Flipper.enabled?(:disability_compensation_lighthouse_document_service_provider)
+          LighthouseDocument.new
+            file_number: submission.submitted_claim_id, # [wipn8923] is this correct?
+            file_name: converted_filename || upload_data['name'],,
+            tracked_item_id: nil,
+            document_type: upload_data[:attachmentId]
+          )
+        else
+          EVSSClaimDocument.new(
+            evss_claim_id: submission.submitted_claim_id,
+            file_name: converted_filename || upload_data['name'],
+            tracked_item_id: nil,
+            document_type: upload_data['attachmentId']
+          )
+        end
       end
     end
   end

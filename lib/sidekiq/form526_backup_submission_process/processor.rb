@@ -360,6 +360,7 @@ module Sidekiq
         uploads = submission.form[FORM_526_UPLOADS]
         uploads.each do |upload|
           guid = upload['confirmationCode']
+          # [wipn8923] update to use flipper (probably need new SupportingEvidenceAttachment for LH specific inheritance
           sea = SupportingEvidenceAttachment.find_by(guid:)
           file = sea&.get_file
           raise ArgumentError, "supporting evidence attachment with guid #{guid} has no file data" if file.nil?

@@ -4,6 +4,7 @@ require 'central_mail/datestamp_pdf'
 require 'pdf_fill/filler'
 require 'logging/third_party_transaction'
 
+# [wipn8923] renamespace?
 module EVSS
   module DisabilityCompensationForm
     class SubmitForm0781 < Job
@@ -140,12 +141,21 @@ module EVSS
       end
 
       def create_document_data(evss_claim_id, upload_data)
-        EVSSClaimDocument.new(
-          evss_claim_id:,
-          file_name: upload_data[:file_name],
-          tracked_item_id: nil,
-          document_type: upload_data[:doc_type]
-        )
+        if Flipper.enabled?(:disability_compensation_lighthouse_document_service_provider)
+          LighthouseDocument.new
+            file_number: evss_claim_id,
+            file_name: upload_data[:file_name],
+            tracked_item_id: nil,
+            document_type: upload_data[:doc_type]
+          )
+        else
+          EVSSClaimDocument.new(
+            evss_claim_id:,
+            file_name: upload_data[:file_name],
+            tracked_item_id: nil,
+            document_type: upload_data[:doc_type]
+          )
+        end
       end
 
       def upload_to_vbms(pdf_path, form_id)
@@ -167,8 +177,9 @@ module EVSS
       end
 
       def client
+        # [wipn8923] is this ever called when running the LH process??
         @client ||= if Flipper.enabled?(:disability_compensation_lighthouse_document_service_provider)
-                      # TODO: create client from lighthouse document service
+                      BenefitsDocuments::Service.new(submission.auth_headers)
                     else
                       EVSS::DocumentsService.new(submission.auth_headers)
                     end

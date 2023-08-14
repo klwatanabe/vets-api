@@ -4,6 +4,7 @@ require 'ddtrace'
 require 'timeout'
 require 'logging/third_party_transaction'
 
+# [wipn8923] verifigy that this is replaced by lighthouse object and wrap that object with logging
 class EVSS::DocumentUpload
   include Sidekiq::Worker
   extend Logging::ThirdPartyTransaction::MethodWrapper

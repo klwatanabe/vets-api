@@ -4,6 +4,7 @@ require 'common/client/base'
 require 'lighthouse/benefits_documents/configuration'
 require 'lighthouse/service_exception'
 
+# [wipn8923] this is the new document service that delegates to the Lighthouse stuff
 module BenefitsDocuments
   class Service < Common::Client::Base
     configuration BenefitsDocuments::Configuration

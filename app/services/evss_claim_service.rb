@@ -5,6 +5,7 @@ require 'evss/documents_service'
 require 'evss/auth_headers'
 
 # EVSS Claims Status Tool
+# [wipn8923] verify that this is replaced by LH object
 class EVSSClaimService
   include SentryLogging
   EVSS_CLAIM_KEYS = %w[open_claims historical_claims].freeze

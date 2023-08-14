@@ -3,6 +3,7 @@
 require 'central_mail/datestamp_pdf'
 require 'pdf_fill/filler'
 
+# [wipn8923] verify that this is replaced by LH object
 module EVSS
   module DisabilityCompensationForm
     # Base document class for the 526 ancillary forms

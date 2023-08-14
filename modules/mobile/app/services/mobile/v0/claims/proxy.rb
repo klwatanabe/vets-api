@@ -2,6 +2,7 @@
 
 require 'lighthouse/facilities/client'
 
+# [wipn8923] is this a valid use case?  if so, do we need to update or replace it?
 module Mobile
   module V0
     module Claims

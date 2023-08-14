@@ -21,6 +21,8 @@ module EVSS
 
       wrap_with_logging(
         :upload_bdd_instructions,
+        :new_evss_document,
+        :new_lighthouse_document,
         additional_class_logs: {
           action: 'Upload BDD Instructions to EVSS'
         },
@@ -60,7 +62,7 @@ module EVSS
 
       def client
         @client ||= if Flipper.enabled?(:disability_compensation_lighthouse_document_service_provider)
-                      # TODO: create client from lighthouse document service
+                      BenefitsDocuments::Service.new(submission.auth_headers)
                     else
                       EVSS::DocumentsService.new(submission.auth_headers)
                     end
@@ -72,7 +74,24 @@ module EVSS
       end
 
       def document_data
-        @document_data ||= EVSSClaimDocument.new(
+        @document_data ||= if Flipper.enabled?(:disability_compensation_lighthouse_document_service_provider)
+          new_lighthouse_document
+        else
+          new_evss_document
+        end
+      end
+
+      def new_lighthouse_document
+        LighthouseDocument.new
+          file_number: submission.submitted_claim_id, # [wipn8923] is this correct?
+          file_name: 'BDD_Instructions.pdf',
+          tracked_item_id: nil,
+          document_type: 'L023'
+        )
+      end
+
+      def new_evss_document
+        EVSSClaimDocument.new(
           evss_claim_id: submission.submitted_claim_id,
           file_name: 'BDD_Instructions.pdf',
           tracked_item_id: nil,

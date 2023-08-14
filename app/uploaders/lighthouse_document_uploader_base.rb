@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+# [wipn8923] replaces app/uploaders/evss_claim_document_uploader_base.r ?
 class LighthouseDocumentUploaderBase < CarrierWave::Uploader::Base
   include SetAWSConfig
   include ValidatePdf
@@ -34,6 +35,7 @@ class LighthouseDocumentUploaderBase < CarrierWave::Uploader::Base
     50.megabytes
   end
 
+  # [wipn8923] is this accurate?
   # Lighthouse will split PDF's larger than 50mb before sending to VBA who has a limit of 50mb. so,
   # PDF's can be larger than other files
   def validate_file_size(file)

@@ -3,6 +3,8 @@
 # Files uploaded as part of a form526 submission that will be sent to EVSS upon form submission.
 # inherits from ApplicationRecord
 class SupportingEvidenceAttachment < FormAttachment
+  # [wipn8923] this is problematic... SupportingEvidenceAttachmentUploader inherits from EVSS logic, so this will
+  # need to respect the flipper, however, we don't have access to the flipper at this level
   ATTACHMENT_UPLOADER_CLASS = SupportingEvidenceAttachmentUploader
 
   # this uploads the file to S3 through its parent class

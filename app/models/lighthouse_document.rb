@@ -3,11 +3,13 @@
 require 'common/models/base'
 require 'pdf_info'
 
+# [wipn8923] replaces evss_claim_document.rb ?
 class LighthouseDocument < Common::Base
   include ActiveModel::Validations
   include ActiveModel::Validations::Callbacks
   include SentryLogging
 
+  # [wipn8923] TODO: is file_number the equivalent value of evss_claim_id?
   attribute :file_number, String
   attribute :claim_id, Integer
   attribute :tracked_item_id, Integer

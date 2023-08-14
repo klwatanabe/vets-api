@@ -78,7 +78,7 @@ module EVSS
 
       def client
         @client ||= if Flipper.enabled?(:disability_compensation_lighthouse_document_service_provider)
-                      # TODO: create client from lighthouse document service
+                      BenefitsDocuments::Service.new(submission.auth_headers)
                     else
                       EVSS::DocumentsService.new(submission.auth_headers)
                     end
