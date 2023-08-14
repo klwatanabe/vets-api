@@ -29,10 +29,15 @@ module ClaimsApi
             veteran_icn: target_veteran.mpi.icn
           )
           track_pact_counter auto_claim
-          pdf_data = get_pdf_data
-          pdf_mapper_service(form_attributes, pdf_data, target_veteran).map_claim
 
-          generate_526_pdf(pdf_data)
+          pdf = ClaimsApi::DisabilityCompPdfGenerator.perform_async(auto_claim, target_veteran)
+
+          # move into evss docker worker
+            # shouldn't the pdf generator create a file??, I want to send it to the VBMS uploader
+            # ClaimsApi::DisabilityCompVBMSUploadJob.perform_async(auto_claim.id, pdf)
+            # capture evss_id
+
+
           get_benefits_documents_auth_token unless Rails.env.test?
 
           render json: auto_claim
@@ -66,16 +71,6 @@ module ClaimsApi
           }
         end
 
-        def generate_526_pdf(pdf_data)
-          pdf_data[:data] = pdf_data[:data][:attributes]
-          client = PDFClient.new(pdf_data.to_json)
-          client.generate_pdf
-        end
-
-        def pdf_mapper_service(auto_claim, pdf_data, target_veteran)
-          ClaimsApi::V2::DisabilityCompensationPdfMapper.new(auto_claim, pdf_data, target_veteran)
-        end
-
         def evss_mapper_service(auto_claim)
           ClaimsApi::V2::DisabilityCompensationEvssMapper.new(auto_claim)
         end
@@ -90,12 +85,6 @@ module ClaimsApi
 
           ClaimsApi::ClaimSubmission.create claim:, claim_type: 'PACT',
                                             consumer_label: token.payload['label'] || token.payload['cid']
-        end
-
-        def get_pdf_data
-          {
-            data: {}
-          }
         end
 
         def benefits_doc_api
