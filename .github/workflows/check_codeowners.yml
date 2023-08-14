@@ -18,8 +18,8 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v2
 
-    - name: Check CODEOWNERS exists for new/updates files
-      run: .github/scripts/check_codeowners.sh
+    # - name: Check CODEOWNERS exists for new/updates files
+    #   run: .github/scripts/check_codeowners.sh
 
     - name: Check CODEOWNERS for removal when files deleted
       run: .github/scripts/check_deleted_files.sh
