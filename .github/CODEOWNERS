@@ -5,9 +5,11 @@
 
 *       @department-of-veterans-affairs/backend-review-group @department-of-veterans-affairs/va-api-engineers
 
+# TEST for controllers
+app/controllers                       @department-of-veterans-affairs/backend-review-group
+
 # Explicitly require BE-Tools Review
 rakelib/prod/                         @department-of-veterans-affairs/vfs-vaos @department-of-veterans-affairs/backend-review-group
-app/test/                             @department-of-veterans-affairs/backend-review-group
 
 # Experiment for isolating VFS teams
 modules/vaos/                        @department-of-veterans-affairs/vfs-vaos @department-of-veterans-affairs/backend-review-group
