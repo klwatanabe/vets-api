@@ -3,7 +3,7 @@
 set -e
 
 # All newly added files in this PR
-CHANGED_FILES=CHANGED_FILES=$(git diff --name-only --diff-filter=A HEAD~1 HEAD)
+CHANGED_FILES=$(git diff --name-only --diff-filter=A HEAD~1 HEAD)
 
 check_in_codeowners() {
     local file="$1"
