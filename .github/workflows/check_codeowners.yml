@@ -5,7 +5,6 @@ on:
     branches:
       - lhattamer-codeowners-entry-gha # temp for testing
     paths-ignore:
-      - '.github/CODEOWNERS'
       - '.github/workflows/**'
 
 jobs:
