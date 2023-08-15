@@ -17,17 +17,17 @@ module BGS
       in_progress_copy = in_progress_form_copy(in_progress_form)
       claim_data = valid_claim_data(saved_claim_id, vet_info)
       normalize_names_and_addresses!(claim_data)
-      temp_user = generate_temp_user(vet_info['veteran_information'])
+      user_struct = generate_user_struct(vet_info['veteran_information'])
 
-      BGS::Form674.new(temp_user).submit(claim_data)
-      send_confirmation_email(user_uuid, temp_user.va_profile_email, temp_user.first_name)
+      BGS::Form674.new(user_struct).submit(claim_data)
+      send_confirmation_email(user_uuid, user_struct.va_profile_email, user_struct.first_name)
       in_progress_form&.destroy
       Rails.logger.info('BGS::SubmitForm674Job succeeded!', { user_uuid:, saved_claim_id:, icn: })
     rescue => e
       Rails.logger.error('BGS::SubmitForm674Job failed!', { user_uuid:, saved_claim_id:, icn:, error: e.message })
       log_message_to_sentry(e, :error, {}, { team: 'vfs-ebenefits' })
       salvage_save_in_progress_form(FORM_ID, user_uuid, in_progress_copy)
-      DependentsApplicationFailureMailer.build(temp_user).deliver_now if temp_user.present?
+      DependentsApplicationFailureMailer.build(user_struct).deliver_now if user_struct.present?
     end
 
     private
@@ -53,7 +53,7 @@ module BGS
       )
     end
 
-    def generate_temp_user(vet_info)
+    def generate_user_struct(vet_info)
       OpenStruct.new(
         first_name: vet_info['full_name']['first'],
         ssn: vet_info['ssn'],
