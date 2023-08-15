@@ -26,7 +26,7 @@ do
   # Check if the file or any of its parent directories are in CODEOWNERS
   if ! check_in_codeowners "$FILE"; then
     echo "Error: $FILE (or its parent directories) does not have a CODEOWNERS entry."
-    echo "::set-output name=offending_file::$FILE"
+    echo "offending_file=$FILE" >> $GITHUB_ENV
     exit 1
   fi
 done
