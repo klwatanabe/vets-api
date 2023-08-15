@@ -103,7 +103,6 @@ module ClaimsApi
         Faraday::Connection.new(ssl: { verify_mode: @ssl_verify_mode })
       end
       connection.options.timeout = @timeout
-
       wsdl = log_duration(event: 'connection_wsdl_get', endpoint:) do
         connection.get("#{Settings.bgs.url}/#{endpoint}?WSDL")
       end
@@ -252,6 +251,11 @@ module ClaimsApi
       return [] if claims.count < 1 || claims[:benefit_claims_dto].blank?
 
       transform_bgs_claims_to_evss(claims)
+    rescue TypeError => err
+      ClaimsApi::Logger.log('Claims API', detail: 'TypeError in Claims v1 index', exception: err,
+                            body: err.message << ' for response object ' << claims.to_s
+                            )
+      raise ::Common::Exceptions::ResourceNotFound.new(detail: 'Claims not found')
     end
     # END: switching v1 from evss to bgs. Delete after EVSS is no longer available. Fix controller first.
 
