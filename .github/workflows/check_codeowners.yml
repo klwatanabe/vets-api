@@ -18,6 +18,13 @@ jobs:
       with:
         fetch-depth: 2
 
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v1-node16
+      with:
+        aws-access-key-id: ${{ secrets.aws_access_key_id }}
+        aws-secret-access-key: ${{ secrets.aws_secret_access_key }}
+        aws-region: "us-gov-west-1"
+
     - name: Get GitHub Bot Token
       uses: marvinpinto/action-inject-ssm-secrets@v1.2.1
       with:
