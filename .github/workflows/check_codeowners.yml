@@ -1,9 +1,6 @@
 name: Check CODEOWNERS Entries
 
 on:
-  push:
-    branches:
-      - lhattamer-codeowners-entry-gha # temp for testing files
   pull_request:
     branches:
       - '*'
