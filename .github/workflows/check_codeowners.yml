@@ -3,7 +3,7 @@ name: Check CODEOWNERS Entries
 on:
   push:
     branches:
-      - lhattamer-codeowners-entry-gha # temp for testing
+      - lhattamer-codeowners-entry-gha # temp for testing files
 
 jobs:
   check:
