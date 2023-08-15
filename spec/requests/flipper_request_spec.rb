@@ -27,7 +27,7 @@ RSpec.describe 'Flipper UI' do
   end
   let(:user) { Warden::GitHub::User.new(default_attrs) }
 
-  github_oauth_message = 'User must authenticate with GitHub to edit feature toggles'
+  github_oauth_message = "If you'd like to modify feature toggles, please sign in with GitHub"
 
   before do
     allow_any_instance_of(Warden::Proxy).to receive(:authenticate!).and_return(user)
