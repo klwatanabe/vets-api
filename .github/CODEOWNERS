@@ -5,9 +5,6 @@
 
 *       @department-of-veterans-affairs/backend-review-group @department-of-veterans-affairs/va-api-engineers
 
-# TEST for bin directory removal
-bin/                      @department-of-veterans-affairs/backend-review-group
-
 # Explicitly require BE-Tools Review
 rakelib/prod/                         @department-of-veterans-affairs/vfs-vaos @department-of-veterans-affairs/backend-review-group
 
