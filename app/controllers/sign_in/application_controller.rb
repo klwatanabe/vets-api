@@ -4,6 +4,7 @@ module SignIn
   class ApplicationController < ActionController::API
     include SignIn::Authentication
     include SignIn::Instrumentation
+    include SignIn::Redirecting
     include Pundit::Authorization
     include ActionController::Cookies
     include ExceptionHandling
