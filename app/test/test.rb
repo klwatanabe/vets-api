@@ -1,1 +1,1 @@
-# Test file for testing GHA
+# Test file for testing GHA - CODEOWNERS
