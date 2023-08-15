@@ -2,24 +2,25 @@
 
 set -e
 
-# All newly added files in this PR (only new)
-CHANGED_FILES=$(git diff --name-only --diff-filter=A HEAD~1 HEAD)
+# All files that are added, copied, modified, renamed, or have their type changed in the latest push
+# This should cover scenarios where a file/directory is deleted and then re-added in another commit
+CHANGED_FILES=$(git diff --name-only --diff-filter=ACMRT HEAD~1 HEAD)
 
 check_in_codeowners() {
     local file="$1"
     while [[ "$file" != '.' && "$file" != '/' ]]; do
         # Check if the file or directory is in CODEOWNERS
-				echo "Checking CODEOWNERS for: $file"
+        echo "Checking CODEOWNERS for: $file"
         if grep -qE "^\s*${file}(/|\s+|\$)" .github/CODEOWNERS; then
             return 0
         fi
         # Move to the parent directory
-
-				echo "PARENT DIR: Checking CODEOWNERS for: $file"
+        echo "PARENT DIR: Checking CODEOWNERS for: $file"
         file=$(dirname "$file")
     done
     return 1
 }
+
 for FILE in $CHANGED_FILES
 do
   # Check if the file or any of its parent directories are in CODEOWNERS
