@@ -1,4 +1,4 @@
-# frozen_string_literal: true @ test commit
+# frozen_string_literal: true
 
 # Account's purpose is to correlate unique identifiers, and to
 # remove our dependency on third party services for a user's
