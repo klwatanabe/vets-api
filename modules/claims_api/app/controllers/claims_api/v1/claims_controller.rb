@@ -17,11 +17,7 @@ module ClaimsApi
         render json: claims,
                serializer: ActiveModel::Serializer::CollectionSerializer,
                each_serializer: ClaimsApi::ClaimListSerializer
-      rescue TypeError => err
-        ClaimsApi::Logger.log('Claims API', detail: 'TypeError in Claims v1 index', exception: err,
-                              body: err.message.merge({ request_header: }).merge(request.headers)
-                              )
-      rescue EVSS::ErrorMiddleware::EVSSError => e
+      rescue EVSS::ErrorMiddleware::EVSSError
         log_message_to_sentry('Error in claims v1',
                               :warning,
                               body: err.message)
