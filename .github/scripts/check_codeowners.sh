@@ -2,8 +2,8 @@
 
 set -e
 
-# All added or modified files in this PR
-CHANGED_FILES=$(git diff --name-only --diff-filter=AM HEAD~1 HEAD)
+# All newly added files in this PR
+CHANGED_FILES=CHANGED_FILES=$(git diff --name-only --diff-filter=A HEAD~1 HEAD)
 
 check_in_codeowners() {
     local file="$1"

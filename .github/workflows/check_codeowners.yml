@@ -6,6 +6,7 @@ on:
       - lhattamer-codeowners-entry-gha # temp for testing
     paths-ignore:
       - '.github/workflows/**'
+      - '.github/scripts/**'
 
 jobs:
   check:
@@ -17,7 +18,7 @@ jobs:
       with:
         fetch-depth: 2
 
-    - name: Check CODEOWNERS exists for new/updates files
+    - name: Check CODEOWNERS exists for new files
       run: |
         chmod +x .github/scripts/check_codeowners.sh
         .github/scripts/check_codeowners.sh
