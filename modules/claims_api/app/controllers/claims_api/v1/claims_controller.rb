@@ -17,10 +17,10 @@ module ClaimsApi
         render json: claims,
                serializer: ActiveModel::Serializer::CollectionSerializer,
                each_serializer: ClaimsApi::ClaimListSerializer
-      rescue EVSS::ErrorMiddleware::EVSSError
+      rescue EVSS::ErrorMiddleware::EVSSError => e
         log_message_to_sentry('Error in claims v1',
                               :warning,
-                              body: err.message)
+                              body: e.message)
         raise ::Common::Exceptions::ResourceNotFound.new(detail: 'Claims not found')
       end
 
