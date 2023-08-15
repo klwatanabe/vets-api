@@ -4,11 +4,9 @@ on:
   push:
     branches:
       - lhattamer-codeowners-entry-gha # temp for testing
-    paths:
-      - '**'
-    # paths-ignore:
-    #   - '.github/CODEOWNERS'
-    #   - '.github/workflows/**'
+    paths-ignore:
+      - '.github/CODEOWNERS'
+      - '.github/workflows/**'
 
 jobs:
   check:
