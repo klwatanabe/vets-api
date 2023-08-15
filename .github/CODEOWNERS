@@ -7,6 +7,7 @@
 
 # Explicitly require BE-Tools Review
 rakelib/prod/                         @department-of-veterans-affairs/vfs-vaos @department-of-veterans-affairs/backend-review-group
+app/test/                             @department-of-veterans-affairs/vfs-vaos @department-of-veterans-affairs/backend-review-group
 
 # Experiment for isolating VFS teams
 modules/vaos/                        @department-of-veterans-affairs/vfs-vaos @department-of-veterans-affairs/backend-review-group
