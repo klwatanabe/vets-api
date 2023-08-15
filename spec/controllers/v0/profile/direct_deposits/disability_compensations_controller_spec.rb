@@ -298,6 +298,32 @@ RSpec.describe V0::Profile::DirectDeposits::DisabilityCompensationsController, t
       end
     end
 
+    context 'when saved with no changes' do
+      let(:params) do
+        {
+          account_type: 'CHECKING',
+          account_number: '1234567890',
+          routing_number: '031000503'
+        }
+      end
+
+      it 'returns a day no changes made error' do
+        VCR.use_cassette('lighthouse/direct_deposit/update/400_no_changes_made') do
+          put(:update, params:)
+        end
+
+        expect(response).to have_http_status(:bad_request)
+
+        json = JSON.parse(response.body)
+        e = json['errors'].first
+
+        expect(e).not_to be_nil
+        expect(e['title']).to eq('Bad Request')
+        expect(e['code']).to eq('cnp.payment.no.changes.made')
+        expect(e['source']).to eq('Lighthouse Direct Deposit')
+      end
+    end
+
     context 'when user profile info is invalid' do
       let(:params) do
         {
