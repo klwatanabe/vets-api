@@ -299,9 +299,6 @@ module ClaimsApi
     end
 
     def transform_bgs_claims_to_evss(claims)
-      claims = { benefit_claims_dto: {
-        benefit_claim: [[]]  }
-      }
       claims[:benefit_claims_dto][:benefit_claim]&.map do |claim|
         bgs_claim = ClaimsApi::EvssBgsMapper.new(claim)
         bgs_claim.map_and_build_object

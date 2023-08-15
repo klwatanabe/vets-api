@@ -60,27 +60,4 @@ describe ClaimsApi::LocalBGS do
       end
     end
   end
-
-  # Testing unexpected return structure from BGS find_benefit_claims_status_by_ptcpnt_id
-  describe '#all' do
-    let(:subject_instance) { subject }
-    let(:id) { 12_343 }
-    let(:claims) do
-      { benefit_claims_dto: {
-          benefit_claim: [[]]
-        }
-      }
-    end
-
-    # Test
-    context 'when a hash with nested array structure is returned it hits rescue and response is 404' do
-      it 'returns a hash with nested array' do
-        # exception should trigger return
-        allow(subject_instance).to receive(:find_benefit_claims_status_by_ptcpnt_id).with(id).and_return(claims)
-        result = subject.all(id)
-        byebug
-        expect(result).to be_a Hash
-      end
-    end
-  end
 end
