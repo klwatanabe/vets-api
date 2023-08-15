@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - lhattamer-codeowners-entry-gha # temp for testing files
+  pull_request:
+    branches:
+      - '*'
 
 jobs:
   check:
@@ -15,12 +18,32 @@ jobs:
       with:
         fetch-depth: 2
 
+      - name: Get GitHub Bot Token
+        uses: marvinpinto/action-inject-ssm-secrets@v1.2.1
+        with:
+          ssm_parameter: /devops/VA_VSP_BOT_GITHUB_TOKEN
+          env_variable_name: VA_VSP_BOT_GITHUB_TOKEN
+
     - name: Check CODEOWNERS exists for new files
       run: |
         chmod +x .github/scripts/check_codeowners.sh
         .github/scripts/check_codeowners.sh
 
+    - name: Respond to PR if check CODEOWNERS exists for new files fails
+      if: ${{ failure() }}
+      uses: thollander/actions-comment-pull-request@dadb7667129e23f12ca3925c90dc5cd7121ab57e # v2.4.0
+      with:
+        message: 'Error: A file (or its parent directories) does not have a CODEOWNERS entry. See test failure details. Offending file: ${{ env.FILE }}'
+        GITHUB_TOKEN: ${{ env.VA_VSP_BOT_GITHUB_TOKEN }}
+
     - name: Check CODEOWNERS for removal when files deleted
       run: |
         chmod +x .github/scripts/check_deleted_files.sh
         .github/scripts/check_deleted_files.sh
+
+    - name: Respond to PR if check CODEOWNERS exists for new files fails
+      if: ${{ failure() }}
+      uses: thollander/actions-comment-pull-request@dadb7667129e23f12ca3925c90dc5cd7121ab57e # v2.4.0
+      with:
+        message: 'Error: A file (or its parent directories) was deleted but its reference still exists in CODEOWNERS. See test failure details. Offending file: ${{ env.FILE }}'
+        GITHUB_TOKEN: ${{ env.VA_VSP_BOT_GITHUB_TOKEN }}
