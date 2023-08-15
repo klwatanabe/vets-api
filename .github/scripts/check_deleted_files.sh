@@ -2,12 +2,8 @@
 
 set -e
 
-# Fetch the latest state of the remote repository
-git fetch origin
-
-# Compare the current state of the branch with the base branch (e.g., origin/master)
-# to get the list of deleted files.
-DELETED_FILES=$(git diff --name-only --diff-filter=D origin/master...HEAD)
+# Fetch all the deleted files
+DELETED_FILES=$(git diff --name-only --diff-filter=D HEAD~1 HEAD)
 
 # Check if a file's or its parent directory's reference is in CODEOWNERS
 file_in_codeowners() {
