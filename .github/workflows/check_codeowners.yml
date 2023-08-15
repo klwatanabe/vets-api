@@ -18,11 +18,11 @@ jobs:
       with:
         fetch-depth: 2
 
-      - name: Get GitHub Bot Token
-        uses: marvinpinto/action-inject-ssm-secrets@v1.2.1
-        with:
-          ssm_parameter: /devops/VA_VSP_BOT_GITHUB_TOKEN
-          env_variable_name: VA_VSP_BOT_GITHUB_TOKEN
+    - name: Get GitHub Bot Token
+      uses: marvinpinto/action-inject-ssm-secrets@v1.2.1
+      with:
+        ssm_parameter: /devops/VA_VSP_BOT_GITHUB_TOKEN
+        env_variable_name: VA_VSP_BOT_GITHUB_TOKEN
 
     - name: Check CODEOWNERS exists for new files
       run: |
