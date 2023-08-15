@@ -30,7 +30,7 @@ do
     else
       # The entire directory has been deleted, but its reference still exists in CODEOWNERS
       echo "Error: $FILE (or its parent directories) is deleted but its reference still exists in CODEOWNERS."
-      echo "::set-output name=offending_file::$FILE"
+      echo "offending_file=$FILE" >> $GITHUB_ENV
       exit 1
     fi
   fi
