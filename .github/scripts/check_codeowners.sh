@@ -9,10 +9,13 @@ check_in_codeowners() {
     local file="$1"
     while [[ "$file" != '.' && "$file" != '/' ]]; do
         # Check if the file or directory is in CODEOWNERS
+				echo "Checking CODEOWNERS for: $file"
         if grep -qE "^\s*${file}(/|\s+|\$)" .github/CODEOWNERS; then
             return 0
         fi
         # Move to the parent directory
+
+				echo "PARENT DIR: Checking CODEOWNERS for: $file"
         file=$(dirname "$file")
     done
     return 1
