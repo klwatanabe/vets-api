@@ -1,13 +1,20 @@
 <div>
-  <% if RequestStore.store[:flipper_user_email_for_log].blank? && !Rails.env.development? %>
+  <% if RequestStore.store[:flipper_user_email_for_log].blank? %>
+  <%# <% if RequestStore.store[:flipper_user_email_for_log].blank? && !Rails.env.development? %> %>
     <p>If you'd like to modify feature toggles, please sign in with GitHub.</p>
     <form action=<%="/flipper/features/#{@feature.key}"%> method="post" class="usa-form">
       <button type="submit" style="background-color:black; width:auto; margin-top:0">
         <img style="height:25px; margin-right:20px" src="<%= "#{request.base_url}/images/github-mark-white.png" %>" alt="gh-logo">Sign in to GitHub
       </button>
     </form>
-  <% elsif !RequestStore.store[:flipper_authorized] && !Rails.env.development? %>
+  <% elsif !RequestStore.store[:flipper_authorized] %>
+  <%# <% elsif !RequestStore.store[:flipper_authorized] && !Rails.env.development? %> %>
     <p>You are not authorized to perform any actions. Please see <a href="https://depo-platform-documentation.scrollhelp.site/developer-docs/feature-toggles" target="_blank">Platform Documentation</a> for more information.</p>
+    <form action="/flipper/features/logout"  class="usa-form">
+      <button type="submit" style="background-color:black; width:auto; margin-top:0">
+        <img style="height:20px; margin-right:20px" src="<%= "#{request.base_url}/images/github-mark-white.png" %>" alt="gh-logo">Sign out
+      </button>
+    </form>  
   <% else %>
     <% actor_type = FLIPPER_FEATURE_CONFIG['features'].dig(feature_name, 'actor_type')%>
     <% actor_name = actor_type == FLIPPER_ACTOR_STRING ? 'FLIPPER_ID cookie' : 'Logged in Users'  %>
@@ -209,6 +216,12 @@
           </div>
         </div>
       </div>
+
+      <form action="/flipper/features/logout"  class="usa-form" style="float:right">
+        <button type="submit" style="background-color:black; width:auto; margin:8px">
+          <img style="height:20px; margin-right:20px" src="<%= "#{request.base_url}/images/github-mark-white.png" %>" alt="gh-logo">Sign out
+        </button>
+      </form>
     </div>
   <% end %>
 </div>

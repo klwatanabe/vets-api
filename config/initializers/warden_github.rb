@@ -9,9 +9,11 @@ module WardenGithubStrategyExtensions
       success!(session[:coverband_user])
       redirect!(request.url)
     elsif scope == :flipper && session[:flipper_user].present?
+      require 'pry'; binding.pry;
       success!(session[:flipper_user])
       redirect!(request.url)
     else
+      # require 'pry'; binding.pry;
       super
     end
   end
@@ -20,6 +22,10 @@ module WardenGithubStrategyExtensions
     session[:sidekiq_user] = load_user if scope == :sidekiq
     session[:coverband_user] = load_user if scope == :coverband
     session[:flipper_user] = load_user if scope == :flipper
+    super
+  end
+
+  def teardown_flow
     super
   end
 end
