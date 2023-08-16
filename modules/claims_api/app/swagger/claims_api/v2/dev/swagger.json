@@ -2521,6 +2521,7 @@
                     "properties": {
                       "attributes": {
                         "type": "object",
+                        "additionalProperties": false,
                         "required": [
                           "veteranIdentification",
                           "serviceInformation",
@@ -2559,7 +2560,8 @@
                               "currentVaEmployee": {
                                 "type": "boolean",
                                 "description": "Set to true if Veteran is a VA employee.",
-                                "default": false
+                                "default": false,
+                                "nullable": false
                               },
                               "serviceNumber": {
                                 "type": "string",
@@ -2580,7 +2582,8 @@
                                     "type": "boolean",
                                     "description": "Agreement to email information relating to this claim.",
                                     "example": true,
-                                    "default": false
+                                    "default": false,
+                                    "nullable": false
                                   }
                                 }
                               },
@@ -2591,8 +2594,7 @@
                                   "telephone": {
                                     "type": "string",
                                     "pattern": "^\\d{10}?$",
-                                    "description": "Veteran's phone number.",
-                                    "maxLength": 10
+                                    "description": "Veteran's phone number."
                                   },
                                   "internationalTelephone": {
                                     "type": "string",
@@ -2711,7 +2713,7 @@
                               "city": {
                                 "description": "City for the Veteran's new address.",
                                 "type": "string",
-                                "pattern": "^$|^([-a-zA-Z0-9'.,&#]([-a-zA-Z0-9'.,&# ])?)+$",
+                                "pattern": "^$|^([-a-zA-Z0-9'.#]([-a-zA-Z0-9'.# ])?)+$",
                                 "example": "Portland"
                               },
                               "country": {
@@ -2752,17 +2754,21 @@
                                 "example": "Jane Doe"
                               },
                               "pointOfContactNumber": {
+                                "type": "object",
+                                "additionalProperties": false,
                                 "properties": {
                                   "telephone": {
                                     "description": "Primary phone of Point of Contact.",
                                     "type": "string",
-                                    "example": "5555555555",
+                                    "pattern": "^\\d{10}?$",
+                                    "example": "5555555",
                                     "maxLength": 10
                                   },
                                   "internationalTelephone": {
                                     "description": "international phone of Point of Contact.",
                                     "type": "string",
-                                    "example": "5555555555",
+                                    "pattern": "^\\d{10}?$",
+                                    "example": "5555555",
                                     "maxLength": 10
                                   }
                                 }
@@ -2798,7 +2804,7 @@
                                 "properties": {
                                   "livingSituationOptions": {
                                     "type": "string",
-                                    "default": "OTHER",
+                                    "default": "HOUSING_WILL_BE_LOST_IN_30_DAYS",
                                     "enum": [
                                       "HOUSING_WILL_BE_LOST_IN_30_DAYS",
                                       "LEAVING_PUBLICLY_FUNDED_SYSTEM_OF_CARE",
@@ -2809,7 +2815,7 @@
                                     "description": "For a 'livingSituationOptions' of value 'other', please provide additional comments on the living situation.",
                                     "type": "string",
                                     "maxLength": 500,
-                                    "example": "OTHER"
+                                    "example": "other living situation"
                                   }
                                 }
                               }
@@ -2823,9 +2829,14 @@
                                 "description": "Toxic exposure related to the Gulf war.",
                                 "properties": {
                                   "servedInGulfWarHazardLocations": {
-                                    "type": "boolean",
+                                    "type": "string",
                                     "description": "Did the Veteran serve in any of the following Gulf War hazard locations? Iraq; Kuwait; Saudi Arabia; the neutral zone between Iraq and Saudi Arabia; Bahrain; Qatar; the United Arab Emirates; Oman; Yemen; Lebanon; Somalia; Afghanistan; Israel; Egypt; Turkey; Syria; Jordan; Djibouti; Uzbekistan; the Gulf of Aden; the Gulf of Oman; the Persian Gulf; the Arabian Sea; and the Red Sea.",
-                                    "example": "YES"
+                                    "example": "YES",
+                                    "enum": [
+                                      "NO",
+                                      "YES"
+                                    ],
+                                    "nullable": true
                                   },
                                   "serviceDates": {
                                     "type": "object",
@@ -2852,12 +2863,18 @@
                                 "description": "Toxic exposure related to herbicide hazards.",
                                 "properties": {
                                   "servedInHerbicideHazardLocations": {
-                                    "type": "boolean",
+                                    "type": "string",
                                     "description": "Did the Veteran serve in any of the following Herbicide (e.g., Agent Orange) locations? These locations include: Republic of Vietnam to include the 12 nautical mile territorial waters; Thailand at any United States or Royal Thai base; Laos; Cambodia at Mimot or Krek; Kampong Cham Province; Guam or American Samoa; or in the territorial waters thereof; Johnston Atoll or a ship that called at Johnston Atoll; Korean demilitarized zone; aboard (to include repeated operations and maintenance with) a C-123 aircraft known to have been used to spray an herbicide agent (during service in the Air Force and Air Force Reserves).",
-                                    "example": "YES"
+                                    "example": "YES",
+                                    "enum": [
+                                      "NO",
+                                      "YES"
+                                    ],
+                                    "nullable": true
                                   },
                                   "otherLocationsServed": {
                                     "type": "string",
+                                    "pattern": "^([-a-zA-Z0-9'.,&#]([-a-zA-Z0-9'.,&# ])?)+$",
                                     "description": "Other location(s) where Veteran served."
                                   },
                                   "serviceDates": {
@@ -2896,7 +2913,7 @@
                                         "MUSTARD_GAS",
                                         "RADIATION",
                                         "SHIPBOARD_HAZARD_AND_DEFENSE",
-                                        "MILITARY_OCCUPATIONAL_SPECIALTY_RELATED",
+                                        "MILITARY_OCCUPATIONAL_SPECIALTY_RELATED_TOXIN",
                                         "CONTAMINATED_WATER_AT_CAMP_LEJEUNE",
                                         "OTHER"
                                       ]
@@ -2904,8 +2921,8 @@
                                   },
                                   "specifyOtherExposures": {
                                     "type": "string",
-                                    "description": "Other exposure details.",
-                                    "example": "Exposure to asbestos"
+                                    "pattern": "^([-a-zA-Z0-9'.,&#]([-a-zA-Z0-9'.,&# ])?)+$",
+                                    "description": "Exposure to asbestos."
                                   },
                                   "exposureDates": {
                                     "type": "object",
@@ -2951,11 +2968,13 @@
                                   },
                                   "exposureLocation": {
                                     "type": "string",
-                                    "description": ""
+                                    "pattern": "^([-a-zA-Z0-9'.,&#]([-a-zA-Z0-9'.,&# ])?)+$",
+                                    "description": "Other location(s) where Veteran served"
                                   },
                                   "hazardExposedTo": {
                                     "type": "string",
-                                    "description": ""
+                                    "pattern": "^([-a-zA-Z0-9'.,&#]([-a-zA-Z0-9'.,&# ])?)+$",
+                                    "description": "The hazard or event that created the exposure."
                                   }
                                 }
                               }
@@ -3007,7 +3026,7 @@
                                   "example": 9999
                                 },
                                 "disabilityActionType": {
-                                  "description": "The status of the current disability.  \n If value is \"INCREASE\", then \"ratedDisabilityId\" and \"diagnosticCode\" are required.",
+                                  "description": "Action type requested for the disability. If 'INCREASE', then 'ratedDisabilityId' and 'diagnosticCode' are required.  'NONE' should be used when including a secondary disability. If 'NONE', then 'diagnosticCode' is required.",
                                   "type": "string",
                                   "enum": [
                                     "NONE",
@@ -3018,7 +3037,7 @@
                                   "example": "NEW"
                                 },
                                 "secondaryDisabilities": {
-                                  "description": "Identifies the Secondary Service Disability information of the Veteran.",
+                                  "description": "If secondaryDisability is included, the following attributes are required:  'secondaryDisability.name', 'secondaryDisability.disabilityActionType' and 'secondaryDisability.serviceRelevance'",
                                   "type": "array",
                                   "uniqueItems": true,
                                   "items": {
@@ -3028,15 +3047,17 @@
                                       "name": {
                                         "description": "Name of the disability. The /disabilities endpoint on the Benefits Reference Data API may be used to retrieve possible disability names.",
                                         "type": "string",
-                                        "example": "PTSD (post traumatic stress disorder)"
+                                        "pattern": "^$|([a-zA-Z0-9\"\\/&\\(\\)\\-'.,# ]([a-zA-Z0-9(\\)\\-'.,# ])?)+$",
+                                        "example": "PTSD (post traumatic stress disorder)",
+                                        "maxLength": 255
                                       },
                                       "disabilityActionType": {
                                         "description": "The status of the secondary disability.",
                                         "type": "string",
+                                        "example": "SECONDARY",
                                         "enum": [
                                           "SECONDARY"
-                                        ],
-                                        "example": "SECONDARY"
+                                        ]
                                       },
                                       "serviceRelevance": {
                                         "description": "Explanation of how the disability(ies) relates to the in-service event/exposure/injury.",
@@ -3051,7 +3072,7 @@
                                       "approximateDate": {
                                         "description": "Approximate date disability began. \n Format can be either MM-DD-YYYY or MM-YYYY",
                                         "type": "string",
-                                        "pattern": "^(0[1-9]|1[0-2])(-(0[1-9]|[1-2][0-9]|3[0-1]))?-\\d{4}$|^(0[1-9]|1[0-2])-\\d{4}$",
+                                        "pattern": "^$|^((0[1-9]|1[0-2])(-(0[1-9]|[1-2][0-9]|3[0-1]))?-\\d{4}$|^(0[1-9]|1[0-2])-\\d{4})?$",
                                         "example": "03-12-2019 or 03-2019"
                                       },
                                       "exposureOrEventOrInjury": {
@@ -3068,9 +3089,10 @@
                                 },
                                 "isRelatedToToxicExposure": {
                                   "type": "boolean",
-                                  "description": "Is the disability related to toxic exposures? If so, include exposure information.",
+                                  "description": "Is the disability related to toxic exposures? If true, related 'toxicExposure' must be included.",
                                   "example": true,
-                                  "default": false
+                                  "default": false,
+                                  "nullable": false
                                 },
                                 "exposureOrEventOrInjury": {
                                   "type": "string",
@@ -3140,7 +3162,7 @@
                                   "example": "02-2018"
                                 },
                                 "treatedDisabilityNames": {
-                                  "description": "Name(s) of Disabilities treated in this time frame.",
+                                  "description": "Name(s) of disabilities treated in this time frame. Name must match 'name' of a disability included on this claim.",
                                   "type": "array",
                                   "maxItems": 101,
                                   "items": {
@@ -3275,7 +3297,7 @@
                               },
                               "confinements": {
                                 "type": "array",
-                                "description": "",
+                                "description": "If 'confinements' is included, the following attributes are required: 'approximateBeginDate',  'approximateEndDate'.",
                                 "uniqueItems": true,
                                 "items": {
                                   "additionalProperties": false,
@@ -3300,6 +3322,7 @@
                                 "properties": {
                                   "obligationTermsOfService": {
                                     "type": "object",
+                                    "description": "If 'obligationTermsOfService' is included, the following attributes are required: 'beginDate ' and 'endDate'.",
                                     "additionalProperties": false,
                                     "properties": {
                                       "beginDate": {
@@ -3324,7 +3347,7 @@
                                     ]
                                   },
                                   "title10Activation": {
-                                    "description": "Include if the Veteran is currently activated on federal orders within the National Guard or Reserves",
+                                    "description": "If 'title10Activation' is included, the following attributes are required: 'anticipatedSeparationDate' and 'title10ActivationDate'.",
                                     "type": "object",
                                     "additionalProperties": false,
                                     "properties": {
@@ -3344,8 +3367,7 @@
                                   },
                                   "unitName": {
                                     "type": "string",
-                                    "pattern": "^$|([a-zA-Z0-9\\-'.,# ][a-zA-Z0-9\\-'.,# ]?)*$",
-                                    "example": "National Guard Unit Name"
+                                    "pattern": "^$|([a-zA-Z0-9\\-'.,# ][a-zA-Z0-9\\-'.,# ]?)*$"
                                   },
                                   "unitAddress": {
                                     "type": "string",
@@ -3358,7 +3380,7 @@
                                       "areaCode": {
                                         "type": "string",
                                         "maxLength": 3,
-                                        "pattern": "^$|^\\d{3}?$",
+                                        "pattern": "^$|^\\d{3}$",
                                         "example": "555"
                                       },
                                       "phoneNumber": {
@@ -3370,7 +3392,12 @@
                                     }
                                   },
                                   "receivingInactiveDutyTrainingPay": {
-                                    "type": "boolean",
+                                    "type": "string",
+                                    "enum": [
+                                      "YES",
+                                      "NO"
+                                    ],
+                                    "nullable": true,
                                     "example": "YES"
                                   }
                                 }
@@ -3391,9 +3418,14 @@
                                 }
                               },
                               "servedInActiveCombatSince911": {
-                                "type": "boolean",
+                                "type": "string",
+                                "enum": [
+                                  "YES",
+                                  "NO"
+                                ],
                                 "description": "Did Veteran serve in a combat zone since 9-11-2001?",
-                                "example": "YES"
+                                "example": "YES",
+                                "nullable": true
                               }
                             }
                           },
@@ -3405,23 +3437,35 @@
                                 "description": "Is the Veteran waiving VA benefits to retain training pay? See item 28 on form 21-526EZ for more details. ",
                                 "type": "boolean",
                                 "example": true,
-                                "default": false
+                                "default": false,
+                                "nullable": false
                               },
                               "favorMilitaryRetiredPay": {
                                 "description": "Is the Veteran waiving VA benefits to retain military retired pay? See item 26 on form 21-526EZ for more details.",
                                 "type": "boolean",
                                 "example": true,
-                                "default": false
+                                "default": false,
+                                "nullable": false
                               },
                               "receivingMilitaryRetiredPay": {
                                 "description": "Is the Veteran receiving military retired pay?",
-                                "type": "boolean",
-                                "example": "YES"
+                                "type": "string",
+                                "enum": [
+                                  "YES",
+                                  "NO"
+                                ],
+                                "example": "YES",
+                                "nullable": true
                               },
                               "futureMilitaryRetiredPay": {
                                 "description": "Will the Veteran receive military retired pay pay in future? \n If true, then 'futurePayExplanation' is required.",
-                                "type": "boolean",
-                                "example": "YES"
+                                "type": "string",
+                                "enum": [
+                                  "YES",
+                                  "NO"
+                                ],
+                                "example": "YES",
+                                "nullable": true
                               },
                               "futureMilitaryRetiredPayExplanation": {
                                 "description": "Explains why future pay will be received.",
@@ -3480,13 +3524,17 @@
                                   "RETIRED",
                                   "TEMPORARY_DISABILITY_RETIRED_LIST",
                                   "PERMANENT_DISABILITY_RETIRED_LIST"
-                                ],
-                                "example": "PERMANENT_DISABILITY_RETIRED_LIST"
+                                ]
                               },
                               "receivedSeparationOrSeverancePay": {
                                 "description": "Has the Veteran ever received separation pay, disability severance pay, or any other lump sum payment from their branch of service?",
-                                "type": "boolean",
-                                "example": "YES"
+                                "type": "string",
+                                "enum": [
+                                  "YES",
+                                  "NO"
+                                ],
+                                "example": "YES",
+                                "nullable": true
                               },
                               "separationSeverancePay": {
                                 "type": "object",
@@ -3501,33 +3549,6 @@
                                   "branchOfService": {
                                     "description": "Branch of Service making payments.",
                                     "type": "string",
-                                    "enum": [
-                                      "Air Force",
-                                      "Air Force Reserves",
-                                      "Air National Guard",
-                                      "Army",
-                                      "Army National Guard",
-                                      "Army Reserves",
-                                      "Coast Guard",
-                                      "Coast Guard Reserves",
-                                      "Marine Corps",
-                                      "Marine Corps Reserves",
-                                      "National Oceanic &amp; Atmospheric Administration",
-                                      "National Oceanic & Atmospheric Administration",
-                                      "Navy",
-                                      "Navy Reserves",
-                                      "Public Health Service",
-                                      "Air Force Academy",
-                                      "Army Air Corps or Army Air Force",
-                                      "Army Nurse Corps",
-                                      "Coast Guard Academy",
-                                      "Merchant Marine",
-                                      "Naval Academy",
-                                      "Other",
-                                      "US Military Academy",
-                                      "Women's Army Corps",
-                                      "Space Force"
-                                    ],
                                     "example": "Air Force"
                                   },
                                   "preTaxAmountReceived": {
@@ -3544,18 +3565,15 @@
                           "directDeposit": {
                             "type": "object",
                             "additionalProperties": false,
+                            "description": "If direct deposit information is included, the following attributes are required: accountType, accountNumber, routingNumber, and financialInstitutionName.",
                             "properties": {
                               "accountType": {
                                 "description": "Account type for the direct deposit.",
                                 "type": "string",
-                                "enum": [
-                                  "CHECKING",
-                                  "SAVINGS"
-                                ],
                                 "example": "CHECKING",
                                 "properties": {
                                   "result": {
-                                    "anyOf": [
+                                    "oneOf": [
                                       {
                                         "type": "string",
                                         "enum": [
@@ -3589,12 +3607,13 @@
                                 "description": "Provide the name of the financial institution where the Veteran wants the direct deposit.",
                                 "maxLength": 35,
                                 "type": "string",
-                                "example": "Chase"
+                                "example": "Some Bank"
                               },
                               "noAccount": {
                                 "type": "boolean",
                                 "description": "Claimant certifies that they do not have an account with a financial institution or certified payment agent.",
-                                "default": false
+                                "default": false,
+                                "nullable": false
                               }
                             }
                           }
@@ -3659,14 +3678,14 @@
                       },
                       "toxicExposure": {
                         "gulfWarHazardService": {
-                          "servedInGulfWarHazardLocations": true,
+                          "servedInGulfWarHazardLocations": "YES",
                           "serviceDates": {
                             "beginDate": "07-1999",
                             "endDate": "01-2005"
                           }
                         },
                         "herbicideHazardService": {
-                          "servedInHerbicideHazardLocations": true,
+                          "servedInHerbicideHazardLocations": "YES",
                           "otherLocationsServed": "Guam",
                           "serviceDates": {
                             "beginDate": "03-2002",
@@ -3795,26 +3814,26 @@
                             "areaCode": "555",
                             "phoneNumber": "5555555"
                           },
-                          "receivingInactiveDutyTrainingPay": true
+                          "receivingInactiveDutyTrainingPay": "YES"
                         },
                         "alternateNames": [
                           "John Jacob Jingleheimer-Schmidt",
                           "Johnathon"
                         ],
-                        "servedInActiveCombatSince911": false
+                        "servedInActiveCombatSince911": "NO"
                       },
                       "servicePay": {
                         "favorTrainingPay": true,
                         "favorMilitaryRetiredPay": false,
-                        "receivingMilitaryRetiredPay": false,
-                        "futureMilitaryRetiredPay": true,
+                        "receivingMilitaryRetiredPay": "NO",
+                        "futureMilitaryRetiredPay": "YES",
                         "futureMilitaryRetiredPayExplanation": "ABCDEFGHIJKLMNOPQRSTUVW",
                         "militaryRetiredPay": {
                           "branchOfService": "Army",
                           "monthlyAmount": 840.75
                         },
                         "retiredStatus": "PERMANENT_DISABILITY_RETIRED_LIST",
-                        "receivedSeparationOrSeverancePay": false,
+                        "receivedSeparationOrSeverancePay": "NO",
                         "separationSeverancePay": {
                           "datePaymentReceived": "07-31-2018",
                           "branchOfService": "Naval Academy",
@@ -4516,8 +4535,8 @@
                     "id": "1",
                     "type": "intent_to_file",
                     "attributes": {
-                      "creationDate": "2023-08-08",
-                      "expirationDate": "2024-08-08",
+                      "creationDate": "2023-08-15",
+                      "expirationDate": "2024-08-15",
                       "type": "compensation",
                       "status": "active"
                     }

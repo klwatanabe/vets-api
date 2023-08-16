@@ -1,30 +1,29 @@
 # frozen_string_literal: true
 
 class DynamicsService
-  DATA = [
-    {
-      'inquiryNumber' => 'A-1',
-      'inquiryTopic' => 'Topic',
-      'submitterQuestions' => 'This is a question',
-      'inquiryProcessingStatus' => 'In Progress',
-      'lastUpdate' => '08/07/23',
-      'userUuid' => '6400bbf301eb4e6e95ccea7693eced6f'
-    },
-    {
-      'inquiryNumber' => 'A-2',
-      'inquiryTopic' => 'Topic',
-      'submitterQuestions' => 'This is a question',
-      'inquiryProcessingStatus' => 'In Progress',
-      'lastUpdate' => '08/07/23',
-      'userUuid' => '6400bbf301eb4e6e95ccea7693eced6f'
-    }
-  ].freeze
-
-  def get_submitter_inquiries(uuid:)
-    inquiries = DATA.filter_map do |inquiry|
-      AskVAApi::Inquiry::Creator.new(inquiry) if inquiry['userUuid'] == uuid
+  def get_user_inquiries(uuid:)
+    inquiries_parsed_data.select do |inquiry|
+      inquiry[:userUuid] == uuid
     end
+  end
 
-    AskVAApi::UserInquiries::Creator.new(inquiries)
+  def get_inquiry(inquiry_number:)
+    inquiries_parsed_data.find { |data| data[:inquiryNumber] == inquiry_number } || {}
+  end
+
+  def get_reply(inquiry_number:)
+    replies_parsed_data.find { |data| data[:inquiryNumber] == inquiry_number } || {}
+  end
+
+  def inquiries_parsed_data
+    data = File.read('./modules/ask_va_api/config/locales/inquiries_mock_data.json')
+
+    JSON.parse(data, symbolize_names: true)[:data]
+  end
+
+  def replies_parsed_data
+    data = File.read('./modules/ask_va_api/config/locales/replies_mock_data.json')
+
+    JSON.parse(data, symbolize_names: true)[:data]
   end
 end
