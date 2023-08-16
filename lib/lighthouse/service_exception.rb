@@ -25,21 +25,20 @@ module Lighthouse
     # raises an error based off of what the response status was
     # formats the Lighthouse exception for the controller ExceptionHandling to report out to the consumer
     def self.send_error(error, service_name, lighthouse_client_id, url)
-      raise error_class(:'504') if gateway_timeout?(error.response)
+      response = error.response
+      status_code = get_status_code(response)
 
-      error_response = error.response
+      return error unless status_code
 
-      return error unless error_response&.key?(:status)
+      send_error_logs(status_code, error, service_name, lighthouse_client_id, url)
 
-      send_error_logs(error, service_name, lighthouse_client_id, url)
+      raise error_class(status_code.to_s.to_sym) if service_gateway_issue?(status_code)
 
-      error_status = error_response[:status]
+      errors = get_errors_from_response(error, status_code)
 
-      errors = get_errors_from_response(error, error_status)
+      status_code_sym = status_code.to_s.to_sym
 
-      error_status_sym = error_status.to_s.to_sym
-
-      raise error_class(error_status_sym).new(errors:)
+      raise error_class(status_code_sym).new(errors:)
     end
 
     # chooses which error class should be reported based on the http status
@@ -96,7 +95,7 @@ module Lighthouse
     end
 
     # sends errors to sentry!
-    def self.send_error_logs(error, service_name, lighthouse_client_id, url)
+    def self.send_error_logs(status_code, error, service_name, lighthouse_client_id, url)
       base_key_string = "#{lighthouse_client_id} #{url} Lighthouse Error"
       Rails.logger.error(
         error.response,
@@ -112,13 +111,19 @@ module Lighthouse
         url:,
         client_id: lighthouse_client_id
       )
+
+      Raven.capture_exception(error, level: 'warn') if (400..499).include?(status_code)
+      Raven.capture_exception(error, level: 'error') if (500..599).include?(status_code)
     end
 
-    def self.gateway_timeout?(response)
-      return response.status == 504 if response.respond_to?(:status)
-      return response[:status] == 504 if response.instance_of?(Hash) && response&.key?(:status)
+    def self.get_status_code(response)
+      return response.status if response.respond_to?(:status)
+      return response[:status] if response.instance_of?(Hash) && response&.key?(:status)
+    end
 
-      false
+    def self.service_gateway_issue?(status_code)
+      # bad gateway, service unavailable, gateway timeout
+      [502, 503, 504].include?(status_code)
     end
   end
 end
