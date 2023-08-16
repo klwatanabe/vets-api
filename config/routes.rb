@@ -467,7 +467,6 @@ Rails.application.routes.draw do
 
   get '/flipper/features/logout', to: 'flipper#logout'
   mount Flipper::UI.app(Flipper.instance) => '/flipper', constraints: Flipper::AdminUserConstraint
-  # get '/flipper/features/logout', to: redirect('/flipper')
 
   if Rails.env.production?
     require 'coverband'
