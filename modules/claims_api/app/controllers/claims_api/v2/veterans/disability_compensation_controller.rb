@@ -7,7 +7,6 @@ require 'claims_api/v2/disability_compensation_pdf_mapper'
 require 'claims_api/v2/disability_compensation_evss_mapper'
 require 'evss_service/base'
 require 'pdf_generator_service/pdf_client'
-require 'bd/bd'
 
 module ClaimsApi
   module V2
@@ -32,7 +31,11 @@ module ClaimsApi
           pdf_data = get_pdf_data
           pdf_mapper_service(form_attributes, pdf_data, target_veteran).map_claim
 
+          evss_data = evss_mapper_service(auto_claim).map_claim
+          evss_service.submit(auto_claim, evss_data)
+
           generate_526_pdf(pdf_data)
+
           get_benefits_documents_auth_token unless Rails.env.test?
 
           render json: auto_claim
@@ -96,10 +99,6 @@ module ClaimsApi
           {
             data: {}
           }
-        end
-
-        def benefits_doc_api
-          ClaimsApi::BD.new
         end
 
         def evss_service

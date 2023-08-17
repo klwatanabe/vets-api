@@ -8,10 +8,13 @@ module AskVAApi
       def initialize(inquiry_number:)
         @inquiry_number = inquiry_number
         @service = DynamicsService.new
+        @reply_creator = Replies::ReplyCreator
       end
 
       def call
-        Inquiries::Inquiry.new(@service.get_inquiry(inquiry_number:))
+        reply = @reply_creator.new(inquiry_number:).call
+
+        Inquiries::Inquiry.new(@service.get_inquiry(inquiry_number:), reply)
       end
     end
   end
