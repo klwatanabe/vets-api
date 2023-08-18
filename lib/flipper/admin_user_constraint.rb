@@ -25,7 +25,6 @@ module Flipper
       return true if (request.method == 'GET' && request.path.exclude?('/callback')) || Rails.env.development?
 
       authenticate(request)
-      Rails.logger.info "Already Auth'd"
       true
     end
 
