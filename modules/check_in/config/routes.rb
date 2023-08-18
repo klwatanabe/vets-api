@@ -8,6 +8,10 @@ CheckIn::Engine.routes.draw do
   namespace :v0, defaults: { format: :json } do
     resources :patient_check_ins, only: %i[show create]
     resources :travel_claims, only: %i[create]
+    resource :mobile_check_ins, only: %i[create]
+    resource :mobile_check_ins_demographics, only: %i[show create]
+
+    get 'mobile_check_ins_demographics/:patient_dfn', to: 'check_in/v0/mobile_check_ins_demographics#show'
   end
 
   namespace :v1, defaults: { format: :json } do

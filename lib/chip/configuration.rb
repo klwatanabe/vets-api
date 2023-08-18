@@ -33,7 +33,8 @@ module Chip
     # @return [Faraday::Connection] a Faraday connection instance.
     #
     def connection
-      @conn ||= Faraday.new(url:) do |faraday|
+      # @conn ||= Faraday.new(url:) do |faraday|
+      @conn ||= Faraday.new(url:, ssl: { verify: false }) do |faraday|
         faraday.use :breakers
         faraday.request :json
 
