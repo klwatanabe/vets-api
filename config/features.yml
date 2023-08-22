@@ -14,7 +14,7 @@
 features:
   this_is_only_a_test:
     actor_type: user
-    description: used in feature_toggles_controller_spec.
+    description: Used in feature_toggles_controller_spec.
   avs_enabled:
     actor_type: user
     description: Enables the After Visit Summary API.
@@ -123,6 +123,10 @@ features:
   check_in_experience_travel_reimbursement:
     actor_type: user
     description: Enables travel reimbursement workflow for day-of check-in application.
+    enable_in_development: true
+  check_in_experience_travel_logic:
+    actor_type: user
+    description: Enables the travel reimbursement logic
     enable_in_development: true
   check_in_experience_browser_monitoring:
     actor_type: user
@@ -293,6 +297,10 @@ features:
     actor_type: user
     description: enables displaying a short education blurb alongside rated disabilities already at maximum rating.
     enable_in_development: true
+  disability_526_maximum_rating_api:
+    actor_type: user
+    description: enables sending disability diagnostic codes to VRO Max CFI API to get the corresponding maximum ratings.
+    enable_in_development: false
   disability_compensation_flashes:
     actor_type: user
     description: enables sending flashes to BGS for disability_compensation submissions.
@@ -415,6 +423,9 @@ features:
   form2110210:
     actor_type: user
     description: If enabled shows the digital form experience for form 21-10210
+  form21p0847:
+    actor_type: user
+    description: If enabled shows the digital form experience for form 21P-0847
   form264555:
     actor_type: user
     description: If enabled shows the digital form experience for form 26-4555
