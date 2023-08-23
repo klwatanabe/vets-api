@@ -97,9 +97,17 @@ module Users
           payment_history: BGSPolicy.new(user).access?(log_stats: false),
           personal_information: MPIPolicy.new(user).queryable?,
           rating_info: EVSSPolicy.new(user).access?,
-          form526_required_identifier_presence: Form526Policy.new(user).form526_required_identifier_presence
+          **form_526_required_identifiers
         }
       end
+    end
+
+    def form_526_required_identifiers
+      if Flipper.enabled?(:form_526_required_identifiers_in_user_object)
+        return { form526_required_identifier_presence: Form526Policy.new(user).form526_required_identifier_presence }
+      end
+
+      {}
     end
 
     def vet360_contact_information
