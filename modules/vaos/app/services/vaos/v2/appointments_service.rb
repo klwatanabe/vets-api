@@ -96,6 +96,33 @@ module VAOS
           VAOS::V2::MobileFacilityService.new(user)
       end
 
+      def avs_service
+        @avs_service ||=
+          VAOS::V2::AVSService.new(user)
+      end
+
+      def extract_station_id_and_ien(appt)
+        id_colon_ien = appt[:identifier][0][:value]
+        id_ien_array = id_colon_ien.split(":", 2)
+      end
+
+      def get_avs_link(station_id, ien)
+        avs_service.get_avs(station_id, ien)
+      end
+
+      # Checks if appointment is eligible for receiving an avs link
+      #
+      # @param appt [Hash] the appointment to check
+      # @return [Boolean] true if the appointment is eligible, false otherwise
+      #
+      # @raise [ArgumentError] if the appointment is nil
+      #
+      def avs_applicable?(appt)
+        raise ArgumentError, 'Appointment cannot be nil' if appt.nil?
+
+        appt[:status] == 'booked' && appt[:start].past?
+      end
+
       # Checks if the appointment is booked.
       #
       # @param appt [Hash] the appointment to check
