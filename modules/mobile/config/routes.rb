@@ -14,6 +14,7 @@ Mobile::Engine.routes.draw do
     get '/appointments/facilities/:facility_id/clinics/:clinic_id/slots', to: 'clinics#slots'
     get '/appointments/preferences', to: 'appointment_preferences#show'
     put '/appointments/preferences', to: 'appointment_preferences#update'
+    post '/appointments/check-in', to: 'check_in#create'
     post '/appointment', to: 'appointments#create'
     get '/claims-and-appeals-overview', to: 'claims_and_appeals#index'
     get '/claims/decision-letters', to: 'decision_letters#index'
