@@ -15,6 +15,13 @@ module ClaimsApi
     def perform(ews_id)
       ews = ClaimsApi::EvidenceWaiverSubmission.find(ews_id)
       bgs_claim = benefit_claim_service(ews).find_bnft_claim(claim_id: ews.claim_id)
+      if bgs_claim[:bnft_claim_dto].empty?
+        ClaimsApi::Logger.log(ews_id: ews.id, keys: bgs_claim.keys,
+                              detail: "Failed to update for claim #{ews.claim_id}: #{e.message}")
+        ews.status = ClaimsApi::EvidenceWaiverSubmission::ERRORED
+        ews.save
+        return
+      end
 
       unless bgs_claim&.dig(:bnft_claim_dto, :filed5103_waiver_ind) == FILE_5103
         bgs_claim[:bnft_claim_dto][:filed5103_waiver_ind] = FILE_5103
