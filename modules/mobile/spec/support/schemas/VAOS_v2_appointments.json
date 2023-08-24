@@ -39,7 +39,19 @@
               "status",
               "statusDetail",
               "timeZone",
-              "vetextId"
+              "vetextId",
+              "reason",
+              "isCovidVaccine",
+              "isPending",
+              "proposedTimes",
+              "typeOfCare",
+              "patientPhoneNumber",
+              "patientEmail",
+              "bestTimeToCall",
+              "friendlyLocationName",
+              "serviceCategoryName",
+              "eCheckinAllowed",
+              "appointmentIen"
             ],
             "properties": {
               "appointmentType": {
@@ -222,6 +234,87 @@
                   "string",
                   "null"
                 ]
+              },
+              "reason": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "isCovidVaccine": {
+                "type": "boolean"
+              },
+              "isPending": {
+                "type": "boolean"
+              },
+              "proposedTimes": {
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "date",
+                    "time"
+                  ],
+                  "properties": {
+                    "date": {
+                      "type": "string"
+                    },
+                    "time": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              "typeOfCare": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "patientPhoneNumber": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "patientEmail": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "bestTimeToCall": {
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "items": {
+                  "type": "string"
+                }
+              },
+              "friendlyLocationName": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "serviceCategoryName": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "eCheckinAllowed": {
+                "type": "boolean"
+              },
+              "appointmentIen": {
+                "type": [
+                  "string",
+                  "null"
+                ]
               }
             }
           }
@@ -230,7 +323,8 @@
     },
     "meta": {
       "required": [
-        "pagination"
+        "pagination",
+        "checkinWindow"
       ],
       "properties": {
         "errors": {
@@ -255,6 +349,21 @@
               "type": "integer"
             },
             "totalEntries": {
+              "type": "integer"
+            }
+          }
+        },
+        "checkinWindow": {
+          "type": "object",
+          "required": [
+            "minutesBefore",
+            "minutesAfter"
+          ],
+          "properties": {
+            "minutesBefore": {
+              "type": "integer"
+            },
+            "minutesAfter": {
               "type": "integer"
             }
           }

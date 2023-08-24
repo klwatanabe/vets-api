@@ -73,6 +73,7 @@ module Mobile
       attribute :friendly_location_name, Types::String.optional
       attribute :service_category_name, Types::String.optional
       attribute :e_checkin_allowed, Types::Bool
+      attribute :appointment_ien, Types::String.optional
 
       # On staging, some upstream services use different facility ids for the same facility.
       # These methods convert between the two sets of ids.

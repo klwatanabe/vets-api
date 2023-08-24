@@ -445,7 +445,7 @@ module Mobile
         end
 
         def checkin_allowed?
-          return false unless !!appointment[:e_checkin_enabled]
+          return false if appointment[:e_checkin_enabled].nil? || appointment[:e_checkin_enabled] == false
 
           vista_status = appointment.dig(:extension, :vista_status)
           return false if vista_status.nil? # not sure if this is possible

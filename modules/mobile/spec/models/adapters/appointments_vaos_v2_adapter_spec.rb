@@ -86,7 +86,9 @@ describe Mobile::V0::Adapters::VAOSV2Appointments, aggregate_failures: true do
                                            'patient_email' => nil,
                                            'best_time_to_call' => nil,
                                            'friendly_location_name' => 'Cheyenne VA Medical Center',
-                                           'service_category_name' => nil })
+                                           'service_category_name' => nil,
+                                           'e_checkin_allowed' => false,
+                                           'appointment_ien' => nil })
     end
   end
 
@@ -141,7 +143,9 @@ describe Mobile::V0::Adapters::VAOSV2Appointments, aggregate_failures: true do
                                         'patient_email' => nil,
                                         'best_time_to_call' => nil,
                                         'friendly_location_name' => 'Cheyenne VA Medical Center',
-                                        'service_category_name' => nil
+                                        'service_category_name' => nil,
+                                        'e_checkin_allowed' => false,
+                                        'appointment_ien' => nil
                                       })
     end
   end
@@ -201,7 +205,9 @@ describe Mobile::V0::Adapters::VAOSV2Appointments, aggregate_failures: true do
                                         'patient_email' => nil,
                                         'best_time_to_call' => nil,
                                         'friendly_location_name' => 'CC practice name',
-                                        'service_category_name' => nil
+                                        'service_category_name' => nil,
+                                        'e_checkin_allowed' => false,
+                                        'appointment_ien' => nil
                                       })
     end
   end
@@ -267,7 +273,9 @@ describe Mobile::V0::Adapters::VAOSV2Appointments, aggregate_failures: true do
                                             'Morning'
                                           ],
                                           'friendly_location_name' => nil,
-                                          'service_category_name' => nil
+                                          'service_category_name' => nil,
+                                          'e_checkin_allowed' => false,
+                                          'appointment_ien' => nil
                                         })
     end
   end
@@ -331,7 +339,9 @@ describe Mobile::V0::Adapters::VAOSV2Appointments, aggregate_failures: true do
                                             'Evening'
                                           ],
                                           'friendly_location_name' => 'Cheyenne VA Medical Center',
-                                          'service_category_name' => nil
+                                          'service_category_name' => nil,
+                                          'e_checkin_allowed' => false,
+                                          'appointment_ien' => nil
                                         })
     end
   end
@@ -391,7 +401,9 @@ describe Mobile::V0::Adapters::VAOSV2Appointments, aggregate_failures: true do
                                          'Morning'
                                        ],
                                        'friendly_location_name' => 'Cheyenne VA Medical Center',
-                                       'service_category_name' => nil
+                                       'service_category_name' => nil,
+                                       'e_checkin_allowed' => false,
+                                       'appointment_ien' => nil
                                      })
     end
   end
@@ -440,7 +452,9 @@ describe Mobile::V0::Adapters::VAOSV2Appointments, aggregate_failures: true do
                                       'patient_email' => nil,
                                       'best_time_to_call' => nil,
                                       'friendly_location_name' => 'Cheyenne VA Medical Center',
-                                      'service_category_name' => nil })
+                                      'service_category_name' => nil,
+                                      'e_checkin_allowed' => false,
+                                      'appointment_ien' => nil })
     end
   end
 
@@ -496,7 +510,9 @@ describe Mobile::V0::Adapters::VAOSV2Appointments, aggregate_failures: true do
                                        'patient_email' => nil,
                                        'best_time_to_call' => nil,
                                        'friendly_location_name' => 'Cheyenne VA Medical Center',
-                                       'service_category_name' => nil })
+                                       'service_category_name' => nil,
+                                       'e_checkin_allowed' => false,
+                                       'appointment_ien' => nil })
     end
   end
 
@@ -543,7 +559,9 @@ describe Mobile::V0::Adapters::VAOSV2Appointments, aggregate_failures: true do
                                      'patient_email' => nil,
                                      'best_time_to_call' => nil,
                                      'friendly_location_name' => 'Cheyenne VA Medical Center',
-                                     'service_category_name' => nil })
+                                     'service_category_name' => nil,
+                                     'e_checkin_allowed' => false,
+                                     'appointment_ien' => nil })
     end
   end
 
@@ -606,7 +624,9 @@ describe Mobile::V0::Adapters::VAOSV2Appointments, aggregate_failures: true do
                                                             'Afternoon'
                                                           ],
                                                           'friendly_location_name' => 'Cheyenne VA Medical Center',
-                                                          'service_category_name' => nil
+                                                          'service_category_name' => nil,
+                                                          'e_checkin_allowed' => false,
+                                                          'appointment_ien' => nil
                                                         })
     end
   end
@@ -770,7 +790,9 @@ describe Mobile::V0::Adapters::VAOSV2Appointments, aggregate_failures: true do
           'patient_email' => 'melissa.gra@va.gov',
           'best_time_to_call' => nil,
           'friendly_location_name' => 'Dayton VA Medical Center',
-          'service_category_name' => 'REGULAR'
+          'service_category_name' => 'REGULAR',
+          'e_checkin_allowed' => false,
+          'appointment_ien' => nil
         }
       )
     end
@@ -915,6 +937,19 @@ preferred dates:12/13/2022 PM|pager number:8675309"
       it 'is false' do
         expect(appointment[:e_checkin_allowed]).to eq(false)
       end
+    end
+  end
+
+  describe 'appointment_ien' do
+    let(:appointment) do
+      data = JSON.parse(appointment_fixtures, symbolize_names: true)
+      data.first[:appointment_ien] = 'abcdefg'
+      appointments = subject.parse(data)
+      appointments[0]
+    end
+
+    it 'is set to the provided value' do
+      expect(appointment[:appointment_ien]).to eq('abcdefg')
     end
   end
 end

@@ -316,9 +316,9 @@ RSpec.describe 'vaos v2 appointments', type: :request do
         end
         meta = response.parsed_body['meta']
         expect(meta['checkinWindow']).to eq({
-          'minutesBefore' => 45,
-          'minutesAfter' => 15
-        })
+                                              'minutesBefore' => 45,
+                                              'minutesAfter' => 15
+                                            })
       end
     end
   end

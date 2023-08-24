@@ -28,7 +28,9 @@ module Mobile
                  :patient_email,
                  :best_time_to_call,
                  :friendly_location_name,
-                 :service_category_name
+                 :service_category_name,
+                 :e_checkin_allowed,
+                 :appointment_ien
     end
   end
 end
