@@ -842,8 +842,7 @@ preferred dates:12/13/2022 PM|pager number:8675309"
     context 'when eCheckinEnabled is not present' do
       it 'is false' do
         adapted_appointments.each do |appt|
-binding.pry
-          expect(appt[:e_checkin_allowed]).to be_false
+          expect(appt[:e_checkin_allowed]).to eq(false)
         end
       end
     end
@@ -851,18 +850,28 @@ binding.pry
     context 'when eCheckinEnabled is false' do
       let(:appointment) do
         data = JSON.parse(appointment_fixtures, symbolize_names: true)
-        appointment = data(0, :location).delete(:timezone)
+        data.first[:e_checkin_enabled] = false
         appointments = subject.parse(data)
         appointments[0]
       end
 
       it 'is false' do
-
+        expect(appointment[:e_checkin_allowed]).to eq(false)
       end
     end
 
     context 'when eCheckinEnabled is true and vista status is nil' do
+      let(:appointment) do
+        data = JSON.parse(appointment_fixtures, symbolize_names: true)
+        data.first[:e_checkin_enabled] = true
+        data.first[:extension][:vista_status] = nil
+        appointments = subject.parse(data)
+        appointments[0]
+      end
 
+      it 'is false' do
+        expect(appointment[:e_checkin_allowed]).to eq(false)
+      end
     end
 
     context 'when eCheckinEnabled is true and vista status is an empty array' do

@@ -446,7 +446,7 @@ module Mobile
           # these are not correct. clarify values
           allowed_statuses = ['NO ACTION TAKEN/TODAY', 'INPATIENT/NO ACT TAKN', 'NON-COUNT']
           # unclear how eCheckinEnabled will be converted to snake case
-          appointment[:e_checkin_enabled] && (vista_status&.in?(allowed_statuses) || vista_status == [])
+          !!appointment[:e_checkin_enabled] && (vista_status&.in?(allowed_statuses) || vista_status == [])
         end
       end
     end
