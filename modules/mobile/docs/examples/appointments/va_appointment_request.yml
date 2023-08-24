@@ -32,20 +32,20 @@ data:
       timeZone: America/Denver
       vetextId: null
       reason: 'routine-follow-up'
-      is_covid_vaccine: null
-      is_pending: true
-      proposed_times:
+      isCovidVaccine: null
+      isPending: true
+      proposedTimes:
         - { date: '10/02/2020', time: 'PM' }
         - { date: '10/01/2020', time: 'PM' }
         - { date: nil, time: nil }
-      type_of_care: 'Optometry (routine eye exam)'
-      patient_phone_number: '(703) 652-0000'
-      patient_email: 'samatha.girla@va.gov'
-      best_time_to_call:
+      typeOfCare: 'Optometry (routine eye exam)'
+      patientPhoneNumber: '(703) 652-0000'
+      patientEmail: 'samatha.girla@va.gov'
+      bestTimeToCall:
         - Afternoon
         - Evening
         - Morning
-      friendly_location_name: 'CHYSHR-Cheyenne VA Medical Center'
+      friendlyLocationName: 'CHYSHR-Cheyenne VA Medical Center'
       appointmentIEN: null
       locationId: '938'
       eCheckinAllowed: false
