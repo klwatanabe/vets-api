@@ -31,7 +31,7 @@ module Mobile
                  :service_category_name,
                  :e_checkin_allowed
 
-                 attribute :appointmentIEN, &:appointment_ien
+      attribute :appointmentIEN, &:appointment_ien
     end
   end
 end
