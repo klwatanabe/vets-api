@@ -34,6 +34,12 @@ module VAOS
 
             log_telehealth_data(appt[:telehealth]&.[](:atlas)) unless appt[:telehealth]&.[](:atlas).nil?
             convert_appointment_time(appt)
+
+            # TODO: test in RI
+            # if avs_applicable?(appt)
+            #   fetch_avs_and_update_appt_body(appt)
+            # end
+
           end
           {
             data: deserialized_appointments(response.body[:data]),
@@ -62,6 +68,11 @@ module VAOS
           if booked?(response.body[:data]) && cerner?(response.body[:data])
             response.body[:data][:requested_periods] = nil
           end
+
+          # TODO: test in RI
+          # if avs_applicable?(response.body[:data])
+          #   fetch_avs_and_update_appt_body(response.body[:data])
+          # end
 
           OpenStruct.new(response.body[:data])
         end
@@ -98,7 +109,7 @@ module VAOS
 
       def avs_service
         @avs_service ||=
-          VAOS::V2::AVSService.new(user)
+          Avs::V0::AvsService.new(user)
       end
 
       def extract_station_id_and_ien(appt)
@@ -107,7 +118,13 @@ module VAOS
       end
 
       def get_avs_link(station_id, ien)
-        avs_service.get_avs(station_id, ien)
+        avs_service.get_avs_by_appointment(station_id, ien)
+      end
+
+      def fetch_avs_and_update_appt_body(appt)
+        id_ien_array = extract_station_id_and_ien(appt)
+        avs_link = get_avs_link(id_ien_array[0], id_ien_array[1])
+        appt[:avs_path] = avs_link
       end
 
       # Checks if appointment is eligible for receiving an avs link
