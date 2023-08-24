@@ -72,6 +72,8 @@ module Mobile
           'OTHER_REASON' => 'My reason isn’t listed'
         }.freeze
 
+        CHECKIN_ENABLED_VISTA_STATUSES = ['NO ACTION TAKEN/TODAY', 'INPATIENT/NO ACT TAKN', 'NON-COUNT', ''].freeze
+
         attr_reader :appointment
 
         def initialize(appointment)
@@ -108,7 +110,8 @@ module Mobile
             best_time_to_call: appointment[:preferred_times_for_phone_call],
             friendly_location_name:,
             service_category_name: appointment.dig(:service_category, 0, :text),
-            e_checkin_allowed: checkin_allowed?
+            e_checkin_allowed: checkin_allowed?,
+            appointment_ien: appointment[:appointment_ien]
           }
 
           StatsD.increment('mobile.appointments.type', tags: ["type:#{appointment_type}"])
@@ -442,11 +445,12 @@ module Mobile
         end
 
         def checkin_allowed?
+          return false unless !!appointment[:e_checkin_enabled]
+
           vista_status = appointment.dig(:extension, :vista_status)
-          # these are not correct. clarify values
-          allowed_statuses = ['NO ACTION TAKEN/TODAY', 'INPATIENT/NO ACT TAKN', 'NON-COUNT']
-          # unclear how eCheckinEnabled will be converted to snake case
-          !!appointment[:e_checkin_enabled] && (vista_status&.in?(allowed_statuses) || vista_status == [])
+          return false if vista_status.nil? # not sure if this is possible
+
+          (vista_status.empty? || !!vista_status.any? { |vs| vs.in?(CHECKIN_ENABLED_VISTA_STATUSES) })
         end
       end
     end

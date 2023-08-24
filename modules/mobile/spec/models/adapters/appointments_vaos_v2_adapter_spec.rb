@@ -851,6 +851,7 @@ preferred dates:12/13/2022 PM|pager number:8675309"
       let(:appointment) do
         data = JSON.parse(appointment_fixtures, symbolize_names: true)
         data.first[:e_checkin_enabled] = false
+        data.first[:extension][:vista_status] = ['']
         appointments = subject.parse(data)
         appointments[0]
       end
@@ -875,15 +876,45 @@ preferred dates:12/13/2022 PM|pager number:8675309"
     end
 
     context 'when eCheckinEnabled is true and vista status is an empty array' do
-      
+      let(:appointment) do
+        data = JSON.parse(appointment_fixtures, symbolize_names: true)
+        data.first[:e_checkin_enabled] = true
+        data.first[:extension][:vista_status] = []
+        appointments = subject.parse(data)
+        appointments[0]
+      end
+
+      it 'is true' do
+        expect(appointment[:e_checkin_allowed]).to eq(true)
+      end
     end
 
     context 'when eCheckinEnabled is true and vista status indicates that checkin is allowed' do
-      
+      let(:appointment) do
+        data = JSON.parse(appointment_fixtures, symbolize_names: true)
+        data.first[:e_checkin_enabled] = true
+        data.first[:extension][:vista_status] = ['']
+        appointments = subject.parse(data)
+        appointments[0]
+      end
+
+      it 'is true' do
+        expect(appointment[:e_checkin_allowed]).to eq(true)
+      end
     end
 
     context 'when eCheckinEnabled is true and vista status is something else' do
-      
+      let(:appointment) do
+        data = JSON.parse(appointment_fixtures, symbolize_names: true)
+        data.first[:e_checkin_enabled] = true
+        data.first[:extension][:vista_status] = ['irrelevant']
+        appointments = subject.parse(data)
+        appointments[0]
+      end
+
+      it 'is false' do
+        expect(appointment[:e_checkin_allowed]).to eq(false)
+      end
     end
   end
 end
