@@ -51,7 +51,7 @@
               "friendlyLocationName",
               "serviceCategoryName",
               "eCheckinAllowed",
-              "appointmentIEN"
+              "appointmentIen"
             ],
             "properties": {
               "appointmentType": {
@@ -310,7 +310,7 @@
               "eCheckinAllowed": {
                 "type": "boolean"
               },
-              "appointmentIEN": {
+              "appointmentIen": {
                 "type": [
                   "string",
                   "null"

@@ -274,7 +274,7 @@ paths:
           application/json:
             schema:
               properties:
-                appointmentIEN:
+                appointmentIen:
                   type: string
                 locationId:
                   type: string

@@ -46,7 +46,7 @@ data:
         - Evening
         - Morning
       friendlyLocationName: 'CHYSHR-Cheyenne VA Medical Center'
-      appointmentIEN: null
+      appointmentIen: null
       locationId: '938'
       eCheckinAllowed: false
 meta:

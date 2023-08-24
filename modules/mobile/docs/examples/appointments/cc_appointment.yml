@@ -39,7 +39,7 @@ data:
       patientEmail: null
       bestTimeToCall: null
       friendlyLocationName: null
-      appointmentIEN: '123456'
+      appointmentIen: '123456'
       locationId: '938'
       eCheckinAllowed: false
 meta:

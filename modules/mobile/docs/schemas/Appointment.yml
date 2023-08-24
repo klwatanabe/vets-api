@@ -31,7 +31,7 @@ properties:
       - vetextId
       - reason
       - isCovidVaccine
-      - appointmentIEN
+      - appointmentIen
       - locationId
       - eCheckinAllowed
     properties:
@@ -175,7 +175,7 @@ properties:
       serviceCategoryName:
         type: string
         example: "COMPENSATION & PENSION"
-      appointmentIEN:
+      appointmentIen:
         type: string
       locationId:
         type: string
