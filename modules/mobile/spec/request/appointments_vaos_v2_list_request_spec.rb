@@ -304,5 +304,22 @@ RSpec.describe 'vaos v2 appointments', type: :request do
         end
       end
     end
+
+    describe 'checkinWindow' do
+      it 'is set correctly in the meta' do
+        VCR.use_cassette('mobile/appointments/VAOS_v2/get_clinic_200', match_requests_on: %i[method uri]) do
+          VCR.use_cassette('mobile/appointments/VAOS_v2/get_facility_200', match_requests_on: %i[method uri]) do
+            VCR.use_cassette('mobile/appointments/VAOS_v2/get_appointment_200', match_requests_on: %i[method uri]) do
+              get '/mobile/v0/appointments', headers: iam_headers, params:
+            end
+          end
+        end
+        meta = response.parsed_body['meta']
+        expect(meta['checkinWindow']).to eq({
+          'minutesBefore' => 45,
+          'minutesAfter' => 15
+        })
+      end
+    end
   end
 end

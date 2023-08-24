@@ -3,6 +3,13 @@
 module Mobile
   module V0
     class AppointmentsController < ApplicationController
+      CHECKIN_WINDOW = {
+        checkinWindow: {
+          minutesBefore: 45,
+          minutesAfter: 15
+        }
+      }.freeze
+
       after_action :clear_appointments_cache, only: %i[cancel create]
 
       def index
@@ -12,7 +19,8 @@ module Mobile
         partial_errors = partial_errors(failures)
         status = get_response_status(failures)
         page_appointments, page_meta_data = paginate(appointments, validated_params)
-        page_meta_data[:meta] = page_meta_data[:meta].merge(partial_errors) unless partial_errors.nil?
+        meta_additions = partial_errors.present? ? CHECKIN_WINDOW.merge(partial_errors) : CHECKIN_WINDOW
+        page_meta_data[:meta] = page_meta_data[:meta].merge(meta_additions)
 
         render json: Mobile::V0::AppointmentSerializer.new(page_appointments, page_meta_data), status:
       end

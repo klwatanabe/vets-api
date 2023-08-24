@@ -837,4 +837,44 @@ preferred dates:12/13/2022 PM|pager number:8675309"
       end
     end
   end
+
+  describe 'checkin_allowed' do
+    context 'when eCheckinEnabled is not present' do
+      it 'is false' do
+        adapted_appointments.each do |appt|
+binding.pry
+          expect(appt[:e_checkin_allowed]).to be_false
+        end
+      end
+    end
+
+    context 'when eCheckinEnabled is false' do
+      let(:appointment) do
+        data = JSON.parse(appointment_fixtures, symbolize_names: true)
+        appointment = data(0, :location).delete(:timezone)
+        appointments = subject.parse(data)
+        appointments[0]
+      end
+
+      it 'is false' do
+
+      end
+    end
+
+    context 'when eCheckinEnabled is true and vista status is nil' do
+
+    end
+
+    context 'when eCheckinEnabled is true and vista status is an empty array' do
+      
+    end
+
+    context 'when eCheckinEnabled is true and vista status indicates that checkin is allowed' do
+      
+    end
+
+    context 'when eCheckinEnabled is true and vista status is something else' do
+      
+    end
+  end
 end

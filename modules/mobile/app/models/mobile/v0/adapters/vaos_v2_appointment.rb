@@ -107,7 +107,8 @@ module Mobile
             patient_email:,
             best_time_to_call: appointment[:preferred_times_for_phone_call],
             friendly_location_name:,
-            service_category_name: appointment.dig(:service_category, 0, :text)
+            service_category_name: appointment.dig(:service_category, 0, :text),
+            e_checkin_allowed: checkin_allowed?
           }
 
           StatsD.increment('mobile.appointments.type', tags: ["type:#{appointment_type}"])
@@ -438,6 +439,14 @@ module Mobile
 
         def time_to_datetime(time)
           time.is_a?(DateTime) ? time : DateTime.parse(time)
+        end
+
+        def checkin_allowed?
+          vista_status = appointment.dig(:extension, :vista_status)
+          # these are not correct. clarify values
+          allowed_statuses = ['NO ACTION TAKEN/TODAY', 'INPATIENT/NO ACT TAKN', 'NON-COUNT']
+          # unclear how eCheckinEnabled will be converted to snake case
+          appointment[:e_checkin_enabled] && (vista_status&.in?(allowed_statuses) || vista_status == [])
         end
       end
     end
