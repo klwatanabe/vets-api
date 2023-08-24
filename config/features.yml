@@ -626,6 +626,10 @@ features:
   my_va_update_errors_warnings:
     actor_type: user
     description: Update all errors and warnings on My VA for consistency (will remove when va-notification component is released)
+  rated_disabilities_use_lighthouse:
+    actor_type: user
+    description: When enabled, the rated disabilities application uses Lighthouse instead of EVSS
+    enable_in_development: true
   search_representative:
     actor_type: user
     description: Enable frontend application and cta for Search Representative application
@@ -942,9 +946,12 @@ features:
   virtual_agent_show_floating_chatbot:
     actor_type: user
     description: Enables a floating chatbot on the chatbot page - managed by virtual agent team
-  disability_compensation_lighthouse_rated_disabilities_provider:
+  disability_compensation_lighthouse_rated_disabilities_provider_foreground:
     actor_type: user
-    description: If enabled uses the lighthouse rated disabilities endpoint
+    description: If enabled uses the lighthouse rated disabilities endpoint for foreground requests
+  disability_compensation_lighthouse_rated_disabilities_provider_background:
+    actor_type: user
+    description: If enabled uses the lighthouse rated disabilities endpoint for background tasks
   disability_compensation_lighthouse_document_service_provider:
     actor_type: user
     description: If enabled uses the lighthouse documents service
