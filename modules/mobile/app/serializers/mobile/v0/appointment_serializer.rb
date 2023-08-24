@@ -29,8 +29,9 @@ module Mobile
                  :best_time_to_call,
                  :friendly_location_name,
                  :service_category_name,
-                 :e_checkin_allowed,
-                 :appointment_ien
+                 :e_checkin_allowed
+
+                 attribute :appointmentIEN, &:appointment_ien
     end
   end
 end
