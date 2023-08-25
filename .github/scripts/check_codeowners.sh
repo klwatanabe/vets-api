@@ -4,7 +4,7 @@ set -e
 
 # All files that are added, copied, modified, renamed, or have their type changed in the latest push
 # This will cover scenarios where a file/directory is deleted and then re-added in another commit
-CHANGED_FILES=$( git diff --name-only --unified=0 origin/master)
+CHANGED_FILES=$( git diff --name-only --unified=0 origin/rcassity-testing-gha-codeowners)
 
 check_in_codeowners() {
     local file="$1"
