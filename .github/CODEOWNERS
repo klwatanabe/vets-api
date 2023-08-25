@@ -266,7 +266,7 @@ app/policies/communication_preferences_policy.rb    @department-of-veterans-affa
 app/policies/debt_letters_policy.rb    @department-of-veterans-affairs/vsa-debt-resolution @department-of-veterans-affairs/backend-review-group
 app/policies/debt_policy.rb    @department-of-veterans-affairs/vsa-debt-resolution @department-of-veterans-affairs/backend-review-group
 app/policies/demographics_policy.rb    @department-of-veterans-affairs/mobile-api-team @department-of-veterans-affairs/backend-review-group
-app/policies/emis_policy.rb    @department-of-veterans-affairs/backend-review-group
+app/policies/va_profile_policy.rb    @department-of-veterans-affairs/backend-review-group
 app/policies/evss_policy.rb    @department-of-veterans-affairs/backend-review-group
 app/policies/form1095_policy.rb    @department-of-veterans-affairs/1095b-tax-form @department-of-veterans-affairs/backend-review-group
 app/policies/lighthouse_policy.rb    @department-of-veterans-affairs/lighthouse-banana-peels @department-of-veterans-affairs/backend-review-group
@@ -713,7 +713,7 @@ config/spring.rb    @department-of-veterans-affairs/backend-review-group
 config/ssoe_idp_int_metadata_isam.xml    @department-of-veterans-affairs/vsp-identity @department-of-veterans-affairs/backend-review-group
 config/storage.yml    @department-of-veterans-affairs/va-api-engineers @department-of-veterans-affairs/backend-review-group
 # CONTRIBUTING.md
-# Dangerfile
+Dangerfile @department-of-veterans-affairs/backend-review-group
 # db
 db/migrate    @department-of-veterans-affairs/backend-review-group
 db/schema.rb    @department-of-veterans-affairs/backend-review-group
@@ -1705,7 +1705,7 @@ spec/policies/bgs_policy_spec.rb    @department-of-veterans-affairs/vsa-ebenefit
 spec/policies/ch33_dd_policy_spec.rb    @department-of-veterans-affairs/vsa-ebenefits @department-of-veterans-affairs/backend-review-group
 spec/policies/coe_policy_spec.rb    @department-of-veterans-affairs/Benefits-Team-1 @department-of-veterans-affairs/backend-review-group
 spec/policies/debt_policy_spec.rb    @department-of-veterans-affairs/vsa-debt-resolution @department-of-veterans-affairs/backend-review-group
-spec/policies/emis_policy_spec.rb    @department-of-veterans-affairs/backend-review-group
+spec/policies/va_profile_policy_spec.rb    @department-of-veterans-affairs/backend-review-group
 spec/policies/evss_policy_spec.rb    @department-of-veterans-affairs/backend-review-group
 spec/policies/form1095_policy_spec.rb    @department-of-veterans-affairs/1095b-tax-form @department-of-veterans-affairs/backend-review-group
 spec/policies/lighthouse_policy_spec.rb    @department-of-veterans-affairs/lighthouse-banana-peels @department-of-veterans-affairs/backend-review-group
