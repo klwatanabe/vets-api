@@ -8,11 +8,11 @@ module Mobile
       def create
         response = chip_service.post_patient_check_in(appointment_ien: params[:appointmentIEN], patient_dfn:,
                                                       station_no: params[:locationId])
-
-        if error(response)
-          raise *error(response)
+        attributes = JSON.parse(response.body)&.dig('data', 'attributes')
+        if (error = parse_error(attributes))
+          raise(*error)
         else
-          render json: JSON.parse(response.body)
+          render json: Mobile::V0::CheckInSerializer.new(@current_user.id, attributes)
         end
       end
 
@@ -35,19 +35,18 @@ module Mobile
         ::Chip::Service.new(chip_creds)
       end
 
-      def error(response)
+      def parse_error(attributes)
         @error ||= begin
-                     attributes = JSON.parse(response.body)&.dig('data', 'attributes')
-                     error = attributes&.dig('errors', 0)
-                     message = attributes&.dig('message')
+          error = attributes&.dig('errors', 0)
+          message = attributes&.dig('message')
 
-                     if error.present?
-                       case message
-                       when 'Check-in unsuccessful with appointmentIen: appt-ien, patientDfn: patient-ien, stationNo: station-no'
-                         [Common::Exceptions::ParameterMissing, 'appointmentIEN and/or locationId']
-                       end
-                     end
-                   end
+          if error.present?
+            case message
+            when 'Check-in unsuccessful with appointmentIen: appt-ien, patientDfn: patient-ien, stationNo: station-no'
+              [Common::Exceptions::ParameterMissing, 'appointmentIEN and/or locationId']
+            end
+          end
+        end
       end
     end
   end

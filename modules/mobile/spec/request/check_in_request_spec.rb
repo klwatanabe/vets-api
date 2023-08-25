@@ -22,7 +22,9 @@ RSpec.describe 'check in', type: :request do
         end
       end
 
-      expect(attributes['message']).to match('success with appointmentIen: test-appt-ien, patientDfn: test-patient-ien, stationNo: test-station-no')
+      expect(response).to have_http_status(:ok)
+      expect(attributes['code']).to match('check-in-success')
+      expect(attributes['message']).to match('Check-In successful')
     end
 
     it 'shows error when nil appointmentIEN' do
@@ -33,7 +35,7 @@ RSpec.describe 'check in', type: :request do
         end
       end
 
-      expect(response.status).to eq(400)
+      expect(response).to have_http_status(:bad_request)
       expect(response.parsed_body.dig('errors', 0, 'title')).to match('Missing parameter')
     end
 
@@ -41,11 +43,11 @@ RSpec.describe 'check in', type: :request do
       VCR.use_cassette('chip/authenticated_check_in/post_check_in_invalid_appointment_200') do
         VCR.use_cassette('check_in/chip/token/token_200') do
           post '/mobile/v0/appointments/check-in', headers: iam_headers,
-               params: { 'appointmentIEN' => '516', 'locationId' => nil }
+                                                   params: { 'appointmentIEN' => '516', 'locationId' => nil }
         end
       end
 
-      expect(response.status).to eq(400)
+      expect(response).to have_http_status(:bad_request)
       expect(response.parsed_body.dig('errors', 0, 'title')).to match('Missing parameter')
     end
   end
