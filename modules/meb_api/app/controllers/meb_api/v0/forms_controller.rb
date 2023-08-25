@@ -51,7 +51,14 @@ module MebApi
       end
 
       def submit_claim
-        dd_response = payment_service.get_ch33_dd_eft_info
+        begin
+          dd_response = payment_service.get_ch33_dd_eft_info
+        rescue => e
+          Rails.logger.error('BDN service error: ', e)
+          head :internal_server_error
+          return
+        end
+
         response = submission_service.submit_claim(params, dd_response, 'toe')
 
         clear_saved_form(params[:form_id]) if params[:form_id]
