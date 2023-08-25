@@ -11,6 +11,7 @@ check_in_codeowners() {
     while [[ "$file" != '.' && "$file" != '/' ]]; do
         # Check if the file or directory is in CODEOWNERS
         echo "Checking CODEOWNERS for: $file"
+        grep -i "# ${file}" .github/CODEOWNERS |
         if grep -qE "^\s*${file}(/|\s+|\$)" .github/CODEOWNERS; then
             return 0
         fi
