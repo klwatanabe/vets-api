@@ -14,8 +14,39 @@ RSpec.describe 'check in', type: :request do
       iam_sign_in(user)
     end
 
-    it 'correctly updates check in' do
-      post '/mobile/v0/appointments/check-in', headers: iam_headers, params: { 'appointmentIEN' => '516', 'locationId' => '516' }
+    it 'correctly updates check in when 200' do
+      VCR.use_cassette('chip/authenticated_check_in/post_check_in_200') do
+        VCR.use_cassette('check_in/chip/token/token_200') do
+          post '/mobile/v0/appointments/check-in', headers: iam_headers,
+                                                   params: { 'appointmentIEN' => '516', 'locationId' => '516' }
+        end
+      end
+
+      expect(attributes['message']).to match('success with appointmentIen: test-appt-ien, patientDfn: test-patient-ien, stationNo: test-station-no')
+    end
+
+    it 'shows error when nil appointmentIEN' do
+      VCR.use_cassette('chip/authenticated_check_in/post_check_in_invalid_appointment_200') do
+        VCR.use_cassette('check_in/chip/token/token_200') do
+          post '/mobile/v0/appointments/check-in', headers: iam_headers,
+                                                   params: { 'appointmentIEN' => nil, 'locationId' => '516' }
+        end
+      end
+
+      expect(response.status).to eq(400)
+      expect(response.parsed_body.dig('errors', 0, 'title')).to match('Missing parameter')
+    end
+
+    it 'shows error when nil locationId' do
+      VCR.use_cassette('chip/authenticated_check_in/post_check_in_invalid_appointment_200') do
+        VCR.use_cassette('check_in/chip/token/token_200') do
+          post '/mobile/v0/appointments/check-in', headers: iam_headers,
+               params: { 'appointmentIEN' => '516', 'locationId' => nil }
+        end
+      end
+
+      expect(response.status).to eq(400)
+      expect(response.parsed_body.dig('errors', 0, 'title')).to match('Missing parameter')
     end
   end
 end
