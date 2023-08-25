@@ -19,6 +19,7 @@ class AppealsBaseController < ApplicationController
   def decision_review_service
     DecisionReview::Service.new
   end
+  hello
 
   def request_body_hash
     @request_body_hash ||= get_hash_from_request_body
