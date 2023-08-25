@@ -14,6 +14,12 @@ module Lighthouse
           sponsor = get_sponsor_for user
           raise ArgumentError, 'Unable to find sponsor for dependent user' unless sponsor
 
+          ::Rails.logger.info({
+            message: 'User is a dependent. Using sponsor information.',
+            id: user.uuid,
+            sponsor_id: sponsor.uuid
+          })
+
           icn = sponsor.icn
         end
 
