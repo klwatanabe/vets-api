@@ -4,13 +4,14 @@ set -e
 
 # All files that are added, copied, modified, renamed, or have their type changed in the latest push
 # This will cover scenarios where a file/directory is deleted and then re-added in another commit
-CHANGED_FILES=$(git diff --name-only --diff-filter=ACMRT HEAD~1 HEAD)
+CHANGED_FILES=$( git diff --name-only --unified=0 origin/master)
 
 check_in_codeowners() {
     local file="$1"
     while [[ "$file" != '.' && "$file" != '/' ]]; do
         # Check if the file or directory is in CODEOWNERS
         echo "Checking CODEOWNERS for: $file"
+        grep -i "\- #" .github/CODEOWNERS |
         if grep -qE "^\s*${file}(/|\s+|\$)" .github/CODEOWNERS; then
             return 0
         fi

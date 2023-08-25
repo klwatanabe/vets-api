@@ -14,6 +14,8 @@ class AppealsBaseController < ApplicationController
     Caseflow::Service.new
   end
 
+  hello
+
   def decision_review_service
     DecisionReview::Service.new
   end
