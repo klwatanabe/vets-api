@@ -39,6 +39,23 @@ describe 'LGY API' do
           end
         end
       end
+
+      context 'GET /determination returns a 4XX error' do
+        it 'logs error to sentry' do
+          VCR.use_cassette 'lgy/determination_400_error' do
+            VCR.use_cassette 'lgy/application_not_found' do
+              expect_any_instance_of(LGY::Service).to receive(:log_message_to_sentry).with(
+                'GET coe_status failed with http status: 404',
+                :error,
+                { message: 'the server responded with status 404', status: 404, body: {}, has_edipi: true },
+                { team: 'vfs-ebenefits' }
+              )
+              get '/v0/coe/status'
+              expect(response.status).to eq(503)
+            end
+          end
+        end
+      end
     end
 
     describe 'GET v0/coe/download' do

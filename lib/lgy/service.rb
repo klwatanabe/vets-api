@@ -51,6 +51,14 @@ module LGY
         )
         nil
       end
+    rescue Common::Client::Errors::ClientError => e
+      log_message_to_sentry(
+        "GET coe_status failed with http status: #{e.status}",
+        :error,
+        { message: e.message, status: e.status, body: e.body, has_edipi: @edipi.present? },
+        { team: 'vfs-ebenefits' }
+      )
+      raise e
     end
     # rubocop:enable Metrics/MethodLength
 
