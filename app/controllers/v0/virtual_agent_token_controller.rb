@@ -53,7 +53,6 @@ module V0
                else
                  Settings.virtual_agent.webchat_secret
                end
-    
       @bearer_token ||= "Bearer #{secret}"
     end
 
