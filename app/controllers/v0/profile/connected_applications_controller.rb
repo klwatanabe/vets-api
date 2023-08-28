@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 require 'rest-client'
 
 module V0
@@ -13,12 +14,12 @@ module V0
         app.user = @current_user
 
         icn = app.user
-        clientId = app.clientId
+        client_id = app.clientId
 
         root_url = request.base_url == 'https://api.va.gov' ? 'https://api.va.gov' : 'https://sandbox-api.va.gov'
         revocation_url = "#{root_url}/internal/auth/v3/user/consent"
 
-        payload = { icn: icn, clientId: clientId}
+        payload = { icn:, client_id: }
 
         begin
           response = RestClient.delete(revocation_url, params: payload)
@@ -26,8 +27,9 @@ module V0
           if response.code == 204
             head :no_content
           else
-            render json: { error: 'Something went wrong cannot revoke grants'}, status: :unprocessable_entity
+            render json: { error: 'Something went wrong cannot revoke grants' }, status: :unprocessable_entity
           end
+        end
       end
 
       private
