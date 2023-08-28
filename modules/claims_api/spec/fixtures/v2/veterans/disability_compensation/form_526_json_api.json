@@ -132,7 +132,7 @@
           "servedInGulfWarHazardLocations": "YES",
           "serviceDates": {
             "beginDate": "07-2018",
-            "endDate": "08-2018"
+            "endDate": "2018"
           }
         },
         "herbicideHazardService": {
@@ -154,7 +154,7 @@
         "multipleExposures": [
           {
             "exposureDates": {
-              "beginDate": "12-2012",
+              "beginDate": "2012",
               "endDate": "07-2013"
             },
             "exposureLocation": "Guam",

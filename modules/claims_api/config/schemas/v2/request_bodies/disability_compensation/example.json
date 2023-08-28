@@ -56,7 +56,7 @@
         "gulfWarHazardService": {
           "servedInGulfWarHazardLocations": "YES",
           "serviceDates": {
-            "beginDate": "07-1999",
+            "beginDate": "1999",
             "endDate": "01-2005"
           }
         },
@@ -73,7 +73,7 @@
           "specifyOtherExposures": "Other exposure details",
           "exposureDates": {
             "beginDate": "07-2011",
-            "endDate": "10-2013"
+            "endDate": "2013"
           }
         },
         "multipleExposures": [
@@ -145,7 +145,7 @@
             "state": "GA",
             "city": "Decatur"
           },
-          "beginDate": "03-1985"
+          "beginDate": "1985"
         }
       ],
       "serviceInformation": {
