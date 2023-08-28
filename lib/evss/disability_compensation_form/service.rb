@@ -67,7 +67,7 @@ module EVSS
       # Returns PDF stream in response, instead of submitting to auto-establish.
       # This is used in the 526ez backup submission process when auto-establisment errors and is not possible.
       #
-      # @param form_content [JSON] JSON serialized version of a {Form526Submission}
+      # @param form_content [JSON] JSON serialized version of a {Form525Submission}
       # @return [Faraday::Response] - Response from EVSS /getPDF endpoint
       def get_form526(form_content)
         with_monitoring_and_error_handling do
