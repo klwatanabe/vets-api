@@ -14,6 +14,7 @@ module V0
         app.user = @current_user
 
         icn = app.user.icn
+        client_id = connected_accounts_params[:id]
 
         root_url = request.base_url == 'https://api.va.gov' ? 'https://api.va.gov' : 'https://sandbox-api.va.gov'
         revocation_url = "#{root_url}/internal/auth/v3/user/consent"
