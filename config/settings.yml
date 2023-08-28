@@ -185,11 +185,11 @@ edu:
   staging_spool_contents:
     emails:
       - noah.stern@va.gov
-      - gregg.puhala@dbitpro.com
+      - gregg.puhala@va.gov
       - kara.ciprich@va.gov
       - napoleon.kernessant@govcio.com
       - vishnhav.ashok@va.gov
-      - jarred.simon@vetsez.com
+      - donna.saunders@va.gov
       - ariana.adili@govcio.com
 
 dependents:
@@ -621,7 +621,9 @@ vba_documents:
 #Settings for Claims Api Module
 claims_api:
   pdf_generator_526:
-    service_name: form-526ez-pdf-generator
+    url: ~
+    path: '/form-526ez-pdf-generator/v1/forms/'
+    content_type: 'application/vnd.api+json'
   report_enabled: false
   audit_enabled: false
   s3:
@@ -1243,6 +1245,7 @@ vanotify:
         form1990_confirmation_email: form1990_confirmation_email_template_id
         form1990e_confirmation_email: form1990e_confirmation_email_template_id
         form1995_confirmation_email: form1995_confirmation_email_template_id
+        form21_4142_confirmation_email: form21_4142_confirmation_email_template_id
         form526_confirmation_email: fake_template_id
         form526_submission_failed_email: fake_template_id
         form5490_confirmation_email: form5490_confirmation_email_template_id
