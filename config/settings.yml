@@ -1412,6 +1412,8 @@ chip:
   mock: true
   mobile_app:
     tenant_id: 6f1c8b41-9c77-469d-852d-269c51a7d380
+    username: 'testuser'
+    password: '12345'
 
 check_in:
   travel_reimbursement_api:
@@ -1492,7 +1494,7 @@ virtual_regional_office:
   api_key: 9d3868d1-ec15-4889-8002-2bff1b50ba62
   evidence_pdf_path: evidence-pdf
   ctn_classification_path: classifier
-  max_cfi_path: max-ratings
+  max_cfi_path: employee-experience/max-ratings
 
 # Settings for Test User Dashboard modules
 test_user_dashboard:
