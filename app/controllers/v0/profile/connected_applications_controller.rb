@@ -13,13 +13,12 @@ module V0
         app = OktaRedis::App.with_id(connected_accounts_params[:id])
         app.user = @current_user
 
-        icn = app.user
-        client_id = app.clientId
+        icn = app.user.icn
 
         root_url = request.base_url == 'https://api.va.gov' ? 'https://api.va.gov' : 'https://sandbox-api.va.gov'
-        revocation_url = "#{root_url}/auth/v3/user/consent"
+        revocation_url = "#{root_url}/internal/auth/v3/user/consent"
 
-        payload = { icn:, client_id: }
+        payload = { icn:, id: }
 
         begin
           response = RestClient.delete(revocation_url, params: payload)
