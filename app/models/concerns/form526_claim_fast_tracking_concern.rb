@@ -79,8 +79,8 @@ module Form526ClaimFastTrackingConcern
     form.dig('form526', 'form526', 'disabilities')
   end
 
-  def increase_only?
-    disabilities.all? { |disability| disability['disabilityActionType']&.upcase == 'INCREASE' }
+  def increase_or_new?
+    disabilities.all? { |disability| disability['disabilityActionType']&.upcase == 'INCREASE' || disability['disabilityActionType']&.upcase == 'NEW' }
   end
 
   def diagnostic_codes
@@ -100,16 +100,22 @@ module Form526ClaimFastTrackingConcern
   end
 
   def update_classification
-    return unless Flipper.enabled?(:disability_526_classifier)
-    return unless increase_only?
+    return unless increase_or_new?
     return unless disabilities.count == 1
-    return unless diagnostic_codes.count == 1
 
     diagnostic_code = diagnostic_codes.first
+    claim_type = disabilities.pick('disabilityActionType').upcase
+    if claim_type == 'INCREASE'
+      claim_type = 'claim_for_increase'
+    elsif claim_type == 'NEW'
+      claim_type = 'new'
+    end
+
     params = {
       diagnostic_code:,
       claim_id: saved_claim_id,
-      form526_submission_id: id
+      form526_submission_id: id,
+      claim_type:
     }
 
     classification = classify_by_diagnostic_code(params)
@@ -119,7 +125,7 @@ module Form526ClaimFastTrackingConcern
 
   def classify_by_diagnostic_code(params)
     vro_client = VirtualRegionalOffice::Client.new
-    response = vro_client.classify_contention_by_diagnostic_code(params)
+    response = vro_client.classify_single_contention(params)
     response.body
   end
 
