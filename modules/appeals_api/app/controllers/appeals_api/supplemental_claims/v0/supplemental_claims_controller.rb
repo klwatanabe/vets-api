@@ -7,7 +7,7 @@ module AppealsApi::SupplementalClaims::V0
     include AppealsApi::OpenidAuth
     include AppealsApi::PdfDownloads
 
-    skip_before_action :validate_icn_header, only: %i[index]
+    skip_before_action :validate_icn_header
     before_action :validate_icn_parameter, only: %i[index download]
 
     API_VERSION = 'V0'
@@ -26,6 +26,15 @@ module AppealsApi::SupplementalClaims::V0
       render json: AppealsApi::SupplementalClaimSerializer.new(veteran_scs).serializable_hash
     end
 
+    def show
+      sc = AppealsApi::SupplementalClaim.select(ALLOWED_COLUMNS).find(params[:id])
+      sc = with_status_simulation(sc) if status_requested_and_allowed?
+
+      render_supplemental_claim(sc)
+    rescue ActiveRecord::RecordNotFound
+      render_supplemental_claim_not_found(params[:id])
+    end
+
     def create
       sc = AppealsApi::SupplementalClaim.new(
         auth_headers: request_headers,
@@ -40,15 +49,14 @@ module AppealsApi::SupplementalClaims::V0
 
       sc.save
       AppealsApi::PdfSubmitJob.perform_async(sc.id, 'AppealsApi::SupplementalClaim', 'v3')
-
-      render json: AppealsApi::SupplementalClaimSerializer.new(sc).serializable_hash
+      render_supplemental_claim(sc)
     end
 
     def download
       id = params[:id]
       supplemental_claim = AppealsApi::SupplementalClaim.find(id)
 
-      render_appeal_pdf_download(supplemental_claim, "#{FORM_NUMBER}-supplemental-claim-#{id}.pdf")
+      render_appeal_pdf_download(supplemental_claim, "#{FORM_NUMBER}-supplemental-claim-#{id}.pdf", params[:icn])
     rescue ActiveRecord::RecordNotFound
       render_supplemental_claim_not_found(id)
     end
@@ -66,6 +74,10 @@ module AppealsApi::SupplementalClaims::V0
       end
 
       render json: { errors: validation_errors }, status: :unprocessable_entity if validation_errors.present?
+    end
+
+    def render_supplemental_claim(sc)
+      render json: AppealsApi::SupplementalClaimSerializer.new(sc).serializable_hash
     end
 
     def token_validation_api_key
