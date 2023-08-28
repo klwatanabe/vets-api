@@ -48,13 +48,13 @@ module V0
     end
 
     def bearer_token
-      if Flipper.enabled?(:virtual_agent_enable_pva2_chatbot, current_user)
-        secret = Settings.virtual_agent.webchat_pva2_secret
-        @bearer_token ||= "Bearer #{secret}"
-      else
-        secret = Settings.virtual_agent.webchat_secret
-        @bearer_token ||= "Bearer #{secret}"
-      end
+      secret = if Flipper.enabled?(:virtual_agent_enable_pva2_chatbot, current_user)
+                 Settings.virtual_agent.webchat_pva2_secret
+               else
+                 Settings.virtual_agent.webchat_secret
+               end
+    
+      @bearer_token ||= "Bearer #{secret}"
     end
 
     def service_exception_handler(exception)
