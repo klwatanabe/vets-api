@@ -17,7 +17,7 @@ module V0
         client_id = app.clientId
 
         root_url = request.base_url == 'https://api.va.gov' ? 'https://api.va.gov' : 'https://sandbox-api.va.gov'
-        revocation_url = "#{root_url}/internal/auth/v3/user/consent"
+        revocation_url = "#{root_url}/auth/v3/user/consent"
 
         payload = { icn:, client_id: }
 
