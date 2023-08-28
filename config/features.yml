@@ -409,6 +409,10 @@ features:
     actor_type: user
     description: Enables form 1990e email submission confirmation (VaNotify)
     enable_in_development: true
+  form21_4142_confirmation_email:
+    actor_type: user
+    description: Enables form 21-4142 email submission confirmation (VaNotify)
+    enable_in_development: true
   form5490_confirmation_email:
     actor_type: user
     description: Enables form 5490 email submission confirmation (VaNotify)
@@ -501,7 +505,11 @@ features:
     enable_in_development: true
   mhv_landing_page_enabled:
     actor_type: user
-    description: Enables the new MHV landing page on VA.gov
+    description: Enables the My HealtheVet landing page on VA.gov
+    enable_in_development: true
+  mhv_landing_page_show_priority_group:
+    actor_type: user
+    description: Shows Veterans their Priority Group on the MHV Landing Page
     enable_in_development: true
   mhv_secure_messaging_to_va_gov_release:
     actor_type: user
@@ -946,9 +954,12 @@ features:
   virtual_agent_show_floating_chatbot:
     actor_type: user
     description: Enables a floating chatbot on the chatbot page - managed by virtual agent team
-  disability_compensation_lighthouse_rated_disabilities_provider:
+  disability_compensation_lighthouse_rated_disabilities_provider_foreground:
     actor_type: user
-    description: If enabled uses the lighthouse rated disabilities endpoint
+    description: If enabled uses the lighthouse rated disabilities endpoint for foreground requests
+  disability_compensation_lighthouse_rated_disabilities_provider_background:
+    actor_type: user
+    description: If enabled uses the lighthouse rated disabilities endpoint for background tasks
   disability_compensation_lighthouse_document_service_provider:
     actor_type: user
     description: If enabled uses the lighthouse documents service
