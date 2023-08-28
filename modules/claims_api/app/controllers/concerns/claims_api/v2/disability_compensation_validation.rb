@@ -661,21 +661,23 @@ module ClaimsApi
       # Either date could be in MM-YYYY or MM-DD-YYYY format
       def begin_date_not_after_end_date_with_mixed_format_dates?(begin_date, end_date)
         # figure out which one has the day and remove it
-        if date_has_day?(begin_date)
+        if type_of_date_format?(begin_date) == 'mm-dd-yyyy'
           begin_date = remove_chars(begin_date.dup)
-        elsif date_has_day?(end_date)
+        elsif type_of_date_format?(end_date) == 'mm-dd-yyyy'
           end_date = remove_chars(end_date.dup)
         end
         Date.strptime(begin_date, '%m-%Y') > Date.strptime(end_date, '%m-%Y') # = is ok
       end
 
       def date_is_valid_against_current_time_after_check_on_format?(date)
-        if date_has_day?(date)
+        if type_of_date_format?(date) == 'mm-dd-yyyy'
           param_date = Date.strptime(date, '%m-%d-%Y')
           now_date = Date.strptime(Time.zone.today.strftime('%m-%d-%Y'), '%m-%d-%Y')
-        else
+        elsif type_of_date_format?(date) == 'mm-yyyy'
           param_date = Date.strptime(date, '%m-%Y')
           now_date = Date.strptime(Time.zone.today.strftime('%m-%Y'), '%m-%Y')
+        elsif type_of_date_format?(date) == 'yyyy'
+          #
         end
         param_date <= now_date # Since it is approximate we go with <=
       end
@@ -683,6 +685,18 @@ module ClaimsApi
       # just need to know if day is present or not
       def date_has_day?(date)
         date.length == 10
+      end
+
+      # which of three types are we dealing with
+      def type_of_date_format?(date)
+        case date.length
+        when 4
+          'yyyy'
+        when 7
+          'mm-yyyy'
+        when 10
+          'mm-dd-yyyy'
+        end
       end
 
       # making date approximate to compare

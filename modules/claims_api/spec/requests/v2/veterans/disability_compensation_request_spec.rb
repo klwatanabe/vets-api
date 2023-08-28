@@ -1255,6 +1255,34 @@ RSpec.describe 'Disability Claims', type: :request do
                 end
               end
             end
+
+            context "when 'datePaymentReceived' is not in the past but is approximate (YYYY)" do
+              let(:received_date) { (Time.zone.today + 1.month).strftime('%Y') }
+
+              it 'responds with a bad request' do
+                with_okta_user(scopes) do |auth_header|
+                  json_data = JSON.parse data
+                  params = json_data
+                  params['data']['attributes']['servicePay'] = service_pay_attribute
+                  post submit_path, params: params.to_json, headers: auth_header
+                  expect(response).to have_http_status(:bad_request)
+                end
+              end
+            end
+
+            context "when 'datePaymentReceived' is in the past but is approximate (YYYY)" do
+              let(:received_date) { (Time.zone.today - 1.year).strftime('%Y') }
+
+              it 'responds with a 200' do
+                with_okta_user(scopes) do |auth_header|
+                  json_data = JSON.parse data
+                  params = json_data
+                  params['data']['attributes']['servicePay'] = service_pay_attribute
+                  post submit_path, params: params.to_json, headers: auth_header
+                  expect(response).to have_http_status(:ok)
+                end
+              end
+            end
           end
         end
       end
@@ -1275,6 +1303,20 @@ RSpec.describe 'Disability Claims', type: :request do
         context 'when treatment beginDate is included and in the correct pattern' do
           it 'returns a 200' do
             with_okta_user(scopes) do |auth_header|
+              post submit_path, params: data, headers: auth_header
+              expect(response).to have_http_status(:ok)
+            end
+          end
+        end
+
+        context 'when treatment beginDate is included and in the YYYY pattern' do
+          let(:treatment_begin_date) { '1999' }
+
+          it 'returns a 200' do
+            with_okta_user(scopes) do |auth_header|
+              json = JSON.parse(data)
+              json['data']['attributes']['treatments'][0]['beginDate'] = treatment_begin_date
+              data = json.to_json
               post submit_path, params: data, headers: auth_header
               expect(response).to have_http_status(:ok)
             end
@@ -2128,7 +2170,7 @@ RSpec.describe 'Disability Claims', type: :request do
                         name: '',
                         serviceRelevance: 'Caused by a service-connected disability.',
                         classificationCode: '',
-                        approximateDate: ''
+                        approximateDate: '2019'
                       }
                     ]
                   }
@@ -2160,7 +2202,7 @@ RSpec.describe 'Disability Claims', type: :request do
                         name: 'PTSD',
                         serviceRelevance: 'Caused by a service-connected disability.',
                         classificationCode: '',
-                        approximateDate: ''
+                        approximateDate: '2019'
                       }
                     ]
                   }
@@ -2193,7 +2235,7 @@ RSpec.describe 'Disability Claims', type: :request do
                         name: 'PTSD',
                         serviceRelevance: '',
                         classificationCode: '',
-                        approximateDate: ''
+                        approximateDate: '2019'
                       }
                     ]
                   }
@@ -2434,6 +2476,32 @@ RSpec.describe 'Disability Claims', type: :request do
               params['data']['attributes']['disabilities'] = disabilities
               post submit_path, params: params.to_json, headers: auth_header
               expect(response).to have_http_status(:bad_request)
+            end
+          end
+
+          it 'returns 200 if approximateDate is in format YYYY' do
+            with_okta_user(scopes) do |auth_header|
+              json_data = JSON.parse data
+              params = json_data
+              disabilities = [
+                {
+                  disabilityActionType: 'NONE',
+                  name: 'PTSD (post traumatic stress disorder)',
+                  diagnosticCode: 9999,
+                  serviceRelevance: 'Heavy equipment operator in service.',
+                  secondaryDisabilities: [
+                    {
+                      disabilityActionType: 'SECONDARY',
+                      name: 'PTSD',
+                      serviceRelevance: 'Caused by a service-connected disability.',
+                      approximateDate: "#{Time.zone.now.year + 1}"
+                    }
+                  ]
+                }
+              ]
+              params['data']['attributes']['disabilities'] = disabilities
+              post submit_path, params: params.to_json, headers: auth_header
+              expect(response).to have_http_status(:ok)
             end
           end
         end
