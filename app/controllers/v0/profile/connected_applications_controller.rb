@@ -14,12 +14,12 @@ module V0
         app.user = @current_user
 
         icn = app.user.icn
-        client_id = params[:id]
+        client_id = connected_accounts_params[:id]
 
         root_url = request.base_url == 'https://api.va.gov' ? 'https://api.va.gov' : 'https://sandbox-api.va.gov'
         revocation_url = "#{root_url}/internal/auth/v3/user/consent"
 
-        payload = { icn:, id: }
+        payload = { icn:, client_id: }
 
         begin
           response = RestClient.delete(revocation_url, params: payload)
