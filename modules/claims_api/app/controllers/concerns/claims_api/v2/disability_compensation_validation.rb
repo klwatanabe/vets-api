@@ -677,7 +677,8 @@ module ClaimsApi
           param_date = Date.strptime(date, '%m-%Y')
           now_date = Date.strptime(Time.zone.today.strftime('%m-%Y'), '%m-%Y')
         elsif type_of_date_format?(date) == 'yyyy'
-          #
+          param_date = Date.strptime(date, '%Y')
+          now_date = Date.strptime(Time.zone.today.strftime('%Y'), '%Y')
         end
         param_date <= now_date # Since it is approximate we go with <=
       end

@@ -2134,17 +2134,16 @@ RSpec.describe 'Disability Claims', type: :request do
             end
           end
 
-          # because of the adjusted regex in the schema I wanted to lock this in
           context 'when approximateDate is formatted YYYY' do
             let(:approximate_date) { (Time.zone.today - 1.month).strftime('%Y') }
 
-            it 'responds with a 422' do
+            it 'responds with a 200' do
               with_okta_user(scopes) do |auth_header|
                 json_data = JSON.parse data
                 params = json_data
                 params['data']['attributes']['disabilities'][0]['approximateDate'] = approximate_date
                 post submit_path, params: params.to_json, headers: auth_header
-                expect(response).to have_http_status(:unprocessable_entity)
+                expect(response).to have_http_status(:ok)
               end
             end
           end
@@ -2466,7 +2465,7 @@ RSpec.describe 'Disability Claims', type: :request do
                   secondaryDisabilities: [
                     {
                       disabilityActionType: 'SECONDARY',
-                      name: 'PTSD',
+                      name: 'PTSD (post traumatic stress disorder)',
                       serviceRelevance: 'Caused by a service-connected disability.',
                       approximateDate: "01-11-#{Time.zone.now.year + 1}"
                     }
@@ -2483,6 +2482,7 @@ RSpec.describe 'Disability Claims', type: :request do
             with_okta_user(scopes) do |auth_header|
               json_data = JSON.parse data
               params = json_data
+              count = params['data']['attributes']['disabilities'].count
               disabilities = [
                 {
                   disabilityActionType: 'NONE',
@@ -2492,14 +2492,14 @@ RSpec.describe 'Disability Claims', type: :request do
                   secondaryDisabilities: [
                     {
                       disabilityActionType: 'SECONDARY',
-                      name: 'PTSD',
+                      name: 'PTSD (post traumatic stress disorder)',
                       serviceRelevance: 'Caused by a service-connected disability.',
-                      approximateDate: "#{Time.zone.now.year + 1}"
+                      approximateDate: "#{Time.zone.now.year - 1}"
                     }
                   ]
                 }
               ]
-              params['data']['attributes']['disabilities'] = disabilities
+              params['data']['attributes']['disabilities'][count + 1] = disabilities
               post submit_path, params: params.to_json, headers: auth_header
               expect(response).to have_http_status(:ok)
             end

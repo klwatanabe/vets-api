@@ -274,7 +274,9 @@ module ClaimsApi
         claim_disabilities = @auto_claim&.dig('disabilities')&.map do |disability|
           disability['disability'] = disability['name']
           if disability['approximateDate'].present?
-            approx_date = if disability['approximateDate'].length == 7
+            approx_date = if disability['approximateDate'].length == 4
+                            Date.strptime(disability['approximateDate'], '%Y')
+                          elsif disability['approximateDate'].length == 7
                             Date.strptime(disability['approximateDate'], '%m-%Y')
                           else
                             Date.strptime(disability['approximateDate'], '%m-%d-%Y')
@@ -289,7 +291,9 @@ module ClaimsApi
           sec_dis = disability['secondaryDisabilities']&.map do |secondary_disability|
             secondary_disability['disability'] = secondary_disability['name']
             if secondary_disability['approximateDate'].present?
-              approx_date = if secondary_disability['approximateDate'].length == 7
+              approx_date = if secondary_disability['approximateDate'].length == 4
+                              Date.strptime(secondary_disability['approximateDate'], '%Y')
+                            elsif secondary_disability['approximateDate'].length == 7
                               Date.strptime(secondary_disability['approximateDate'], '%m-%Y')
                             else
                               Date.strptime(secondary_disability['approximateDate'], '%m-%d-%Y')
