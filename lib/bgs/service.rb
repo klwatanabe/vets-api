@@ -6,6 +6,7 @@ require 'common/client/concerns/monitoring'
 module BGS
   class Service
     STATSD_KEY_PREFIX = 'api.bgs'
+    FILE_NUMBER_MATCH = /(No record found for file number )(\d+)/
 
     include BGS::Exceptions::BGSErrors
     include SentryLogging
@@ -40,6 +41,8 @@ module BGS
 
     def find_rating_data
       service.rating.find_rating_data(@user.ssn)
+    rescue => e
+      raise(e.class, filter_sensitive_information(e.message))
     end
 
     def create_proc_form(vnp_proc_id, form_type_code)
@@ -281,6 +284,10 @@ module BGS
         external_uid: @user.icn || @user.uuid,
         external_key: @user.common_name || @user.email
       )
+    end
+
+    def filter_sensitive_information(message)
+      message.gsub(FILE_NUMBER_MATCH, '\1<FILTERED>')
     end
   end
 end

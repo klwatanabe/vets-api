@@ -6,6 +6,8 @@ module BGS
     module BGSErrors
       include SentryLogging
       MAX_ATTEMPTS = 3
+      SQL_STATEMENT_MATCH = /(\{prepstmnt.*VALUES.*\[params=.*?})/
+      SQL_DATA_MATCH = /(\([\w+]+\)\s+)([^,\]]+)/s
 
       def with_multiple_attempts_enabled
         attempt ||= 0
@@ -21,6 +23,8 @@ module BGS
       end
 
       def notify_of_service_exception(error, method, attempt = nil, status = :error)
+        error = error.exception(filter_senstive_information(error.message))
+
         msg = "Unable to #{method}: #{error.message}: try #{attempt} of #{MAX_ATTEMPTS}"
         context = { icn: @user[:icn] }
         tags = { team: 'vfs-ebenefits' }
@@ -60,6 +64,10 @@ module BGS
             { team: 'vfs-ebenefits' }
           )
         end
+      end
+
+      def filter_senstive_information(message)
+        message.gsub(SQL_STATEMENT_MATCH) { |match| match.gsub(SQL_DATA_MATCH, '\1<FILTERED>') }
       end
     end
   end
