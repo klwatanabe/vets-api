@@ -1,6 +1,6 @@
 - request:
     method: delete
-    uri: https://sandbox-api.va.gov/internal/auth/v3/user/consent?icn=1013062086V794840&clientId=0oa2ey2m6kEL2897N2p7
+    uri: https://sandbox-api.va.gov/internal/auth/v3/user/consent?client_id=id&icn=123498767V234859
     body:
       encoding: US-ASCII
       string: ''
