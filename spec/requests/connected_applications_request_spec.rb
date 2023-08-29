@@ -3,7 +3,7 @@
 require 'rails_helper'
 
 RSpec.describe 'Connected Applications API endpoint' do
-  let(:user) { build(:user, :loa3, uuid: '1847a3eb4b904102882e24e4ddf12ff3', icn: '1013062086V794840') }
+  let(:user) { build(:user, :loa3, uuid: '1847a3eb4b904102882e24e4ddf12ff3') }
 
   before { sign_in_as(user) }
 
