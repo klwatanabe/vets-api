@@ -112,7 +112,7 @@ describe ClaimsApi::V2::DisabilityCompensationPdfMapper do
         expect(email).to eq('valid@somedomain.com')
         expect(agree_to_email).to eq(true)
         expect(telephone).to eq('5555555555')
-        expect(international_telephone).to eq('5555555555')
+        expect(international_telephone).to eq('+44 20 1234 5678')
       end
     end
 
@@ -164,7 +164,7 @@ describe ClaimsApi::V2::DisabilityCompensationPdfMapper do
 
         expect(homeless_point_of_contact).to eq('john stewart')
         expect(homeless_telephone).to eq('5555555555')
-        expect(homeless_international_telephone).to eq('5555555555')
+        expect(homeless_international_telephone).to eq('+44 20 1234 5678')
         expect(homeless_currently).to eq('YES') # can't be both homess & at risk
         expect(homeless_situation_options).to eq('FLEEING_CURRENT_RESIDENCE')
         expect(homeless_currently_other_description).to eq('ABCDEFGHIJKLM')
@@ -194,10 +194,10 @@ describe ClaimsApi::V2::DisabilityCompensationPdfMapper do
         exp_begin_date = toxic_exp_data[:additionalHazardExposures][:exposureDates][:start]
         exp_end_date = toxic_exp_data[:additionalHazardExposures][:exposureDates][:end]
 
-        multi_exp_begin_date = toxic_exp_data[:multipleExposures][:exposureDates][:start]
-        multi_exp_end_date = toxic_exp_data[:multipleExposures][:exposureDates][:end]
-        multi_exp_location = toxic_exp_data[:multipleExposures][:exposureLocation]
-        multi_exp_hazard = toxic_exp_data[:multipleExposures][:hazardExposedTo]
+        multi_exp_begin_date = toxic_exp_data[:multipleExposures][0][:exposureDates][:start]
+        multi_exp_end_date = toxic_exp_data[:multipleExposures][0][:exposureDates][:end]
+        multi_exp_location = toxic_exp_data[:multipleExposures][0][:exposureLocation]
+        multi_exp_hazard = toxic_exp_data[:multipleExposures][0][:hazardExposedTo]
 
         expect(gulf_locations).to eq('YES')
         expect(gulf_begin_date).to eq({ month: 7, year: 2018 })
@@ -213,10 +213,10 @@ describe ClaimsApi::V2::DisabilityCompensationPdfMapper do
         expect(exp_begin_date).to eq({ month: 7, year: 2018 })
         expect(exp_end_date).to eq({ month: 8, year: 2018 })
 
-        expect(multi_exp_begin_date).to eq({ month: 7, year: 2018 })
-        expect(multi_exp_end_date).to eq({ month: 8, year: 2018 })
-        expect(multi_exp_location).to eq('ABCDEFGHIJKLMN')
-        expect(multi_exp_hazard).to eq('ABCDEFGHIJKLMNO')
+        expect(multi_exp_begin_date).to eq({ month: 12, year: 2012 })
+        expect(multi_exp_end_date).to eq({ month: 7, year: 2013 })
+        expect(multi_exp_location).to eq('Guam')
+        expect(multi_exp_hazard).to eq('RADIATION')
       end
     end
 

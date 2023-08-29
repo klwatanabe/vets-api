@@ -20,7 +20,7 @@
         },
         "veteranNumber": {
           "telephone": "5555555555",
-          "internationalTelephone": "5555555555"
+          "internationalTelephone": "+44 20 1234 5678"
         },
         "vaFileNumber": "AB123CDEF"
       },
@@ -120,7 +120,7 @@
         "pointOfContact": "john stewart",
         "pointOfContactNumber": {
           "telephone": "5555555555",
-          "internationalTelephone": "5555555555"
+          "internationalTelephone": "+44 20 1234 5678"
         },
         "currentlyHomeless": {
           "homelessSituationOptions": "FLEEING_CURRENT_RESIDENCE",
@@ -151,14 +151,16 @@
             "endDate": "08-2018"
           }
         },
-        "multipleExposures": {
-          "exposureDates": {
-            "beginDate": "07-2018",
-            "endDate": "08-2018"
-          },
-          "exposureLocation": "ABCDEFGHIJKLMN",
-          "hazardExposedTo": "ABCDEFGHIJKLMNO"
-        }
+        "multipleExposures": [
+          {
+            "exposureDates": {
+              "beginDate": "12-2012",
+              "endDate": "07-2013"
+            },
+            "exposureLocation": "Guam",
+            "hazardExposedTo": "RADIATION"
+          }
+        ]
       },
       "treatments": [
         {
