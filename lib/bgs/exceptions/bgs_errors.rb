@@ -6,7 +6,7 @@ module BGS
     module BGSErrors
       include SentryLogging
       MAX_ATTEMPTS = 3
-      SQL_STATEMENT_MATCH = /(\{prepstmnt.*VALUES.*\[params=.*?})/
+      SQL_STATEMENT_MATCH = /(\{prepstmnt.*?VALUES.*?\[params=.*?\})/
       SQL_DATA_MATCH = /(\(\w+\)\s+)([^,\]]+)/s
 
       def with_multiple_attempts_enabled
