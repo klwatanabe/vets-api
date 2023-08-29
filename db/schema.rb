@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2023_07_13_182204) do
+ActiveRecord::Schema.define(version: 2023_08_28_162433) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "btree_gin"
@@ -344,7 +344,8 @@ ActiveRecord::Schema.define(version: 2023_07_13_182204) do
     t.text "logout_redirect_uri"
     t.boolean "pkce"
     t.string "certificates", array: true
-    t.string "refresh_token_path"
+    t.text "description"
+    t.string "access_token_attributes", default: [], array: true
     t.index ["client_id"], name: "index_client_configs_on_client_id", unique: true
   end
 
@@ -752,6 +753,8 @@ ActiveRecord::Schema.define(version: 2023_07_13_182204) do
     t.string "icn", null: false
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
+    t.integer "vet360_link_attempts"
+    t.boolean "vet360_linked"
     t.index ["icn"], name: "index_mobile_users_on_icn", unique: true
   end
 
@@ -968,6 +971,15 @@ ActiveRecord::Schema.define(version: 2023_07_13_182204) do
     t.uuid "user_account_id"
     t.index ["user_account_id"], name: "index_terms_and_conditions_acceptances_on_user_account_id"
     t.index ["user_uuid"], name: "index_terms_and_conditions_acceptances_on_user_uuid"
+  end
+
+  create_table "terms_of_use_agreements", force: :cascade do |t|
+    t.uuid "user_account_id", null: false
+    t.string "agreement_version", null: false
+    t.integer "response", null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["user_account_id"], name: "index_terms_of_use_agreements_on_user_account_id"
   end
 
   create_table "test_user_dashboard_tud_account_availability_logs", force: :cascade do |t|
@@ -1244,6 +1256,7 @@ ActiveRecord::Schema.define(version: 2023_07_13_182204) do
   add_foreign_key "oauth_sessions", "user_accounts"
   add_foreign_key "oauth_sessions", "user_verifications"
   add_foreign_key "terms_and_conditions_acceptances", "user_accounts"
+  add_foreign_key "terms_of_use_agreements", "user_accounts"
   add_foreign_key "user_acceptable_verified_credentials", "user_accounts"
   add_foreign_key "user_credential_emails", "user_verifications"
   add_foreign_key "user_verifications", "user_accounts"

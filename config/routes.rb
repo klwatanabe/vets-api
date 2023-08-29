@@ -115,6 +115,7 @@ Rails.application.routes.draw do
         get(:healthcheck)
         get(:enrollment_status)
         get(:rating_info)
+        post(:download_pdf)
       end
     end
 
@@ -142,6 +143,7 @@ Rails.application.routes.draw do
 
     resources :benefits_claims, only: %i[index show] do
       post :submit5103, on: :member
+      post 'benefits_documents', to: 'benefits_documents#create'
     end
 
     get 'claim_letters', to: 'claim_letters#index'
@@ -432,6 +434,7 @@ Rails.application.routes.draw do
 
   # Modules
   mount AskVAApi::Engine, at: '/ask_va_api'
+  mount Avs::Engine, at: '/avs'
   mount CheckIn::Engine, at: '/check_in'
   mount CovidResearch::Engine, at: '/covid-research'
   mount CovidVaccine::Engine, at: '/covid_vaccine'
@@ -463,7 +466,8 @@ Rails.application.routes.draw do
     mount MockedAuthentication::Engine, at: '/mocked_authentication'
   end
 
-  mount Flipper::UI.app(Flipper.instance) => '/flipper', constraints: Flipper::AdminUserConstraint.new
+  get '/flipper/features/logout', to: 'flipper#logout'
+  mount Flipper::UI.app(Flipper.instance) => '/flipper', constraints: Flipper::AdminUserConstraint
 
   if Rails.env.production?
     require 'coverband'

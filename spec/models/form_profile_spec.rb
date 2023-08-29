@@ -915,8 +915,9 @@ RSpec.describe FormProfile, type: :model do
   end
 
   describe '#prefill_form' do
+    # TODO: Platform Product Team 8/2023: rename this function.
     def can_prefill_emis(yes)
-      expect(user).to receive(:authorize).at_least(:once).with(:emis, :access?).and_return(yes)
+      expect(user).to receive(:authorize).at_least(:once).with(:va_profile, :access?).and_return(yes)
     end
 
     def strip_required(schema)
@@ -1282,11 +1283,13 @@ RSpec.describe FormProfile, type: :model do
             end
 
             it 'returns prefilled 21-526EZ' do
-              Flipper.disable(ApiProviderFactory::FEATURE_TOGGLE_RATED_DISABILITIES)
+              Flipper.disable(ApiProviderFactory::FEATURE_TOGGLE_RATED_DISABILITIES_FOREGROUND)
               VCR.use_cassette('evss/pciu_address/address_domestic') do
                 VCR.use_cassette('evss/disability_compensation_form/rated_disabilities') do
                   VCR.use_cassette('evss/ppiu/payment_information') do
-                    expect_prefilled('21-526EZ')
+                    VCR.use_cassette('virtual_regional_office/max_ratings') do
+                      expect_prefilled('21-526EZ')
+                    end
                   end
                 end
               end
@@ -1308,13 +1311,15 @@ RSpec.describe FormProfile, type: :model do
               end
 
               it 'returns prefilled 21-526EZ' do
-                Flipper.disable(ApiProviderFactory::FEATURE_TOGGLE_RATED_DISABILITIES)
+                Flipper.disable(ApiProviderFactory::FEATURE_TOGGLE_RATED_DISABILITIES_FOREGROUND)
                 expect(user).to receive(:authorize).with(:ppiu, :access?).and_return(true).at_least(:once)
                 expect(user).to receive(:authorize).with(:evss, :access?).and_return(true).at_least(:once)
                 VCR.use_cassette('evss/pciu_address/address_domestic') do
                   VCR.use_cassette('evss/disability_compensation_form/rated_disabilities') do
                     VCR.use_cassette('evss/ppiu/payment_information') do
-                      expect_prefilled('21-526EZ')
+                      VCR.use_cassette('virtual_regional_office/max_ratings') do
+                        expect_prefilled('21-526EZ')
+                      end
                     end
                   end
                 end
