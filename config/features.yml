@@ -144,6 +144,18 @@ features:
     actor_type: user
     description: When enabled, claims status tool uses the Lighthouse API instead of EVSS
     enable_in_development: true
+  cst_use_lighthouse_5103:
+    actor_type: user
+    description: When enabled, claims status tool uses the Lighthouse API for the 5103 endpoint
+    enable_in_development: true
+  cst_use_lighthouse_index:
+    actor_type: user
+    description: When enabled, claims status tool uses the Lighthouse API for the index endpoint
+    enable_in_development: true
+  cst_use_lighthouse_show:
+    actor_type: user
+    description: When enabled, claims status tool uses the Lighthouse API for the show endpoint
+    enable_in_development: true
   cst_include_ddl_boa_letters:
     actor_type: user
     description: When enabled, the Download Decision Letters feature includes Board of Appeals decision letters
@@ -216,6 +228,9 @@ features:
     actor_type: user
     description: enable/disable the use of LH Benefits Documents API in our Claim Status v2 services.
     enable_in_development: false
+  claims_status_v1_lh_auto_establish_claim_enabled:
+    actor_type: user
+    description: With feature flag enabled, v1 /526 should use Lighthouse Form526 docker container
   debt_letters_show_letters:
     actor_type: user
     description: Enables debt letters
@@ -337,10 +352,6 @@ features:
     actor_type: user
     description: Send only lat/long values (no bounding box or address) to the API when querying for facilities.
     enable_in_development: true
-  facility_locator_lighthouse_covid_vaccine_query:
-    actor_type: user
-    description: enable covid search/display
-    enable_in_development: true
   facility_locator_ppms_legacy_urgent_care_to_pos_locator:
     actor_type: user
     description: force the legacy urgent care path to use the new POS locator
@@ -408,6 +419,10 @@ features:
   form1990e_confirmation_email:
     actor_type: user
     description: Enables form 1990e email submission confirmation (VaNotify)
+    enable_in_development: true
+  form21_4142_confirmation_email:
+    actor_type: user
+    description: Enables form 21-4142 email submission confirmation (VaNotify)
     enable_in_development: true
   form5490_confirmation_email:
     actor_type: user
@@ -568,6 +583,9 @@ features:
       Toggle for the entire pre-entry covid 19 self-screener available at /covid19screener and to be used by visitors
       to VHA facilities in lieu of manual screening with a VHA employee.
       This toggle is owned by Patrick B. and the rest of the CTO Health Products team.
+  show_authenticated_menu_enhancements:
+    actor_type: user
+    description: Exposes new links for dependents and letters in the header dropdown for authenticated users
   profile_lighthouse_rating_info:
     actor_type: user
     description: When enabled, will request disability rating info data from lighthouse API.
@@ -627,6 +645,9 @@ features:
     actor_type: user
     description: Use for experimental features for My VA application
     enable_in_development: true
+  my_va_notification_dot_indicator:
+    actor_type: user
+    description: Enable dot indicator for notifications
   my_va_update_errors_warnings:
     actor_type: user
     description: Update all errors and warnings on My VA for consistency (will remove when va-notification component is released)
@@ -959,6 +980,9 @@ features:
   disability_compensation_lighthouse_document_service_provider:
     actor_type: user
     description: If enabled uses the lighthouse documents service
+  disability_compensation_lighthouse_claims_service_provider:
+    actor_type: user
+    description: If enabled uses the lighthouse claims service
   disability_compensation_lighthouse_submit_migration:
     actor_type: user
     description: If enabled uses the lighthouse submit endpoint
