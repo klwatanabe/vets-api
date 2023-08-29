@@ -805,6 +805,7 @@ features:
     enable_in_development: true
     description: Toggle that requires the inclusion of a new 'schedulable' boolean param for fetching facilities
   va_view_dependents_access:
+    enable_in_development: true
     actor_type: user
     description: Allows us to gate the View/ Modify dependents content in a progressive rollout
   yellow_ribbon_mvp_enhancement:

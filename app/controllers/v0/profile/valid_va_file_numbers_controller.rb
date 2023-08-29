@@ -17,9 +17,8 @@ module V0
       private
 
       def valid_va_file_number_data(service_response)
-        return { file_nbr: true } if service_response.file_number.present?
-
-        { file_nbr: false }
+        { file_nbr: service_response.file_number.present?,
+          file_nbr_matches_ssn: service_response.file_number == current_user.ssn }
       end
     end
   end

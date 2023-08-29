@@ -15,6 +15,7 @@ RSpec.describe V0::Profile::ValidVAFileNumbersController, type: :controller do
           expect(response.code).to eq('200')
           expect(response).to have_http_status(:ok)
           expect(JSON.parse(response.body)['data']['attributes']['valid_va_file_number']).to eq(true)
+          expect(JSON.parse(response.body)['data']['attributes']['file_nbr_matches_ssn']).to eq(true)
         end
       end
     end
@@ -28,6 +29,21 @@ RSpec.describe V0::Profile::ValidVAFileNumbersController, type: :controller do
           expect(response.code).to eq('200')
           expect(response).to have_http_status(:ok)
           expect(JSON.parse(response.body)['data']['attributes']['valid_va_file_number']).to eq(false)
+          expect(JSON.parse(response.body)['data']['attributes']['file_nbr_matches_ssn']).to eq(false)
+        end
+      end
+    end
+
+    context 'with a user that has a valid va_file_number but it is different than their SSN' do
+      it 'returns null' do
+        VCR.use_cassette('bgs/person_web_service/find_person_by_participant_id_ssn_mismatch') do
+          sign_in_as(user)
+          get(:show)
+
+          expect(response.code).to eq('200')
+          expect(response).to have_http_status(:ok)
+          expect(JSON.parse(response.body)['data']['attributes']['valid_va_file_number']).to eq(true)
+          expect(JSON.parse(response.body)['data']['attributes']['file_nbr_matches_ssn']).to eq(false)
         end
       end
     end
