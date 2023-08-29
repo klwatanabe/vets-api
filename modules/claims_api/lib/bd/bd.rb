@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'faraday'
+require 'claims_api/v2/benefits_documents/service'
 
 module ClaimsApi
   ##
@@ -33,8 +34,9 @@ module ClaimsApi
     # Upload document of mapped claim
     #
     # @return success or failure
-    def upload(claim, pdf_path, file_number)
-      body = generate_upload_body(claim, pdf_path, file_number)
+    def upload(claim:, pdf_path:, file_number: nil)
+      @multipart = true
+      body = generate_upload_body(claim:, pdf_path:, file_number:)
       client.post('documents', body)&.body
     end
 
@@ -42,14 +44,14 @@ module ClaimsApi
     # Generate form body to upload a document
     #
     # @return {paramenters, file}
-    def generate_upload_body(claim, pdf_path, file_number)
+    def generate_upload_body(claim:, pdf_path:, file_number: nil)
       payload = {}
       data = {
         data: {
           systemName: 'va.gov',
           docType: 'L122',
           claimId: claim.evss_id,
-          fileNumber: file_number,
+          fileNumber: file_number || claim.auth_headers['va_eauth_birlsfilenumber'],
           fileName: File.basename(pdf_path),
           trackedItemIds: []
         }

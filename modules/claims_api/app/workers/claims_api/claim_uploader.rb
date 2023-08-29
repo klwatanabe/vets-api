@@ -3,6 +3,7 @@
 require 'sidekiq'
 require 'evss/documents_service'
 require 'claims_api/claim_logger'
+require 'bd/bd'
 
 module ClaimsApi
   class ClaimUploader
@@ -24,7 +25,11 @@ module ClaimsApi
         uploader.retrieve_from_store!(claim_object.file_data['filename'])
         file_body = uploader.read
         ClaimsApi::Logger.log('526', claim_id: auto_claim.id, attachment_id: uuid)
-        service(auth_headers).upload(file_body, claim_upload_document(claim_object))
+        if Flipper.enabled? :lh_bd_claim_uploader
+          service(auth_headers).upload(claim: auto_claim, pdf_path: uploader.file.file)
+        else
+          service(auth_headers).upload(file_body, claim_upload_document(claim_object))
+        end
       end
     end
 
@@ -49,9 +54,13 @@ module ClaimsApi
     end
 
     def service(auth_headers)
-      EVSS::DocumentsService.new(
-        auth_headers
-      )
+      if Flipper.enabled? :lh_bd_claim_uploader
+        ClaimsApi::BD.new
+      else
+        EVSS::DocumentsService.new(
+          auth_headers
+        )
+      end
     end
   end
 end
