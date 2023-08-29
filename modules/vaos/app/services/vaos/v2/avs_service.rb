@@ -7,7 +7,7 @@ module VAOS
   module V2
     class AVSService < Avs::V0::AvsService
       # TODO: might not need any of this
-      
+
       # def config
       #   VAOS::AVSConfiguration.instance
       # end

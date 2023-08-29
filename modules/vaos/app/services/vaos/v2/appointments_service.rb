@@ -39,7 +39,6 @@ module VAOS
             # if avs_applicable?(appt)
             #   fetch_avs_and_update_appt_body(appt)
             # end
-
           end
           {
             data: deserialized_appointments(response.body[:data]),
@@ -114,7 +113,7 @@ module VAOS
 
       def extract_station_id_and_ien(appt)
         id_colon_ien = appt[:identifier][0][:value]
-        id_ien_array = id_colon_ien.split(":", 2)
+        id_colon_ien.split(':', 2)
       end
 
       def get_avs_link(station_id, ien)
