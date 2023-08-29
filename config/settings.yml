@@ -1242,9 +1242,12 @@ vanotify:
         form527ez_confirmation_email: form527ez_confirmation_email_template_id
         preneeds_burial_form_email: preneeds_burial_form_email_template_id
         contact_info_change: fake_template_id
+        form0994_confirmation_email_v1: form0994_confirmation_email_v1_template_id
+        form0994_confirmation_email_v2: form0994_confirmation_email_v2_template_id
         form1990_confirmation_email: form1990_confirmation_email_template_id
         form1990e_confirmation_email: form1990e_confirmation_email_template_id
         form1995_confirmation_email: form1995_confirmation_email_template_id
+        form21_4142_confirmation_email: form21_4142_confirmation_email_template_id
         form526_confirmation_email: fake_template_id
         form526_submission_failed_email: fake_template_id
         form5490_confirmation_email: form5490_confirmation_email_template_id
@@ -1411,6 +1414,8 @@ chip:
   mock: true
   mobile_app:
     tenant_id: 6f1c8b41-9c77-469d-852d-269c51a7d380
+    username: 'testuser'
+    password: '12345'
 
 check_in:
   travel_reimbursement_api:
@@ -1491,7 +1496,7 @@ virtual_regional_office:
   api_key: 9d3868d1-ec15-4889-8002-2bff1b50ba62
   evidence_pdf_path: evidence-pdf
   ctn_classification_path: classifier
-  max_cfi_path: max-ratings
+  max_cfi_path: employee-experience/max-ratings
 
 # Settings for Test User Dashboard modules
 test_user_dashboard:
