@@ -80,7 +80,9 @@ module Form526ClaimFastTrackingConcern
   end
 
   def increase_or_new?
-    disabilities.all? { |disability| disability['disabilityActionType']&.upcase == 'INCREASE' || disability['disabilityActionType']&.upcase == 'NEW' }
+    disabilities.all? do |disability|
+      disability['disabilityActionType']&.upcase == 'INCREASE' || disability['disabilityActionType']&.upcase == 'NEW'
+    end
   end
 
   def diagnostic_codes
