@@ -1257,7 +1257,7 @@ RSpec.describe 'Disability Claims', type: :request do
             end
 
             context "when 'datePaymentReceived' is not in the past but is approximate (YYYY)" do
-              let(:received_date) { (Time.zone.today + 1.month).strftime('%Y') }
+              let(:received_date) { (Time.zone.today + 1.year).strftime('%Y') }
 
               it 'responds with a bad request' do
                 with_okta_user(scopes) do |auth_header|
@@ -1265,6 +1265,7 @@ RSpec.describe 'Disability Claims', type: :request do
                   params = json_data
                   params['data']['attributes']['servicePay'] = service_pay_attribute
                   post submit_path, params: params.to_json, headers: auth_header
+                  puts "#{response.pretty_inspect}"
                   expect(response).to have_http_status(:bad_request)
                 end
               end

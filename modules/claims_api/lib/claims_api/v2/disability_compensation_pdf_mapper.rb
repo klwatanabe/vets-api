@@ -90,11 +90,11 @@ module ClaimsApi
         @pdf_data[:data][:attributes][:changeOfAddress].merge!(
           effectiveDates: {
             start:
-            convert_date_string_mdy_to_object(@pdf_data[:data][:attributes][:changeOfAddress][:dates][:beginDate])
+            determine_date_format_and_convert_to_object(@pdf_data[:data][:attributes][:changeOfAddress][:dates][:beginDate])
           }
         )
         @pdf_data[:data][:attributes][:changeOfAddress][:effectiveDates][:end] =
-          convert_date_string_mdy_to_object(@pdf_data[:data][:attributes][:changeOfAddress][:dates][:endDate])
+          determine_date_format_and_convert_to_object(@pdf_data[:data][:attributes][:changeOfAddress][:dates][:endDate])
         number_and_street = @pdf_data[:data][:attributes][:changeOfAddress][:numberAndStreet]
         @pdf_data[:data][:attributes][:changeOfAddress][:newAddress][:numberAndStreet] = number_and_street
         apartment_or_unit_number = @pdf_data[:data][:attributes][:changeOfAddress][:apartmentOrUnitNumber]
@@ -149,11 +149,11 @@ module ClaimsApi
         if gulf
           gulfwar_service_dates_begin = @pdf_data[:data][:attributes][:toxicExposure][:gulfWarHazardService][:serviceDates][:beginDate]
           @pdf_data[:data][:attributes][:exposureInformation][:toxicExposure][:gulfWarHazardService][:serviceDates][:start] =
-            convert_date_string_my_to_object(gulfwar_service_dates_begin)
+            determine_date_format_and_convert_to_object(gulfwar_service_dates_begin)
           @pdf_data[:data][:attributes][:exposureInformation][:toxicExposure][:gulfWarHazardService][:serviceDates].delete(:beginDate)
           gulfwar_service_dates_end = @pdf_data[:data][:attributes][:toxicExposure][:gulfWarHazardService][:serviceDates][:endDate]
           @pdf_data[:data][:attributes][:exposureInformation][:toxicExposure][:gulfWarHazardService][:serviceDates][:end] =
-            convert_date_string_my_to_object(gulfwar_service_dates_end)
+            determine_date_format_and_convert_to_object(gulfwar_service_dates_end)
           @pdf_data[:data][:attributes][:exposureInformation][:toxicExposure][:gulfWarHazardService][:serviceDates].delete(:endDate)
           served_in_gulf_war_hazard_locations = @pdf_data[:data][:attributes][:toxicExposure][:gulfWarHazardService][:servedInGulfWarHazardLocations]
           @pdf_data[:data][:attributes][:exposureInformation][:toxicExposure][:gulfWarHazardService][:servedInGulfWarHazardLocations] =
@@ -166,11 +166,11 @@ module ClaimsApi
         if herb
           herbicide_service_dates_begin = @pdf_data[:data][:attributes][:toxicExposure][:herbicideHazardService][:serviceDates][:beginDate]
           @pdf_data[:data][:attributes][:exposureInformation][:toxicExposure][:herbicideHazardService][:serviceDates][:start] =
-            convert_date_string_my_to_object(herbicide_service_dates_begin)
+            determine_date_format_and_convert_to_object(herbicide_service_dates_begin)
           @pdf_data[:data][:attributes][:exposureInformation][:toxicExposure][:herbicideHazardService][:serviceDates].delete(:beginDate)
           herbicide_service_dates_end = @pdf_data[:data][:attributes][:toxicExposure][:herbicideHazardService][:serviceDates][:endDate]
           @pdf_data[:data][:attributes][:exposureInformation][:toxicExposure][:herbicideHazardService][:serviceDates][:end] =
-            convert_date_string_my_to_object(herbicide_service_dates_end)
+            determine_date_format_and_convert_to_object(herbicide_service_dates_end)
           @pdf_data[:data][:attributes][:exposureInformation][:toxicExposure][:herbicideHazardService][:serviceDates].delete(:endDate)
           served_in_herbicide_hazard_locations = @pdf_data[:data][:attributes][:toxicExposure][:herbicideHazardService][:servedInHerbicideHazardLocations]
           @pdf_data[:data][:attributes][:exposureInformation][:toxicExposure][:herbicideHazardService][:servedInHerbicideHazardLocations] =
@@ -183,11 +183,11 @@ module ClaimsApi
         if add
           additional_exposure_dates_begin = @pdf_data[:data][:attributes][:toxicExposure][:additionalHazardExposures][:exposureDates][:beginDate]
           @pdf_data[:data][:attributes][:exposureInformation][:toxicExposure][:additionalHazardExposures][:exposureDates][:start] =
-            convert_date_string_my_to_object(additional_exposure_dates_begin)
+            determine_date_format_and_convert_to_object(additional_exposure_dates_begin)
           @pdf_data[:data][:attributes][:exposureInformation][:toxicExposure][:additionalHazardExposures][:exposureDates].delete(:beginDate)
           additional_exposure_dates_end = @pdf_data[:data][:attributes][:toxicExposure][:additionalHazardExposures][:exposureDates][:endDate]
           @pdf_data[:data][:attributes][:exposureInformation][:toxicExposure][:additionalHazardExposures][:exposureDates][:end] =
-            convert_date_string_my_to_object(additional_exposure_dates_end)
+            determine_date_format_and_convert_to_object(additional_exposure_dates_end)
           @pdf_data[:data][:attributes][:exposureInformation][:toxicExposure][:additionalHazardExposures][:exposureDates].delete(:endDate)
         end
       end
@@ -197,10 +197,10 @@ module ClaimsApi
         if multi
           @pdf_data[:data][:attributes][:toxicExposure][:multipleExposures].each_with_index do |exp, index|
             multiple_service_dates_begin = exp[:exposureDates][:beginDate]
-            @pdf_data[:data][:attributes][:exposureInformation][:toxicExposure][:multipleExposures][index][:exposureDates][:start] = convert_date_string_my_to_object(multiple_service_dates_begin)
+            @pdf_data[:data][:attributes][:exposureInformation][:toxicExposure][:multipleExposures][index][:exposureDates][:start] = determine_date_format_and_convert_to_object(multiple_service_dates_begin)
             @pdf_data[:data][:attributes][:exposureInformation][:toxicExposure][:multipleExposures][index][:exposureDates].delete(:beginDate)
             multiple_service_dates_end = exp[:exposureDates][:endDate]
-            @pdf_data[:data][:attributes][:exposureInformation][:toxicExposure][:multipleExposures][index][:exposureDates][:end] = convert_date_string_my_to_object(multiple_service_dates_end)
+            @pdf_data[:data][:attributes][:exposureInformation][:toxicExposure][:multipleExposures][index][:exposureDates][:end] = determine_date_format_and_convert_to_object(multiple_service_dates_end)
             @pdf_data[:data][:attributes][:exposureInformation][:toxicExposure][:multipleExposures][index][:exposureDates].delete(:endDate)
           end
         end
@@ -356,7 +356,7 @@ module ClaimsApi
           name = tx['treatedDisabilityNames'].join(', ')
           details = "#{name} - #{center}"
           tx['treatmentDetails'] = details
-          tx['dateOfTreatment'] = convert_date_string_my_to_object(tx['beginDate']) if tx['beginDate'].present?
+          tx['dateOfTreatment'] = determine_date_format_and_convert_to_object(tx['beginDate']) if tx['beginDate'].present?
           tx['doNotHaveDate'] = tx['beginDate'].nil?
           tx.delete('center')
           tx.delete('treatedDisabilityNames')
@@ -399,10 +399,10 @@ module ClaimsApi
           sp[:activeDutyEndDate]
         end
         @pdf_data[:data][:attributes][:serviceInformation][:mostRecentActiveService].merge!(
-          start: convert_date_string_mdy_to_object(most_recent_period[:activeDutyBeginDate])
+          start: determine_date_format_and_convert_to_object(most_recent_period[:activeDutyBeginDate])
         )
         @pdf_data[:data][:attributes][:serviceInformation][:mostRecentActiveService].merge!(
-          end: convert_date_string_mdy_to_object(most_recent_period[:activeDutyEndDate])
+          end: determine_date_format_and_convert_to_object(most_recent_period[:activeDutyEndDate])
         )
         @pdf_data[:data][:attributes][:serviceInformation][:placeOfLastOrAnticipatedSeparation] =
           most_recent_period[:separationLocationCode]
@@ -419,8 +419,8 @@ module ClaimsApi
       def array_of_remaining_service_date_objects
         arr = []
         @pdf_data[:data][:attributes][:serviceInformation][:servicePeriods].each do |sp|
-          arr.push({ start: convert_date_string_mdy_to_object(sp[:activeDutyBeginDate]),
-                     end: convert_date_string_mdy_to_object(sp[:activeDutyEndDate]) })
+          arr.push({ start: determine_date_format_and_convert_to_object(sp[:activeDutyBeginDate]),
+                     end: determine_date_format_and_convert_to_object(sp[:activeDutyEndDate]) })
         end
         sorted = arr.sort_by { |sp| sp[:activeDutyEndDate] }
         sorted.pop if sorted.count > 1
@@ -435,16 +435,9 @@ module ClaimsApi
         si = []
         @pdf_data[:data][:attributes][:serviceInformation][:prisonerOfWarConfinement] = { confinementDates: [] }
         @pdf_data[:data][:attributes][:serviceInformation][:confinements].map do |confinement|
-          start_date = if confinement[:approximateBeginDate].length == 7
-                         convert_date_string_my_to_object(confinement[:approximateBeginDate])
-                       else
-                         convert_date_string_mdy_to_object(confinement[:approximateBeginDate])
-                       end
-          end_date = if confinement[:approximateEndDate].length == 7
-                       convert_date_string_my_to_object(confinement[:approximateEndDate])
-                     else
-                       convert_date_string_mdy_to_object(confinement[:approximateEndDate])
-                     end
+          start_date = determine_date_format_and_convert_to_object(confinement[:approximateBeginDate])
+          end_date = determine_date_format_and_convert_to_object(confinement[:approximateEndDate])
+
           si.push({
                     start: start_date, end: end_date
                   })
@@ -465,11 +458,11 @@ module ClaimsApi
         @pdf_data[:data][:attributes][:serviceInformation].merge!(si)
         reserves_begin_date = @pdf_data[:data][:attributes][:serviceInformation][:reservesNationalGuardService][:obligationTermsOfService][:beginDate]
         @pdf_data[:data][:attributes][:serviceInformation][:reservesNationalGuardService][:obligationTermsOfService][:start] =
-          convert_date_string_mdy_to_object(reserves_begin_date)
+          determine_date_format_and_convert_to_object(reserves_begin_date)
         @pdf_data[:data][:attributes][:serviceInformation][:reservesNationalGuardService][:obligationTermsOfService].delete(:beginDate)
         reserves_end_date = @pdf_data[:data][:attributes][:serviceInformation][:reservesNationalGuardService][:obligationTermsOfService][:endDate]
         @pdf_data[:data][:attributes][:serviceInformation][:reservesNationalGuardService][:obligationTermsOfService][:end] =
-          convert_date_string_mdy_to_object(reserves_end_date)
+          determine_date_format_and_convert_to_object(reserves_end_date)
         @pdf_data[:data][:attributes][:serviceInformation][:reservesNationalGuardService][:obligationTermsOfService].delete(:endDate)
 
         component = @pdf_data[:data][:attributes][:serviceInformation][:reservesNationalGuardService][:component]
@@ -505,11 +498,11 @@ module ClaimsApi
         ten = @pdf_data[:data][:attributes][:serviceInformation][:reservesNationalGuardService][:title10Activation]
         activation_date = ten[:title10ActivationDate]
         @pdf_data[:data][:attributes][:serviceInformation][:federalActivation][:activationDate] =
-          convert_date_string_mdy_to_object(activation_date)
+          determine_date_format_and_convert_to_object(activation_date)
 
         anticipated_sep_date = ten[:anticipatedSeparationDate]
         @pdf_data[:data][:attributes][:serviceInformation][:federalActivation][:anticipatedSeparationDate] =
-          convert_date_string_mdy_to_object(anticipated_sep_date)
+          determine_date_format_and_convert_to_object(anticipated_sep_date)
         @pdf_data[:data][:attributes][:serviceInformation][:activatedOnFederalOrders] = 'YES' if activation_date
         @pdf_data[:data][:attributes][:serviceInformation][:reservesNationalGuardService].delete(:title10Activation)
 
@@ -528,7 +521,7 @@ module ClaimsApi
         claim_date = Date.parse @auto_claim&.dig('claimDate')
         claim_date_mdy = claim_date.strftime('%m-%d-%Y')
         @pdf_data[:data][:attributes].merge!(claimCertificationAndSignature: {
-                                               dateSigned: convert_date_string_mdy_to_object(claim_date_mdy),
+                                               dateSigned: determine_date_format_and_convert_to_object(claim_date_mdy),
                                                signature: name
                                              })
         @pdf_data[:data][:attributes].delete(:claimDate)
@@ -565,16 +558,27 @@ module ClaimsApi
             @pdf_data[:data][:attributes][:servicePay][:separationSeverancePay][:datePaymentReceived]
           if date_payment_received.length == 7
             @pdf_data[:data][:attributes][:servicePay][:separationSeverancePay][:datePaymentReceived] =
-              convert_date_string_my_to_object(date_payment_received)
+              determine_date_format_and_convert_to_object(date_payment_received)
           else
             @pdf_data[:data][:attributes][:servicePay][:separationSeverancePay][:datePaymentReceived] =
-              convert_date_string_mdy_to_object(date_payment_received)
+              determine_date_format_and_convert_to_object(date_payment_received)
           end
         end
         @pdf_data
       end
 
-      def convert_date_string_mdy_to_object(date_string)
+      def determine_date_format_and_convert_to_object(date_string)
+        case date_string.length
+        when 10
+          convert_date_string_mdy(date_string)
+        when 7
+          convert_date_string_my(date_string)
+        when 4
+          convert_date_string_yyyy(date_string)
+        end
+      end
+
+      def convert_date_string_mdy(date_string)
         return '' if date_string.blank?
 
         date = Date.strptime(date_string, '%m-%d-%Y')
@@ -585,12 +589,21 @@ module ClaimsApi
         }
       end
 
-      def convert_date_string_my_to_object(date_string)
+      def convert_date_string_my(date_string)
         return '' if date_string.blank?
 
         date = Date.strptime(date_string, '%m-%Y')
         {
           month: date.mon,
+          year: date.year
+        }
+      end
+
+      def convert_date_string_yyyy(date_string)
+        return '' if date_string.blank?
+
+        date = Date.strptime(date_string, '%Y')
+        {
           year: date.year
         }
       end
