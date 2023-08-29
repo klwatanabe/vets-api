@@ -659,7 +659,7 @@
             ],
             "properties": {
               "serviceBranch": {
-                "description": "Branch of Service during period.",
+                "description": "Branch of service. The /service-branches endpoint on the [Benefits Reference Data API|https://developer.va.gov/explore/benefits/docs/benefits_reference_data?version=current] may be used to retrieve list of possible service branches.",
                 "type": "string",
                 "example": "Air Force"
               },
@@ -850,7 +850,7 @@
           "description": "",
           "properties": {
             "branchOfService": {
-              "description": "Branch of Service making payments.",
+              "description": "Branch of Service. The /service-branches endpoint on the [Benefits Reference Data API|https://developer.va.gov/explore/benefits/docs/benefits_reference_data?version=current] may be used to retrieve list of possible service branches.",
               "type": "string",
               "example": "Air Force"
             },
@@ -890,7 +890,7 @@
               "example": "03-02-2018 or 03-2018"
             },
             "branchOfService": {
-              "description": "Branch of Service making payments.",
+              "description": "Branch of service. The /service-branches endpoint on the [Benefits Reference Data API|https://developer.va.gov/explore/benefits/docs/benefits_reference_data?version=current] may be used to retrieve list of possible service branches.",
               "type": "string",
               "example": "Air Force"
             },

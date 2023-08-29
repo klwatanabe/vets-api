@@ -43,8 +43,8 @@ RSpec.describe 'Disability Claims', type: :request do
               allow(JWT).to receive(:decode).and_return(nil)
               allow(Token).to receive(:new).and_return(ccg_token)
               allow_any_instance_of(TokenValidation::V2::Client).to receive(:token_valid?).and_return(true)
-
               post submit_path, params: data, headers: { 'Authorization' => 'Bearer HelloWorld' }
+              byebug
               expect(response).to have_http_status(:ok)
             end
           end
@@ -1606,6 +1606,21 @@ RSpec.describe 'Disability Claims', type: :request do
 
         context 'when the serviceBranch is empty' do
           let(:service_branch) { '' }
+
+          it 'responds with a 422' do
+            with_okta_user(scopes) do |auth_header|
+              json = JSON.parse(data)
+              json['data']['attributes']['serviceInformation']['servicePeriods'][0]['serviceBranch'] =
+                service_branch
+              data = json
+              post submit_path, params: data, headers: auth_header
+              expect(response).to have_http_status(:unprocessable_entity)
+            end
+          end
+        end
+
+        context 'when the serviceBranch is not in the BRD list' do
+          let(:service_branch) { 'Rogue Force' }
 
           it 'responds with a 422' do
             with_okta_user(scopes) do |auth_header|

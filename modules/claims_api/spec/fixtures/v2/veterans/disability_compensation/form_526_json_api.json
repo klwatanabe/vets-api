@@ -27,7 +27,7 @@
       "serviceInformation": {
         "servicePeriods": [
           {
-            "serviceBranch": "Public Health Service",
+            "serviceBranch": "Public Health Service Wrong",
             "activeDutyBeginDate": "11-14-1980",
             "activeDutyEndDate": "11-30-1991",
             "serviceComponent": "Active",
