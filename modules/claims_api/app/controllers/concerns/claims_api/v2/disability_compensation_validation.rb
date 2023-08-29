@@ -359,7 +359,9 @@ module ClaimsApi
       def validate_form_526_service_pay!
         validate_form_526_military_retired_pay!
         validate_form_526_future_military_retired_pay!
+        validate_from_526_military_retired_pay_branch!
         validate_form_526_separation_pay_received_date!
+        validate_from_526_separation_severance_pay_branch!
       end
 
       def validate_form_526_military_retired_pay!
@@ -373,6 +375,17 @@ module ClaimsApi
         raise ::Common::Exceptions::InvalidFieldValue.new(
           'servicePay.militaryRetiredPay',
           form_attributes['servicePay']['militaryRetiredPay']
+        )
+      end
+
+      def validate_from_526_military_retired_pay_branch!
+        branch = form_attributes.dig('servicePay', 'militaryRetiredPay', 'branchOfService')
+        return if brd_service_branch_names.include?(branch)
+
+        raise ::Common::Exceptions::UnprocessableEntity.new(
+          detail:  "'servicePay.militaryRetiredPay.branchOfService' must match a service branch " \
+          'returned from the /service-branches endpoint of the Benefits ' \
+          'Reference Data API.'
         )
       end
 
@@ -398,6 +411,17 @@ module ClaimsApi
 
         raise ::Common::Exceptions::InvalidFieldValue.new('separationSeverancePay.datePaymentReceived',
                                                           separation_pay_received_date)
+      end
+
+      def validate_from_526_separation_severance_pay_branch!
+        branch = form_attributes.dig('servicePay', 'separationSeverancePay', 'branchOfService')
+        return if brd_service_branch_names.include?(branch)
+
+        raise ::Common::Exceptions::UnprocessableEntity.new(
+          detail:  "'servicePay.separationSeverancePay.branchOfService' must match a service branch " \
+          'returned from the /service-branches endpoint of the Benefits ' \
+          'Reference Data API.'
+        )
       end
 
       def validate_form_526_treatments!
@@ -449,14 +473,15 @@ module ClaimsApi
             detail: 'Service information is required'
           )
         end
-        validate_service_periods!
+        validate_service_periods!(service_information)
+        validate_service_branch_names!(service_information)
         validate_confinements!(service_information)
         validate_alternate_names!(service_information)
         validate_reserves_required_values!(service_information)
       end
 
-      def validate_service_periods!
-        service_information = form_attributes['serviceInformation']
+      def validate_service_periods!(service_information)
+        # service_information = form_attributes['serviceInformation']
 
         service_information['servicePeriods'].each do |sp|
           if Date.strptime(sp['activeDutyBeginDate'], '%m-%d-%Y') > Date.strptime(sp['activeDutyEndDate'], '%m-%d-%Y')
@@ -515,6 +540,28 @@ module ClaimsApi
             detail: 'Names entered as an alternate name must be unique.'
           )
         end
+      end
+
+      def validate_service_branch_names!(service_information)
+        service_information['servicePeriods'].each do |sp|
+          unless brd_service_branch_names.include?(sp['serviceBranch'])
+            raise ::Common::Exceptions::UnprocessableEntity.new(
+              detail:  "'servicePeriods.serviceBranch' must match a service branch " \
+              'returned from the /service-branches endpoint of the Benefits ' \
+              'Reference Data API.'
+            )
+          end
+        end
+      end
+
+      def brd_service_branch_names
+        @brd_service_branch_names ||= brd_service_branches&.pluck(:description)
+      end
+
+      def brd_service_branches
+        return @brd_service_branches if @brd_service_branches.present?
+
+        @brd_service_branches ||= ClaimsApi::BRD.new(request).service_branches
       end
 
       def validate_reserves_required_values!(service_information)
