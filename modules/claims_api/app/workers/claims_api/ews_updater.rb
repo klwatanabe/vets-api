@@ -21,8 +21,6 @@ module ClaimsApi
 
         update_bgs_claim(ews, bgs_claim)
       end
-      update_claim_level_suspense(ews)
-      ews.status = ClaimsApi::EvidenceWaiverSubmission::UPDATED
       ews.save
       ews
     end
@@ -38,11 +36,13 @@ module ClaimsApi
       suspense_claim = claim_management_service(ews).find_claim_level_suspense(claim_id: ews.claim_id)
       updated_claim = update_suspense_date(claim: suspense_claim)
       omitted_claim = omit_fields(updated_claim)
-      claim_management_service(ews).update_claim_level_suspense(claim: omitted_claim)
-    rescue => e
-      ClaimsApi::Logger.log(ews_id: ews.id,
-                            detail: "Failed to update suspense dates for claim #{ews.claim_id}: #{e.message}")
-      ews.status = ClaimsApi::EvidenceWaiverSubmission::ERRORED
+      res = claim_management_service(ews).update_claim_level_suspense(claim: omitted_claim)
+      if res.is_a?(Hash)
+        ews.status = ClaimsApi::EvidenceWaiverSubmission::UPDATED
+      else
+        ClaimsApi::Logger.log(ews_id: ews.id, detail: "Failed to update suspense dates for claim #{ews.claim_id}")
+        ews.status = ClaimsApi::EvidenceWaiverSubmission::ERRORED
+      end
       ews.save
     end
 
@@ -82,7 +82,7 @@ module ClaimsApi
                               detail: 'Waiver update Failed', error: response[:return_code],
                               failure_count: ews.bgs_upload_failure_count)
       else
-        ews.status = ClaimsApi::EvidenceWaiverSubmission::UPDATED
+        update_claim_level_suspense(ews)
         # Clear out the error message if there were previous failures
         ews.bgs_error_message = nil if ews.bgs_error_message.present?
         ClaimsApi::Logger.log({ ews_id: ews.id, claim_id: ews.claim_id, detail: 'Waiver Success' })
