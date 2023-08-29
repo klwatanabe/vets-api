@@ -69,7 +69,7 @@ module VAOS
             response.body[:data][:requested_periods] = nil
           end
 
-          # TODO: test in RI
+          # TODO: test in updated RI
           # if avs_applicable?(response.body[:data])
           #   fetch_avs_and_update_appt_body(response.body[:data])
           # end
