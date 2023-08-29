@@ -434,6 +434,7 @@ Rails.application.routes.draw do
 
   # Modules
   mount AskVAApi::Engine, at: '/ask_va_api'
+  mount Avs::Engine, at: '/avs'
   mount CheckIn::Engine, at: '/check_in'
   mount CovidResearch::Engine, at: '/covid-research'
   mount CovidVaccine::Engine, at: '/covid_vaccine'
@@ -465,7 +466,8 @@ Rails.application.routes.draw do
     mount MockedAuthentication::Engine, at: '/mocked_authentication'
   end
 
-  mount Flipper::UI.app(Flipper.instance) => '/flipper', constraints: Flipper::AdminUserConstraint.new
+  get '/flipper/features/logout', to: 'flipper#logout'
+  mount Flipper::UI.app(Flipper.instance) => '/flipper', constraints: Flipper::AdminUserConstraint
 
   if Rails.env.production?
     require 'coverband'

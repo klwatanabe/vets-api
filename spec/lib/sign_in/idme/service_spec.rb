@@ -74,7 +74,6 @@ describe SignIn::Idme::Service do
 
   describe '#render_auth' do
     let(:response) { subject.render_auth(state:, acr:).to_s }
-    let(:configuration) { SignIn::Idme::Configuration }
     let(:expected_authorization_page) { "#{base_path}/#{auth_path}" }
     let(:base_path) { 'some-base-path' }
     let(:auth_path) { 'oauth/authorize' }
@@ -89,12 +88,8 @@ describe SignIn::Idme::Service do
       response
     end
 
-    it 'renders the oauth_get_form template' do
-      expect(response).to include('form id="oauth-form"')
-    end
-
-    it 'directs to the Id.me OAuth authorization page' do
-      expect(response).to include("action=\"#{expected_authorization_page}\"")
+    it 'renders the expected redirect uri' do
+      expect(response).to include(expected_authorization_page)
     end
   end
 
@@ -142,12 +137,11 @@ describe SignIn::Idme::Service do
     before do
       allow(Settings.idme).to receive(:client_cert_path).and_return(test_client_cert_path)
       allow(Settings.idme).to receive(:client_key_path).and_return(test_client_key_path)
+      subject.send(:config).public_jwks = nil
     end
 
-    it 'returns user attributes' do
-      VCR.use_cassette('identity/idme_200_responses') do
-        expect(subject.user_info(token)).to eq(user_info)
-      end
+    it 'returns user attributes', vcr: { cassette_name: 'identity/idme_200_responses' } do
+      expect(subject.user_info(token)).to eq(user_info)
     end
 
     context 'when log_credential is enabled in idme configuration' do
@@ -156,11 +150,10 @@ describe SignIn::Idme::Service do
         allow(MockedAuthentication::Mockdata::Writer).to receive(:save_credential)
       end
 
-      it 'makes a call to mocked authentication writer to save the credential' do
-        VCR.use_cassette('identity/idme_200_responses') do
-          expect(MockedAuthentication::Mockdata::Writer).to receive(:save_credential)
-          subject.user_info(token)
-        end
+      it 'makes a call to mocked authentication writer to save the credential',
+         vcr: { cassette_name: 'identity/idme_200_responses' } do
+        expect(MockedAuthentication::Mockdata::Writer).to receive(:save_credential)
+        subject.user_info(token)
       end
     end
 
@@ -182,6 +175,16 @@ describe SignIn::Idme::Service do
       end
     end
 
+    context 'when the JWT has expired' do
+      let(:current_time) { expiration_time + 100 }
+      let(:expected_error) { SignIn::Idme::Errors::JWTExpiredError }
+      let(:expected_error_message) { '[SignIn][Idme][Service] JWT has expired' }
+
+      it 'raises a jwe expired error with expected message', vcr: { cassette_name: 'identity/idme_200_responses' } do
+        expect { subject.user_info(token) }.to raise_error(expected_error, expected_error_message)
+      end
+    end
+
     context 'when an issue occurs with the JWE decryption' do
       let(:expected_error) { SignIn::Idme::Errors::JWEDecodeError }
       let(:expected_error_message) { '[SignIn][Idme][Service] JWE is malformed' }
@@ -199,46 +202,29 @@ describe SignIn::Idme::Service do
     context 'when the JWT decoding does not match expected verification' do
       let(:expected_error) { SignIn::Idme::Errors::JWTVerificationError }
       let(:expected_error_message) { '[SignIn][Idme][Service] JWT body does not match signature' }
-      let(:mismatched_public_key) { OpenSSL::PKey::RSA.generate(2048) }
-      let(:idme_configuration) { SignIn::Idme::Configuration }
 
-      before do
-        allow_any_instance_of(idme_configuration).to receive(:jwt_decode_public_key).and_return(mismatched_public_key)
-      end
-
-      it 'raises a jwe decode error with expected message' do
-        VCR.use_cassette('identity/idme_200_responses') do
-          expect { subject.user_info(token) }.to raise_error(expected_error, expected_error_message)
-        end
-      end
-    end
-
-    context 'when the JWT has expired' do
-      let(:current_time) { expiration_time + 100 }
-      let(:expected_error) { SignIn::Idme::Errors::JWTExpiredError }
-      let(:expected_error_message) { '[SignIn][Idme][Service] JWT has expired' }
-
-      it 'raises a jwe expired error with expected message' do
-        VCR.use_cassette('identity/idme_200_responses') do
-          expect { subject.user_info(token) }.to raise_error(expected_error, expected_error_message)
-        end
+      it 'raises a jwe decode error with expected message',
+         vcr: { cassette_name: 'identity/idme_jwks_mismatched_signature' } do
+        expect { subject.user_info(token) }.to raise_error(expected_error, expected_error_message)
       end
     end
 
     context 'when the JWT is malformed' do
-      let(:current_time) { expiration_time + 100 }
-      let(:jwt_decode_error) { JWT::DecodeError }
       let(:expected_error) { SignIn::Idme::Errors::JWTDecodeError }
       let(:expected_error_message) { '[SignIn][Idme][Service] JWT is malformed' }
 
-      before do
-        allow(JWT).to receive(:decode).and_raise(jwt_decode_error)
+      it 'raises a jwt malformed error with expected message',
+         vcr: { cassette_name: 'identity/idme_jwks_jwt_malformed' } do
+        expect { subject.user_info(token) }.to raise_error(expected_error, expected_error_message)
       end
+    end
 
-      it 'raises a jwt malformed error with expected message' do
-        VCR.use_cassette('identity/idme_200_responses') do
-          expect { subject.user_info(token) }.to raise_error(expected_error, expected_error_message)
-        end
+    context 'when the JWK is malformed' do
+      let(:expected_error) { SignIn::Idme::Errors::PublicJWKError }
+      let(:expected_error_message) { '[SignIn][Idme][Service] Public JWK is malformed' }
+
+      it 'raises a jwt malformed error with expected message', vcr: { cassette_name: 'identity/idme_jwks_malformed' } do
+        expect { subject.user_info(token) }.to raise_error(expected_error, expected_error_message)
       end
     end
   end
