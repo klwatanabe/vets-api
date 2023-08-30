@@ -2,7 +2,7 @@
 http_interactions:
 - request:
     method: get
-    uri: https://sandbox-api.va.gov/internal/auth/v3/user/connected-apps?icn=1012667145V762142
+    uri: https://sandbox-api.va.gov/internal/auth/v3/user/connected-apps?icn=1012666073V986297
     body:
       encoding: US-ASCII
       string: ''
@@ -27,56 +27,8 @@ http_interactions:
       string: '{
     "apps": [
         {
-            "clientId": "0oa8go9w63TC4IOgy2p7",
-            "label": "LibertyitsMarkwordt-2020-09-30T16:50:38.134Z",
-            "href": "https://ok6static.oktacdn.com/assets/img/logos/default.6770228fb0dab49a1695ef440a5279bb.png",
-            "status": "ACTIVE"
-        },
-        {
-            "clientId": "0oa8goc0hkNNBuqEl2p7",
-            "label": "Lighthouse OAuth Monitoring - Agent J",
-            "href": "https://ok6static.oktacdn.com/assets/img/logos/default.6770228fb0dab49a1695ef440a5279bb.png",
-            "status": "ACTIVE"
-        },
-        {
-            "clientId": "0oabfjv1q9hVL9JOM2p7",
-            "label": "SapientManagementGroupColton-2021-06-07T14:31:55.968Z",
-            "href": "https://ok6static.oktacdn.com/assets/img/logos/default.6770228fb0dab49a1695ef440a5279bb.png",
-            "status": "ACTIVE"
-        },
-        {
-            "clientId": "0oanian82nGCBqZzg2p7",
-            "label": "Api-1689696373-dev",
-            "href": "https://ok6static.oktacdn.com/assets/img/logos/default.6770228fb0dab49a1695ef440a5279bb.png",
-            "status": "ACTIVE"
-        },
-        {
-            "clientId": "0oa41882gkjtBRJhu2p7",
-            "label": "Claims V1 Development",
-            "href": "https://ok6static.oktacdn.com/assets/img/logos/default.6770228fb0dab49a1695ef440a5279bb.png",
-            "status": "ACTIVE"
-        },
-        {
-            "clientId": "0oadz2pxvpNN093FP2p7",
-            "label": "LibertyITSolutionsSubocz-2021-12-09T18:38:10.379Z",
-            "href": "https://ok6static.oktacdn.com/assets/img/logos/default.6770228fb0dab49a1695ef440a5279bb.png",
-            "status": "ACTIVE"
-        },
-        {
-            "clientId": "0oal4788lyph7Glz72p7",
-            "label": "MatchRiteCareJones-1677604608",
-            "href": "https://ok6static.oktacdn.com/assets/img/logos/default.6770228fb0dab49a1695ef440a5279bb.png",
-            "status": "ACTIVE"
-        },
-        {
-            "clientId": "0oa2gilmmiP1QZP1Z2p7",
-            "label": "USAJobsPrototype",
-            "href": "https://ok6static.oktacdn.com/fs/bco/4/fs02ginod1DFe3QUC2p7",
-            "status": "ACTIVE"
-        },
-        {
-            "clientId": "0oa6bj2bxzg97ViBd2p7",
-            "label": "LibertyITSolutionsBrown-2020-02-13T23:56:05.295Z",
+            "clientId": "0oalu3qcg4AVyOxsQ2p7",
+            "label": "Leidosdoyle-1681243734",
             "href": "https://ok6static.oktacdn.com/assets/img/logos/default.6770228fb0dab49a1695ef440a5279bb.png",
             "status": "ACTIVE"
         }
