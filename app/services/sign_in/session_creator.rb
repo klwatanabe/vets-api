@@ -55,7 +55,10 @@ module SignIn
         refresh_token_hash:,
         parent_refresh_token_hash:,
         anti_csrf_token:,
-        last_regeneration_time: refresh_created_time
+        last_regeneration_time: refresh_created_time,
+        first_name: user_attributes[:first_name],
+        last_name: user_attributes[:last_name],
+        email: user_attributes[:email]
       )
     end
 
@@ -103,8 +106,35 @@ module SignIn
       @credential_email ||= validated_credential.credential_email
     end
 
+    def user
+      @user ||= User.find(user_uuid)
+    end
+
     def user_account
       @user_account ||= user_verification.user_account
+    end
+
+    def user_attributes
+      @user_attributes ||= begin
+        user_attributes = {}
+        if client_config.access_token_attributes.presence
+          client_config.access_token_attributes.each do |attribute|
+            user_attributes[attribute.to_sym] = case attribute
+                                                when 'first_name'
+                                                  user.first_name
+                                                when 'last_name'
+                                                  user.last_name
+                                                when 'email'
+                                                  credential_email
+                                                else
+                                                  raise Errors::InvalidAccessTokenAttributeError.new(
+                                                    message: "Access token invalid attribute request: #{attribute}"
+                                                  )
+                                                end
+          end
+        end
+        user_attributes
+      end
     end
 
     def user_uuid

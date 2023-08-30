@@ -61,5 +61,6 @@ module SignIn
     class MHVMissingMPIRecordError < StandardError; end
     class UnverifiedCredentialBlockedError < StandardError; end
     class CredentialMissingAttributeError < StandardError; end
+    class InvalidAccessTokenAttributeError < StandardError; end
   end
 end

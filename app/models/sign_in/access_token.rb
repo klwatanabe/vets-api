@@ -16,7 +16,10 @@ module SignIn
       :parent_refresh_token_hash,
       :version,
       :expiration_time,
-      :created_time
+      :created_time,
+      :first_name,
+      :last_name,
+      :email
     )
 
     validates(
@@ -48,7 +51,10 @@ module SignIn
                    parent_refresh_token_hash: nil,
                    version: nil,
                    expiration_time: nil,
-                   created_time: nil)
+                   created_time: nil,
+                   first_name: nil,
+                   last_name: nil,
+                   email: nil)
       @uuid = uuid || create_uuid
       @session_handle = session_handle
       @client_id = client_id
@@ -61,6 +67,9 @@ module SignIn
       @version = version || Constants::AccessToken::CURRENT_VERSION
       @expiration_time = expiration_time || set_expiration_time
       @created_time = created_time || set_created_time
+      @first_name = first_name
+      @last_name = last_name
+      @email = email
 
       validate!
     end

@@ -15,7 +15,10 @@ RSpec.describe SignIn::AccessToken, type: :model do
            last_regeneration_time:,
            expiration_time:,
            version:,
-           created_time:)
+           created_time:,
+           first_name:,
+           last_name:,
+           email:)
   end
 
   let(:session_handle) { create(:oauth_session).handle }
@@ -35,6 +38,9 @@ RSpec.describe SignIn::AccessToken, type: :model do
   let(:validity_length) { client_config.access_token_duration }
   let(:expiration_time) { Time.zone.now + validity_length }
   let(:created_time) { Time.zone.now }
+  let(:first_name) { nil }
+  let(:last_name) { nil }
+  let(:email) { nil }
 
   describe 'validations' do
     describe '#session_handle' do
@@ -202,6 +208,60 @@ RSpec.describe SignIn::AccessToken, type: :model do
 
         it 'sets expired time to now' do
           expect(subject).to eq(expected_created_time)
+        end
+      end
+    end
+
+    describe '#first_name' do
+      subject { access_token.first_name }
+
+      context 'when a first_name has not been passed to the access token' do
+        it 'does not set a first_name attribute' do
+          expect(subject).to be_nil
+        end
+      end
+
+      context 'when a first_name has been passed to the access token' do
+        let(:first_name) { Faker::Name.first_name }
+
+        it 'sets a first_name attribute' do
+          expect(subject).to eq(first_name)
+        end
+      end
+    end
+
+    describe '#last_name' do
+      subject { access_token.last_name }
+
+      context 'when a last_name has not been passed to the access token' do
+        it 'does not set a last_name attribute' do
+          expect(subject).to be_nil
+        end
+      end
+
+      context 'when a last_name has been passed to the access token' do
+        let(:last_name) { Faker::Name.last_name }
+
+        it 'sets a last_name attribute' do
+          expect(subject).to eq(last_name)
+        end
+      end
+    end
+
+    describe '#email' do
+      subject { access_token.email }
+
+      context 'when an email has not been passed to the access token' do
+        it 'does not set an email attribute' do
+          expect(subject).to be_nil
+        end
+      end
+
+      context 'when an email has been passed to the access token' do
+        let(:email) { Faker::Internet.email }
+
+        it 'sets an email attribute' do
+          expect(subject).to eq(email)
         end
       end
     end

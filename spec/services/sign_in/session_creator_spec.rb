@@ -176,6 +176,46 @@ RSpec.describe SignIn::SessionCreator do
           expect(access_token.parent_refresh_token_hash).to eq(expected_parent_refresh_token_hash)
           expect(access_token.last_regeneration_time).to eq(expected_last_regeneration_time)
         end
+
+        context 'expected user attributes on access token' do
+          before do
+            create(:user, uuid: user_uuid)
+            allow_any_instance_of(SignIn::ClientConfig).to receive(:access_token_attributes)
+              .and_return(access_token_attributes)
+          end
+
+          context 'when a ClientConfig does not include any access_token_attributes' do
+            let(:access_token_attributes) { [] }
+
+            it 'does not include user attributes in the access token' do
+              access_token = subject.access_token
+              expect(access_token.first_name).to be_nil
+              expect(access_token.last_name).to be_nil
+              expect(access_token.email).to be_nil
+            end
+          end
+
+          context 'when a ClientConfig includes invalid access_token_attributes' do
+            let(:access_token_attributes) { %w[bad_attribute] }
+            let(:expected_error_message) { "Access token invalid attribute request: #{access_token_attributes.first}" }
+
+            it 'raises a InvalidAccessTokenAttributeError error' do
+              expect { subject.access_token }.to raise_error(SignIn::Errors::InvalidAccessTokenAttributeError,
+                                                             expected_error_message)
+            end
+          end
+
+          context 'when a ClientConfig includes valid access_token_attributes' do
+            let(:access_token_attributes) { SignIn::Constants::AccessToken::USER_ATTRIBUTES }
+
+            it 'includes the specified attributes in the access token' do
+              access_token = subject.access_token
+              expect(access_token.first_name).not_to be_nil
+              expect(access_token.last_name).not_to be_nil
+              expect(access_token.email).not_to be_nil
+            end
+          end
+        end
       end
     end
   end
