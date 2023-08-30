@@ -60,6 +60,15 @@ RSpec.describe ClaimsApi::ClaimUploader, type: :job do
     end.to change(subject.jobs, :size).by(1)
   end
 
+  it 'submits successfully with BD' do
+    allow(Flipper).to receive(:enabled?).with(:lh_bd_claim_uploader).and_return true
+    allow_any_instance_of(ClaimsApi::BD).to receive(:upload).and_return true
+
+    subject.new.perform(supporting_document.id)
+    supporting_document.reload
+    expect(auto_claim.uploader.blank?).to eq(false)
+  end
+
   # relates to API-14302 and API-14303
   # do not remove uploads from S3 until we feel that uploads to EVSS are stable
   it 'on successful call it does not delete the file from S3' do
