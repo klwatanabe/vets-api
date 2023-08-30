@@ -45,7 +45,11 @@ module V0
         payload = { icn: }
 
         response = RestClient.get(grant_url, params: payload)
-        JSON.parse(response.data.apps) if response.code == 200
+        if response.code == 200
+          parsed_response = JSON.parse(response)
+          apps = parsed_response['apps']
+        end
+        apps
       end
 
       def connected_accounts_params
