@@ -646,6 +646,7 @@ module ClaimsApi
 
       private
 
+      # Used for confinements dates
       def begin_date_is_not_after_end_date?(begin_date, end_date)
         # see what format each date is in
         begin_date_has_day = date_has_day?(begin_date)

@@ -839,83 +839,84 @@ RSpec.describe 'Disability Claims', type: :request do
         end
       end
 
-      # toxic exposure validation tests
-      context 'when the other_locations_served does not match the regex' do
-        let(:other_locations_served) { 'some !@#@#$#%$^%$#&$^%&&(*978078)' }
+      describe "validation of toxicExposure elements" do
+        context 'when the other_locations_served does not match the regex' do
+          let(:other_locations_served) { 'some !@#@#$#%$^%$#&$^%&&(*978078)' }
 
-        it 'responds with a bad request' do
-          with_okta_user(scopes) do |auth_header|
-            json = JSON.parse(data)
-            json['data']['attributes']['toxicExposure']['herbicideHazardService']['otherLocationsServed'] =
-              other_locations_served
-            data = json.to_json
-            post submit_path, params: data, headers: auth_header
-            expect(response).to have_http_status(:unprocessable_entity)
+          it 'responds with a bad request' do
+            with_okta_user(scopes) do |auth_header|
+              json = JSON.parse(data)
+              json['data']['attributes']['toxicExposure']['herbicideHazardService']['otherLocationsServed'] =
+                other_locations_served
+              data = json.to_json
+              post submit_path, params: data, headers: auth_header
+              expect(response).to have_http_status(:unprocessable_entity)
+            end
+          end
+        end
+
+        context 'when the additional_exposures does not match the regex' do
+          let(:additional_exposures) { 'some !@#@#$#%$^%$#&$^%&&(*978078)' }
+
+          it 'responds with a bad request' do
+            with_okta_user(scopes) do |auth_header|
+              json = JSON.parse(data)
+              json['data']['attributes']['toxicExposure']['additionalHazardExposures']['additionalExposures'] =
+                additional_exposures
+              data = json.to_json
+              post submit_path, params: data, headers: auth_header
+              expect(response).to have_http_status(:unprocessable_entity)
+            end
+          end
+        end
+
+        context 'when the specify_other_exposures does not match the regex' do
+          let(:specify_other_exposures) { 'some !@#@#$#%$^%$#&$^%&&(*978078)' }
+
+          it 'responds with a bad request' do
+            with_okta_user(scopes) do |auth_header|
+              json = JSON.parse(data)
+              json['data']['attributes']['toxicExposure']['additionalHazardExposures']['specifyOtherExposures'] =
+                specify_other_exposures
+              data = json.to_json
+              post submit_path, params: data, headers: auth_header
+              expect(response).to have_http_status(:unprocessable_entity)
+            end
+          end
+        end
+
+        context 'when the exposure_location does not match the regex' do
+          let(:exposure_location) { 'some !@#@#$#%$^%$#&$^%&&(*978078)' }
+
+          it 'responds with a bad request' do
+            with_okta_user(scopes) do |auth_header|
+              json = JSON.parse(data)
+              json['data']['attributes']['toxicExposure']['multipleExposures'][0]['exposureLocation'] =
+                exposure_location
+              data = json.to_json
+              post submit_path, params: data, headers: auth_header
+              expect(response).to have_http_status(:unprocessable_entity)
+            end
+          end
+        end
+
+        context 'when the hazard_exposed_to does not match the regex' do
+          let(:hazard_exposed_to) { 'some !@#@#$#%$^%$#&$^%&&(*978078)' }
+
+          it 'responds with a bad request' do
+            with_okta_user(scopes) do |auth_header|
+              json = JSON.parse(data)
+              json['data']['attributes']['toxicExposure']['multipleExposures'][0]['hazardExposedTo'] =
+                hazard_exposed_to
+              data = json.to_json
+              post submit_path, params: data, headers: auth_header
+              expect(response).to have_http_status(:unprocessable_entity)
+            end
           end
         end
       end
 
-      context 'when the additional_exposures does not match the regex' do
-        let(:additional_exposures) { 'some !@#@#$#%$^%$#&$^%&&(*978078)' }
-
-        it 'responds with a bad request' do
-          with_okta_user(scopes) do |auth_header|
-            json = JSON.parse(data)
-            json['data']['attributes']['toxicExposure']['additionalHazardExposures']['additionalExposures'] =
-              additional_exposures
-            data = json.to_json
-            post submit_path, params: data, headers: auth_header
-            expect(response).to have_http_status(:unprocessable_entity)
-          end
-        end
-      end
-
-      context 'when the specify_other_exposures does not match the regex' do
-        let(:specify_other_exposures) { 'some !@#@#$#%$^%$#&$^%&&(*978078)' }
-
-        it 'responds with a bad request' do
-          with_okta_user(scopes) do |auth_header|
-            json = JSON.parse(data)
-            json['data']['attributes']['toxicExposure']['additionalHazardExposures']['specifyOtherExposures'] =
-              specify_other_exposures
-            data = json.to_json
-            post submit_path, params: data, headers: auth_header
-            expect(response).to have_http_status(:unprocessable_entity)
-          end
-        end
-      end
-
-      context 'when the exposure_location does not match the regex' do
-        let(:exposure_location) { 'some !@#@#$#%$^%$#&$^%&&(*978078)' }
-
-        it 'responds with a bad request' do
-          with_okta_user(scopes) do |auth_header|
-            json = JSON.parse(data)
-            json['data']['attributes']['toxicExposure']['multipleExposures'][0]['exposureLocation'] =
-              exposure_location
-            data = json.to_json
-            post submit_path, params: data, headers: auth_header
-            expect(response).to have_http_status(:unprocessable_entity)
-          end
-        end
-      end
-
-      context 'when the hazard_exposed_to does not match the regex' do
-        let(:hazard_exposed_to) { 'some !@#@#$#%$^%$#&$^%&&(*978078)' }
-
-        it 'responds with a bad request' do
-          with_okta_user(scopes) do |auth_header|
-            json = JSON.parse(data)
-            json['data']['attributes']['toxicExposure']['multipleExposures'][0]['hazardExposedTo'] =
-              hazard_exposed_to
-            data = json.to_json
-            post submit_path, params: data, headers: auth_header
-            expect(response).to have_http_status(:unprocessable_entity)
-          end
-        end
-      end
-
-      context 'tracking PACT act claims' do
+      describe 'tracking PACT act claims' do
         context 'when is a PACT claim' do
           it 'tracks the claim count' do
             with_okta_user(scopes) do |auth_header|
@@ -1265,7 +1266,6 @@ RSpec.describe 'Disability Claims', type: :request do
                   params = json_data
                   params['data']['attributes']['servicePay'] = service_pay_attribute
                   post submit_path, params: params.to_json, headers: auth_header
-                  puts "#{response.pretty_inspect}"
                   expect(response).to have_http_status(:bad_request)
                 end
               end
@@ -2483,24 +2483,9 @@ RSpec.describe 'Disability Claims', type: :request do
             with_okta_user(scopes) do |auth_header|
               json_data = JSON.parse data
               params = json_data
-              count = params['data']['attributes']['disabilities'].count
-              disabilities = [
-                {
-                  disabilityActionType: 'NONE',
-                  name: 'PTSD (post traumatic stress disorder)',
-                  diagnosticCode: 9999,
-                  serviceRelevance: 'Heavy equipment operator in service.',
-                  secondaryDisabilities: [
-                    {
-                      disabilityActionType: 'SECONDARY',
-                      name: 'PTSD (post traumatic stress disorder)',
-                      serviceRelevance: 'Caused by a service-connected disability.',
-                      approximateDate: "#{Time.zone.now.year - 1}"
-                    }
-                  ]
-                }
-              ]
-              params['data']['attributes']['disabilities'][count + 1] = disabilities
+
+              disabilities = params['data']['attributes']['disabilities']
+              disabilities[0]["approximateDate"] = '2018'
               post submit_path, params: params.to_json, headers: auth_header
               expect(response).to have_http_status(:ok)
             end
