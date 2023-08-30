@@ -383,9 +383,9 @@ module ClaimsApi
         return if brd_service_branch_names.include?(branch)
 
         raise ::Common::Exceptions::UnprocessableEntity.new(
-          detail:  "'servicePay.militaryRetiredPay.branchOfService' must match a service branch " \
-          'returned from the /service-branches endpoint of the Benefits ' \
-          'Reference Data API.'
+          detail: "'servicePay.militaryRetiredPay.branchOfService' must match a service branch " \
+                  'returned from the /service-branches endpoint of the Benefits ' \
+                  'Reference Data API.'
         )
       end
 
@@ -418,9 +418,9 @@ module ClaimsApi
         return if brd_service_branch_names.include?(branch)
 
         raise ::Common::Exceptions::UnprocessableEntity.new(
-          detail:  "'servicePay.separationSeverancePay.branchOfService' must match a service branch " \
-          'returned from the /service-branches endpoint of the Benefits ' \
-          'Reference Data API.'
+          detail: "'servicePay.separationSeverancePay.branchOfService' must match a service branch " \
+                  'returned from the /service-branches endpoint of the Benefits ' \
+                  'Reference Data API.'
         )
       end
 
@@ -546,9 +546,9 @@ module ClaimsApi
         service_information['servicePeriods'].each do |sp|
           unless brd_service_branch_names.include?(sp['serviceBranch'])
             raise ::Common::Exceptions::UnprocessableEntity.new(
-              detail:  "'servicePeriods.serviceBranch' must match a service branch " \
-              'returned from the /service-branches endpoint of the Benefits ' \
-              'Reference Data API.'
+              detail: "'servicePeriods.serviceBranch' must match a service branch " \
+                      'returned from the /service-branches endpoint of the Benefits ' \
+                      'Reference Data API.'
             )
           end
         end
