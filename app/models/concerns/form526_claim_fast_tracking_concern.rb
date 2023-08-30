@@ -117,7 +117,8 @@ module Form526ClaimFastTrackingConcern
       diagnostic_code:,
       claim_id: saved_claim_id,
       form526_submission_id: id,
-      claim_type:
+      claim_type:,
+      contention_text: 'TODO - add this field',
     }
 
     classification = get_classification(params)
