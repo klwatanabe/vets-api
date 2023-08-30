@@ -151,6 +151,15 @@ describe VAOS::V2::AppointmentsService do
         end
       end
 
+      # it 'returns a 200 status with list of appointments with AVS link' do
+      #   VCR.use_cassette('vaos/v2/appointments/get_appointments_200_with_facilities_200_AVS',
+      # record: :new_episodes, tag: :force_utf8) do#match_requests_on: %i[method path query],
+      # allow_playback_repeats: true
+      #     response = subject.get_appointments(start_date2, end_date2)
+      #     expect(response[:data].size).to eq(16)
+      #   end
+      # end
+
       it 'returns with list of appointments and appends local start time' do
         allow_any_instance_of(VAOS::V2::AppointmentsService).to receive(:get_facility).and_return(mock_facility2)
         VCR.use_cassette('vaos/v2/appointments/get_appointments_200_with_facilities_200',
@@ -606,4 +615,16 @@ describe VAOS::V2::AppointmentsService do
       expect { subject.send(:booked?, nil) }.to raise_error(ArgumentError, 'Appointment cannot be nil')
     end
   end
+
+  # describe '#avs_applicable?' do
+  #   it 'returns true on a booked past appointment' do
+
+  #   end
+  #   it 'returns false on a cancelled past appointment' do
+
+  #   end
+  #   it 'returns false on a booked future appointment' do
+
+  #   end
+  # end
 end

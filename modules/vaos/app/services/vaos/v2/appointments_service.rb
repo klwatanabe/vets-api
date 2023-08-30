@@ -108,20 +108,19 @@ module VAOS
 
       def avs_service
         @avs_service ||=
-          Avs::V0::AvsService.new(user)
+          Avs::V0::AvsService.new
       end
 
-      def extract_station_id_and_ien(appt)
-        id_colon_ien = appt[:identifier][0][:value]
-        id_colon_ien.split(':', 2)
-      end
+      # def extract_station_id_and_ien(id_colon_ien)
+      #   id_colon_ien.split(':', 2)
+      # end
 
       def get_avs_link(station_id, ien)
         avs_service.get_avs_by_appointment(station_id, ien)
       end
 
       def fetch_avs_and_update_appt_body(appt)
-        id_ien_array = extract_station_id_and_ien(appt)
+        id_ien_array = appt[:identifier][0][:value].split(':', 2)
         avs_link = get_avs_link(id_ien_array[0], id_ien_array[1])
         appt[:avs_path] = avs_link
       end
@@ -136,7 +135,7 @@ module VAOS
       def avs_applicable?(appt)
         raise ArgumentError, 'Appointment cannot be nil' if appt.nil?
 
-        appt[:status] == 'booked' && appt[:start].past?
+        appt[:status] == 'booked' && appt[:start].to_datetime.past?
       end
 
       # Checks if the appointment is booked.
