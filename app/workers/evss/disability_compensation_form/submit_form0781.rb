@@ -4,7 +4,7 @@ require 'central_mail/datestamp_pdf'
 require 'pdf_fill/filler'
 require 'logging/third_party_transaction'
 
-# [wipn8923] renamespace?
+# [wipn8923] renamespacing would be good, but feels out of scope for the first pass
 module EVSS
   module DisabilityCompensationForm
     class SubmitForm0781 < Job
