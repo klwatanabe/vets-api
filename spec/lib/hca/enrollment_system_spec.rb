@@ -1573,6 +1573,7 @@ describe HCA::EnrollmentSystem do
 
         should_return_user_id
       end
+
     end
   end
 end
