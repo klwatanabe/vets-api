@@ -1258,7 +1258,7 @@ RSpec.describe 'Disability Claims', type: :request do
               let(:received_date) { (Time.zone.today + 1.year).strftime('%Y') }
 
               it 'responds with a bad request' do
-                with_okta_user(scopes) do |auth_header|
+                mock_ccg(scopes) do |auth_header|
                   json_data = JSON.parse data
                   params = json_data
                   params['data']['attributes']['servicePay'] = service_pay_attribute
@@ -1272,7 +1272,7 @@ RSpec.describe 'Disability Claims', type: :request do
               let(:received_date) { (Time.zone.today - 1.year).strftime('%Y') }
 
               it 'responds with a 200' do
-                with_okta_user(scopes) do |auth_header|
+                mock_ccg(scopes) do |auth_header|
                   json_data = JSON.parse data
                   params = json_data
                   params['data']['attributes']['servicePay'] = service_pay_attribute
@@ -1311,7 +1311,7 @@ RSpec.describe 'Disability Claims', type: :request do
           let(:treatment_begin_date) { '1999' }
 
           it 'returns a 200' do
-            with_okta_user(scopes) do |auth_header|
+            mock_ccg(scopes) do |auth_header|
               json = JSON.parse(data)
               json['data']['attributes']['treatments'][0]['beginDate'] = treatment_begin_date
               data = json.to_json
@@ -2480,7 +2480,7 @@ RSpec.describe 'Disability Claims', type: :request do
           end
 
           it 'returns 200 if approximateDate is in format YYYY' do
-            with_okta_user(scopes) do |auth_header|
+            mock_ccg(scopes) do |auth_header|
               json_data = JSON.parse data
               params = json_data
 
