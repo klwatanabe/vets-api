@@ -29,7 +29,15 @@ module SignIn
         anti_csrf_token: access_token.anti_csrf_token,
         last_regeneration_time: access_token.last_regeneration_time.to_i,
         version: access_token.version
-      }
+      }.merge(user_attributes)
+    end
+
+    def user_attributes
+      {
+        first_name: access_token.first_name,
+        last_name: access_token.last_name,
+        email: access_token.email
+      }.compact
     end
 
     def jwt_encode_access_token

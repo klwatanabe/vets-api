@@ -45,6 +45,41 @@ RSpec.describe SignIn::AccessTokenJwtEncoder do
         expect(decoded_jwt.jti).to eq expected_jti
         expect(decoded_jwt.aud).to eq expected_aud
       end
+
+      context 'expected user attributes on encoded access token' do
+        let(:access_token) { create(:access_token, access_token_params) }
+        let(:access_token_params) do
+          { client_id:,
+            first_name:,
+            last_name:,
+            email: }
+        end
+        let(:first_name) { nil }
+        let(:last_name) { nil }
+        let(:email) { nil }
+
+        context 'when there are no user attributes on the input access token' do
+          it 'does not include user attributes on the encoded access token' do
+            decoded_jwt = OpenStruct.new(JWT.decode(subject, false, nil).first)
+            expect(decoded_jwt.first_name).to be_nil
+            expect(decoded_jwt.last_name).to be_nil
+            expect(decoded_jwt.email).to be_nil
+          end
+        end
+
+        context 'when there are one or more user attributes on the input access token' do
+          let(:first_name) { Faker::Name.first_name }
+          let(:last_name) { Faker::Name.last_name }
+          let(:email) { Faker::Internet.email }
+
+          it 'includes user attributes on the encoded access token' do
+            decoded_jwt = OpenStruct.new(JWT.decode(subject, false, nil).first)
+            expect(decoded_jwt.first_name).to eq(first_name)
+            expect(decoded_jwt.last_name).to eq(last_name)
+            expect(decoded_jwt.email).to eq(email)
+          end
+        end
+      end
     end
   end
 end
