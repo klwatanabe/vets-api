@@ -160,6 +160,10 @@ features:
     actor_type: user
     description: When enabled, the Download Decision Letters feature includes Board of Appeals decision letters
     enable_in_development: true
+  cst_use_new_claim_cards:
+    actor_type: user
+    description: When enabled, claims status tool uses the new claim card designs
+    enable_in_development: true
   coe_access:
     actor_type: user
     description: Feature gates the certificate of eligibility application
@@ -440,6 +444,10 @@ features:
     actor_type: user
     description: Enables form 5495 email submission confirmation (VaNotify)
     enable_in_development: true
+  simple_forms_email_confirmations:
+    actor_type: user
+    description: Enables form email submission confirmations (for allowed email types via VaNotify)
+    enable_in_development: true
   form214142:
     actor_type: user
     description: If enabled shows the digital form experience for form 21-4142
@@ -651,7 +659,17 @@ features:
     description: Use single-logout (SLO) paths for Public Websites-managed EHR CTAs
   my_va_experimental:
     actor_type: user
-    description: Use for experimental features for My VA application
+    description: Use for experimental features for My VA application (general)
+  my_va_experimental_frontend:
+    actor_type: user
+    description: Use for experimental features for My VA application (frontend)
+  my_va_experimental_fullstack:
+    actor_type: user
+    description: Use for experimental features for My VA application (fullstack)
+    enable_in_development: true
+  my_va_notification_component:
+    actor_type: user
+    description: Enable users to see va-notification component on My VA
     enable_in_development: true
   my_va_notification_dot_indicator:
     actor_type: user
