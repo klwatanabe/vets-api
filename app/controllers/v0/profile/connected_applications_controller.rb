@@ -36,17 +36,16 @@ module V0
 
       def apps_from_grants
         apps = {}
-        @current_user.okta_grants.all.each do |grant|
-          links = grant['_links']
-          app_id = links['app']['href'].split('/').last
-          unless apps[app_id]
-            app = OktaRedis::App.with_id(app_id)
-            app.user = @current_user
-            app.fetch_grants
-            apps[app_id] = app
-          end
-        end
-        apps.values
+        app.user = @current_user
+        icn = app.user.icn
+
+        root_url = request.base_url == 'https://api.va.gov' ? 'https://api.va.gov' : 'https://sandbox-api.va.gov'
+        grant_url = "#{root_url}/internal/auth/v3/user/connected-apps"
+
+        payload = { icn: }
+
+        response = RestClient.get(grant_url, params: payload)
+        JSON.parse(response.data.apps) if response.code == 200
       end
 
       def connected_accounts_params
