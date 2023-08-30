@@ -10,10 +10,7 @@ module V0
       end
 
       def destroy
-        app = OktaRedis::App.with_id(connected_accounts_params[:id])
-        app.user = @current_user
-
-        icn = app.user.icn
+        icn = @current_user.icn
         client_id = :id
 
         root_url = request.base_url == 'https://api.va.gov' ? 'https://api.va.gov' : 'https://sandbox-api.va.gov'
@@ -22,7 +19,7 @@ module V0
         payload = { icn:, client_id: }
 
         begin
-          response = RestClient.delete(revocation_url, params: payload)
+          response = RestClient.delete(revocation_url, params: payload, { apiKey: Settings.lighthouse.api_key })
 
           if response.code == 204
             head :no_content
