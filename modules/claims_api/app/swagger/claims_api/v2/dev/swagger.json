@@ -95,7 +95,7 @@
             "content": {
               "application/json": {
                 "example": {
-                  "id": "1012667145V762142"
+                  "id": "1013062086V794840"
                 },
                 "schema": {
                   "additionalProperties": false,
@@ -109,15 +109,15 @@
               }
             }
           },
-          "400": {
+          "422": {
             "description": "Bad Request",
             "content": {
               "application/json": {
                 "example": {
                   "errors": [
                     {
-                      "title": "invalid value for SSN",
-                      "detail": "blank is not valid for SSN"
+                      "title": "Unprocessable Entity",
+                      "detail": "Invalid SSN in Master Person Index (MPI). Please submit an issue at ask.va.gov or call 1-800-MyVA411 (800-698-2411) for assistance."
                     }
                   ]
                 },
@@ -2118,46 +2118,9 @@
                               ],
                               "properties": {
                                 "serviceBranch": {
-                                  "description": "Branch of Service during period.",
+                                  "description": "Branch of service. The /service-branches endpoint on the [Benefits Reference Data API|https://developer.va.gov/explore/benefits/docs/benefits_reference_data?version=current] may be used to retrieve list of possible service branches.",
                                   "type": "string",
-                                  "example": "Air Force",
-                                  "enum": [
-                                    "Air Force",
-                                    "Air Force Academy",
-                                    "Air Force Reserves",
-                                    "Air Force Civilian",
-                                    "Air National Guard",
-                                    "Army",
-                                    "Army Air Corps",
-                                    "Army Air Corps or Army Air Force",
-                                    "Army National Guard",
-                                    "Army Nurse Corps",
-                                    "Army Reserves",
-                                    "Coast Guard",
-                                    "Coast Guard Academy",
-                                    "Coast Guard Reserves",
-                                    "Commonwealth Army Veteran",
-                                    "Guerrilla Combination Service",
-                                    "Marine",
-                                    "Marine Corps",
-                                    "Marine Corps Reserves",
-                                    "Merchant Marine",
-                                    "National Oceanic & Atmospheric Administration",
-                                    "National Oceanic and Atmospheric Administration",
-                                    "Naval Academy",
-                                    "Navy",
-                                    "Navy Reserves",
-                                    "Other",
-                                    "Public Health Service",
-                                    "Regular Philippine Scout",
-                                    "Regular Scout Service",
-                                    "Space Force",
-                                    "Special Philippine Scout",
-                                    "Unknown",
-                                    "US Military Academy",
-                                    "Woman Air Corps",
-                                    "Women's Army Corps"
-                                  ]
+                                  "example": "Air Force"
                                 },
                                 "serviceComponent": {
                                   "type": "array",
@@ -2342,35 +2305,8 @@
                             "description": "",
                             "properties": {
                               "branchOfService": {
-                                "description": "Branch of Service making payments.",
+                                "description": "Branch of service. The /service-branches endpoint on the [Benefits Reference Data API|https://developer.va.gov/explore/benefits/docs/benefits_reference_data?version=current] may be used to retrieve list of possible service branches.",
                                 "type": "string",
-                                "enum": [
-                                  "Air Force",
-                                  "Air Force Reserves",
-                                  "Air National Guard",
-                                  "Army",
-                                  "Army National Guard",
-                                  "Army Reserves",
-                                  "Coast Guard",
-                                  "Coast Guard Reserves",
-                                  "Marine Corps",
-                                  "Marine Corps Reserves",
-                                  "National Oceanic &amp; Atmospheric Administration",
-                                  "National Oceanic & Atmospheric Administration",
-                                  "Navy",
-                                  "Navy Reserves",
-                                  "Public Health Service",
-                                  "Air Force Academy",
-                                  "Army Air Corps or Army Air Force",
-                                  "Army Nurse Corps",
-                                  "Coast Guard Academy",
-                                  "Merchant Marine",
-                                  "Naval Academy",
-                                  "Other",
-                                  "US Military Academy",
-                                  "Women's Army Corps",
-                                  "Space Force"
-                                ],
                                 "example": "Air Force"
                               },
                               "monthlyAmount": {
@@ -2408,35 +2344,8 @@
                                 "example": "03-02-2018 or 03-2018"
                               },
                               "branchOfService": {
-                                "description": "Branch of Service making payments.",
+                                "description": "Branch of service. The /service-branches endpoint on the [Benefits Reference Data API|https://developer.va.gov/explore/benefits/docs/benefits_reference_data?version=current] may be used to retrieve list of possible service branches.",
                                 "type": "string",
-                                "enum": [
-                                  "Air Force",
-                                  "Air Force Reserves",
-                                  "Air National Guard",
-                                  "Army",
-                                  "Army National Guard",
-                                  "Army Reserves",
-                                  "Coast Guard",
-                                  "Coast Guard Reserves",
-                                  "Marine Corps",
-                                  "Marine Corps Reserves",
-                                  "National Oceanic &amp; Atmospheric Administration",
-                                  "National Oceanic & Atmospheric Administration",
-                                  "Navy",
-                                  "Navy Reserves",
-                                  "Public Health Service",
-                                  "Air Force Academy",
-                                  "Army Air Corps or Army Air Force",
-                                  "Army Nurse Corps",
-                                  "Coast Guard Academy",
-                                  "Merchant Marine",
-                                  "Naval Academy",
-                                  "Other",
-                                  "US Military Academy",
-                                  "Women's Army Corps",
-                                  "Space Force"
-                                ],
                                 "example": "Air Force"
                               },
                               "preTaxAmountReceived": {
@@ -3235,46 +3144,9 @@
                                   ],
                                   "properties": {
                                     "serviceBranch": {
-                                      "description": "Branch of Service during period.",
+                                      "description": "Branch of service. The /service-branches endpoint on the Benefits Reference Data API may be used to retrieve list of possible service branches.",
                                       "type": "string",
-                                      "example": "Air Force",
-                                      "enum": [
-                                        "Air Force",
-                                        "Air Force Academy",
-                                        "Air Force Reserves",
-                                        "Air Force Civilian",
-                                        "Air National Guard",
-                                        "Army",
-                                        "Army Air Corps",
-                                        "Army Air Corps or Army Air Force",
-                                        "Army National Guard",
-                                        "Army Nurse Corps",
-                                        "Army Reserves",
-                                        "Coast Guard",
-                                        "Coast Guard Academy",
-                                        "Coast Guard Reserves",
-                                        "Commonwealth Army Veteran",
-                                        "Guerrilla Combination Service",
-                                        "Marine",
-                                        "Marine Corps",
-                                        "Marine Corps Reserves",
-                                        "Merchant Marine",
-                                        "National Oceanic & Atmospheric Administration",
-                                        "National Oceanic and Atmospheric Administration",
-                                        "Naval Academy",
-                                        "Navy",
-                                        "Navy Reserves",
-                                        "Other",
-                                        "Public Health Service",
-                                        "Regular Philippine Scout",
-                                        "Regular Scout Service",
-                                        "Space Force",
-                                        "Special Philippine Scout",
-                                        "Unknown",
-                                        "US Military Academy",
-                                        "Woman Air Corps",
-                                        "Women's Army Corps"
-                                      ]
+                                      "example": "Air Force"
                                     },
                                     "serviceComponent": {
                                       "type": "string",
@@ -3487,35 +3359,8 @@
                                 "description": "",
                                 "properties": {
                                   "branchOfService": {
-                                    "description": "Branch of Service making payments.",
+                                    "description": "Branch of service. The /service-branches endpoint on the Benefits Reference Data API may be used to retrieve list of possible service branches.",
                                     "type": "string",
-                                    "enum": [
-                                      "Air Force",
-                                      "Air Force Reserves",
-                                      "Air National Guard",
-                                      "Army",
-                                      "Army National Guard",
-                                      "Army Reserves",
-                                      "Coast Guard",
-                                      "Coast Guard Reserves",
-                                      "Marine Corps",
-                                      "Marine Corps Reserves",
-                                      "National Oceanic &amp; Atmospheric Administration",
-                                      "National Oceanic & Atmospheric Administration",
-                                      "Navy",
-                                      "Navy Reserves",
-                                      "Public Health Service",
-                                      "Air Force Academy",
-                                      "Army Air Corps or Army Air Force",
-                                      "Army Nurse Corps",
-                                      "Coast Guard Academy",
-                                      "Merchant Marine",
-                                      "Naval Academy",
-                                      "Other",
-                                      "US Military Academy",
-                                      "Women's Army Corps",
-                                      "Space Force"
-                                    ],
                                     "example": "Air Force"
                                   },
                                   "monthlyAmount": {
@@ -3557,7 +3402,7 @@
                                     "example": "03-02-2018 or 03-2018"
                                   },
                                   "branchOfService": {
-                                    "description": "Branch of Service making payments.",
+                                    "description": "Branch of service. The /service-branches endpoint on the Benefits Reference Data API may be used to retrieve list of possible service branches.",
                                     "type": "string",
                                     "example": "Air Force"
                                   },
@@ -4344,7 +4189,7 @@
                   "errors": [
                     {
                       "title": "Not authorized",
-                      "detail": "Not authorized."
+                      "detail": "Not authorized"
                     }
                   ]
                 },
@@ -4547,8 +4392,8 @@
                     "id": "1",
                     "type": "intent_to_file",
                     "attributes": {
-                      "creationDate": "2023-08-23",
-                      "expirationDate": "2024-08-23",
+                      "creationDate": "2023-08-30",
+                      "expirationDate": "2024-08-30",
                       "type": "compensation",
                       "status": "active"
                     }
@@ -4676,7 +4521,7 @@
                   "errors": [
                     {
                       "title": "Not authorized",
-                      "detail": "Not authorized."
+                      "detail": "Not authorized"
                     }
                   ]
                 },
@@ -4782,7 +4627,7 @@
                   "errors": [
                     {
                       "title": "Unprocessable Entity",
-                      "detail": "Claimant SSN cannot be the same as veteran SSN for type 'survivor'"
+                      "detail": "Invalid claimantSsn parameter"
                     }
                   ]
                 },
@@ -5038,7 +4883,7 @@
                   "errors": [
                     {
                       "title": "Not authorized",
-                      "detail": "Not authorized."
+                      "detail": "Not authorized"
                     }
                   ]
                 },
