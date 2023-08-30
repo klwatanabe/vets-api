@@ -48,7 +48,7 @@ module ClaimsApi
       payload = {}
       data = {
         data: {
-          systemName: 'va.gov',
+          systemName: 'VA.gov',
           docType: 'L122',
           claimId: claim.evss_id,
           fileNumber: file_number || claim.auth_headers['va_eauth_birlsfilenumber'],
