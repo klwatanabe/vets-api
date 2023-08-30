@@ -380,7 +380,7 @@ module ClaimsApi
 
       def validate_from_526_military_retired_pay_branch!
         branch = form_attributes.dig('servicePay', 'militaryRetiredPay', 'branchOfService')
-        return if brd_service_branch_names.include?(branch)
+        return if branch.nil? || brd_service_branch_names.include?(branch)
 
         raise ::Common::Exceptions::UnprocessableEntity.new(
           detail: "'servicePay.militaryRetiredPay.branchOfService' must match a service branch " \
@@ -415,7 +415,7 @@ module ClaimsApi
 
       def validate_from_526_separation_severance_pay_branch!
         branch = form_attributes.dig('servicePay', 'separationSeverancePay', 'branchOfService')
-        return if brd_service_branch_names.include?(branch)
+        return if branch.nil? || brd_service_branch_names.include?(branch)
 
         raise ::Common::Exceptions::UnprocessableEntity.new(
           detail: "'servicePay.separationSeverancePay.branchOfService' must match a service branch " \

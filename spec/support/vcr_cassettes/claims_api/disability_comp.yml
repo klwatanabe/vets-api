@@ -65,7 +65,6 @@ http_interactions:
         Force Reserves"},{"code":"AR","description":"Army Reserves"},{"code":"CGR","description":"Coast
         Guard Reserves"},{"code":"MCR","description":"Marine Corps Reserves"}]}'
   recorded_at: Tue, 29 Aug 2023 18:18:33 GMT
-recorded_with: VCR 6.2.0
 - request:
     method: get
     uri: https://staging-api.va.gov/services/benefits-reference-data/v1/disabilities
