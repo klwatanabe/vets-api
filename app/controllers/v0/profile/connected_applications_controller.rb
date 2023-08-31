@@ -13,6 +13,11 @@ module V0
         icn = @current_user.icn
         client_id = :id
 
+        if icn.nil? || client_id.nil?
+          render json: { error: 'icn and/or client_id is missing' }
+          return
+        end
+
         root_url = request.base_url == 'https://api.va.gov' ? 'https://api.va.gov' : 'https://sandbox-api.va.gov'
         revocation_url = "#{root_url}/internal/auth/v3/user/consent"
 
