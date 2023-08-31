@@ -2,7 +2,7 @@
 http_interactions:
 - request:
     method: delete
-    uri: https://sandbox-api.va.gov/internal/auth/v3/user/consent?client_id=id&icn=1234
+    uri: https://sandbox-api.va.gov/internal/auth/v3/user/consent?clientId=id&icn=1234
     body:
       encoding: US-ASCII
       string: ''

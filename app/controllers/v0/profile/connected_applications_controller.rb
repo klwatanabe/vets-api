@@ -14,14 +14,14 @@ module V0
         client_id = :id
 
         if icn.nil? || client_id.nil?
-          render json: { error: 'icn and/or client_id is missing' }
+          render json: { error: 'icn and/or clientId is missing' }
           return
         end
 
         root_url = request.base_url == 'https://api.va.gov' ? 'https://api.va.gov' : 'https://sandbox-api.va.gov'
         revocation_url = "#{root_url}/internal/auth/v3/user/consent"
 
-        payload = { icn:, client_id: }
+        payload = { icn:, clientId: client_id }
 
         begin
           response = RestClient.delete(revocation_url, params: payload,
