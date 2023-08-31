@@ -144,9 +144,25 @@ features:
     actor_type: user
     description: When enabled, claims status tool uses the Lighthouse API instead of EVSS
     enable_in_development: true
+  cst_use_lighthouse_5103:
+    actor_type: user
+    description: When enabled, claims status tool uses the Lighthouse API for the 5103 endpoint
+    enable_in_development: true
+  cst_use_lighthouse_index:
+    actor_type: user
+    description: When enabled, claims status tool uses the Lighthouse API for the index endpoint
+    enable_in_development: true
+  cst_use_lighthouse_show:
+    actor_type: user
+    description: When enabled, claims status tool uses the Lighthouse API for the show endpoint
+    enable_in_development: true
   cst_include_ddl_boa_letters:
     actor_type: user
     description: When enabled, the Download Decision Letters feature includes Board of Appeals decision letters
+    enable_in_development: true
+  cst_use_new_claim_cards:
+    actor_type: user
+    description: When enabled, claims status tool uses the new claim card designs
     enable_in_development: true
   coe_access:
     actor_type: user
@@ -216,6 +232,9 @@ features:
     actor_type: user
     description: enable/disable the use of LH Benefits Documents API in our Claim Status v2 services.
     enable_in_development: false
+  claims_status_v1_lh_auto_establish_claim_enabled:
+    actor_type: user
+    description: With feature flag enabled, v1 /526 should use Lighthouse Form526 docker container
   debt_letters_show_letters:
     actor_type: user
     description: Enables debt letters
@@ -277,6 +296,10 @@ features:
     actor_type: user
     description: Feature gates the dependency verification modal for updating the diaries service.
     enable_in_development: true
+  dependents_enqueue_with_user_struct:
+    actor_type: user
+    description: Manage whether the enqueued job for 686c and 674 will be with a User model or the new User struct
+    enable_in_development: true
   dependents_pension_check:
     actor_type: user
     description: Manage whether or not Pension check is enabled for the 686/674
@@ -337,10 +360,6 @@ features:
     actor_type: user
     description: Send only lat/long values (no bounding box or address) to the API when querying for facilities.
     enable_in_development: true
-  facility_locator_lighthouse_covid_vaccine_query:
-    actor_type: user
-    description: enable covid search/display
-    enable_in_development: true
   facility_locator_ppms_legacy_urgent_care_to_pos_locator:
     actor_type: user
     description: force the legacy urgent care path to use the new POS locator
@@ -397,6 +416,10 @@ features:
     actor_type: user
     description: Form 10182 Notice of Disagreement - Request a board appeal
     enable_in_development: true
+  form0994_confirmation_email:
+    actor_type: user
+    description: Enables form 0994 email submission confirmation (VaNotify)
+    enable_in_development: true
   form1990_confirmation_email:
     actor_type: user
     description: Enables form 1990 email submission confirmation (VaNotify)
@@ -409,6 +432,10 @@ features:
     actor_type: user
     description: Enables form 1990e email submission confirmation (VaNotify)
     enable_in_development: true
+  form21_4142_confirmation_email:
+    actor_type: user
+    description: Enables form 21-4142 email submission confirmation (VaNotify)
+    enable_in_development: true
   form5490_confirmation_email:
     actor_type: user
     description: Enables form 5490 email submission confirmation (VaNotify)
@@ -416,6 +443,10 @@ features:
   form5495_confirmation_email:
     actor_type: user
     description: Enables form 5495 email submission confirmation (VaNotify)
+    enable_in_development: true
+  simple_forms_email_confirmations:
+    actor_type: user
+    description: Enables form email submission confirmations (for allowed email types via VaNotify)
     enable_in_development: true
   form214142:
     actor_type: user
@@ -501,7 +532,11 @@ features:
     enable_in_development: true
   mhv_landing_page_enabled:
     actor_type: user
-    description: Enables the new MHV landing page on VA.gov
+    description: Enables the My HealtheVet landing page on VA.gov
+    enable_in_development: true
+  mhv_landing_page_show_priority_group:
+    actor_type: user
+    description: Shows Veterans their Priority Group on the MHV Landing Page
     enable_in_development: true
   mhv_secure_messaging_to_va_gov_release:
     actor_type: user
@@ -564,6 +599,9 @@ features:
       Toggle for the entire pre-entry covid 19 self-screener available at /covid19screener and to be used by visitors
       to VHA facilities in lieu of manual screening with a VHA employee.
       This toggle is owned by Patrick B. and the rest of the CTO Health Products team.
+  show_authenticated_menu_enhancements:
+    actor_type: user
+    description: Exposes new links for dependents and letters in the header dropdown for authenticated users
   profile_lighthouse_rating_info:
     actor_type: user
     description: When enabled, will request disability rating info data from lighthouse API.
@@ -597,19 +635,23 @@ features:
     actor_type: user
     description: Show/Hide the quick submit section of notification settings in profile
   profile_use_experimental:
-    description: "Use experimental features for Pofile application - Do not remove"
+    description: Use experimental features for Profile application - Do not remove
     enable_in_development: true
     actor_type: user
   profile_use_field_editing_page:
-    description: "Use a single page route in Profile for editing or adding a field value"
+    description: Use a single page route in Profile for editing or adding a field value
+    enable_in_development: true
+    actor_type: user
+  profile_use_hub_page:
+    description: Use a hub style page as the root page for the profile application
     enable_in_development: true
     actor_type: user
   profile_use_notification_settings_checkboxes:
     actor_type: user
-    description: "Use checkboxes for Notification Settings in Profile - Default Send and Email Channel"
+    description: Use checkboxes for Notification Settings in Profile - Default Send and Email Channel
     enable_in_development: true
   profile_use_vafsc:
-    description: "Use VA Forms System Core for forms instead of schema based forms"
+    description: Use VA Forms System Core for forms instead of schema based forms
     actor_type: user
     enable_in_development: true
   pw_ehr_cta_drupal_source_of_truth:
@@ -621,8 +663,21 @@ features:
     description: Use single-logout (SLO) paths for Public Websites-managed EHR CTAs
   my_va_experimental:
     actor_type: user
-    description: Use for experimental features for My VA application
+    description: Use for experimental features for My VA application (general)
+  my_va_experimental_frontend:
+    actor_type: user
+    description: Use for experimental features for My VA application (frontend)
+  my_va_experimental_fullstack:
+    actor_type: user
+    description: Use for experimental features for My VA application (fullstack)
     enable_in_development: true
+  my_va_notification_component:
+    actor_type: user
+    description: Enable users to see va-notification component on My VA
+    enable_in_development: true
+  my_va_notification_dot_indicator:
+    actor_type: user
+    description: Enable dot indicator for notifications
   my_va_update_errors_warnings:
     actor_type: user
     description: Update all errors and warnings on My VA for consistency (will remove when va-notification component is released)
@@ -919,6 +974,10 @@ features:
     actor_type: user
     description: Enables sleep apnea supplies to be ordered in the supply reorder tool / MDOT.
     enable_in_development: true
+  toe_short_circuit_bgs_failure:
+    actor_type: user
+    description: Flag to use begin rescue block for BGS call
+    enable_in_development: true
   move_form_back_button:
     actor_type: user
     description: Test moving form back button to the top of the page
@@ -955,6 +1014,9 @@ features:
   disability_compensation_lighthouse_document_service_provider:
     actor_type: user
     description: If enabled uses the lighthouse documents service
+  disability_compensation_lighthouse_claims_service_provider:
+    actor_type: user
+    description: If enabled uses the lighthouse claims service
   disability_compensation_lighthouse_submit_migration:
     actor_type: user
     description: If enabled uses the lighthouse submit endpoint

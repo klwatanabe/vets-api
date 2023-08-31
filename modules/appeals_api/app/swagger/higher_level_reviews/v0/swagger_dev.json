@@ -741,7 +741,7 @@
         }
       }
     },
-    "/forms/200996/{uuid}": {
+    "/forms/200996/{id}": {
       "get": {
         "summary": "Shows a specific Higher-Level Review. (a.k.a. the Show endpoint)",
         "description": "Returns all of the data associated with a specific Higher-Level Review.",
@@ -772,14 +772,15 @@
         ],
         "parameters": [
           {
-            "name": "uuid",
+            "name": "id",
             "in": "path",
-            "description": "Higher-Level Review UUID",
-            "example": "44e08764-6008-46e8-a95e-eb21951a5b68",
-            "required": true,
+            "description": "Higher-Level Review ID",
             "schema": {
-              "type": "string"
-            }
+              "type": "string",
+              "format": "uuid"
+            },
+            "example": "44e08764-6008-46e8-a95e-eb21951a5b68",
+            "required": true
           }
         ],
         "responses": {
@@ -815,6 +816,155 @@
                       "detail": "HigherLevelReview with uuid invalid not found",
                       "status": "404",
                       "title": "Record not found"
+                    }
+                  ]
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/errorModel"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "example": {
+                  "errors": [
+                    {
+                      "title": "Internal server error",
+                      "detail": "Internal server error",
+                      "code": "500",
+                      "status": "500"
+                    }
+                  ]
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/errorModel"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/forms/200996/{id}/download": {
+      "get": {
+        "summary": "Download a watermarked copy of a submitted Higher-Level Review",
+        "tags": [
+          "Higher-Level Reviews"
+        ],
+        "operationId": "downloadHlr",
+        "security": [
+          {
+            "productionOauth": [
+              "veteran/HigherLevelReviews.read",
+              "representative/HigherLevelReviews.read",
+              "system/HigherLevelReviews.read"
+            ]
+          },
+          {
+            "sandboxOauth": [
+              "veteran/HigherLevelReviews.read",
+              "representative/HigherLevelReviews.read",
+              "system/HigherLevelReviews.read"
+            ]
+          },
+          {
+            "bearer_token": [
+
+            ]
+          }
+        ],
+        "description": "Returns a watermarked copy of the submitted Higher-Level Review PDF. The PDF will only be available\nfor download after the Higher-Level Review has progressed to a 'submitted' state. The PDF will\nbecome unavailable again once personally identifying information is deleted from the server one week after the\nHigher-Level Review progresses to a 'completed' state.\n\nA PDF will not be available unless an ICN was included when the Higher-Level Review was created,\nAnd the 'icn' query parameter provided to this endpoint is required to match the ICN originally submitted with the\nHigher-Level Review.\n",
+        "parameters": [
+          {
+            "name": "icn",
+            "description": "ICN of the Veteran associated with the Higher-Level Review",
+            "example": "0123456789V012345",
+            "schema": {
+              "type": "string",
+              "pattern": "^[0-9]{10}V[0-9]{6}$",
+              "minLength": 17,
+              "maxLength": 17
+            },
+            "in": "query",
+            "required": true
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Higher-Level Review ID",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "example": "44444444-5555-6666-7777-888888888888",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/pdf": {
+                "schema": {
+                  "type": "file"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Higher-Level Review record was not found, or the provided 'icn' query parameter does not match the record's ICN",
+            "content": {
+              "application/json": {
+                "example": {
+                  "errors": [
+                    {
+                      "code": "404",
+                      "detail": "HigherLevelReview with uuid 44444444-5555-6666-7777-888888888888 not found",
+                      "status": "404",
+                      "title": "Record not found"
+                    }
+                  ]
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/errorModel"
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "Personally identifying information gone",
+            "content": {
+              "application/json": {
+                "example": {
+                  "errors": [
+                    {
+                      "code": "410",
+                      "detail": "PDF for HigherLevelReview with id 44444444-5555-6666-7777-888888888888 cannot be downloaded because the form data was deleted from the server after the PII retention period expired",
+                      "status": "410",
+                      "title": "PDF download expired"
+                    }
+                  ]
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/errorModel"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Missing 'icn' query parameter",
+            "content": {
+              "application/json": {
+                "example": {
+                  "errors": [
+                    {
+                      "title": "Unprocessable Entity",
+                      "detail": "'icn' parameter is required",
+                      "code": "422",
+                      "status": "422"
                     }
                   ]
                 },
@@ -2796,23 +2946,28 @@
       },
       "productionOauth": {
         "type": "oauth2",
-        "description": "This API uses OAuth 2 with the authorization code grant flow. [More info](https://developer.va.gov/explore/authorization?api=claims)",
+        "description": "The authentication model for the Higher-Level Reviews API uses OAuth 2.0/OpenID Connect. The following authorization models are supported: [Authorization code flow](https://dev-developer.va.gov/explore/api/higher-level-reviews/authorization-code) and [Client Credentials Grant (CCG)](https://dev-developer.va.gov/explore/api/higher-level-reviews/client-credentials).",
         "flows": {
           "authorizationCode": {
-            "authorizationUrl": "https://api.va.gov/oauth2/authorization",
-            "tokenUrl": "https://api.va.gov/oauth2/token",
+            "authorizationUrl": "https://api.va.gov/oauth2/appeals/v1/authorization",
+            "tokenUrl": "https://api.va.gov/oauth2/appeals/v1/token",
             "scopes": {
               "veteran/HigherLevelReviews.read": "Higher-Level Reviews info",
-              "representative/HigherLevelReviews.read": "Higher-Level Reviews info",
-              "system/HigherLevelReviews.read": "Higher-Level Reviews info",
               "veteran/HigherLevelReviews.write": "Ability to submit Higher-Level Reviews",
-              "representative/HigherLevelReviews.write": "Ability to submit Higher-Level Reviews",
-              "system/HigherLevelReviews.write": "Ability to submit Higher-Level Reviews",
               "veteran/appeals.read": "Appeals info",
-              "representative/appeals.read": "Appeals info",
-              "system/appeals.read": "Appeals info",
               "veteran/appeals.write": "Ability to submit appeals",
-              "representative/appeals.write": "Ability to submit appeals",
+              "representative/HigherLevelReviews.read": "Higher-Level Reviews info",
+              "representative/HigherLevelReviews.write": "Ability to submit Higher-Level Reviews",
+              "representative/appeals.read": "Appeals info",
+              "representative/appeals.write": "Ability to submit appeals"
+            }
+          },
+          "clientCredentials": {
+            "tokenUrl": "To get production access, you must either work for VA or have specific VA agreements in place. If you have questions, [contact us](https://dev-developer.va.gov/support/contact-us).",
+            "scopes": {
+              "system/HigherLevelReviews.read": "Higher-Level Reviews info",
+              "system/HigherLevelReviews.write": "Ability to submit Higher-Level Reviews",
+              "system/appeals.read": "Appeals info",
               "system/appeals.write": "Ability to submit appeals"
             }
           }
@@ -2820,23 +2975,28 @@
       },
       "sandboxOauth": {
         "type": "oauth2",
-        "description": "This API uses OAuth 2 with the authorization code grant flow. [More info](https://developer.va.gov/explore/authorization?api=claims)",
+        "description": "The authentication model for the Higher-Level Reviews API uses OAuth 2.0/OpenID Connect. The following authorization models are supported: [Authorization code flow](https://dev-developer.va.gov/explore/api/higher-level-reviews/authorization-code) and [Client Credentials Grant (CCG)](https://dev-developer.va.gov/explore/api/higher-level-reviews/client-credentials).",
         "flows": {
           "authorizationCode": {
-            "authorizationUrl": "https://sandbox-api.va.gov/oauth2/authorization",
-            "tokenUrl": "https://sandbox-api.va.gov/oauth2/token",
+            "authorizationUrl": "https://sandbox-api.va.gov/oauth2/appeals/v1/authorization",
+            "tokenUrl": "https://sandbox-api.va.gov/oauth2/appeals/v1/token",
             "scopes": {
               "veteran/HigherLevelReviews.read": "Higher-Level Reviews info",
-              "representative/HigherLevelReviews.read": "Higher-Level Reviews info",
-              "system/HigherLevelReviews.read": "Higher-Level Reviews info",
               "veteran/HigherLevelReviews.write": "Ability to submit Higher-Level Reviews",
-              "representative/HigherLevelReviews.write": "Ability to submit Higher-Level Reviews",
-              "system/HigherLevelReviews.write": "Ability to submit Higher-Level Reviews",
               "veteran/appeals.read": "Appeals info",
-              "representative/appeals.read": "Appeals info",
-              "system/appeals.read": "Appeals info",
               "veteran/appeals.write": "Ability to submit appeals",
-              "representative/appeals.write": "Ability to submit appeals",
+              "representative/HigherLevelReviews.read": "Higher-Level Reviews info",
+              "representative/HigherLevelReviews.write": "Ability to submit Higher-Level Reviews",
+              "representative/appeals.read": "Appeals info",
+              "representative/appeals.write": "Ability to submit appeals"
+            }
+          },
+          "clientCredentials": {
+            "tokenUrl": "https://deptva-eval.okta.com/oauth2/auskff5o6xsoQVngk2p7/v1/token",
+            "scopes": {
+              "system/HigherLevelReviews.read": "Higher-Level Reviews info",
+              "system/HigherLevelReviews.write": "Ability to submit Higher-Level Reviews",
+              "system/appeals.read": "Appeals info",
               "system/appeals.write": "Ability to submit appeals"
             }
           }

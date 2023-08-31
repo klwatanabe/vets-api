@@ -573,6 +573,155 @@
         }
       }
     },
+    "/forms/10182/{id}/download": {
+      "get": {
+        "summary": "Download a watermarked copy of a submitted Notice of Disagreement",
+        "tags": [
+          "Notice of Disagreements"
+        ],
+        "operationId": "downloadNod",
+        "security": [
+          {
+            "productionOauth": [
+              "veteran/NoticeOfDisagreements.read",
+              "representative/NoticeOfDisagreements.read",
+              "system/NoticeOfDisagreements.read"
+            ]
+          },
+          {
+            "sandboxOauth": [
+              "veteran/NoticeOfDisagreements.read",
+              "representative/NoticeOfDisagreements.read",
+              "system/NoticeOfDisagreements.read"
+            ]
+          },
+          {
+            "bearer_token": [
+
+            ]
+          }
+        ],
+        "description": "Returns a watermarked copy of the submitted Notice of Disagreement PDF. The PDF will only be available\nfor download after the Notice of Disagreement has progressed to a 'submitted' state. The PDF will\nbecome unavailable again once personally identifying information is deleted from the server one week after the\nNotice of Disagreement progresses to a 'completed' state.\n\nA PDF will not be available unless an ICN was included when the Notice of Disagreement was created,\nAnd the 'icn' query parameter provided to this endpoint is required to match the ICN originally submitted with the\nNotice of Disagreement.\n",
+        "parameters": [
+          {
+            "name": "icn",
+            "description": "ICN of the Veteran associated with the Notice of Disagreement",
+            "example": "0123456789V012345",
+            "schema": {
+              "type": "string",
+              "pattern": "^[0-9]{10}V[0-9]{6}$",
+              "minLength": 17,
+              "maxLength": 17
+            },
+            "in": "query",
+            "required": true
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Notice of Disagreement ID",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "example": "44444444-5555-6666-7777-888888888888",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/pdf": {
+                "schema": {
+                  "type": "file"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Notice of Disagreement record was not found, or the provided 'icn' query parameter does not match the record's ICN",
+            "content": {
+              "application/json": {
+                "example": {
+                  "errors": [
+                    {
+                      "code": "404",
+                      "detail": "NoticeOfDisagreement with uuid 44444444-5555-6666-7777-888888888888 not found",
+                      "status": "404",
+                      "title": "Record not found"
+                    }
+                  ]
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/errorModel"
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "Personally identifying information gone",
+            "content": {
+              "application/json": {
+                "example": {
+                  "errors": [
+                    {
+                      "code": "410",
+                      "detail": "PDF for NoticeOfDisagreement with id 44444444-5555-6666-7777-888888888888 cannot be downloaded because the form data was deleted from the server after the PII retention period expired",
+                      "status": "410",
+                      "title": "PDF download expired"
+                    }
+                  ]
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/errorModel"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Missing 'icn' query parameter",
+            "content": {
+              "application/json": {
+                "example": {
+                  "errors": [
+                    {
+                      "title": "Unprocessable Entity",
+                      "detail": "'icn' parameter is required",
+                      "code": "422",
+                      "status": "422"
+                    }
+                  ]
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/errorModel"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "example": {
+                  "errors": [
+                    {
+                      "title": "Internal server error",
+                      "detail": "Internal server error",
+                      "code": "500",
+                      "status": "500"
+                    }
+                  ]
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/errorModel"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/schemas/{schema_type}": {
       "get": {
         "summary": "Gets the Notice of Disagreement JSON Schema.",
@@ -2691,23 +2840,28 @@
       },
       "productionOauth": {
         "type": "oauth2",
-        "description": "This API uses OAuth 2 with the authorization code grant flow. [More info](https://developer.va.gov/explore/authorization?api=claims)",
+        "description": "The authentication model for the Notice of Disagreements API uses OAuth 2.0/OpenID Connect. The following authorization models are supported: [Authorization code flow](https://developer.va.gov/explore/api/notice-of-disagreements/authorization-code) and [Client Credentials Grant (CCG)](https://developer.va.gov/explore/api/notice-of-disagreements/client-credentials).",
         "flows": {
           "authorizationCode": {
-            "authorizationUrl": "https://api.va.gov/oauth2/authorization",
-            "tokenUrl": "https://api.va.gov/oauth2/token",
+            "authorizationUrl": "https://api.va.gov/oauth2/appeals/v1/authorization",
+            "tokenUrl": "https://api.va.gov/oauth2/appeals/v1/token",
             "scopes": {
               "veteran/NoticeOfDisagreements.read": "Board Appeals info",
-              "representative/NoticeOfDisagreements.read": "Board Appeals info",
-              "system/NoticeOfDisagreements.read": "Board Appeals info",
               "veteran/NoticeOfDisagreements.write": "Ability to submit Board Appeals",
-              "representative/NoticeOfDisagreements.write": "Ability to submit Board Appeals",
-              "system/NoticeOfDisagreements.write": "Ability to submit Board Appeals",
               "veteran/appeals.read": "Appeals info",
-              "representative/appeals.read": "Appeals info",
-              "system/appeals.read": "Appeals info",
               "veteran/appeals.write": "Ability to submit appeals",
-              "representative/appeals.write": "Ability to submit appeals",
+              "representative/NoticeOfDisagreements.read": "Board Appeals info",
+              "representative/NoticeOfDisagreements.write": "Ability to submit Board Appeals",
+              "representative/appeals.read": "Appeals info",
+              "representative/appeals.write": "Ability to submit appeals"
+            }
+          },
+          "clientCredentials": {
+            "tokenUrl": "To get production access, you must either work for VA or have specific VA agreements in place. If you have questions, [contact us](https://developer.va.gov/support/contact-us).",
+            "scopes": {
+              "system/NoticeOfDisagreements.read": "Board Appeals info",
+              "system/NoticeOfDisagreements.write": "Ability to submit Board Appeals",
+              "system/appeals.read": "Appeals info",
               "system/appeals.write": "Ability to submit appeals"
             }
           }
@@ -2715,23 +2869,28 @@
       },
       "sandboxOauth": {
         "type": "oauth2",
-        "description": "This API uses OAuth 2 with the authorization code grant flow. [More info](https://developer.va.gov/explore/authorization?api=claims)",
+        "description": "The authentication model for the Notice of Disagreements API uses OAuth 2.0/OpenID Connect. The following authorization models are supported: [Authorization code flow](https://developer.va.gov/explore/api/notice-of-disagreements/authorization-code) and [Client Credentials Grant (CCG)](https://developer.va.gov/explore/api/notice-of-disagreements/client-credentials).",
         "flows": {
           "authorizationCode": {
-            "authorizationUrl": "https://sandbox-api.va.gov/oauth2/authorization",
-            "tokenUrl": "https://sandbox-api.va.gov/oauth2/token",
+            "authorizationUrl": "https://sandbox-api.va.gov/oauth2/appeals/v1/authorization",
+            "tokenUrl": "https://sandbox-api.va.gov/oauth2/appeals/v1/token",
             "scopes": {
               "veteran/NoticeOfDisagreements.read": "Board Appeals info",
-              "representative/NoticeOfDisagreements.read": "Board Appeals info",
-              "system/NoticeOfDisagreements.read": "Board Appeals info",
               "veteran/NoticeOfDisagreements.write": "Ability to submit Board Appeals",
-              "representative/NoticeOfDisagreements.write": "Ability to submit Board Appeals",
-              "system/NoticeOfDisagreements.write": "Ability to submit Board Appeals",
               "veteran/appeals.read": "Appeals info",
-              "representative/appeals.read": "Appeals info",
-              "system/appeals.read": "Appeals info",
               "veteran/appeals.write": "Ability to submit appeals",
-              "representative/appeals.write": "Ability to submit appeals",
+              "representative/NoticeOfDisagreements.read": "Board Appeals info",
+              "representative/NoticeOfDisagreements.write": "Ability to submit Board Appeals",
+              "representative/appeals.read": "Appeals info",
+              "representative/appeals.write": "Ability to submit appeals"
+            }
+          },
+          "clientCredentials": {
+            "tokenUrl": "https://deptva-eval.okta.com/oauth2/auskff5o6xsoQVngk2p7/v1/token",
+            "scopes": {
+              "system/NoticeOfDisagreements.read": "Board Appeals info",
+              "system/NoticeOfDisagreements.write": "Ability to submit Board Appeals",
+              "system/appeals.read": "Appeals info",
               "system/appeals.write": "Ability to submit appeals"
             }
           }
