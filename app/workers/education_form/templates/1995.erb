@@ -23,8 +23,11 @@ Address:
 
 Email Address:  <%= @applicant.email %>
 Preferred Method of Contact: <%= @applicant.preferredContactMethod %>
-
-<%= parse_with_template_path('bank_account') %>
+<% if ENV['HOSTNAME'].eql?('api.va.gov') -%>
+  <%= parse_with_template_path('bank_account') %>
+<% else -%>
+  <%= parse_with_template_path('bank_account_no_stop') -%>
+<% end -%>
 
                   TYPE AND PROGRAM OF EDUCATION OR TRAINING
                   -----------------------------------------
