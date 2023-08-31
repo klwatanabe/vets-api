@@ -16,16 +16,23 @@ module ClaimsApi
       ews = ClaimsApi::EvidenceWaiverSubmission.find(ews_id)
       bgs_claim = benefit_claim_service(ews).find_bnft_claim(claim_id: ews.claim_id)
 
-      unless bgs_claim&.dig(:bnft_claim_dto, :filed5103_waiver_ind) == FILE_5103
+      if bgs_claim&.dig(:bnft_claim_dto, :filed5103_waiver_ind) == FILE_5103
+        ews.status = ClaimsApi::EvidenceWaiverSubmission::UPDATED
+        ews.save
+      else
         bgs_claim[:bnft_claim_dto][:filed5103_waiver_ind] = FILE_5103
         # log here with API-29139
         update_bgs_claim(ews, bgs_claim)
       end
-      ews.save
       ews
     end
 
     private
+
+    def bgs_service(ews)
+      BGS::Services.new(external_uid: ews.auth_headers['va_eauth_pnid'],
+                        external_key: ews.auth_headers['va_eauth_pnid'])
+    end
 
     def update_claim_level_suspense(ews)
       suspense_claim = claim_management_service(ews).find_claim_level_suspense(claim_id: ews.claim_id)
@@ -38,7 +45,6 @@ module ClaimsApi
                             detail: "Failed to update suspense dates for claim: #{ews.claim_id},
                             and ews_id: #{ews.id}, with message: #{e.message}.")
       ews.status = ClaimsApi::EvidenceWaiverSubmission::ERRORED
-      sidekiq_options retry: false
       ews.save
     end
 
@@ -68,8 +74,8 @@ module ClaimsApi
                                                      external_key: ews.auth_headers['va_eauth_pnid'])
     end
 
-    def update_bgs_claim(ews, _bgs_claim)
-      response = benefit_claim_service(ews).update_bnft_claim(claim_id: ews.claim_id)
+    def update_bgs_claim(ews, bgs_claim)
+      response = bgs_service(ews).benefit_claims.update_bnft_claim(claim: bgs_claim)
       if response[:bnft_claim_dto].nil?
         ews.status = ClaimsApi::EvidenceWaiverSubmission::ERRORED
         ews.bgs_error_message = "BGS Error: update_record failed with code #{response[:return_code]}"
@@ -82,10 +88,11 @@ module ClaimsApi
         update_claim_level_suspense(ews)
         # Clear out the error message if there were previous failures
         ews.bgs_error_message = nil if ews.bgs_error_message.present?
+        ews.status = ClaimsApi::EvidenceWaiverSubmission::UPDATED
+        ews.save
         ClaimsApi::Logger.log('ews_updater',
                               detail: "Successfully updated the waiver for
                               claim: #{ews.claim_id}, and ews: #{ews.id}.")
-        sidekiq_options retry: false
       end
     end
   end
