@@ -11,7 +11,8 @@ describe Avs::V0::AfterVisitSummary, type: :model do
         'generatedDate' => '2020-01-01T00:00:00Z',
         'data' => {
           'patientInfo' => {
-            'icn' => '1234567890V123456'
+            'icn' => '1234567890V123456',
+            'smokingStatus' => 'Current smoker'
           },
           'header' => {
             'timeZone' => 'US/Pacific'
@@ -41,6 +42,9 @@ describe Avs::V0::AfterVisitSummary, type: :model do
           meta: {
             generated_date: '2020-01-01T00:00:00Z',
             time_zone: 'US/Pacific'
+          },
+          patient_info: {
+            smoking_status: 'Current smoker'
           },
           appointment_iens: ['123'],
           clinics_visited: [],

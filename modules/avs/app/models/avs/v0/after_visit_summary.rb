@@ -9,6 +9,7 @@ module Avs
     attribute :id, String
     attribute :icn, String
     attribute :meta, Object
+    attribute :patient_info, Object
     attribute :appointment_iens, Array
     attribute :clinics_visited, Array
     attribute :providers, Array
@@ -39,6 +40,9 @@ module Avs
       self.meta = {
         generated_date: data['generatedDate'],
         time_zone: data['data']['header']['timeZone']
+      }
+      self.patient_info = {
+        smoking_status: data['data']['patientInfo']['smokingStatus']
       }
     end
 
