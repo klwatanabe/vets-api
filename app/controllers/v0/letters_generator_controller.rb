@@ -3,10 +3,13 @@
 require 'lighthouse/letters_generator/service'
 require 'lighthouse/letters_generator/service_error'
 require 'lighthouse/letters_generator/veteran_sponsor_resolver'
+require 'evss/letters/download_service'
 
 module V0
   class LettersGeneratorController < ApplicationController
     before_action { authorize :lighthouse, :access? }
+    before_action { authorize :evss, :access_letters? }
+
     before_action :validate_letter_type, only: %i[download]
     Raven.tags_context(team: 'benefits-claim-appeal-status', feature: 'letters-generator')
     DOWNLOAD_PARAMS = %i[
@@ -32,6 +35,14 @@ module V0
     end
 
     def download
+      if Flipper.enabled?(:bcas_letters_use_lighthouse_download)
+        lh_download
+      else
+        evss_download
+      end
+    end
+
+    def lh_download
       permitted_params = params.permit(DOWNLOAD_PARAMS)
       letter_options =
         permitted_params.to_h
@@ -42,6 +53,19 @@ module V0
       # Throws an error if the current user is a dependent but has no sponsor
       icn = Lighthouse::LettersGenerator::VeteranSponsorResolver.get_icn(@current_user)
       response = service.download_letter(icn, params[:id], letter_options)
+      send_data response,
+                filename: "#{params[:id]}.pdf",
+                type: 'application/pdf',
+                disposition: 'attachment'
+    end
+
+    def evss_download
+      unless EVSS::Letters::Letter::LETTER_TYPES.include? params[:id]
+        Raven.tags_context(team: 'benefits-memorial-1') # tag sentry logs with team name
+        raise Common::Exceptions::ParameterMissing, 'letter_type', "#{params[:id]} is not a valid letter type"
+      end
+
+      response = evss_download_service.download_letter(params[:id], request.body.string)
       send_data response,
                 filename: "#{params[:id]}.pdf",
                 type: 'application/pdf',
@@ -68,6 +92,10 @@ module V0
 
     def service
       @service ||= Lighthouse::LettersGenerator::Service.new
+    end
+
+    def evss_download_service
+      EVSS::Letters::DownloadService.new(@current_user)
     end
   end
 end

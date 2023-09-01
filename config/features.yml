@@ -21,7 +21,11 @@ features:
     enable_in_development: true
   bcas_letters_use_lighthouse:
     actor_type: user
-    description: Use lighthouse instead of EVSS to view/download benefit letters.
+    description: Use lighthouse instead of EVSS to view benefit letters.
+    enable_in_development: true
+  bcas_letters_use_lighthouse_download:
+    actor_type: user
+    description: Use lighthouse instead of EVSS to download benefit letters.
     enable_in_development: true
   caregiver_use_facilities_API:
     actor_type: user
