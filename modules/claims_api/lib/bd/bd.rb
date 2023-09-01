@@ -37,7 +37,10 @@ module ClaimsApi
     def upload(claim:, pdf_path:, file_number: nil)
       @multipart = true
       body = generate_upload_body(claim:, pdf_path:, file_number:)
-      client.post('documents', body)&.body
+      res = client.post('documents', body)&.body
+      request_id = res&.dig(:data, :requestId)
+      ClaimsApi::Logger.log('526', detail: 'Successfully uploaded doc to BD', claim_id: claim.id, request_id:)
+      res
     end
 
     ##
