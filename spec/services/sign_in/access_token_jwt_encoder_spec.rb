@@ -8,7 +8,8 @@ RSpec.describe SignIn::AccessTokenJwtEncoder do
 
     let(:access_token) { create(:access_token, client_id:) }
     let(:client_id) { client_config.client_id }
-    let(:client_config) { create(:client_config) }
+    let(:client_config) { create(:client_config, access_token_attributes:) }
+    let(:access_token_attributes) { [] }
 
     context 'when input object is an access token' do
       let(:expected_sub) { access_token.user_uuid }
@@ -46,37 +47,23 @@ RSpec.describe SignIn::AccessTokenJwtEncoder do
         expect(decoded_jwt.aud).to eq expected_aud
       end
 
-      context 'expected user attributes on encoded access token' do
-        let(:access_token) { create(:access_token, access_token_params) }
-        let(:access_token_params) do
-          { client_id:,
-            first_name:,
-            last_name:,
-            email: }
-        end
-        let(:first_name) { nil }
-        let(:last_name) { nil }
-        let(:email) { nil }
-
-        context 'when there are no user attributes on the input access token' do
+      context 'expected user_attributes on encoded access token' do
+        context 'when there are no user attributes on the correlated ClientConfig access_token_attributes' do
           it 'does not include user attributes on the encoded access token' do
             decoded_jwt = OpenStruct.new(JWT.decode(subject, false, nil).first)
-            expect(decoded_jwt.first_name).to be_nil
-            expect(decoded_jwt.last_name).to be_nil
-            expect(decoded_jwt.email).to be_nil
+            expect(decoded_jwt.user_attributes).to eq({})
           end
         end
 
-        context 'when there are one or more user attributes on the input access token' do
-          let(:first_name) { Faker::Name.first_name }
-          let(:last_name) { Faker::Name.last_name }
-          let(:email) { Faker::Internet.email }
+        context 'when there are one or more user attributes on the correlated ClientConfig access_token_attributes' do
+          let(:access_token_attributes) { %w[first_name last_name] }
 
-          it 'includes user attributes on the encoded access token' do
+          it 'includes those attributes on the encoded access token' do
             decoded_jwt = OpenStruct.new(JWT.decode(subject, false, nil).first)
-            expect(decoded_jwt.first_name).to eq(first_name)
-            expect(decoded_jwt.last_name).to eq(last_name)
-            expect(decoded_jwt.email).to eq(email)
+            serialized_attributes = decoded_jwt.user_attributes
+            expect(serialized_attributes['first_name']).to eq(access_token.user_attributes[:first_name])
+            expect(serialized_attributes['last_name']).to eq(access_token.user_attributes[:last_name])
+            expect(serialized_attributes['email']).to be_nil
           end
         end
       end

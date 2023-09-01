@@ -28,6 +28,8 @@ module SignIn
       @mhv_correlation_id = user_attributes[:mhv_correlation_id]
       @verified_icn = verified_icn
       @request_ip = request_ip
+      @first_name = user_attributes[:first_name]
+      @last_name = user_attributes[:last_name]
     end
 
     def perform
@@ -64,7 +66,8 @@ module SignIn
                         client_id: state_payload.client_id,
                         code_challenge: state_payload.code_challenge,
                         user_verification_id: user_verification.id,
-                        credential_email:).save!
+                        credential_email:,
+                        user_attributes: access_token_attributes).save!
     end
 
     def user_verifier_object
@@ -116,6 +119,14 @@ module SignIn
 
     def user_uuid
       @user_uuid ||= user_verification.backing_credential_identifier
+    end
+
+    def access_token_attributes
+      {
+        first_name: @first_name,
+        last_name: @last_name,
+        email: credential_email
+      }
     end
 
     def client_config

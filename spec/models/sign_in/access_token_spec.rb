@@ -16,17 +16,16 @@ RSpec.describe SignIn::AccessToken, type: :model do
            expiration_time:,
            version:,
            created_time:,
-           first_name:,
-           last_name:,
-           email:)
+           user_attributes:)
   end
 
   let(:session_handle) { create(:oauth_session).handle }
   let(:user_uuid) { create(:user_account).id }
   let!(:client_config) do
-    create(:client_config, authentication:, access_token_duration:)
+    create(:client_config, authentication:, access_token_duration:, access_token_attributes:)
   end
   let(:access_token_duration) { SignIn::Constants::AccessToken::VALIDITY_LENGTH_SHORT_MINUTES }
+  let(:access_token_attributes) { SignIn::Constants::AccessToken::USER_ATTRIBUTES }
   let(:client_id) { client_config.client_id }
   let(:audience) { 'some-audience' }
   let(:authentication) { SignIn::Constants::Auth::API }
@@ -38,9 +37,10 @@ RSpec.describe SignIn::AccessToken, type: :model do
   let(:validity_length) { client_config.access_token_duration }
   let(:expiration_time) { Time.zone.now + validity_length }
   let(:created_time) { Time.zone.now }
-  let(:first_name) { nil }
-  let(:last_name) { nil }
-  let(:email) { nil }
+  let(:first_name) { Faker::Name.first_name }
+  let(:last_name) { Faker::Name.last_name }
+  let(:email) { Faker::Internet.email }
+  let(:user_attributes) { { first_name:, last_name:, email: } }
 
   describe 'validations' do
     describe '#session_handle' do
@@ -212,56 +212,32 @@ RSpec.describe SignIn::AccessToken, type: :model do
       end
     end
 
-    describe '#first_name' do
-      subject { access_token.first_name }
+    describe '#user_attributes' do
+      subject { access_token.user_attributes }
 
-      context 'when a first_name has not been passed to the access token' do
-        it 'does not set a first_name attribute' do
-          expect(subject).to be_nil
+      context 'when attributes are present in the ClientConfig access_token_attributes' do
+        it 'includes those attributes in the access token' do
+          expect(subject[:first_name]).to eq(first_name)
+          expect(subject[:last_name]).to eq(last_name)
+          expect(subject[:email]).to eq(email)
         end
       end
 
-      context 'when a first_name has been passed to the access token' do
-        let(:first_name) { Faker::Name.first_name }
+      context 'when one or more attributes are not present in the ClientConfig access_token_attributes' do
+        let(:access_token_attributes) { %w[email] }
 
-        it 'sets a first_name attribute' do
-          expect(subject).to eq(first_name)
-        end
-      end
-    end
-
-    describe '#last_name' do
-      subject { access_token.last_name }
-
-      context 'when a last_name has not been passed to the access token' do
-        it 'does not set a last_name attribute' do
-          expect(subject).to be_nil
+        it 'does not include those attributes in the access token' do
+          expect(subject[:first_name]).to be_nil
+          expect(subject[:last_name]).to be_nil
+          expect(subject[:email]).to eq(email)
         end
       end
 
-      context 'when a last_name has been passed to the access token' do
-        let(:last_name) { Faker::Name.last_name }
+      context 'when no attributes are present in the ClientConfig access_token_attributes' do
+        let(:access_token_attributes) { [] }
 
-        it 'sets a last_name attribute' do
-          expect(subject).to eq(last_name)
-        end
-      end
-    end
-
-    describe '#email' do
-      subject { access_token.email }
-
-      context 'when an email has not been passed to the access token' do
-        it 'does not set an email attribute' do
-          expect(subject).to be_nil
-        end
-      end
-
-      context 'when an email has been passed to the access token' do
-        let(:email) { Faker::Internet.email }
-
-        it 'sets an email attribute' do
-          expect(subject).to eq(email)
+        it 'sets an empty hash object in the access token' do
+          expect(subject).to eq({})
         end
       end
     end

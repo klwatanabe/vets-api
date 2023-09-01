@@ -8,7 +8,8 @@ RSpec.describe SignIn::CodeContainer, type: :model do
            code_challenge:,
            client_id:,
            code:,
-           user_verification_id:)
+           user_verification_id:,
+           user_attributes:)
   end
 
   let(:code_challenge) { Base64.urlsafe_encode64(SecureRandom.hex) }
@@ -16,6 +17,11 @@ RSpec.describe SignIn::CodeContainer, type: :model do
   let(:client_config) { create(:client_config) }
   let(:client_id) { client_config.client_id }
   let(:user_verification_id) { create(:user_verification).id }
+  let(:user_attributes) do
+    { first_name: Faker::Name.first_name,
+      last_name: Faker::Name.last_name,
+      email: Faker::Internet.email }
+  end
 
   describe 'validations' do
     describe '#code' do
@@ -37,6 +43,20 @@ RSpec.describe SignIn::CodeContainer, type: :model do
 
       context 'when user_verification_id is nil' do
         let(:user_verification_id) { nil }
+        let(:expected_error) { Common::Exceptions::ValidationErrors }
+        let(:expected_error_message) { 'Validation error' }
+
+        it 'raises validation error' do
+          expect { subject }.to raise_error(expected_error, expected_error_message)
+        end
+      end
+    end
+
+    describe '#user_attributes' do
+      subject { code_container.user_attributes }
+
+      context 'when user_attributes is nil' do
+        let(:user_attributes) { nil }
         let(:expected_error) { Common::Exceptions::ValidationErrors }
         let(:expected_error_message) { 'Validation error' }
 

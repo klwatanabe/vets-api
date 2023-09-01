@@ -28,16 +28,9 @@ module SignIn
         parent_refresh_token_hash: access_token.parent_refresh_token_hash,
         anti_csrf_token: access_token.anti_csrf_token,
         last_regeneration_time: access_token.last_regeneration_time.to_i,
-        version: access_token.version
-      }.merge(user_attributes)
-    end
-
-    def user_attributes
-      {
-        first_name: access_token.first_name,
-        last_name: access_token.last_name,
-        email: access_token.email
-      }.compact
+        version: access_token.version,
+        user_attributes: access_token.user_attributes
+      }
     end
 
     def jwt_encode_access_token

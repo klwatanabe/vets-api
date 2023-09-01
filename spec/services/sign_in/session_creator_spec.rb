@@ -11,11 +11,17 @@ RSpec.describe SignIn::SessionCreator do
     subject { session_creator.perform }
 
     context 'when input object is a ValidatedCredential' do
-      let(:validated_credential) { create(:validated_credential, client_config:) }
+      let(:validated_credential) { create(:validated_credential, client_config:, user_attributes:) }
       let(:user_uuid) { validated_credential.user_verification.backing_credential_identifier }
       let(:client_id) { client_config.client_id }
-      let(:client_config) { create(:client_config, refresh_token_duration:) }
+      let(:client_config) { create(:client_config, refresh_token_duration:, access_token_attributes:) }
+      let(:access_token_attributes) { %w[first_name last_name email] }
       let(:refresh_token_duration) { SignIn::Constants::RefreshToken::VALIDITY_LENGTH_SHORT_MINUTES }
+      let(:user_attributes) do
+        { first_name: Faker::Name.first_name,
+          last_name: Faker::Name.last_name,
+          email: Faker::Internet.email }
+      end
 
       context 'expected anti_csrf_token' do
         let(:expected_anti_csrf_token) { 'some-anti-csrf-token' }
@@ -178,41 +184,33 @@ RSpec.describe SignIn::SessionCreator do
         end
 
         context 'expected user attributes on access token' do
-          before do
-            create(:user, uuid: user_uuid)
-            allow_any_instance_of(SignIn::ClientConfig).to receive(:access_token_attributes)
-              .and_return(access_token_attributes)
+          context 'when attributes are present in the ClientConfig access_token_attributes' do
+            it 'includes those attributes in the access token' do
+              access_token_attributes = subject.access_token.user_attributes
+
+              expect(access_token_attributes[:first_name]).to eq(user_attributes[:first_name])
+              expect(access_token_attributes[:last_name]).to eq(user_attributes[:last_name])
+              expect(access_token_attributes[:email]).to eq(user_attributes[:email])
+            end
           end
 
-          context 'when a ClientConfig does not include any access_token_attributes' do
+          context 'when one or more attributes are not present in the ClientConfig access_token_attributes' do
+            let(:access_token_attributes) { %w[email] }
+
+            it 'does not include those attributes in the access token' do
+              access_token_attributes = subject.access_token.user_attributes
+
+              expect(access_token_attributes[:first_name]).to be_nil
+              expect(access_token_attributes[:last_name]).to be_nil
+              expect(access_token_attributes[:email]).to eq(user_attributes[:email])
+            end
+          end
+
+          context 'when no attributes are present in the ClientConfig access_token_attributes' do
             let(:access_token_attributes) { [] }
 
-            it 'does not include user attributes in the access token' do
-              access_token = subject.access_token
-              expect(access_token.first_name).to be_nil
-              expect(access_token.last_name).to be_nil
-              expect(access_token.email).to be_nil
-            end
-          end
-
-          context 'when a ClientConfig includes invalid access_token_attributes' do
-            let(:access_token_attributes) { %w[bad_attribute] }
-            let(:expected_error_message) { "Access token invalid attribute request: #{access_token_attributes.first}" }
-
-            it 'raises a InvalidAccessTokenAttributeError error' do
-              expect { subject.access_token }.to raise_error(SignIn::Errors::InvalidAccessTokenAttributeError,
-                                                             expected_error_message)
-            end
-          end
-
-          context 'when a ClientConfig includes valid access_token_attributes' do
-            let(:access_token_attributes) { SignIn::Constants::AccessToken::USER_ATTRIBUTES }
-
-            it 'includes the specified attributes in the access token' do
-              access_token = subject.access_token
-              expect(access_token.first_name).not_to be_nil
-              expect(access_token.last_name).not_to be_nil
-              expect(access_token.email).not_to be_nil
+            it 'sets an empty hash object in the access token' do
+              expect(subject.access_token.user_attributes).to eq({})
             end
           end
         end

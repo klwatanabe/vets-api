@@ -17,9 +17,7 @@ module SignIn
       :version,
       :expiration_time,
       :created_time,
-      :first_name,
-      :last_name,
-      :email
+      :user_attributes
     )
 
     validates(
@@ -52,9 +50,7 @@ module SignIn
                    version: nil,
                    expiration_time: nil,
                    created_time: nil,
-                   first_name: nil,
-                   last_name: nil,
-                   email: nil)
+                   user_attributes: nil)
       @uuid = uuid || create_uuid
       @session_handle = session_handle
       @client_id = client_id
@@ -67,9 +63,7 @@ module SignIn
       @version = version || Constants::AccessToken::CURRENT_VERSION
       @expiration_time = expiration_time || set_expiration_time
       @created_time = created_time || set_created_time
-      @first_name = first_name
-      @last_name = last_name
-      @email = email
+      @user_attributes = validate_user_attributes(user_attributes:)
 
       validate!
     end
@@ -109,6 +103,16 @@ module SignIn
 
     def validity_length
       client_config.access_token_duration
+    end
+
+    def validate_user_attributes(user_attributes:)
+      validated_user_attributes = {}
+      if client_config&.access_token_attributes.presence
+        client_config.access_token_attributes.each do |attribute|
+          validated_user_attributes[attribute.to_sym] = user_attributes[attribute.to_sym]
+        end
+      end
+      validated_user_attributes
     end
 
     def client_config
