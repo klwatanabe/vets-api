@@ -481,8 +481,6 @@ module ClaimsApi
       end
 
       def validate_service_periods!(service_information)
-        # service_information = form_attributes['serviceInformation']
-
         service_information['servicePeriods'].each do |sp|
           if Date.strptime(sp['activeDutyBeginDate'], '%m-%d-%Y') > Date.strptime(sp['activeDutyEndDate'], '%m-%d-%Y')
             raise ::Common::Exceptions::UnprocessableEntity.new(
