@@ -8,9 +8,10 @@ FactoryBot.define do
     credential_email { Faker::Internet.email }
     client_config { create(:client_config) }
     user_attributes do
-      { first_name: Faker::Name.first_name,
-        last_name: Faker::Name.last_name,
-        email: Faker::Internet.email }
+      attributes = { first_name: Faker::Name.first_name,
+                     last_name: Faker::Name.last_name,
+                     email: Faker::Internet.email }
+      KmsEncrypted::Box.new.encrypt(attributes.to_json)
     end
 
     initialize_with do

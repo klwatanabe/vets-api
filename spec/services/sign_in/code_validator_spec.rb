@@ -32,8 +32,7 @@ RSpec.describe SignIn::CodeValidator do
                code: code_container_code,
                code_challenge:,
                client_id:,
-               user_verification_id:,
-               user_attributes:)
+               user_verification_id:)
       end
       let(:client_id) { client_config.client_id }
       let(:client_config) { create(:client_config, pkce:, certificates: [client_assertion_certificate]) }
@@ -42,11 +41,6 @@ RSpec.describe SignIn::CodeValidator do
       let(:client_assertion_certificate) { nil }
       let(:code_challenge) { 'some-code-challenge' }
       let(:user_verification_id) { 'some-user-verification-uuid' }
-      let(:user_attributes) do
-        { first_name: Faker::Name.first_name,
-          last_name: Faker::Name.last_name,
-          email: Faker::Internet.email }
-      end
 
       context 'and client is configured with pkce authentication type' do
         let(:pkce) { true }
@@ -84,17 +78,12 @@ RSpec.describe SignIn::CodeValidator do
             let(:expected_email) { code_container.credential_email }
             let(:expected_client_config) { SignIn::ClientConfig.find_by(client_id: code_container.client_id) }
             let(:expected_user_attributes) { code_container.user_attributes }
-            let(:expected_validated_credential) do
-              SignIn::ValidatedCredential.new(user_verification:,
-                                              credential_email: expected_email,
-                                              client_id: expected_client_id,
-                                              user_attributes: expected_user_attributes)
-            end
 
             it 'returns a validated credential object with expected attributes' do
               expect(subject).to have_attributes(credential_email: expected_email,
                                                  client_config: expected_client_config,
-                                                 user_verification:)
+                                                 user_verification:,
+                                                 user_attributes: expected_user_attributes)
             end
 
             it 'returns a validated credential object with expected credential email' do
@@ -103,6 +92,10 @@ RSpec.describe SignIn::CodeValidator do
 
             it 'returns a validated credential object with expected client_config' do
               expect(subject.client_config).to eq(expected_client_config)
+            end
+
+            it 'returns a validated credential object with expected expected_user_attributes' do
+              expect(subject.user_attributes).to eq(expected_user_attributes)
             end
           end
         end
@@ -218,7 +211,7 @@ RSpec.describe SignIn::CodeValidator do
                 end
 
                 context 'and aud equals token route' do
-                  let(:aud) { "https://#{Settings.hostname}#{SignIn::Constants::Auth::TOKEN_ROUTE_PATH}" }
+                  let(:aud) { "http://#{Settings.hostname}#{SignIn::Constants::Auth::TOKEN_ROUTE_PATH}" }
 
                   context 'and user verification uuid in code container does not match with a user verification' do
                     let(:user_verification_id) { 'some-arbitrary-user-verification-uuid' }
@@ -238,12 +231,12 @@ RSpec.describe SignIn::CodeValidator do
                     let(:expected_email) { code_container.credential_email }
                     let(:expected_client_config) { SignIn::ClientConfig.find_by(client_id: code_container.client_id) }
                     let(:expected_user_attributes) { code_container.user_attributes }
-                    let(:expected_validated_credential) do
-                      SignIn::ValidatedCredential.new(user_verification:,
-                                                      credential_email: expected_email,
-                                                      client_id: expected_client_id,
-                                                      user_attributes: expected_user_attributes)
-                    end
+                    # let(:expected_validated_credential) do
+                    #   SignIn::ValidatedCredential.new(user_verification:,
+                    #                                   credential_email: expected_email,
+                    #                                   client_id: expected_client_id,
+                    #                                   user_attributes: expected_user_attributes)
+                    # end
 
                     it 'returns a validated credential object with expected attributes' do
                       expect(subject).to have_attributes(credential_email: expected_email,

@@ -15,9 +15,10 @@ RSpec.describe SignIn::ValidatedCredential, type: :model do
   let(:credential_email) { 'some-credential-email' }
   let(:client_config) { create(:client_config) }
   let(:user_attributes) do
-    { first_name: 'some-first-name',
-      last_name: 'some-last-name',
-      email: credential_email }
+    attributes = { first_name: Faker::Name.first_name,
+                   last_name: Faker::Name.last_name,
+                   email: Faker::Internet.email }
+    KmsEncrypted::Box.new.encrypt(attributes.to_json)
   end
 
   describe 'validations' do
@@ -46,9 +47,11 @@ RSpec.describe SignIn::ValidatedCredential, type: :model do
     end
 
     describe '#user_attributes' do
+      subject { validated_credential.user_attributes }
+
       context 'when user_attributes is nil' do
         let(:user_attributes) { nil }
-        let(:expected_error_message) { "Validation failed: User verification can't be blank" }
+        let(:expected_error_message) { "Validation failed: User attributes can't be blank" }
         let(:expected_error) { ActiveModel::ValidationError }
 
         it 'raises validation error' do

@@ -122,11 +122,10 @@ module SignIn
     end
 
     def access_token_attributes
-      {
-        first_name: @first_name,
-        last_name: @last_name,
-        email: credential_email
-      }
+      attributes = { first_name: @first_name,
+                     last_name: @last_name,
+                     email: credential_email }
+      KmsEncrypted::Box.new.encrypt(attributes.to_json)
     end
 
     def client_config

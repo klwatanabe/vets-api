@@ -109,7 +109,7 @@ module SignIn
       validated_user_attributes = {}
       if client_config&.access_token_attributes.presence
         client_config.access_token_attributes.each do |attribute|
-          validated_user_attributes[attribute.to_sym] = user_attributes[attribute.to_sym]
+          validated_user_attributes[attribute] = user_attributes[attribute]
         end
       end
       validated_user_attributes

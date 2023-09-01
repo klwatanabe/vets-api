@@ -16,9 +16,9 @@ FactoryBot.define do
     expiration_time { Time.zone.now + SignIn::Constants::AccessToken::VALIDITY_LENGTH_SHORT_MINUTES }
     created_time { Time.zone.now }
     user_attributes do
-      { first_name: Faker::Name.first_name,
-        last_name: Faker::Name.last_name,
-        email: Faker::Internet.email }
+      { 'first_name' => Faker::Name.first_name,
+        'last_name' => Faker::Name.last_name,
+        'email' => Faker::Internet.email }
     end
 
     initialize_with do

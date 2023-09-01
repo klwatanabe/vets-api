@@ -11,7 +11,9 @@ RSpec.describe SignIn::SessionCreator do
     subject { session_creator.perform }
 
     context 'when input object is a ValidatedCredential' do
-      let(:validated_credential) { create(:validated_credential, client_config:, user_attributes:) }
+      let(:validated_credential) do
+        create(:validated_credential, client_config:, user_attributes: encrypted_user_attributes)
+      end
       let(:user_uuid) { validated_credential.user_verification.backing_credential_identifier }
       let(:client_id) { client_config.client_id }
       let(:client_config) { create(:client_config, refresh_token_duration:, access_token_attributes:) }
@@ -22,6 +24,7 @@ RSpec.describe SignIn::SessionCreator do
           last_name: Faker::Name.last_name,
           email: Faker::Internet.email }
       end
+      let(:encrypted_user_attributes) { KmsEncrypted::Box.new.encrypt(user_attributes.to_json) }
 
       context 'expected anti_csrf_token' do
         let(:expected_anti_csrf_token) { 'some-anti-csrf-token' }
@@ -188,9 +191,9 @@ RSpec.describe SignIn::SessionCreator do
             it 'includes those attributes in the access token' do
               access_token_attributes = subject.access_token.user_attributes
 
-              expect(access_token_attributes[:first_name]).to eq(user_attributes[:first_name])
-              expect(access_token_attributes[:last_name]).to eq(user_attributes[:last_name])
-              expect(access_token_attributes[:email]).to eq(user_attributes[:email])
+              expect(access_token_attributes['first_name']).to eq(user_attributes[:first_name])
+              expect(access_token_attributes['last_name']).to eq(user_attributes[:last_name])
+              expect(access_token_attributes['email']).to eq(user_attributes[:email])
             end
           end
 
@@ -200,9 +203,9 @@ RSpec.describe SignIn::SessionCreator do
             it 'does not include those attributes in the access token' do
               access_token_attributes = subject.access_token.user_attributes
 
-              expect(access_token_attributes[:first_name]).to be_nil
-              expect(access_token_attributes[:last_name]).to be_nil
-              expect(access_token_attributes[:email]).to eq(user_attributes[:email])
+              expect(access_token_attributes['first_name']).to be_nil
+              expect(access_token_attributes['last_name']).to be_nil
+              expect(access_token_attributes['email']).to eq(user_attributes[:email])
             end
           end
 

@@ -40,7 +40,7 @@ RSpec.describe SignIn::AccessToken, type: :model do
   let(:first_name) { Faker::Name.first_name }
   let(:last_name) { Faker::Name.last_name }
   let(:email) { Faker::Internet.email }
-  let(:user_attributes) { { first_name:, last_name:, email: } }
+  let(:user_attributes) { { 'first_name' => first_name, 'last_name' => last_name, 'email' => email } }
 
   describe 'validations' do
     describe '#session_handle' do
@@ -217,9 +217,9 @@ RSpec.describe SignIn::AccessToken, type: :model do
 
       context 'when attributes are present in the ClientConfig access_token_attributes' do
         it 'includes those attributes in the access token' do
-          expect(subject[:first_name]).to eq(first_name)
-          expect(subject[:last_name]).to eq(last_name)
-          expect(subject[:email]).to eq(email)
+          expect(subject['first_name']).to eq(first_name)
+          expect(subject['last_name']).to eq(last_name)
+          expect(subject['email']).to eq(email)
         end
       end
 
@@ -227,9 +227,9 @@ RSpec.describe SignIn::AccessToken, type: :model do
         let(:access_token_attributes) { %w[email] }
 
         it 'does not include those attributes in the access token' do
-          expect(subject[:first_name]).to be_nil
-          expect(subject[:last_name]).to be_nil
-          expect(subject[:email]).to eq(email)
+          expect(subject['first_name']).to be_nil
+          expect(subject['last_name']).to be_nil
+          expect(subject['email']).to eq(email)
         end
       end
 

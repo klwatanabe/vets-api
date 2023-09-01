@@ -56,7 +56,7 @@ module SignIn
         parent_refresh_token_hash:,
         anti_csrf_token:,
         last_regeneration_time: refresh_created_time,
-        user_attributes:
+        user_attributes: decrypted_user_attributes
       )
     end
 
@@ -106,6 +106,10 @@ module SignIn
 
     def user_account
       @user_account ||= user_verification.user_account
+    end
+
+    def decrypted_user_attributes
+      @decrypted_user_attributes ||= JSON.parse(KmsEncrypted::Box.new.decrypt(user_attributes))
     end
 
     def user_attributes
