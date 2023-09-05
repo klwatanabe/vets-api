@@ -2,6 +2,11 @@
 
 require 'claims_api/v2/benefits_documents/service'
 
+# require 'common/client/concerns/monitoring'
+# require 'common/client/errors'
+# require 'common/exceptions'
+# require_relative 'configuration'
+
 module ClaimsApi
   ##
   # Class to interact with the EVSS container
@@ -10,6 +15,9 @@ module ClaimsApi
   # @param [] rails request object (used to determine environment)
   module EVSSService
     class Base
+      include ::Common::Client::Concerns::Monitoring
+      STATSD_KEY_PREFIX = 'claims_api.v2.evss_service'
+
       def initialize(request = nil)
         @request = request
         @auth_headers = {}
@@ -35,24 +43,22 @@ module ClaimsApi
         set_headers(claim)
         set_claim(claim)
 
-        begin
-          resp = client.post('validate', data)&.body
-
-          log_outcome_for_claims_api('validate', 'success', resp, claim)
-
-          resp
-        rescue => e
-          detail = e.respond_to?(:original_body) ? e.original_body : e
-          log_outcome_for_claims_api('validate', 'error', detail, claim)
-
-          raise e
+        with_monitoring_and_error_handling do
+          client.post('validate', data)&.body
         end
       end
 
       private
 
+      def with_monitoring_and_error_handling(&)
+        with_monitoring(2, &)
+      rescue => e
+        handle_error(e)
+      end
+
       def set_headers(claim)
         @auth_headers = claim.auth_headers
+        @auth_headers['va_eauth_birlsfilenumber'] = @auth_headers['va_eauth_pnid']
       end
 
       def set_claim(claim)
@@ -89,6 +95,23 @@ module ClaimsApi
 
       def access_token
         @auth_token ||= ClaimsApi::V2::BenefitsDocuments::Service.new.get_auth_token
+      end
+
+      def handle_error(e)
+        log_outcome_for_claims_api('validate', 'error', e, @claim&.id)
+        # We have a Docker container error
+        if e.respond_to?(:original_body)
+          errors = format_docker_container_error_for_v1(e.original_body[:messages])
+          e.original_body[:messages] = errors
+        end
+        raise e
+      end
+
+      # v1/disability_compenstaion_controller expects different values then the docker container provides
+      def format_docker_container_error_for_v1(errors)
+        errors.each do |err|
+          err.merge!(detail: err[:text]).stringify_keys!
+        end
       end
 
       def log_outcome_for_claims_api(action, status, response, claim)

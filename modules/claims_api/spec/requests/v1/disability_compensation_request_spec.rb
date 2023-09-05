@@ -995,15 +995,13 @@ RSpec.describe 'Disability Claims ', type: :request do
 
         it 'returns a list of errors when invalid hitting EVSS' do
           mock_acg(scopes) do |auth_header|
-            VCR.use_cassette('evss/disability_compensation_form/form_526_invalid_validation') do
-              VCR.use_cassette('brd/countries') do
-                VCR.use_cassette('bgs/claims/claims') do
-                  VCR.use_cassette('claims_api/v1/disability_comp/bd_token') do
-                    VCR.use_cassette('claims_api/v1/disability_comp/invalid') do
-                      post path, params: data, headers: headers.merge(auth_header)
-                      parsed = JSON.parse(response.body)
-                      expect(parsed['errors'].size).to eq(2)
-                    end
+            VCR.use_cassette('brd/countries') do
+              VCR.use_cassette('bgs/claims/claims') do
+                VCR.use_cassette('claims_api/v1/disability_comp/bd_token') do
+                  VCR.use_cassette('claims_api/v1/disability_comp/invalid') do
+                    post path, params: data, headers: headers.merge(auth_header)
+                    parsed = JSON.parse(response.body)
+                    expect(parsed['errors'].size).to eq(2)
                   end
                 end
               end
