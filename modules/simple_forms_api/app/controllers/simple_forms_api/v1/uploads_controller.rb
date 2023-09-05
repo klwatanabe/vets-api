@@ -11,6 +11,7 @@ module SimpleFormsApi
 
       FORM_NUMBER_MAP = {
         '21-0972' => 'vba_21_0972',
+        '21-0845' => 'vba_21_0845',
         '21-10210' => 'vba_21_10210',
         '21-4142' => 'vba_21_4142',
         '21P-0847' => 'vba_21p_0847',
@@ -30,8 +31,7 @@ module SimpleFormsApi
 
         status, confirmation_number = upload_pdf_to_benefits_intake(file_path, metadata)
 
-        # this will need to be refactored as we add more supported forms
-        if status == 200 && Flipper.enabled?(:form21_4142_confirmation_email)
+        if status == 200 && Flipper.enabled?(:simple_forms_email_confirmations)
           SimpleFormsApi::ConfirmationEmail.new(
             form_data: parsed_form_data, form_number: form_id, confirmation_number:
           ).send

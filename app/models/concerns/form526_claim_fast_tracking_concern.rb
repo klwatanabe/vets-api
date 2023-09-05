@@ -136,19 +136,20 @@ module Form526ClaimFastTrackingConcern
 
   def log_max_cfi_metrics_on_submit
     DISABILITIES_WITH_MAX_CFI.intersection(diagnostic_codes).each do |diagnostic_code|
-      selected_disability = disabilities.find do |dis|
+      next unless disabilities.any? do |dis|
         diagnostic_code == dis['diagnosticCode']
       end
-      next if selected_disability.nil?
 
       next unless max_rated_disabilities_from_ipf.any? do |dis|
         diagnostic_code == dis['diagnostic_code']
       end
 
-      formatted_disability = selected_disability['name'].parameterize(separator: '_')
       max_cfi_enabled = Flipper.enabled?(:disability_526_maximum_rating) ? 'on' : 'off'
-      StatsD.increment("#{MAX_CFI_STATSD_KEY_PREFIX}.#{max_cfi_enabled}.submit.#{formatted_disability}")
+      StatsD.increment("#{MAX_CFI_STATSD_KEY_PREFIX}.#{max_cfi_enabled}.submit.#{diagnostic_code}")
     end
+  rescue => e
+    # Log the exception but but do not fail, otherwise form will not be submitted
+    log_exception_to_sentry(e)
   end
 
   def send_post_evss_notifications!
@@ -176,12 +177,22 @@ module Form526ClaimFastTrackingConcern
     rated_disabilities = fd['rated_disabilities'] || []
 
     rated_disabilities.select do |dis|
-      dis['maximum_rating_percentage'] == dis['rating_percentage']
+      dis['maximum_rating_percentage'].present? && dis['maximum_rating_percentage'] == dis['rating_percentage']
     end
   end
 
   def open_claims
-    all_claims = EVSS::ClaimsService.new(auth_headers).all_claims.body
+    icn = UserAccount.where(id: user_account_id).first&.icn
+    api_provider = ApiProviderFactory.call(
+      type: ApiProviderFactory::FACTORIES[:claims],
+      provider: nil,
+      options: { auth_headers:, icn: },
+      # Flipper id is needed to check if the feature toggle works for this user
+      current_user: OpenStruct.new({ flipper_id: user_account_id }),
+      feature_toggle: ApiProviderFactory::FEATURE_TOGGLE_CLAIMS_SERVICE
+    )
+
+    all_claims = api_provider.all_claims
     all_claims['open_claims']
   end
 
