@@ -2,7 +2,6 @@
 
 require 'rails_helper'
 require_relative '../../rails_helper'
-require 'evss_service/base' # docker container
 
 RSpec.describe 'Disability Claims ', type: :request do
   let(:headers) do
