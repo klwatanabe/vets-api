@@ -43,7 +43,8 @@ module ClaimsApi
         rescue => e
           detail = e.respond_to?(:original_body) ? e.original_body : e
           log_outcome_for_claims_api('validate', 'error', detail, claim)
-          formatted_err = handle_error(e)
+
+          formatted_err = handle_error(e) # for v1 controller reporting
           raise formatted_err
         end
       end
@@ -83,7 +84,7 @@ module ClaimsApi
       end
 
       def handle_error(e)
-        # We have a Docker container error
+        # if orignal_body we have a Docker Container error
         if e.respond_to?(:original_body)
           errors = format_docker_container_error_for_v1(e.original_body[:messages])
           e.original_body[:messages] = errors
@@ -94,6 +95,7 @@ module ClaimsApi
       # v1/disability_compenstaion_controller expects different values then the docker container provides
       def format_docker_container_error_for_v1(errors)
         errors.each do |err|
+          # need to add a :detail key v1 looks for in it's error reporting, get :text key from docker container
           err.merge!(detail: err[:text]).stringify_keys!
         end
       end
