@@ -16,15 +16,16 @@ module ClaimsApi
       ews = ClaimsApi::EvidenceWaiverSubmission.find(ews_id)
       bgs_claim = benefit_claim_service(ews).find_bnft_claim(claim_id: ews.claim_id)
 
-      if bgs_claim&.dig(:bnft_claim_dto, :filed5103_waiver_ind).present? &&
-         bgs_claim&.dig(:bnft_claim_dto, :filed5103_waiver_ind) != FILE_5103
+      indicator = bgs_claim&.dig(:bnft_claim_dto, :filed5103_waiver_ind)
+      if indicator.present? && indicator != FILE_5103
         bgs_claim[:bnft_claim_dto][:filed5103_waiver_ind] = FILE_5103
         update_bgs_claim(ews, bgs_claim)
       end
-      if bgs_claim&.dig(:bnft_claim_dto, :filed5103_waiver_ind).blank?
+      if bgs_claim&.dig(:bnft_claim_dto).blank?
+        ews.status = ClaimsApi::EvidenceWaiverSubmission::ERRORED
         ClaimsApi::Logger.log('ews_updater',
                               detail: "bnft_claim_dto, filed5103_waiver_ind is not present on claim: #{ews.claim_id},
-            and ews_id: #{ews.id}.")
+            and ews_id: #{ews.id}, and bgs_claim keys: #{bgs_claim&.keys}.")
       end
       update_claim_level_suspense(ews)
       ews.status = ClaimsApi::EvidenceWaiverSubmission::UPDATED
