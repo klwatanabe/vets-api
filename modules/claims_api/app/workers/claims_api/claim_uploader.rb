@@ -25,7 +25,7 @@ module ClaimsApi
         uploader.retrieve_from_store!(claim_object.file_data['filename'])
         file_body = uploader.read
         ClaimsApi::Logger.log('526', claim_id: auto_claim.id, attachment_id: uuid)
-        if Flipper.enabled? :lh_bd_claim_uploader
+        if Flipper.enabled? :claims_claim_uploader_use_bd
           ClaimsApi::BD.new.upload(claim: auto_claim, pdf_path: uploader.file.file)
         else
           EVSS::DocumentsService.new(auth_headers).upload(file_body, claim_upload_document(claim_object))
