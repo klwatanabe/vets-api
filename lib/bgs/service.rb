@@ -42,7 +42,9 @@ module BGS
     def find_rating_data
       service.rating.find_rating_data(@user.ssn)
     rescue => e
-      raise(e.class, filter_sensitive_information(e.message))
+      error = e.exception(filter_sensitive_data(e.message))
+    ensure
+      raise error if error.present?
     end
 
     def create_proc_form(vnp_proc_id, form_type_code)
@@ -286,7 +288,7 @@ module BGS
       )
     end
 
-    def filter_sensitive_information(message)
+    def filter_sensitive_data(message)
       message.gsub(FILE_NUMBER_MATCH, '\1<FILTERED>')
     end
   end
