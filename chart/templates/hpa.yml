@@ -2,7 +2,7 @@
 {{- range $name, $service := $root.Values.web.webServices }}
 {{- if $service.autoscaling.enabled }}
 ---
-apiVersion: autoscaling/v2beta1
+apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: {{ $name }}
@@ -25,7 +25,7 @@ spec:
 
 {{- if .Values.worker.autoscaling.enabled }}
 ---
-apiVersion: autoscaling/v2beta1
+apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: {{ .Values.appName }}-sidekiq
