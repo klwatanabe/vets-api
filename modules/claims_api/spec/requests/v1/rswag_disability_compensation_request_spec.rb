@@ -5,7 +5,6 @@ require Rails.root.join('spec', 'rswag_override.rb').to_s
 require 'rails_helper'
 require_relative '../../rails_helper'
 require_relative '../../support/swagger_shared_components/v1'
-require 'evss_service/base' # docker container
 
 describe 'Disability Claims', swagger_doc: 'modules/claims_api/app/swagger/claims_api/v1/swagger.json' do # rubocop:disable RSpec/DescribeClass
   path '/forms/526' do
@@ -528,13 +527,7 @@ describe 'Disability Claims', swagger_doc: 'modules/claims_api/app/swagger/claim
           before do |example|
             stub_poa_verification
             stub_mpi
-
-            # mock the token service
-            allow_any_instance_of(Auth::ClientCredentials::Service)
-              .to receive(:get_token).and_return('faketokenvaluehere')
-            token = 'faketokenvaluehere' # matches VCR cassette value
-            allow_any_instance_of(::ClaimsApi::V2::BenefitsDocuments::Service)
-              .to receive(:get_auth_token).and_return(token)
+            stub_claims_api_auth_token
 
             VCR.use_cassette('evss/disability_compensation_form/form_526_valid_validation') do
               mock_acg(scopes) do
