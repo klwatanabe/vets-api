@@ -134,9 +134,22 @@ module MebApi
 
         return unless Flipper.enabled?(:form1990meb_confirmation_email) && email.present?
 
+        claimant_response = claimant_service.get_claimant_info
+        claimant_id = claimant_response['claimant_id']
+        claim_status_response = claim_status_service.get_claim_status(params, claimant_id)
+        claim_status = claim_status_response['claim_status']
+
+        template_id = if claim_status.eql? 'ELIGIBLE'
+          Settings.vanotify.services.va_gov.template_id.form1990meb_approved_confirmation_email
+        elsif claim_status.eql? 'DENIED'
+          Settings.vanotify.services.va_gov.template_id.form1990meb_denied_confirmation_email
+        else
+          Settings.vanotify.services.va_gov.template_id.form1990meb_offramp_confirmation_email
+        end
+
         VANotify::EmailJob.perform_async(
           email,
-          Settings.vanotify.services.va_gov.template_id.form1990meb_confirmation_email,
+          template_id,
           {
             'first_name' => form_data.dig('claimant', 'first_name')&.upcase.presence,
             'date_submitted' => Time.zone.today.strftime('%B %d, %Y')

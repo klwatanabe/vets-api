@@ -178,21 +178,60 @@ Rspec.describe MebApi::V0::EducationBenefitsController, type: :request do
 
       context 'when successful' do
         context 'confirmation email' do
-          it 'sends when successful' do
+          it 'sends approved email when status is approved' do
             VCR.use_cassette('dgi/submit_claim') do
-              allow(VANotify::EmailJob).to receive(:perform_async)
+              VCR.use_cassette('dgi/get_claim_status') do
+                allow(VANotify::EmailJob).to receive(:perform_async)
 
-              post '/meb_api/v0/submit_claim',
-                   params: claimant_params
+                post '/meb_api/v0/submit_claim', params: claimant_params
 
-              expect(VANotify::EmailJob).to have_received(:perform_async).with(
-                'hhover@test.com',
-                'form1990meb_confirmation_email_template_id',
-                {
-                  'first_name' => 'HERBERT',
-                  'date_submitted' => Time.zone.today.strftime('%B %d, %Y')
-                }
-              )
+                expect(VANotify::EmailJob).to have_received(:perform_async).with(
+                  'hhover@test.com',
+                  'form1990meb_approved_confirmation_email_template_id',
+                  {
+                    'first_name' => 'HERBERT',
+                    'date_submitted' => Time.zone.today.strftime('%B %d, %Y')
+                  }
+                )
+              end
+            end
+          end
+
+          it 'sends offramp email when status is not approved or denied' do
+            VCR.use_cassette('dgi/submit_claim') do
+              VCR.use_cassette('dgi/get_claim_status_in_progress') do
+                allow(VANotify::EmailJob).to receive(:perform_async)
+
+                post '/meb_api/v0/submit_claim', params: claimant_params
+
+                expect(VANotify::EmailJob).to have_received(:perform_async).with(
+                  'hhover@test.com',
+                  'form1990meb_offramp_confirmation_email_template_id',
+                  {
+                    'first_name' => 'HERBERT',
+                    'date_submitted' => Time.zone.today.strftime('%B %d, %Y')
+                  }
+                )
+              end
+            end
+          end
+
+          it 'sends denied email when status is denied' do
+            VCR.use_cassette('dgi/submit_claim') do
+              VCR.use_cassette('dgi/get_claim_status_denied') do
+                allow(VANotify::EmailJob).to receive(:perform_async)
+
+                post '/meb_api/v0/submit_claim', params: claimant_params
+
+                expect(VANotify::EmailJob).to have_received(:perform_async).with(
+                  'hhover@test.com',
+                  'form1990meb_denied_confirmation_email_template_id',
+                  {
+                    'first_name' => 'HERBERT',
+                    'date_submitted' => Time.zone.today.strftime('%B %d, %Y')
+                  }
+                )
+              end
             end
           end
 
