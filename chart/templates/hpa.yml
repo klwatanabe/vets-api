@@ -15,10 +15,13 @@ spec:
   minReplicas: {{ $service.autoscaling.minReplicas | default $root.Values.web.autoscaling.minReplicas }}
   maxReplicas: {{ $service.autoscaling.maxReplicas | default $root.Values.web.autoscaling.maxReplicas }}
   metrics:
-  - type: External
-    external:
-      metricName: "datadogmetric@{{ $root.Release.Namespace }}:puma-backlog-{{ $name }}"
-      targetValue: {{ $service.autoscaling.targetValue | default $root.Values.web.autoscaling.targetValue }}
+  - external:
+      metric:
+        name: "datadogmetric@{{ $root.Release.Namespace }}:puma-backlog-{{ $name }}"
+      target:
+        type: Value
+        value: {{ $service.autoscaling.targetValue | default $root.Values.web.autoscaling.targetValue }}
+    type: External
 {{- end }}
 {{- end }}
 
@@ -36,9 +39,13 @@ spec:
     name: {{ .Values.appName }}-sidekiq
   minReplicas: {{ .Values.worker.autoscaling.minReplicas }}
   maxReplicas: {{ .Values.worker.autoscaling.maxReplicas }}
+
   metrics:
-  - type: External
-    external:
-      metricName: "datadogmetric@{{ $root.Release.Namespace }}:sidekiq-enqueued-jobs"
-      targetValue: {{ .Values.worker.autoscaling.targetValue }}
+  - external:
+      metric:
+        name: "datadogmetric@{{ $root.Release.Namespace }}:sidekiq-enqueued-jobs"
+      target:
+        type: Value
+        value: {{ .Values.worker.autoscaling.targetValue }}
+    type: External
 {{- end }}
