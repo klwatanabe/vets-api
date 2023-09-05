@@ -19,19 +19,45 @@ module ClaimsApi
         @auth_headers = claim.auth_headers
 
         begin
-          resp = client.post('submit', data).body
-          ClaimsApi::Logger.log('526',
-                                detail: 'EVSS DOCKER CONTAINER submit success', evss_response: resp)
+          resp = client.post('submit', data)&.body
+          log_outcome_for_claims_api('submit', 'success', detail, claim)
+
           resp # return is for v1 Sidekiq worker
         rescue => e
           detail = e.respond_to?(:original_body) ? e.original_body : e
-          ClaimsApi::Logger.log('526',
-                                detail: "EVSS DOCKER CONTAINER submit error: #{detail}", claim_id: claim&.id)
+          log_outcome_for_claims_api('submit', 'error', detail, claim)
+
           e # return is for v1 Sidekiq worker
         end
       end
 
+      def validate_form526(claim, data)
+        set_headers(claim)
+        set_claim(claim)
+
+        begin
+          resp = client.post('validate', data)&.body
+
+          log_outcome_for_claims_api('validate', 'success', resp, claim)
+
+          resp
+        rescue => e
+          detail = e.respond_to?(:original_body) ? e.original_body : e
+          log_outcome_for_claims_api('validate', 'error', detail, claim)
+
+          raise e
+        end
+      end
+
       private
+
+      def set_headers(claim)
+        @auth_headers = claim.auth_headers
+      end
+
+      def set_claim(claim)
+        @claim = claim
+      end
 
       def client
         base_name = Settings.evss&.dvp&.url
@@ -63,6 +89,11 @@ module ClaimsApi
 
       def access_token
         @auth_token ||= ClaimsApi::V2::BenefitsDocuments::Service.new.get_auth_token
+      end
+
+      def log_outcome_for_claims_api(action, status, response, claim)
+        ClaimsApi::Logger.log('526_docker_container',
+                              detail: "EVSS DOCKER CONTAINER #{action} #{status}: #{response}", claim: claim&.id)
       end
     end
   end
