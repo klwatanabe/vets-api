@@ -2,11 +2,6 @@
 
 require 'claims_api/v2/benefits_documents/service'
 
-# require 'common/client/concerns/monitoring'
-# require 'common/client/errors'
-# require 'common/exceptions'
-# require_relative 'configuration'
-
 module ClaimsApi
   ##
   # Class to interact with the EVSS container
@@ -58,7 +53,6 @@ module ClaimsApi
 
       def set_headers(claim)
         @auth_headers = claim.auth_headers
-        @auth_headers['va_eauth_birlsfilenumber'] = @auth_headers['va_eauth_pnid']
       end
 
       def set_claim(claim)

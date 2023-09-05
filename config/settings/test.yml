@@ -371,6 +371,10 @@ mhv:
     app_token: xyz
     host: http://example.org
 
+evss:
+  dvp:
+    url: https://fakeurlhere.com
+
 claims_api:
   evss_container:
     auth_base_name: staging-api.va.gov
