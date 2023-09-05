@@ -29,9 +29,10 @@ module ClaimsApi
           )
           track_pact_counter auto_claim
           pdf_data = get_pdf_data
-          pdf_mapper_service(form_attributes, pdf_data, target_veteran).map_claim
+          file_number = get_file_number.nil? ? target_veteran.ssn : get_file_number
+          pdf_mapper_service(form_attributes, pdf_data, target_veteran, file_number).map_claim
 
-          evss_data = evss_mapper_service(auto_claim, target_veteran).map_claim
+          evss_data = evss_mapper_service(auto_claim, file_number).map_claim
           evss_service.submit(auto_claim, evss_data)
 
           ClaimsApi::Logger.log('526 v2', claim_id: auto_claim.id, detail: 'Starting call to 526EZ PDF generator')
@@ -91,12 +92,12 @@ module ClaimsApi
           client.generate_pdf
         end
 
-        def pdf_mapper_service(auto_claim, pdf_data, target_veteran)
-          ClaimsApi::V2::DisabilityCompensationPdfMapper.new(auto_claim, pdf_data, target_veteran)
+        def pdf_mapper_service(auto_claim, pdf_data, target_veteran, file_number)
+          ClaimsApi::V2::DisabilityCompensationPdfMapper.new(auto_claim, pdf_data, target_veteran, file_number)
         end
 
-        def evss_mapper_service(auto_claim, target_veteran)
-          ClaimsApi::V2::DisabilityCompensationEvssMapper.new(auto_claim, target_veteran)
+        def evss_mapper_service(auto_claim, file_number)
+          ClaimsApi::V2::DisabilityCompensationEvssMapper.new(auto_claim, file_number)
         end
 
         def track_pact_counter(claim)
@@ -122,6 +123,10 @@ module ClaimsApi
 
         def benefits_doc_api
           ClaimsApi::BD.new
+        end
+
+        def get_file_number
+          local_bgs_service.find_by_ssn(target_veteran.ssn)&.dig(:file_nbr) # rubocop:disable Rails/DynamicFindBy
         end
       end
     end
