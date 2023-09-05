@@ -10,9 +10,6 @@ module ClaimsApi
   # @param [] rails request object (used to determine environment)
   module EVSSService
     class Base
-      include ::Common::Client::Concerns::Monitoring
-      STATSD_KEY_PREFIX = 'claims_api.v2.evss_service'
-
       def initialize(request = nil)
         @request = request
         @auth_headers = {}
@@ -23,7 +20,7 @@ module ClaimsApi
 
         begin
           resp = client.post('submit', data)&.body
-          log_outcome_for_claims_api('submit', 'success', detail, claim)
+          log_outcome_for_claims_api('submit', 'success', resp, claim)
 
           resp # return is for v1 Sidekiq worker
         rescue => e
@@ -35,29 +32,23 @@ module ClaimsApi
       end
 
       def validate_form526(claim, data)
-        set_headers(claim)
-        set_claim(claim)
+        @auth_headers = claim.auth_headers
+        @auth_headers['va_eauth_birlsfilenumber'] = @auth_headers['va_eauth_pnid']
 
-        with_monitoring_and_error_handling do
-          client.post('validate', data)&.body
+        begin
+          resp = client.post('validate', data)&.body
+          log_outcome_for_claims_api('validate', 'success', resp, claim)
+
+          resp
+        rescue => e
+          detail = e.respond_to?(:original_body) ? e.original_body : e
+          log_outcome_for_claims_api('validate', 'error', detail, claim)
+          formatted_err = handle_error(e)
+          raise formatted_err
         end
       end
 
       private
-
-      def with_monitoring_and_error_handling(&)
-        with_monitoring(2, &)
-      rescue => e
-        handle_error(e)
-      end
-
-      def set_headers(claim)
-        @auth_headers = claim.auth_headers
-      end
-
-      def set_claim(claim)
-        @claim = claim
-      end
 
       def client
         base_name = Settings.evss&.dvp&.url
@@ -92,13 +83,12 @@ module ClaimsApi
       end
 
       def handle_error(e)
-        log_outcome_for_claims_api('validate', 'error', e, @claim&.id)
         # We have a Docker container error
         if e.respond_to?(:original_body)
           errors = format_docker_container_error_for_v1(e.original_body[:messages])
           e.original_body[:messages] = errors
         end
-        raise e
+        e
       end
 
       # v1/disability_compenstaion_controller expects different values then the docker container provides
