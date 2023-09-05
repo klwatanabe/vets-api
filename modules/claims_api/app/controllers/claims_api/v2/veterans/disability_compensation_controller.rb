@@ -31,7 +31,7 @@ module ClaimsApi
           pdf_data = get_pdf_data
           pdf_mapper_service(form_attributes, pdf_data, target_veteran).map_claim
 
-          evss_data = evss_mapper_service(auto_claim).map_claim
+          evss_data = evss_mapper_service(auto_claim, target_veteran).map_claim
           evss_service.submit(auto_claim, evss_data)
 
           ClaimsApi::Logger.log('526 v2', claim_id: auto_claim.id, detail: 'Starting call to 526EZ PDF generator')
@@ -95,8 +95,8 @@ module ClaimsApi
           ClaimsApi::V2::DisabilityCompensationPdfMapper.new(auto_claim, pdf_data, target_veteran)
         end
 
-        def evss_mapper_service(auto_claim)
-          ClaimsApi::V2::DisabilityCompensationEvssMapper.new(auto_claim)
+        def evss_mapper_service(auto_claim, target_veteran)
+          ClaimsApi::V2::DisabilityCompensationEvssMapper.new(auto_claim, target_veteran)
         end
 
         def track_pact_counter(claim)

@@ -3,10 +3,11 @@
 module ClaimsApi
   module V2
     class DisabilityCompensationEvssMapper
-      def initialize(auto_claim)
+      def initialize(auto_claim, target_veteran)
         @auto_claim = auto_claim
         @data = auto_claim&.form_data&.deep_symbolize_keys
         @evss_claim = {}
+        @target_veteran = target_veteran
       end
 
       def map_claim
@@ -82,7 +83,8 @@ module ClaimsApi
         # EVSS Docker needs currentlyVAEmployee, 526 schema uses currentVaEmployee
         @evss_claim[:veteran][:currentlyVAEmployee] = @data.dig(:veteranIdentification, :currentVaEmployee)
         @evss_claim[:veteran][:emailAddress] = @data.dig(:veteranIdentification, :emailAddress, :email)
-        @evss_claim[:veteran][:fileNumber] = @data.dig(:veteranIdentification, :vaFileNumber)
+        file_number = @target_veteran.birls_file_number.nil? ? @target_veteran.ssn : @target_veteran.birls_file_number
+        @evss_claim[:veteran][:fileNumber] = file_number
       end
 
       # Convert 12-05-1984 to 1984-12-05 for Docker container

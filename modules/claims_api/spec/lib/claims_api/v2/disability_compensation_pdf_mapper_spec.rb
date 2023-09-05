@@ -108,7 +108,7 @@ describe ClaimsApi::V2::DisabilityCompensationPdfMapper do
           pdf_data[:data][:attributes][:identificationInformation][:phoneNumber][:internationalTelephone]
 
         expect(current_va_employee).to eq(false)
-        expect(va_file_number).to eq('AB123CDEF')
+        expect(va_file_number).to eq('796111863')
         expect(email).to eq('valid@somedomain.com')
         expect(agree_to_email).to eq(true)
         expect(telephone).to eq('5555555555')
