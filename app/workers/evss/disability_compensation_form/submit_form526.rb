@@ -22,7 +22,7 @@ module EVSS
       wrap_with_logging(
         :submit_complete_form,
         additional_class_logs: {
-          action: 'Begin overall 526 submission'
+          action: 'Final 526 complete form upload'
         },
         additional_instance_logs: {
           submission_id: %i[submission_id]
