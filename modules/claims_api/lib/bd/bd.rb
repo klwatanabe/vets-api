@@ -10,9 +10,9 @@ module ClaimsApi
   # Takes an optional request parameter
   # @param [] rails request object
   class BD
-    def initialize(multipart: false, request: nil)
+    def initialize(request: nil)
       @request = request
-      @multipart = multipart
+      @multipart = false
     end
 
     ##
@@ -20,6 +20,7 @@ module ClaimsApi
     #
     # @return Documents list
     def search(claim_id, file_number)
+      @multipart = false
       body = { data: { claimId: claim_id, fileNumber: file_number } }
       ClaimsApi::Logger.log('benefits_documents',
                             detail: "calling benefits documents search for claimId #{claim_id}")
