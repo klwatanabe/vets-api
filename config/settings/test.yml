@@ -371,10 +371,6 @@ mhv:
     app_token: xyz
     host: http://example.org
 
-evss:
-  dvp:
-    url: https://fakedomainandsubdomain.com
-
 claims_api:
   evss_container:
     auth_base_name: staging-api.va.gov
@@ -388,4 +384,5 @@ claims_api:
     auth:
       ccg:
         client_id: fakekeyvaluehere
+        secret_key: path/to/fake/key.pem
         aud_claim_url: https://fakeurlhere/fake/path/here
