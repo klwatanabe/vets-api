@@ -52,12 +52,12 @@ module SignIn
         @public_jwks ||= begin
           cache_hit = true
 
-          response = Rails.cache.fetch(config.jwks_cache_key, expires_in: config.jwks_cache_expiration) do
+          parsed_public_jwks = Rails.cache.fetch(config.jwks_cache_key, expires_in: config.jwks_cache_expiration) do
             cache_hit = false
-            perform(:get, config.public_jwks_path, nil, nil)
+            response = perform(:get, config.public_jwks_path, nil, nil)
+            parsed_public_jwks = parse_public_jwks(response:)
           end
 
-          parsed_public_jwks = parse_public_jwks(response:)
           Rails.logger.info("[SignIn][Idme][Service] Get Public JWKs Success - #{cache_hit ? 'Cache' : 'Request'}")
 
           parsed_public_jwks
