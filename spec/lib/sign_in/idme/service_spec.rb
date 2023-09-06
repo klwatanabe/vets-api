@@ -133,6 +133,7 @@ describe SignIn::Idme::Service do
   describe '#user_info' do
     let(:test_client_cert_path) { 'spec/fixtures/sign_in/oauth_test.crt' }
     let(:test_client_key_path) { 'spec/fixtures/sign_in/oauth_test.key' }
+    let(:expected_jwks_log) { '[SignIn][Idme][Service] Get Public JWKs Success' }
 
     before do
       allow(Settings.idme).to receive(:client_cert_path).and_return(test_client_cert_path)
@@ -228,18 +229,15 @@ describe SignIn::Idme::Service do
     end
 
     context 'when the public JWK response is not cached' do
-      let(:expected_log) { '[SignIn][Idme][Service] Get Public JWKs Success - Request' }
-
       it 'logs information to rails logger' do
         VCR.use_cassette('identity/idme_200_responses') do
-          expect(Rails.logger).to receive(:info).with(expected_log)
+          expect(Rails.logger).to receive(:info).with(expected_jwks_log)
           subject.user_info(token)
         end
       end
     end
 
     context 'when the public JWK response is cached' do
-      let(:expected_log) { '[SignIn][Idme][Service] Get Public JWKs Success - Cache' }
       let(:cache_key) { 'idme_public_jwks' }
       let(:cache_expiration) { 30.minutes }
       let(:response) { double(body: 'some-body') }
@@ -250,9 +248,9 @@ describe SignIn::Idme::Service do
         allow(JWT::JWK::Set).to receive(:new).and_return([])
       end
 
-      it 'logs information to rails logger' do
+      it 'does not log expected_jwks_log' do
         VCR.use_cassette('identity/idme_200_responses') do
-          expect(Rails.logger).to receive(:info).with(expected_log)
+          expect(Rails.logger).not_to receive(:info).with(expected_jwks_log)
           subject.user_info(token)
         end
       end

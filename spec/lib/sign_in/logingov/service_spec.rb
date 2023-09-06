@@ -118,7 +118,7 @@ describe SignIn::Logingov::Service do
     end
 
     context 'when the request is successful' do
-      let(:expected_jwks_log) { '[SignIn][Logingov][Service] Get Public JWKs Success - Request' }
+      let(:expected_jwks_log) { '[SignIn][Logingov][Service] Get Public JWKs Success' }
       let(:expected_token_log) { "[SignIn][Logingov][Service] Token Success, code: #{code}" }
       let(:expected_access_token) { 'mHO_gU3WooLm0xoDxIAulw' }
       let(:expected_logingov_acr) { SignIn::Constants::Auth::LOGIN_GOV_IAL2 }
@@ -138,7 +138,6 @@ describe SignIn::Logingov::Service do
       end
 
       context 'when the public JWK response is cached' do
-        let(:expected_cache_log) { '[SignIn][Logingov][Service] Get Public JWKs Success - Cache' }
         let(:cache_key) { 'logingov_public_jwks' }
         let(:cache_expiration) { 30.minutes }
         let(:response) { double(body: 'some-body') }
@@ -149,10 +148,10 @@ describe SignIn::Logingov::Service do
           allow(JWT::JWK::Set).to receive(:new).and_return([])
         end
 
-        it 'logs information to rails logger' do
+        it 'does not log expected_jwks_log' do
           VCR.use_cassette('identity/logingov_200_responses') do
             expect(Rails.logger).to receive(:info).with(expected_token_log)
-            expect(Rails.logger).to receive(:info).with(expected_cache_log)
+            expect(Rails.logger).not_to receive(:info).with(expected_jwks_log)
             subject.token(code)
           end
         end
