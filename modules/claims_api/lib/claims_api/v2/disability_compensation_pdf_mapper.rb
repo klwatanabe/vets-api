@@ -51,8 +51,10 @@ module ClaimsApi
             @pdf_data[:data][:attributes][:homeless][:pointOfContactNumber][:telephone]
           homeless_point_of_contact_international =
             @pdf_data[:data][:attributes][:homeless][:pointOfContactNumber][:internationalTelephone]
-          @pdf_data[:data][:attributes][:homelessInformation][:pointOfContactNumber][:telephone] =
-            homeless_point_of_contact_telephone
+          unless homeless_point_of_contact_telephone.blank?
+            @pdf_data[:data][:attributes][:homelessInformation][:pointOfContactNumber][:telephone] =
+            convert_phone(homeless_point_of_contact_telephone)
+          end
           if homeless_point_of_contact_international
             @pdf_data[:data][:attributes][:homelessInformation][:pointOfContactNumber][:internationalTelephone] =
               homeless_point_of_contact_international
@@ -213,7 +215,7 @@ module ClaimsApi
         )
         vet_number = @pdf_data[:data][:attributes][:identificationInformation][:veteranNumber].present?
         if vet_number
-          phone = @pdf_data[:data][:attributes][:identificationInformation][:veteranNumber][:telephone]
+          phone = convert_phone(@pdf_data[:data][:attributes][:identificationInformation][:veteranNumber][:telephone])
           international_telephone =
             @pdf_data[:data][:attributes][:identificationInformation][:veteranNumber][:internationalTelephone]
         end
@@ -591,6 +593,11 @@ module ClaimsApi
           month: date.mon,
           year: date.year
         }
+      end
+
+      def convert_phone(phone)
+        phone.gsub!(/[^0-9]/, '')
+        "#{phone[0..2]}-#{phone[3..5]}-#{phone[6..9]}"
       end
     end
   end
