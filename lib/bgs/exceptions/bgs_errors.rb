@@ -23,7 +23,7 @@ module BGS
       end
 
       def notify_of_service_exception(error, method, attempt = nil, status = :error)
-        error = error.exception(filter_senstive_information(error.message))
+        error = error.exception(filter_senstive_data(error.message))
 
         msg = "Unable to #{method}: #{error.message}: try #{attempt} of #{MAX_ATTEMPTS}"
         context = { icn: @user[:icn] }
@@ -66,7 +66,7 @@ module BGS
         end
       end
 
-      def filter_senstive_information(message)
+      def filter_senstive_data(message)
         message.gsub(SQL_STATEMENT_MATCH) { |match| match.gsub(SQL_DATA_MATCH, '\1<FILTERED>') }
       end
     end
