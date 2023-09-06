@@ -836,7 +836,7 @@ RSpec.describe 'Disability Claims', type: :request do
         end
       end
 
-      describe "Validation of toxicExposure elements" do
+      describe 'Validation of toxicExposure elements' do
         context 'when the other_locations_served does not match the regex' do
           let(:other_locations_served) { 'some !@#@#$#%$^%$#&$^%&&(*978078)' }
 
@@ -929,11 +929,49 @@ RSpec.describe 'Disability Claims', type: :request do
         end
 
         context 'when it is not a PACT claim' do
+          let(:disabilities) do
+            [{
+              disabilityActionType: 'NEW',
+              name: 'Traumatic Brain Injury',
+              classificationCode: '9020',
+              serviceRelevance: 'ABCDEFG',
+              approximateDate: '03-11-2018',
+              ratedDisabilityId: 'ABCDEFGHIJKLMNOPQRSTUVWX',
+              diagnosticCode: 9020,
+              secondaryDisabilities: [
+                {
+                  name: 'Post Traumatic Stress Disorder (PTSD) Combat - Mental Disorders',
+                  disabilityActionType: 'SECONDARY',
+                  serviceRelevance: 'ABCDEFGHIJKLMNOPQ',
+                  classificationCode: '9010',
+                  approximateDate: '03-12-2018',
+                  exposureOrEventOrInjury: 'EXPOSURE'
+                }
+              ],
+              isRelatedToToxicExposure: false,
+              exposureOrEventOrInjury: 'EXPOSURE'
+            }]
+          end
+          let(:treatments) do
+            [
+              {
+                center: {
+                  name: 'Center One',
+                  state: 'GA',
+                  city: 'Decatur'
+                },
+                treatedDisabilityNames: ['Traumatic Brain Injury',
+                                         'Post Traumatic Stress Disorder (PTSD) Combat - Mental Disorders'],
+                beginDate: '03-1985'
+              }
+            ]
+          end
+
           it 'tracks the claim count' do
             mock_ccg(scopes) do |auth_header|
               json = JSON.parse(data)
-              json['data']['attributes']['disabilities'][0]['isRelatedToToxicExposure'] = false
-              json['data']['attributes']['disabilities'][1]['isRelatedToToxicExposure'] = false
+              json['data']['attributes']['disabilities'] = disabilities
+              json['data']['attributes']['treatments'] = treatments
               data = json.to_json
               post submit_path, params: data, headers: auth_header
               id = JSON.parse(response.body)['data']['id']
@@ -2485,7 +2523,7 @@ RSpec.describe 'Disability Claims', type: :request do
               params = json_data
 
               disabilities = params['data']['attributes']['disabilities']
-              disabilities[0]["approximateDate"] = '2018'
+              disabilities[0]['approximateDate'] = '2018'
               post submit_path, params: params.to_json, headers: auth_header
               expect(response).to have_http_status(:ok)
             end

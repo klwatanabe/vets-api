@@ -525,7 +525,6 @@ module ClaimsApi
         # if reserves is not empty the we require tos dates
         validate_reserves_tos_dates!(reserves)
         validate_title_ten_activiation_values!(reserves)
-        # validate_reserves_unit_information_values!(reserves)
       end
 
       def validate_reserves_tos_dates!(reserves)
@@ -671,13 +670,14 @@ module ClaimsApi
       end
 
       def date_is_valid_against_current_time_after_check_on_format?(date)
-        if type_of_date_format?(date) == 'mm-dd-yyyy'
+        case type_of_date_format?(date)
+        when 'mm-dd-yyyy'
           param_date = Date.strptime(date, '%m-%d-%Y')
           now_date = Date.strptime(Time.zone.today.strftime('%m-%d-%Y'), '%m-%d-%Y')
-        elsif type_of_date_format?(date) == 'mm-yyyy'
+        when 'mm-yyyy'
           param_date = Date.strptime(date, '%m-%Y')
           now_date = Date.strptime(Time.zone.today.strftime('%m-%Y'), '%m-%Y')
-        elsif type_of_date_format?(date) == 'yyyy'
+        when 'yyyy'
           param_date = Date.strptime(date, '%Y')
           now_date = Date.strptime(Time.zone.today.strftime('%Y'), '%Y')
         end
