@@ -541,8 +541,9 @@ module ClaimsApi
       end
 
       def validate_service_branch_names!(service_information)
+        downcase_branches = brd_service_branch_names.map(&:downcase)
         service_information['servicePeriods'].each do |sp|
-          unless brd_service_branch_names.include?(sp['serviceBranch'])
+          unless downcase_branches.include?(sp['serviceBranch'].downcase)
             raise ::Common::Exceptions::UnprocessableEntity.new(
               detail: "'servicePeriods.serviceBranch' must match a service branch " \
                       'returned from the /service-branches endpoint of the Benefits ' \
