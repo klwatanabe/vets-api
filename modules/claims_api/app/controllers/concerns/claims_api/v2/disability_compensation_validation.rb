@@ -165,8 +165,6 @@ module ClaimsApi
       end
 
       def brd_disabilities
-        return @brd_disabilities if @brd_disabilities.present?
-
         @brd_disabilities ||= ClaimsApi::BRD.new(request).disabilities
       end
 
@@ -558,8 +556,6 @@ module ClaimsApi
       end
 
       def brd_service_branches
-        return @brd_service_branches if @brd_service_branches.present?
-
         @brd_service_branches ||= ClaimsApi::BRD.new(request).service_branches
       end
 
