@@ -51,9 +51,9 @@ module ClaimsApi
             @pdf_data[:data][:attributes][:homeless][:pointOfContactNumber][:telephone]
           homeless_point_of_contact_international =
             @pdf_data[:data][:attributes][:homeless][:pointOfContactNumber][:internationalTelephone]
-          unless homeless_point_of_contact_telephone.blank?
+          if homeless_point_of_contact_telephone.present?
             @pdf_data[:data][:attributes][:homelessInformation][:pointOfContactNumber][:telephone] =
-            convert_phone(homeless_point_of_contact_telephone)
+              convert_phone(homeless_point_of_contact_telephone)
           end
           if homeless_point_of_contact_international
             @pdf_data[:data][:attributes][:homelessInformation][:pointOfContactNumber][:internationalTelephone] =
