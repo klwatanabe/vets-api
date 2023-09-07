@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module V0
-  class EZRController < ApplicationController
+  class EzrController < ApplicationController
     def show; end
   end
 end
