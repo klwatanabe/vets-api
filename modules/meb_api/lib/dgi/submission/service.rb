@@ -34,11 +34,15 @@ module MebApi
         end
 
         def format_params(params)
-          camelized_keys = camelize_keys_for_java_service(params.except(:form_id))
-          modified_keys = camelized_keys['claimant']&.merge(
-            personCriteria: { ssn: @user.ssn }.stringify_keys)
-          camelized_keys['claimant'] = modified_keys
-          camelized_keys
+          if Flipper.enabled?(:show_meb_enhancements_09)
+            camelized_keys = camelize_keys_for_java_service(params.except(:form_id))
+            modified_keys = camelized_keys['claimant']&.merge(
+              personCriteria: { ssn: @user.ssn }.stringify_keys)
+            camelized_keys['claimant'] = modified_keys
+            camelized_keys
+          else
+            camelize_keys_for_java_service(params)
+          end
         end
 
         def camelize_keys_for_java_service(params)
