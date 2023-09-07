@@ -234,6 +234,8 @@ module ClaimsApi
             )
           end
         end
+        additional_identification_info
+
         @pdf_data[:data][:attributes][:identificationInformation].delete(:veteranNumber)
         country = @pdf_data[:data][:attributes][:identificationInformation][:mailingAddress][:country]
         abbr_country = country == 'USA' ? 'US' : country
@@ -577,27 +579,47 @@ module ClaimsApi
       def convert_date_string_mdy_to_object(date_string)
         return '' if date_string.blank?
 
-        date = Date.strptime(date_string, '%m-%d-%Y')
+        arr = date_string.split('-')
         {
-          month: date.mon,
-          day: date.mday,
-          year: date.year
+          month: arr[0].to_s,
+          day: arr[1].to_s,
+          year: arr[2].to_s
         }
       end
 
       def convert_date_string_my_to_object(date_string)
         return '' if date_string.blank?
 
-        date = Date.strptime(date_string, '%m-%Y')
+        arr = date_string.split('-')
         {
-          month: date.mon,
-          year: date.year
+          month: arr[0].to_s,
+          year: arr[1].to_s
         }
       end
 
       def convert_phone(phone)
         phone.gsub!(/[^0-9]/, '')
         "#{phone[0..2]}-#{phone[3..5]}-#{phone[6..9]}"
+      end
+
+      def additional_identification_info
+        name = {
+          lastName: @target_veteran.last_name,
+          firstName: @target_veteran.first_name,
+          middleInitial: (@target_veteran.middle_name.presence || '')
+        }
+        if @target_veteran.birth_date
+          birth_date =
+            {
+              month: @target_veteran.birth_date[4..5].to_s,
+              day: @target_veteran.birth_date[6..7].to_s,
+              year: @target_veteran.birth_date[0..3].to_s
+            }
+        end
+        @pdf_data[:data][:attributes][:identificationInformation][:name] = name
+        @pdf_data[:data][:attributes][:identificationInformation][:ssn] = @target_veteran.ssn
+        @pdf_data[:data][:attributes][:identificationInformation][:dateOfBirth] = birth_date
+        @pdf_data
       end
     end
   end
