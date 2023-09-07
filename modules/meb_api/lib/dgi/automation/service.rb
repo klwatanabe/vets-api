@@ -17,9 +17,47 @@ module MebApi
           with_monitoring do
             headers = request_headers
             options = { timeout: 60 }
-            raw_response = perform(:post, end_point(type), { ssn: @user.ssn.to_s }.to_json, headers, options)
+            # raw_response = perform(:post, end_point(type), { ssn: @user.ssn.to_s }.to_json, headers, options)
 
-            MebApi::DGI::Automation::ClaimantResponse.new(raw_response.status, raw_response)
+            raw_response = {
+              body: {
+                claimant: {
+                  claimantId: 300000000000001,
+                  suffix: 'Jr.',
+                  dateOfBirth: '1988-10-01',
+                  firstName: 'Teressa',
+                  lastName: 'Harber',
+                  middleName: 'Estefana',
+                  notificationMethod: 'TEXT',
+                  contactInfo: {
+                    addressLine1: '23082 Xavier Union',
+                    addressLine2: 'Apt. 498',
+                    city: 'Lake Stephanville',
+                    zipcode: '40638-9651',
+                    emailAddress: 'test@test.com',
+                    addressType: 'DOMESTIC',
+                    mobilePhoneNumber: '5401113337',
+                    homePhoneNumber: '5401114448',
+                    countryCode: 'US',
+                    stateCode: 'KS',
+                  },
+                  preferredContact: '',
+                },
+                serviceData: [
+                  {
+                    branchOfService: 'Marine Corps',
+                    beginDate: '2009-01-01',
+                    endDate: '2019-12-01',
+                    characterOfService: 'Honorable',
+                    reasonForSeparation: 'Expiration Term Of Service',
+                    exclusionPeriods: [],
+                    trainingPeriods: [],
+                  },
+                ],
+                toeSponsors: '',
+              }
+            }
+            MebApi::DGI::Automation::ClaimantResponse.new(200, raw_response)
           end
         end
 

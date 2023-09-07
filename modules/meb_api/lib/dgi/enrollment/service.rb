@@ -18,8 +18,185 @@ module MebApi
           with_monitoring do
             headers = request_headers
             options = { timeout: 60 }
-            response = perform(:get, enrollment_url(claimant_id), {}, headers, options)
-
+            # response = perform(:get, enrollment_url(claimant_id), {}, headers, options)
+            response = {
+              body: {
+                enrollment_verifications: [
+                  {
+                    verificationMonth: 'June 2023',
+                    certifiedBeginDate: '2023-06-01',
+                    certifiedEndDate: '2023-06-30',
+                    certifiedThroughDate: '',
+                    certificationMethod: '',
+                    enrollments: [
+                      {
+                        facilityName: 'UNIVERSITY OF HAWAII AT HILO',
+                        beginDate: '2022-09-01',
+                        endDate: '2023-06-01',
+                        totalCreditHours: 16,
+                      },
+                    ],
+                    verificationResponse: 'NR',
+                    createdDate: '',
+                  },
+                  {
+                    verificationMonth: 'May 2023',
+                    certifiedBeginDate: '2023-05-01',
+                    certifiedEndDate: '2023-05-31',
+                    certifiedThroughDate: '',
+                    certificationMethod: '',
+                    enrollments: [
+                      {
+                        facilityName: 'UNIVERSITY OF HAWAII AT HILO',
+                        beginDate: '2022-09-01',
+                        endDate: '2023-06-01',
+                        totalCreditHours: 16,
+                      },
+                    ],
+                    verificationResponse: 'NR',
+                    createdDate: '',
+                  },
+                  {
+                    verificationMonth: 'April 2023',
+                    certifiedBeginDate: '2023-04-01',
+                    certifiedEndDate: '2023-04-30',
+                    certifiedThroughDate: '',
+                    certificationMethod: '',
+                    enrollments: [
+                      {
+                        facilityName: 'UNIVERSITY OF HAWAII AT HILO',
+                        beginDate: '2022-09-01',
+                        endDate: '2023-06-01',
+                        totalCreditHours: 16,
+                      },
+                    ],
+                    verificationResponse: 'NR',
+                    createdDate: '',
+                  },
+                  {
+                    verificationMonth: 'March 2023',
+                    certifiedBeginDate: '2023-03-01',
+                    certifiedEndDate: '2023-03-31',
+                    certifiedThroughDate: '',
+                    certificationMethod: '',
+                    enrollments: [
+                      {
+                        facilityName: 'UNIVERSITY OF HAWAII AT HILO',
+                        beginDate: '2022-09-01',
+                        endDate: '2023-06-01',
+                        totalCreditHours: 16,
+                      },
+                    ],
+                    verificationResponse: 'NR',
+                    createdDate: '',
+                  },
+                  {
+                    verificationMonth: 'February 2023',
+                    certifiedBeginDate: '2023-02-01',
+                    certifiedEndDate: '2023-02-28',
+                    certifiedThroughDate: '',
+                    certificationMethod: '',
+                    enrollments: [
+                      {
+                        facilityName: 'UNIVERSITY OF HAWAII AT HILO',
+                        beginDate: '2022-09-01',
+                        endDate: '2023-06-01',
+                        totalCreditHours: 16,
+                      },
+                    ],
+                    verificationResponse: 'NR',
+                    createdDate: '',
+                  },
+                  {
+                    verificationMonth: 'January 2023',
+                    certifiedBeginDate: '2023-01-01',
+                    certifiedEndDate: '2023-01-31',
+                    certifiedThroughDate: '',
+                    certificationMethod: '',
+                    enrollments: [
+                      {
+                        facilityName: 'UNIVERSITY OF HAWAII AT HILO',
+                        beginDate: '2022-09-01',
+                        endDate: '2023-06-01',
+                        totalCreditHours: 16,
+                      },
+                    ],
+                    verificationResponse: 'NR',
+                    createdDate: '',
+                  },
+                  {
+                    verificationMonth: 'December 2022',
+                    certifiedBeginDate: '2022-12-01',
+                    certifiedEndDate: '2022-12-31',
+                    certifiedThroughDate: '2022-12-31',
+                    certificationMethod: 'MEB',
+                    enrollments: [
+                      {
+                        facilityName: 'UNIVERSITY OF HAWAII AT HILO',
+                        beginDate: '2022-09-01',
+                        endDate: '2023-06-01',
+                        totalCreditHours: 16,
+                      },
+                    ],
+                    verificationResponse: 'Y',
+                    createdDate: '',
+                  },
+                  {
+                    verificationMonth: 'November 2022',
+                    certifiedBeginDate: '2022-11-01',
+                    certifiedEndDate: '2022-11-30',
+                    certifiedThroughDate: '2022-11-30',
+                    certificationMethod: 'MEB',
+                    enrollments: [
+                      {
+                        facilityName: 'UNIVERSITY OF HAWAII AT HILO',
+                        beginDate: '2022-09-01',
+                        endDate: '2023-06-01',
+                        totalCreditHours: 16,
+                      },
+                    ],
+                    verificationResponse: 'Y',
+                    createdDate: '',
+                  },
+                  {
+                    verificationMonth: 'October 2022',
+                    certifiedBeginDate: '2022-10-01',
+                    certifiedEndDate: '2022-10-31',
+                    certifiedThroughDate: '2022-10-31',
+                    certificationMethod: 'MEB',
+                    enrollments: [
+                      {
+                        facilityName: 'UNIVERSITY OF HAWAII AT HILO',
+                        beginDate: '2022-09-01',
+                        endDate: '2023-06-01',
+                        totalCreditHours: 16,
+                      },
+                    ],
+                    verificationResponse: 'Y',
+                    createdDate: '',
+                  },
+                  {
+                    verificationMonth: 'September 2022',
+                    certifiedBeginDate: '2022-09-01',
+                    certifiedEndDate: '2022-09-30',
+                    certifiedThroughDate: '2022-09-30',
+                    certificationMethod: 'MEB',
+                    enrollments: [
+                      {
+                        facilityName: 'UNIVERSITY OF HAWAII AT HILO',
+                        beginDate: '2022-09-01',
+                        endDate: '2023-06-01',
+                        totalCreditHours: 16,
+                      },
+                    ],
+                    verificationResponse: 'NR',
+                    createdDate: '',
+                  },
+                ],
+                last_certified_through_date: '2023-01-31',
+                payment_on_hold: false,
+              }
+            }
             MebApi::DGI::Enrollment::Response.new(response)
           end
         end

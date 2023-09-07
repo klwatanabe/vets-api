@@ -10,7 +10,7 @@ module MebApi
 
         def initialize(status, response = nil)
           attributes = {
-            eligibility: response.body
+            eligibility: response[:body]
           }
 
           super(status, attributes)

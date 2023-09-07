@@ -16,15 +16,17 @@ module MebApi
       end
 
       def eligibility
-        claimant_response = claimant_service.get_claimant_info
-        claimant_id = claimant_response['claimant_id']
+        # claimant_response = claimant_service.get_claimant_info
+        # claimant_id = claimant_response['claimant_id']
+        claimant_id = 300000000000001
 
         eligibility_response = eligibility_service.get_eligibility(claimant_id)
 
-        response = claimant_response.status == 201 ? eligibility_response : claimant_response
-        serializer = claimant_response.status == 201 ? EligibilitySerializer : ClaimantSerializer
+        response = eligibility_response
+        serializer = EligibilitySerializer
 
         render json: response, serializer:
+        # head :service_unavailable
       end
 
       def claim_status
@@ -68,8 +70,9 @@ module MebApi
       end
 
       def enrollment
-        claimant_response = claimant_service.get_claimant_info
-        claimant_id = claimant_response['claimant_id']
+        # claimant_response = claimant_service.get_claimant_info
+        # claimant_id = claimant_response['claimant_id']
+        claimant_id = 300000000000001
         if claimant_id.nil?
           render json: {
             data: {

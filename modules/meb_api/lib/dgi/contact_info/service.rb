@@ -31,6 +31,17 @@ module MebApi
             #     ]
             #   }
             # }
+            response = {
+              body: {
+                email: [
+                  { address: email_params[0]['value'], dupe: false }
+                ],
+                phone: [
+                  { number: phone_params[0][:value], dupe: false }
+                ]
+              }
+            }            
+
             MebApi::DGI::ContactInfo::Response.new(200, response)
           end
         end

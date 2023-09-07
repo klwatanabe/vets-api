@@ -12,12 +12,12 @@ module MebApi
 
         def initialize(response = nil)
           attributes = {
-            last_certified_through_date: response.body['last_certified_through_date'],
-            payment_on_hold: response.body['payment_on_hold'],
-            enrollment_verifications: response.body['enrollment_verifications']
+            last_certified_through_date: response[:body][:last_certified_through_date],
+            payment_on_hold: response[:body][:payment_on_hold],
+            enrollment_verifications: response[:body][:enrollment_verifications]
           }
 
-          super(response.status, attributes)
+          super(200, attributes)
         end
       end
     end

@@ -18,8 +18,26 @@ module MebApi
             headers = request_headers
             options = { timeout: 60 }
 
-            raw_response = perform(:get, end_point(claimant_id), {}, headers, options)
-            MebApi::DGI::Eligibility::EligibilityResponse.new(raw_response.status, raw_response)
+            # raw_response = perform(:get, end_point(claimant_id), {}, headers, options)
+
+            raw_response = {
+              body: [
+                {
+                  veteranIsEligible: true,
+                  chapter: 'Chapter33',
+                },
+                {
+                  veteranIsEligible: false,
+                  chapter: 'Chapter30',
+                },
+                {
+                  veteranIsEligible: nil,
+                  chapter: 'Chapter1606',
+                }
+              ]
+            }
+
+            MebApi::DGI::Eligibility::EligibilityResponse.new(201, raw_response)
           end
         end
 

@@ -11,8 +11,8 @@ module MebApi
 
         def initialize(status, response = nil)
           attributes = {
-            claimant: response.body['claimant'],
-            service_data: response.body['service_data']
+            claimant: response[:body][:claimant],
+            service_data: response[:body][:service_data]
           }
           super(status, attributes)
         end
