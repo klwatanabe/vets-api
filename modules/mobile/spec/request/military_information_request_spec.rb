@@ -24,21 +24,27 @@ RSpec.describe 'military_information', type: :request do
                         'beginDate' => '2002-02-02',
                         'endDate' => '2008-12-01',
                         'formattedBeginDate' => 'February 02, 2002',
-                        'formattedEndDate' => 'December 01, 2008'
+                        'formattedEndDate' => 'December 01, 2008',
+                        'characterOfDischarge' => 'Dishonorable',
+                        'honorableServiceIndicator' => 'N'
                       },
                       {
                         'branchOfService' => 'United States Navy',
                         'beginDate' => '2009-03-01',
                         'endDate' => '2012-12-31',
                         'formattedBeginDate' => 'March 01, 2009',
-                        'formattedEndDate' => 'December 31, 2012'
+                        'formattedEndDate' => 'December 31, 2012',
+                        'characterOfDischarge' => 'Unknown',
+                        'honorableServiceIndicator' => 'Z'
                       },
                       {
                         'branchOfService' => 'United States Army',
                         'beginDate' => '2012-03-02',
                         'endDate' => '2018-10-31',
                         'formattedBeginDate' => 'March 02, 2012',
-                        'formattedEndDate' => 'October 31, 2018'
+                        'formattedEndDate' => 'October 31, 2018',
+                        'characterOfDischarge' => 'Honorable',
+                        'honorableServiceIndicator' => 'Y'
                       }
                     ]
             }
@@ -59,7 +65,9 @@ RSpec.describe 'military_information', type: :request do
                         'beginDate' => '2002-02-02',
                         'endDate' => '2008-12-01',
                         'formattedBeginDate' => 'February 02, 2002',
-                        'formattedEndDate' => 'December 01, 2008'
+                        'formattedEndDate' => 'December 01, 2008',
+                        'characterOfDischarge' => 'Under honorable conditions (general)',
+                        'honorableServiceIndicator' => 'Y'
                       }
                     ]
             }
@@ -80,21 +88,27 @@ RSpec.describe 'military_information', type: :request do
                         'beginDate' => '2002-02-02',
                         'endDate' => nil,
                         'formattedBeginDate' => 'February 02, 2002',
-                        'formattedEndDate' => nil
+                        'formattedEndDate' => nil,
+                        'characterOfDischarge' => 'DoD provided a value not in the reference table',
+                        'honorableServiceIndicator' => 'Z'
                       },
                       {
                         'branchOfService' => 'United States Navy',
                         'beginDate' => '2009-03-01',
                         'endDate' => '2012-12-31',
                         'formattedBeginDate' => 'March 01, 2009',
-                        'formattedEndDate' => 'December 31, 2012'
+                        'formattedEndDate' => 'December 31, 2012',
+                        'characterOfDischarge' => 'Bad conduct',
+                        'honorableServiceIndicator' => 'N'
                       },
                       {
                         'branchOfService' => 'United States Army',
                         'beginDate' => '2012-03-02',
                         'endDate' => '2018-10-31',
                         'formattedBeginDate' => 'March 02, 2012',
-                        'formattedEndDate' => 'October 31, 2018'
+                        'formattedEndDate' => 'October 31, 2018',
+                        'characterOfDischarge' => 'Honorable (Assumed) - GRAS periods only',
+                        'honorableServiceIndicator' => 'Y'
                       }
                     ]
             }
