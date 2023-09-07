@@ -140,12 +140,12 @@ module MebApi
         claim_status = claim_status_response['claim_status']
 
         template_id = if claim_status.eql? 'ELIGIBLE'
-          Settings.vanotify.services.va_gov.template_id.form1990meb_approved_confirmation_email
-        elsif claim_status.eql? 'DENIED'
-          Settings.vanotify.services.va_gov.template_id.form1990meb_denied_confirmation_email
-        else
-          Settings.vanotify.services.va_gov.template_id.form1990meb_offramp_confirmation_email
-        end
+                        Settings.vanotify.services.va_gov.template_id.form1990meb_approved_confirmation_email
+                      elsif claim_status.eql? 'DENIED'
+                        Settings.vanotify.services.va_gov.template_id.form1990meb_denied_confirmation_email
+                      else
+                        Settings.vanotify.services.va_gov.template_id.form1990meb_offramp_confirmation_email
+                      end
 
         VANotify::EmailJob.perform_async(
           email,
