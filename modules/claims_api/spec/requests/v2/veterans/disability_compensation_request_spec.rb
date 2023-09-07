@@ -1609,7 +1609,7 @@ RSpec.describe 'Disability Claims', type: :request do
               json = JSON.parse(data)
               json['data']['attributes']['serviceInformation']['servicePeriods'][0]['serviceBranch'] =
                 service_branch
-              data = json
+              data = json.to_json
               post submit_path, params: data, headers: auth_header
               expect(response).to have_http_status(:unprocessable_entity)
             end
@@ -1624,9 +1624,24 @@ RSpec.describe 'Disability Claims', type: :request do
               json = JSON.parse(data)
               json['data']['attributes']['serviceInformation']['servicePeriods'][0]['serviceBranch'] =
                 service_branch
-              data = json
+              data = json.to_json
               post submit_path, params: data, headers: auth_header
               expect(response).to have_http_status(:unprocessable_entity)
+            end
+          end
+        end
+
+        context 'when the serviceBranch is in the BRD list but does not match case' do
+          let(:service_branch) { 'PUBLIC Health SERVICE' }
+
+          it 'responds with a 200' do
+            mock_ccg(scopes) do |auth_header|
+              json = JSON.parse(data)
+              json['data']['attributes']['serviceInformation']['servicePeriods'][0]['serviceBranch'] =
+                service_branch
+              data = json.to_json
+              post submit_path, params: data, headers: auth_header
+              expect(response).to have_http_status(:ok)
             end
           end
         end
