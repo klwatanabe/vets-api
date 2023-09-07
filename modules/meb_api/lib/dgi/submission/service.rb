@@ -5,17 +5,20 @@ require 'dgi/submission/configuration'
 require 'dgi/service'
 require 'dgi/submission/submit_claim_response'
 require 'authentication_token_service'
+
 module MebApi
   module DGI
     module Submission
       class Service < MebApi::DGI::Service
         configuration MebApi::DGI::Submission::Configuration
         STATSD_KEY_PREFIX = 'api.dgi.submission'
+
         def submit_claim(params)
           with_monitoring do
             headers = request_headers
             options = { timeout: 60 }
             response = perform(:post, end_point, format_params(params), headers, options)
+
             MebApi::DGI::Submission::SubmissionResponse.new(response.status, response)
           end
         end
