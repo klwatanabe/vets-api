@@ -43,7 +43,7 @@ module ClaimsApi
 
           if auto_claim.evss_id.nil?
             ClaimsApi::Logger.log('526 v2', claim_id: auto_claim.id, detail: 'Mapping EVSS Data')
-            evss_data = evss_mapper_service(auto_claim).map_claim
+            evss_data = evss_mapper_service(auto_claim, file_number).map_claim
             ClaimsApi::Logger.log('526 v2', claim_id: auto_claim.id, detail: 'Submitting to EVSS')
             evss_service.submit(auto_claim, evss_data)
           else
