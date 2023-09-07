@@ -15,9 +15,9 @@ module ClaimsApi
       }.freeze
 
       DATE_FORMATS = {
-        10 => :convert_date_string_mdy,
-        7 => :convert_date_string_my,
-        4 => :convert_date_string_yyyy
+        10 => :convert_date_string_to_format_mdy,
+        7 => :convert_date_string_to_format_my,
+        4 => :convert_date_string_to_format_yyyy
       }.freeze
 
       def initialize(auto_claim, pdf_data, target_veteran)
@@ -238,6 +238,8 @@ module ClaimsApi
             )
           end
         end
+        additional_identification_info
+
         @pdf_data[:data][:attributes][:identificationInformation].delete(:veteranNumber)
         country = @pdf_data[:data][:attributes][:identificationInformation][:mailingAddress][:country]
         abbr_country = country == 'USA' ? 'US' : country
@@ -487,11 +489,7 @@ module ClaimsApi
 
       def service_info_other_names
         other_names = @pdf_data[:data][:attributes][:serviceInformation][:alternateNames].present?
-        if other_names
-          names = @pdf_data[:data][:attributes][:serviceInformation][:alternateNames].join(', ')
-          @pdf_data[:data][:attributes][:serviceInformation][:servedUnderAnotherName] = 'YES'
-          @pdf_data[:data][:attributes][:serviceInformation][:alternateNames] = names
-        end
+        @pdf_data[:data][:attributes][:serviceInformation][:servedUnderAnotherName] = 'YES' if other_names
       end
 
       def fed_activation
@@ -570,24 +568,24 @@ module ClaimsApi
         send(date_format, date_string) if date_format
       end
 
-      def convert_date_string_mdy(date_string)
-        date = Date.strptime(date_string, '%m-%d-%Y')
+      def convert_date_string_to_format_mdy(date_string)
+        arr = date_string.split('-')
         {
-          month: date.mon,
-          day: date.mday,
-          year: date.year
+          month: arr[0].to_s,
+          day: arr[1].to_s,
+          year: arr[2].to_s
         }
       end
 
-      def convert_date_string_my(date_string)
-        date = Date.strptime(date_string, '%m-%Y')
+      def convert_date_string_to_format_my(date_string)
+        arr = date_string.split('-')
         {
-          month: date.mon,
-          year: date.year
+          month: arr[0].to_s,
+          year: arr[1].to_s
         }
       end
 
-      def convert_date_string_yyyy(date_string)
+      def convert_date_string_to_format_yyyy(date_string)
         date = Date.strptime(date_string, '%Y')
         {
           year: date.year
@@ -602,6 +600,26 @@ module ClaimsApi
         else
           Date.strptime(date_string, '%m-%d-%Y').strftime('%B %Y')
         end
+      end
+
+      def additional_identification_info
+        name = {
+          lastName: @target_veteran.last_name,
+          firstName: @target_veteran.first_name,
+          middleInitial: (@target_veteran.middle_name.presence || '')
+        }
+        if @target_veteran.birth_date
+          birth_date =
+            {
+              month: @target_veteran.birth_date[4..5].to_s,
+              day: @target_veteran.birth_date[6..7].to_s,
+              year: @target_veteran.birth_date[0..3].to_s
+            }
+        end
+        @pdf_data[:data][:attributes][:identificationInformation][:name] = name
+        @pdf_data[:data][:attributes][:identificationInformation][:ssn] = @target_veteran.ssn
+        @pdf_data[:data][:attributes][:identificationInformation][:dateOfBirth] = birth_date
+        @pdf_data
       end
     end
   end
