@@ -31,7 +31,7 @@ module ClaimsApi
         end
       end
 
-      def validate_form526(claim, data)
+      def validate(claim, data)
         @auth_headers = claim.auth_headers
         @auth_headers['va_eauth_birlsfilenumber'] = @auth_headers['va_eauth_pnid']
 

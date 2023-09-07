@@ -164,7 +164,7 @@ module ClaimsApi
           )
 
           if Flipper.enabled? :claims_status_v1_lh_auto_establish_claim_enabled
-            service.validate_form526(auto_claim, auto_claim.to_internal)
+            service.validate(auto_claim, auto_claim.to_internal)
           else
             service.validate_form526(auto_claim.to_internal)
           end

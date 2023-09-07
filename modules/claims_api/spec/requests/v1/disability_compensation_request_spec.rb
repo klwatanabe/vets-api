@@ -1042,7 +1042,7 @@ RSpec.describe 'Disability Claims ', type: :request do
                         allow_any_instance_of(EVSS::DisabilityCompensationForm::Service)
                           .to receive(:validate_form526).and_raise(error_klass)
                         allow_any_instance_of(ClaimsApi::EVSSService::Base)
-                          .to receive(:validate_form526).and_raise(error_klass)
+                          .to receive(:validate).and_raise(error_klass)
                         post path, params: data, headers: headers.merge(auth_header)
                         expect(PersonalInformationLog.count).to be_positive
                         expect(PersonalInformationLog.last.error_class).to eq("validate_form_526 #{error_klass.name}")
