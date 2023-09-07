@@ -118,7 +118,7 @@ module Form526ClaimFastTrackingConcern
       claim_id: saved_claim_id,
       form526_submission_id: id,
       claim_type:,
-      contention_text: 'TODO - add this field',
+      contention_text: disabilities.pick('name')
     }
 
     classification = get_classification(params)
