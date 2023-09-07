@@ -46,6 +46,9 @@ module ClaimsApi
                                                                type: 'DOMESTIC'
                                                              })
         @evss_claim[:veteran][:currentMailingAddress].except!(:numberAndStreet, :apartmentOrUnitNumber)
+        if @evss_claim[:veteran][:currentMailingAddress][:zipLastFour].blank?
+          @evss_claim[:veteran][:currentMailingAddress].except!(:zipLastFour)
+        end
       end
 
       def disabilities
