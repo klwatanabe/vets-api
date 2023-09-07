@@ -25,8 +25,7 @@ module V0
 
         begin
           response = RestClient.delete(revocation_url, params: payload,
-                                                       headers: { apiKey:
-                                                       Settings.connected_apps_api.connected_apps.api_key })
+                                                       headers: { apiKey: Settings.lighthouse.api_key })
 
           if response.code == 204
             head :no_content
