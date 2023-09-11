@@ -225,6 +225,9 @@ features:
   covid_volunteer_delivery:
     actor_type: cookie_id
     description: Toggles whether COVID Research volunteer submissions will be delivered to genISIS
+  claims_claim_uploader_use_bd:
+    actor_type: user
+    description: Use BDS instead of EVSS to upload to VBMS.
   claims_status_v1_bgs_enabled:
     actor_type: user
     description: enables calling BGS instead of EVSS for the claims status v1.
@@ -545,6 +548,14 @@ features:
   mhv_secure_messaging_to_va_gov_release:
     actor_type: user
     description: Enables/disbales Secure Messaging Patient on VA.gov (intial transition from MHV to VA.gov)
+    enable_in_development: true
+  mhv_medical_records_phr_refresh_on_login:
+    actor_type: user
+    description: Enables/disbales the PHR refresh for MHV users when logging into VA.gov
+    enable_in_development: true
+  mhv_medical_records_display_domains:
+    actor_type: user
+    description: Show/hide in-progress Medical Records domains
     enable_in_development: true
   mhv_to_logingov_account_transition:
     actor_type: cookie_id
@@ -978,6 +989,9 @@ features:
     actor_type: user
     description: Provides a flag wrapper for minor code changes to be gated from Prod.
     enable_in_development: true
+  meb_gate_person_criteria:
+    actor_type: user
+    description: Flag to use Person Criteria on Submission service
   supply_reordering_sleep_apnea_enabled:
     actor_type: user
     description: Enables sleep apnea supplies to be ordered in the supply reorder tool / MDOT.

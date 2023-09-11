@@ -111,14 +111,14 @@ describe ClaimsApi::V2::DisabilityCompensationPdfMapper do
         international_telephone =
           pdf_data[:data][:attributes][:identificationInformation][:phoneNumber][:internationalTelephone]
 
-        expect(ssn).to eq('796111863')
+        expect(ssn).to eq('796-11-1863')
         expect(name).to eq({ lastName: 'lincoln', middleInitial: '', firstName: 'abraham' })
         expect(birth_date).to eq({ month: '11', day: '30', year: '2012' })
         expect(current_va_employee).to eq(false)
         expect(va_file_number).to eq('AB123CDEF')
         expect(email).to eq('valid@somedomain.com')
         expect(agree_to_email).to eq(true)
-        expect(telephone).to eq('5555555555')
+        expect(telephone).to eq('555-555-5555')
         expect(international_telephone).to eq('+44 20 1234 5678')
       end
     end
@@ -170,7 +170,7 @@ describe ClaimsApi::V2::DisabilityCompensationPdfMapper do
           pdf_data[:data][:attributes][:homelessInformation][:currentlyHomeless][:otherDescription]
 
         expect(homeless_point_of_contact).to eq('john stewart')
-        expect(homeless_telephone).to eq('5555555555')
+        expect(homeless_telephone).to eq('555-555-5555')
         expect(homeless_international_telephone).to eq('+44 20 1234 5678')
         expect(homeless_currently).to eq('YES') # can't be both homess & at risk
         expect(homeless_situation_options).to eq('FLEEING_CURRENT_RESIDENCE')
@@ -245,11 +245,13 @@ describe ClaimsApi::V2::DisabilityCompensationPdfMapper do
         secondary_event = claim_info[:disabilities][1][:exposureOrEventOrInjury]
         secondary_relevance = claim_info[:disabilities][1][:serviceRelevance]
         has_conditions = pdf_data[:data][:attributes][:exposureInformation][:hasConditionsRelatedToToxicExposures]
+        yyyy_date_format = claim_info[:disabilities][2][:approximateDate]
 
         expect(has_conditions).to eq('YES')
         expect(name).to eq('Traumatic Brain Injury')
         expect(relevance).to eq('ABCDEFG')
         expect(date).to eq('March 2018')
+        expect(yyyy_date_format).to eq('2015')
         expect(event).to eq('EXPOSURE')
         expect(attribut_count).to eq(4)
         expect(secondary_name).to eq('Cancer - Musculoskeletal - Elbow')
